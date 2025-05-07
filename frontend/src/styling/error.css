@@ -1,0 +1,42 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+.error-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, #0D1B2A 20%, #1E3A8A 60%, #00F5D4 100%);
+    color: #fff;
+}
+.error-div h2 {
+    font-size: 55px;
+    font-family: "Space Grotesk", sans-serif;
+    margin-bottom: 10px;
+}
+.error-div a {
+    text-decoration: none;
+    font-weight: 500;
+    color: #fff;
+    font-size: 18.5px;
+    position: relative;
+}
+.error-div a::before {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 80%;
+    height: 1.3px;
+    background-color: #fff;
+    border-radius: 15px;
+    transition: .4s ease;
+}
+.error-div a:hover::before {
+    width: 100%;
+}

@@ -1,0 +1,131 @@
+.user-sign {
+    width: 100%;
+    height: 70vh;
+    min-height: fit-content;
+    padding: 30px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+}
+.sign-div {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px 35px 25px;
+    width: 430px;
+    border-radius: 16px;
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .sign-div:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+  
+  .sign-div h2 {
+    font-size: 37px;
+    font-weight: bold;
+    color: #00F5D4;
+    margin-bottom: 16px;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .input-group {
+    position: relative;
+    margin-bottom: 15px;
+  }
+  
+  .input-group input {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 13px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    transition: 0.3s ease-in-out;
+    background: #f8f9fa;
+  }
+  .input-group input::placeholder {
+    color: #555;
+  }
+  .input-group input:focus {
+    border-color: #007bff;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
+  }
+  
+  /* 🌟 Primary Button */
+  .signup-btn {
+    width: 100%;
+    padding: 12px;
+    background: #00F5D4;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .signup-btn:hover {
+    background: #00f5d486;
+    transform: scale(1.02);
+  }
+  .login-link {
+    margin-top: 20px;
+    font-size: 15px;
+    color: #f8f8f8;
+    font-weight: 500;
+  }
+  .login-link a {
+    color: #00F5D4;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 15.5px;
+    position: relative;
+  }
+  .login-link a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    height: 2.5px;
+    width: 0%;
+    background-color: #00F5D4;
+    border-radius: 15px;
+    transition: .4s ease;
+  }
+  .login-link a:hover::before {
+    width: 100%;
+  }
+  
+  /* 🔹 Google Sign-In Button */
+  #google-signin-btn .nsm7Bb-HzV7m-LgbsSe {
+    width: 100%;
+    font-weight: 600;
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    border-radius: 13px;
+    transition: .3s ease;
+  }
+  #google-signin-btn .nsm7Bb-HzV7m-LgbsSe:hover {
+    scale: 1.015;
+  }
+  .nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-BPrWId {
+    -webkit-flex-grow: 1;
+    flex-grow: 1;
+    font-family: "Space Grotesk", sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+}
+  @media (max-width: 480px) {
+    .sign-div {
+      width: 100%;
+      padding: 25px 18px;
+    }
+  }

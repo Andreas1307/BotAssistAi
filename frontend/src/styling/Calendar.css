@@ -1,0 +1,776 @@
+/* calendar-custom.css */
+
+.booking-settings-container  {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px 20px 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex: 1 1;
+    margin: 15px 0 20px;
+    position: relative;
+    transition: .3s ease;
+  }
+  .booking-heading {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .booking-heading h2 {
+    font-size: 30px;
+    font-family: "Space Grotesk", sans-serif;
+    margin-bottom: 10px;
+  }
+  
+  .booking-heading button {
+    padding: 9px 28px;
+    font-size: 17.5px;
+    background: linear-gradient(90deg, #0077ff, #9b00ff, #ff007a);
+    border: none;
+    cursor: pointer;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 13px;
+  }
+  
+  .workingHours {
+    font-size: 23px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    font-family: "Space Grotesk", sans-serif;
+    cursor: pointer;
+  }
+  .swh {
+    font-size: 21px;
+    margin-bottom: -3px;
+    margin-left: 5px;
+  }
+  .working-hours-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .working-hour-day {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .working-hour-day label {
+    font-size: 19px;
+    font-weight: 600;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .working-hour-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 7px;
+  }
+  .timezoneDiv {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .timezoneDiv h3 {
+    font-size: 19px;
+    font-weight: 600;
+    margin-left: 4px;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .timezoneDiv select {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    margin-top: 7px;
+    color: white;
+    font-size: 15.5px;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .timezoneDiv select option {
+    color: #333;
+    font-weight: 500;
+  }
+  .days-off-container {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .days-off-container h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-left: 4px;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+    margin-bottom: 7px;
+  }
+  .days-off-container button {
+    padding: 7px 13px;
+    background-color: #00F5D4;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 13px;
+    font-size: 14.5px;
+    border: 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .days-off-container input {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    margin-top: 7px;
+    color: white;
+    font-size: 15.5px;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .days-off-list {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .day-off-item {
+    padding: 8px 15px;
+    border-radius: 13px;
+    font-weight: 500;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .3s ease;
+  }
+  .day-off-item:hover {
+    scale: 1.02;
+  }
+  .inputs {
+    display: flex;
+    gap: 15px;
+  }
+  .working-hour-inputs span {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+  }
+  .working-hour-inputs span h3 {
+    font-size: 16.5px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+    font-weight: 500;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .time-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: white;
+    width: 100%;
+    font-weight: 500;
+    font-size: 1rem;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .blocked-time-section {
+    width: 100%;
+  }
+  .blocked-time-section h4 {
+    font-size: 19px;
+    font-weight: 600;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+    margin-bottom: 10px;
+  }
+  .blocked-time-section button {
+    padding: 7px 16px 7.5px;
+    background-color: #00F5D4;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 13px;
+    font-size: 14.5px;
+    border: 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .blockedInputs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+  .blocked-time-section input {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .blockTimeBtn {
+    padding: 9px 13px;
+    background-color: #00F5D4;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 13px;
+    font-size: 14.5px;
+    border: 0;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .blockTimeBtn:hover {
+    background-color: #00f5d486;
+  }
+  .time-input:focus {
+    outline: none;
+    background-color: #4b6b8d;
+  }
+  
+  /* Blocked Slot Section */
+  .add-block-button {
+    background-color: #00F5D4;
+    padding: 11px 22px;
+    border-radius: 13px;
+    color: white;
+    font-size: 16.5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 18px;
+    border: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .add-block-button:hover {
+    background-color: #00f5d483;
+  }
+  
+  .blocked-slot-container {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 18px;
+}
+.blocked-slot-container span {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+.blocked-slot-container span h4 {
+    font-size: 17px;
+    font-weight: 600;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+}
+  
+  .date-input,
+  .time-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .date-input.two,
+  .time-input.two {
+    margin: 4px 0;
+  }
+  
+  .time-input:focus,
+  .date-input:focus {
+    outline: none;
+    background-color: #222;
+  }
+  
+  /* Save Button */
+  .save-button {
+    margin-top: 10px;
+    padding: 14px 20px;
+    background-color: #00F5D4;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 13px;
+    font-size: 18px;
+    border: 0;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  
+  .save-button:hover {
+    background-color: #00f5d485;
+  }
+  
+
+
+
+
+  .calendar-container {
+    border-radius: 13px;
+    color: white;
+    margin-top: 1rem;
+  }
+  .react-calendar {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 13px;
+    padding: 1rem;
+    color: white;
+  }
+  .react-calendar__navigation {
+    margin-bottom: 20px;
+  }
+  .react-calendar__navigation button {
+    font-size: 14.5px;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    background-color: #00F5D4;
+    border-top-left-radius: 13px;
+    border-bottom-right-radius: 13px;
+    cursor: pointer;
+    border: 0;
+    margin: 0 3px;
+    font-family: "Space Grotesk", sans-serif;
+    transition: .4s ease;
+  }
+  .react-calendar__navigation button:hover {
+    background-color: #00f5d485;
+  }
+  .react-calendar__month-view__weekdays__weekday {
+    font-size: 16px;
+    margin-bottom: 3px;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .react-calendar__tile {
+    background: transparent;
+    color: white;
+    padding: 20px 3px;
+    border-radius: 13px;
+    font-size: 15px;
+    transition: 0.3s;
+    cursor: pointer;
+    font-family: "Space Grotesk", sans-serif;
+    border: 0;
+    margin: 5px 0;
+    position: relative;
+    box-shadow: 4px 6px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .react-calendar__tile--active {
+    background: #00F5D4;
+    color: #000;
+  }
+  
+  .react-calendar__tile--now {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  .react-calendar__tile:enabled:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .react-calendar__month-view__days__day--weekend {
+    color: #fff;
+    font-weight: 500;
+  }
+
+
+  .appointments-list {
+    margin-top: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 1rem;
+    color: white;
+  }
+  .appointments-heading {
+    font-size: 21.5px;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .appointments-list ul {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: start;
+    margin-top: 12px;
+  }
+  .appointment-entry {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 13px;
+    padding: 13px 18px;
+    list-style: none;
+    margin: 5px 0;
+  }
+  .appointment-entry p span {
+    margin-right: 2px;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .appointment-entry h2 {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+  .appointment-entry:last-child {
+    border-bottom: none;
+  }
+  
+  .appointment-entry p {
+    margin: 0.2rem 0;
+  }
+  .appointments-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .service-availability {
+    margin: 10px 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    width: 100%;
+  }
+  .service-availability label {
+    font-size: 17.8px;
+    margin-bottom: 9px;
+    font-weight: 600;
+    color: white;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .service-availability div {
+    margin: 4px 0;
+  }
+  .service-availability input {
+    width: 14px;
+  height: 14px;
+  accent-color: #00F5D4; 
+  cursor: pointer;
+  margin-right: 8px;
+  margin-bottom: -2px;
+  transition: all 0.2s ease
+  }
+  .staff-select{
+    padding: 8px 22px;
+    font-weight: 600;
+    color: #f8f8f8;
+    font-size: 15.5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 13px;
+    border: 0;
+    font-family: "Space Grotesk", sans-serif;
+    cursor: pointer;
+  }
+  .staff-select option {
+    color: #333;
+    font-weight: 500;
+  }
+  .mCompleted {
+    padding: 7px 15px 6.5px;
+    margin-top: 6px;
+    font-weight: 600;
+    color: #f8f8f8;
+    background-color: #00F5D4;
+    border-radius: 13px;
+    font-size: 15.5px;
+    border: 0;
+    cursor: pointer;
+    transition: .4s ease;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .mCompleted:hover {
+    scale: 1.01;
+  }
+  .appointment-count {
+    position: absolute;
+    font-size: 15px;
+    border-radius: 50%;
+    padding: 3px 8px;
+    display: inline-block;
+    background-color: #00d9ff;
+    color: black;
+    top: 5px;
+    right: 5px;
+    font-weight: 600;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  
+  .appointment-count:empty {
+    display: none;
+  }
+  
+  .react-calendar__tile .appointment-count {
+    background-color: rgba(0, 217, 255, 0.2); /* lighter for 0 */
+    color: #fff;
+  }
+  
+  .react-calendar__tile .appointment-count:not(:contains('0')) {
+    background-color: #00d9ff;
+    color: black;
+  }
+
+  .integration-section {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 13px;
+    margin-top: 1rem;
+    color: white;
+  }
+  
+  .integration-block {
+    margin-bottom: 1rem;
+  }
+  
+  .integration-label {
+    font-size: 21px;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .inteIcon {
+    font-size: 18.5px;
+    margin-left: 3.5px;
+    margin-bottom: -2.5px;
+  }
+  .add-more-btn {
+    background-color: #00F5D4;
+    padding: 9px 17px;
+    border-radius: 13px;
+    color: white;
+    font-size: 14.5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 18px;
+    border: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.list {
+  margin-top: 12px;
+}
+.imgText {
+  font-size: 17px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  font-family: "Space Grotesk", sans-serif;
+}
+  .integration-input  {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 3px;
+}
+.integration-input::placeholder {
+  color: #fff;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 500;
+}
+  
+
+.integration-textarea {
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
+  background-color: #1a1a1a;
+  padding: 0 10px;
+  padding-bottom: 15px;
+  border-radius: 15px;
+  margin: 7px 0 20px;
+  font-size: 15.5px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.copy-code-btn {
+  background: #00F5D4;
+  color: white;
+  padding: 9px 18px;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 15px;
+  transition: .4s ease;
+}
+.copy-code-btn:hover {
+  background-color: #00f5d485;
+}
+.saveAppointment {
+  margin-top: 8px;
+  margin-bottom: 20px;
+  padding: 11.5px 18px;
+  background-color: #28a745;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 13px;
+  font-size: 17px;
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: "Space Grotesk", sans-serif;
+}
+.removeService {
+  padding: 8px 22px;
+  margin-top: 13px;
+  border-radius: 13px;
+  background-color: #c50101;
+  color: #fff;
+  font-size: 14.4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 0;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: "Space Grotesk", sans-serif;
+  transition: .4s ease;
+}
+.removeService:hover {
+  background-color: #bd0000b0;
+}
+.trash {
+  margin-bottom: -1.5px;
+  margin-right: 2px;
+}
+@media(max-width: 760px) {
+  .booking-heading {
+    flex-direction: column;
+    align-items: start;
+  }
+  .booking-heading button {
+    margin: 7px 0 13px;
+  }
+}
+@media(max-width: 620px) {
+  .booking-heading h2 {
+    font-size: 26px;
+  }
+  .booking-heading button {
+    padding: 7px 22px;
+    font-size: 16.5px;
+    margin-bottom: 9px;
+}
+  .workingHours {
+    font-size: 21px;
+  }
+  .inputs {
+    width: 100%;
+    gap: 10px;
+    flex-direction: column;
+  }
+  .working-hour-inputs span {
+    width: 100%;
+  }
+  .blockedInputs {
+    flex-direction: column;
+  }
+  .working-hour-day label {
+    font-size: 17.5px;
+  }
+  .working-hour-inputs span h3 {
+    font-size: 15.5px;
+  }
+  .time-input,
+  .blocked-time-section input {
+    padding: 10px 15px;
+    font-size: 15px;
+  }
+  .blocked-time-section h4 {
+    font-size: 17.5px;
+  }
+  .appointment-count {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+  .react-calendar__navigation {
+    margin-bottom: 10px;
+  }
+  .add-more-btn {
+    font-size: 14px;
+  }
+  .saveAppointment {
+    font-size: 16px;
+    padding: 7px 15px;
+  }
+  .dashboard-bookings {
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+  .appointments-heading {
+    font-size: 17.5px;
+  }
+}
+
+
+
+
+@media (max-width: 500px) {
+  .booking-settings-container {
+    padding: 15px 10px;
+  }
+  .react-calendar__month-view__days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 columns */
+    gap: 5px;
+    width: 100%;
+  }
+  
+  .react-calendar__tile {
+    font-size: 13px;
+    border-radius: 10px;
+    padding: 30px 10px; /* smaller padding */
+    text-align: center;
+    aspect-ratio: 1/1; /* makes tiles perfect squares */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .appointment-count {
+    font-size: 10px;
+  }
+
+  .react-calendar__navigation button {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+  .imgText {
+    font-size: 15.5px;
+  }
+  .integration-block {
+    width: 100%;
+  }
+  .integration-block:last-child {
+    display: none;
+  }
+  }

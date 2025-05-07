@@ -1,0 +1,240 @@
+.contact-page {
+    color: white;
+  }
+  
+  .contact-hero {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .contact-hero h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .contact-hero p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+  }
+  .contact-options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+  }
+  
+  .contact-card {
+    background: #00ffcc;
+    padding: 20px;
+    border-radius: 10px;
+    width: 320px;
+    text-align: center;
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+    margin-bottom: 40px;
+  }
+  .contact-card h3 {
+    font-size: 25px;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .contact-card p {
+    font-weight: 500;
+    margin-bottom: 5px;
+  }
+  .contact-card:hover {
+    scale: 1.02;
+  }
+  .contact-card a {
+    text-decoration: none;
+    font-weight: 600;
+    padding-bottom: -30px;
+    color: #f8f8f8;
+    font-size: 16.5px;
+   }
+  .contact-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  .chat-btn,
+  .ticket-btn  {
+    font-size: 14.5px;
+    background: #fff;
+    padding: 8.5px 15px;
+    color: #00f5d4;
+    border: none;
+    border-radius: 13px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    margin-top: 5px;
+  }
+  
+  .chat-btn:hover {
+    background: #e1e1e1;
+  }
+  .suggestInput {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    max-height: 200px;
+    min-height: 40px;
+    padding: 10px;
+    margin-top: 3px;
+    border-radius: 10px;
+    color: #333;
+    border: 2px solid #666;
+  }
+  .suggestBtn {
+    padding: 8.5px 24px;
+    font-weight: 600;
+    background-color: #fff;
+    border: 0;
+    border-radius: 13px;
+    font-size: 14px;
+    margin-top: 3px;
+    margin-bottom: -8px;
+    cursor: pointer;
+  }
+  .contact-form-container {
+    background: #00f5d4;
+    padding: 0px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 100px auto 70px;
+    display: flex;
+    overflow: hidden;
+  }
+  .contact-form-container div {
+    width: 55%;
+    position: relative;
+    padding: 25px 8% 20px 25px;
+  }
+  .contact-form-container div::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -60px; 
+    width: 120px;
+    height: 100%;
+    background-color: #00f5d4;
+    transform: skewX(-12deg);
+    transform-origin: left;
+  }
+  .contact-form-container div h3 {
+    font-size: 35px;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 800;
+  }
+  .contact-form-container div p {
+    font-weight: 600;
+    margin-top: 5px;
+    margin-bottom: 15px;
+  }
+  .contact-form-container img {
+    width: 45%;
+  }
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+  }
+  .contact-form input,
+  .contact-form textarea {
+    width: 100%;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    border: 2px solid #00f5d4;
+    outline: 2px solid #fff;
+  }
+  .contact-form input::placeholder,
+  .contact-form textarea::placeholder {
+    color: #00f5d4;
+  }
+  .contact-form button {
+    width: 100%;
+    padding: 12px;
+    background: #00f5d4;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    font-size: 16px;
+    border: 2px solid #00f5d4;
+    outline: 3px solid #fff;
+  }
+  
+  .contact-form button:hover {
+    background: #fff;
+    color: #00f5d4;
+  }
+  @media(max-width: 1200px) {
+    .contact-form-container img {
+      display: none;
+    }
+    .contact-form-container div::before {
+      display: none;
+    }
+    .contact-form-container {
+      max-width: 700px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .contact-form-container div {
+      width: 100%;
+    }
+  }
+  @media (max-width: 768px) {
+    .contact-options {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .contact-card {
+      width: 100%;
+      max-width: 400px;
+    }
+  }
+  @media(max-width: 720px) {
+    .contact-form-container {
+      max-width: 98%;
+    }
+    .contact-form-container div h3 {
+      font-size: 30px;
+    }
+    .contact-form-container div p {
+      font-size: 15px;
+    }
+  }
+  @media(max-width: 440px) {
+    .contact-options {
+      padding: 0 15px;
+    }
+    .contact-card {
+      margin-bottom: 0;
+      padding: 15px;
+    }
+    .contact-card h3 {
+      font-size: 21px;
+    }
+    .contact-card p {
+      font-size: 15px;
+      margin-top: 4px;
+    }
+    .callback-btn, .ticket-btn {
+      font-size: 14px;
+    }
+    .contact-icon {
+      font-size: 30px;
+      margin: 5px 0;
+    }
+  }

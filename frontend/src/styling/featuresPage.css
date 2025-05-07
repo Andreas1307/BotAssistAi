@@ -1,0 +1,299 @@
+.features-page {
+    color: #f8f8f8;
+  }
+  .features-hero {
+    width: 100%;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .features-hero h1 {
+    font-size: 50px;
+    font-family: "Space Grotesk", sans-serif;
+    text-shadow: .2px .2px #00f5d4;
+    margin-top: -50px;
+  }
+  .features-hero p {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    margin-top: 3px;
+  }
+  .features-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .features-section h2 {
+    font-size: 45px;
+  color: #fff;
+  font-family: "Space Grotesk", sans-serif;
+  margin-bottom: 7px;
+  }
+  .features-section p {
+    font-size: 17px;
+    font-weight: 500;
+  margin-bottom: 15px;
+  max-width: 800px;
+  text-align: center;
+  }
+  .features-grid {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 30px;
+    margin: 0 auto 50px;
+  }
+  .feature-item1 {
+    max-width: 30%;
+    min-width: 250px;
+    background-color: #00f5d4;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: .4s ease;
+  }
+  .feature-item1 p {
+    margin-bottom: 0;
+  }
+  .feature-item:hover {
+    scale: 1.03;
+  }
+  .feature-item h3 {
+    font-size: 23px;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .feature-item p {
+    margin-top: 3px;
+    font-weight: 500;
+  }
+  .feature-icon {
+    font-size: 35px;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .video-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 15px;
+    margin: 20px 0 0;
+  }
+  .video-section h2 {
+    font-size: 45px;
+  margin-bottom: 5px;
+  color: #fff;
+  font-family: "Space Grotesk", sans-serif;
+  }
+  .video-section p {
+    font-size: 16.5px;
+    font-weight: 500;
+    color: #e9e9e9;
+  }
+  .video-section video {
+    width: 90%;
+    max-width: 900px;
+    margin-top: 20px;
+    border-radius: 10px;
+  }
+  .comparison-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 15px;
+  }
+  .comparison-section h2 {
+    font-size: 45px;
+  margin-bottom: 30px;
+  color: #fff;
+  font-family: "Space Grotesk", sans-serif;
+  }
+  .comparison-section table {
+    width: 100%;
+    max-width: 1000px;
+    margin: auto;
+    border-collapse: collapse;
+    color: #002244;
+    border-radius: 10px;
+    overflow: hidden;
+    color: #fff;
+  }
+  .comparison-section th {
+    color: #fff;
+    background-color: #00f5d4;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 19px;
+  }
+  .comparison-section tr td:first-child {
+    color: #fff;
+    background-color: #00f5d4;
+    font-weight: 600;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 17px;
+  }
+  .comparison-section th, .comparison-section td {
+    padding: 20px 15px;
+    border: 2px solid #00f5d4;
+    font-weight: 600;
+  }
+  .comparison-section td {
+    background-color: transparent;
+  }
+  .green-icon {
+    color: green;
+  }
+  
+  .red-icon {
+    color: red;
+  }
+  
+  .faq-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  
+  /* CTA */
+  .cta-section {
+    margin-top: 60px;
+  }
+  @media (max-width: 880px) {
+    .features-hero h1 {
+      font-size: 42px;
+      text-align: center;
+    }
+    .features-hero p {
+      font-size: 15px;
+      margin-bottom: 0px;
+    }
+    .features-section h2 {
+      font-size: 41px;
+      text-align: center;
+    }
+    .features-section p {
+      font-size: 15px;
+      max-width: 650px;
+      margin-bottom: 10px;
+    }
+    .features-grid h3 {
+      font-size: 22px;
+    }
+  .video-section h2 {
+    font-size: 41px;
+    text-align: center;
+  }
+  .video-section p {
+    font-size: 15px;
+  }
+  .video-section video {
+    width: 99%;
+  }
+  .comparison-section h2 {
+    font-size: 41px; 
+    text-align: center;
+  }
+}
+
+@media (max-width: 700px) {
+  .comparison-section {
+    padding: 16px;
+  }
+  .comparison-section table {
+    width: 100%; 
+    border: none; 
+  }
+  .comparison-section tr {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px; 
+    margin-bottom: 20px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 245, 212, 0.1);
+  }
+  .comparison-section td {
+    border: none; 
+    padding: 10px 0;
+    position: relative; 
+    color: #fff; 
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .comparison-section td[data-label]::before {
+    content: attr(data-label); 
+    font-weight: bold; 
+    font-size: 12px; 
+    color: #00f5d4;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .comparison-section thead {
+    display: none;
+  }
+  .comparison-section tr td:first-child {
+    background: transparent;
+    font-size: 18px; 
+    font-weight: bold; 
+    color: #00f5d4;
+    margin-bottom: 8px; 
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 245, 212, 0.3);
+  }
+  .comparison-section td:not(:first-child) {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+@media(max-width: 534px) {
+  .feature-item1 {
+    max-width: 90%;
+    min-width: 90%;
+  }
+  .features-section p {
+    margin-left: 7px;
+    margin-right: 7px;
+    font-size: 14.5px;
+  }
+  .features-hero h1 {
+    font-size: 40px;
+  }
+  .features-hero p {
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 15px;
+    margin-top: 7px;
+    font-size: 14.5px;
+  }
+  .features-section h2 {
+    font-size: 36px; 
+  }
+  .video-section h2 {
+    font-size: 36px;
+  }
+  .comparison-section h2 {
+    font-size: 36px;
+}
+  .features-grid h3 {
+    font-size: 22px !important;
+  }
+  .cta-section h2 {
+    font-size: 36px;
+  }
+}
+
+
+

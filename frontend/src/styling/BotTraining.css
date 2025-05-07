@@ -1,0 +1,167 @@
+.support-bot-customization {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px 20px 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex: 1 1;
+    margin: 15px 0 20px;
+    position: relative;
+    transition: .3s ease;
+}
+.support-bot-customization h2 {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    font-family: "Space Grotesk";
+    font-weight: 800;
+}
+.config-opt {
+    display: flex;
+    flex-wrap: wrap;
+}
+.config-opt {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin: auto;
+  }
+  
+  .config-opt div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .config-opt label {
+    font-weight: 600;
+    color: #fff;
+    font-family: "Space Grotesk";
+    font-size: 17px;
+  }
+  
+  .config-opt input,
+  .config-opt select,
+  .config-opt textarea {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 13px;
+    font-size: 16px;
+    background: white;
+    transition: border-color 0.3s ease-in-out;
+  }
+  
+  .config-opt input:focus,
+  .config-opt select:focus,
+  .config-opt textarea:focus {
+    border-color: #00F5D4;
+    outline: none;
+  }
+  
+  .config-opt textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .config-opt button {
+    margin-top: 5px;
+    background: #00F5D4;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 13px;
+    font-size: 17px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-weight: 600;
+    font-family: "Space Grotesk";
+  }
+  .config-opt button:hover {
+    background: #00f5d486;
+  }
+  .config-opt ul {
+    list-style: none;
+    padding: 0;
+  }
+  .config-opt ul li {
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+.save-btn {
+    padding: 10px 23px;
+    font-weight: 600;
+    font-family: "Space Grotesk";
+    font-size: 17.8px;
+    border: 0;
+    border-radius: 13px;
+    background-color: #00F5D4;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 17px;
+    margin-left: 2px;
+    transition: .2s ease;
+}
+.save-btn:hover {
+    background-color: #00f5d485;
+}
+.config-icon {
+    margin-right: 5px;
+}
+.upgrade-div {
+  width: 100%;
+  display: flex;
+}
+.upgrade-div a {
+  max-width: 260px;
+  font-size: 16px;
+  background: linear-gradient(90deg, #0077ff, #9b00ff, #ff007a);
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  padding: 12px 20px 11px;
+  border-radius: 13px;
+  margin: 7px 0 5px;
+  display: block;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 2px 4px rgba(155, 0, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  font-family: "Space Grotesk", sans-serif;
+  text-decoration: none;
+  transition: .4s ease;
+}
+.upgrade-div a:hover {
+  scale: 1.02;
+}
+@media(max-width: 1000px) {
+  .support-bot-customization h2 {
+    font-size: 24.5px;
+  }
+  .config-opt label {
+    font-size: 16px;
+  }
+  .config-opt input, .config-opt select, .config-opt textarea {
+    font-size: 15px;
+  }
+  .support-bot-customization {
+    width: 100%;
+  }
+}
+@media(max-width: 550px) {
+  .config-opt {
+    padding: 20px 0;
+    background-color: transparent;
+    box-shadow: none;
+  }
+  .config-opt div {
+    width: 100%;
+  }
+}
