@@ -1,2 +1,2 @@
-const directory = "http://localhost:8090"
+const directory = "https://botassistai.com"
 export default directory

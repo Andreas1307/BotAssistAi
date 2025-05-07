@@ -14,7 +14,7 @@ const PaddleIntegration = () => {
             console.log("Error fetching the user", e)
           }
         }
-        fetchUser()
+        fetchUser()  
       }, [])
 
   useEffect(() => {
@@ -27,8 +27,8 @@ const PaddleIntegration = () => {
 
     script.onload = () => {
       if (window.Paddle) {
-        window.Paddle.Initialize({  // add it to eenv , si uitate pe gpt   
-          token: "live_e21116b4e2f5efe12995eac2803", // Replace with a client-side token
+        window.Paddle.Initialize({   
+          token: process.env.PADDLE_TOKEN,
         });
         console.log("Paddle initialized successfully");
       } else {
