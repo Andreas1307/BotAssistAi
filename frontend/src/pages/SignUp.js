@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../styling/SignLog.css";
 import Header from "../components/Header";
 import Footer from "../components/footer";
-import directory from "../directory";
+import directory from './src/directory';
 import axios from "axios";
 
 const SignUp = () => {

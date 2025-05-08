@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaRocket, FaCheckCircle, FaTimesCircle, FaStar, FaBolt, FaShieldAlt } from "react-icons/fa";
 import "../styling/upgrade.css"; // Make sure to style this with Tailwind or CSS
 import axios from "axios";
-import directory from "../directory";
+import directory from './src/directory';
 import StripeCheckout from "../UserComponents/StripeCheckout";
 import PaddleCheckout from "../UserComponents/PaddleCheckout";
 import { Link } from "react-router-dom"

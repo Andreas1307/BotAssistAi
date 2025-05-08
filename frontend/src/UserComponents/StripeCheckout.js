@@ -9,7 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import directory from "../directory";
+import directory from './src/directory';
 import "../styling/StripeCheckout.css";
 import { ToastContainer, toast } from 'react-toastify';
 

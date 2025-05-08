@@ -5,7 +5,7 @@ import Header from "../components/Header";
 import Newsletter from "../components/newsletter";
 import Footer from "../components/footer";
 import Faq from "../components/faq"
-import directory from "../directory";
+import directory from './src/directory';
 import axios from "axios";
 import { Helmet } from "react-helmet";
 import { useNavigate, useLocation } from "react-router-dom";

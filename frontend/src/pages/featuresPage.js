@@ -6,7 +6,7 @@ import Newsletter from "../components/newsletter";
 import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import directory from "../directory";
+import directory from './src/directory';
 import { Helmet } from "react-helmet";
 import axios from "axios";
 const FeaturesPage = () => {

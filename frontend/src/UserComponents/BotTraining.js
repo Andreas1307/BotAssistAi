@@ -3,7 +3,7 @@ import { IoSettingsOutline } from "react-icons/io5"
 import { Link } from "react-router-dom"
 import "../styling/BotTraining.css"
 import axios from 'axios';
-import directory from '../directory';
+import directory from './src/directory';
 import { ToastContainer, toast } from 'react-toastify';
 
 const SupportBotCustomization = () => {

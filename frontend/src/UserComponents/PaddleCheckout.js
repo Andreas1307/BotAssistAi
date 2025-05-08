@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import directory from "../directory";
+import directory from './src/directory';
 import axios from "axios";
 
 const PaddleIntegration = () => {

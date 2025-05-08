@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import directory from "../directory";
+import directory from './src/directory';
 import { ToastContainer, toast } from "react-toastify";
 function OpenAi() {
   const [message, setMessage] = useState("");

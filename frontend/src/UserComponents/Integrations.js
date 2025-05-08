@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import "../styling/Integrations.css";
 import OpenAi from "./OpenAi";
-import directory from "../directory";
+import directory from './src/directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow } from "date-fns";
 import axios from "axios";

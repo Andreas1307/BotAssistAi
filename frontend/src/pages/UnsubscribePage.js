@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../styling/UnsubscribePage.css';
 import axios from 'axios';
-import directory from '../directory';
+import directory from './src/directory';
 
 export default function UnsubscribePage() {
   const [email, setEmail] = useState('');

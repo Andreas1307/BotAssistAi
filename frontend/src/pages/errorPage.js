@@ -2,7 +2,7 @@ import React, {useState, useEffect} from "react";
 import { Link } from "react-router-dom"
 import "../styling/error.css"
 import axios from "axios";
-import directory from "../directory";
+import directory from './src/directory';
 import { useNavigate } from "react-router-dom";
 
 const Error = () => {
