@@ -10,7 +10,6 @@ import {
   FaEye,
 } from "react-icons/fa";
 import "../styling/Integrations.css";
-import OpenAi from "./OpenAi";
 import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow } from "date-fns";
