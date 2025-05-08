@@ -4,7 +4,7 @@ import "../styling/SignLog.css";
 import Header from "../components/Header";
 import Footer from "../components/footer";
 import axios from "axios";
-import directory from './src/directory';
+import directory from '../directory';
 
 const LogIn = () => {
   const [email, setEmail] = useState("");
