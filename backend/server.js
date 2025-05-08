@@ -37,7 +37,7 @@ const ivLength = 16;
 const axios = require('axios');
 const chrono = require('chrono-node');
 const pool = createPool({
-host: "localhost",
+host: process.env.DATABASE_HOST,
 user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
