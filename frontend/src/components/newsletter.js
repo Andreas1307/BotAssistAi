@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../styling/newsletter.css";
 import axios from "axios";
-import directory from './src/directory';
+import directory from '../directory'; 
 const Newsletter = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState(null);
