@@ -3,7 +3,7 @@ import { Line, Doughnut, Bar } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import "../styling/AnalyticsPage.css";
 import axios from "axios";
-import directory from './src/directory';
+import directory from '../directory';
 import { Link } from "react-router-dom"
 import { ToastContainer, toast } from 'react-toastify';
 

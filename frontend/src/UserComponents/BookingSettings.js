@@ -3,7 +3,7 @@ import { Calendar } from "react-calendar";
 import "../styling/Calendar.css";
 import { FaChevronUp, FaChevronDown, FaTrash } from "react-icons/fa";
 import axios from "axios";
-import directory from './src/directory';
+import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { format } from "date-fns";
 import { Link } from "react-router-dom"

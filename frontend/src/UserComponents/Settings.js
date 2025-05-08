@@ -3,7 +3,7 @@ import { FaCog } from "react-icons/fa";
 import "../styling/Settings.css";
 import { FaKey } from "react-icons/fa";
 import axios from "axios";
-import directory from './src/directory';
+import directory from '../directory';
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 const LogoutConfirmToast = ({ closeToast, onConfirm, reason = "Are you sure you want to log out?" }) => (
