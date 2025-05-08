@@ -2,7 +2,7 @@
   const script = document.createElement('script');
   const currentScript = document.currentScript;
   const apiKey = currentScript?.getAttribute("api-key");  
-  const directory = "https://botassistai.com"
+  const directory = "http://168.231.113.72:8090/"
     const fontLink = document.createElement('link');
     fontLink.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@300..700&display=swap";
     fontLink.rel = 'stylesheet';
