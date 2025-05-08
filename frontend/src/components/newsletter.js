@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import "../styling/newsletter.css";
 import axios from "axios";
-import directory from "/Programming/BotAssistAI/frontend/src/directory"
-
+import directory from './src/directory';
 const Newsletter = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState(null);
