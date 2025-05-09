@@ -1928,30 +1928,25 @@ res.json({ yesterdayMessages: result[0]?.total_messages || 0 });
 
 app.post("/user-training", async (req, res) => {
   const { username } = req.body;
-
-  if (!username) {
-    return res.status(400).json({ message: "Username is required" });
-  }
+  console.log("USERNAME RECEIVED:", username); // Add this
 
   try {
-    
-    const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username]);
+    const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username])
+    console.log("DB QUERY RESULT:", rows); // Add this
 
-    if (rows.length > 0) {
+    if(rows.length > 0) {
       const training = rows[0];
       return res.status(200).json({ config: training });
     } else {
-      return res.status(200).json({ config: {} }); // No config found, return empty
+      return res.status(200).json({ config: {} });
     }
 
-  } catch (e) {
-    console.error("Error during /user-training request:", e);
-    return res.status(500).json({ 
-      message: "An error occurred while retrieving the user training data", 
-      error: e.message 
-    });
+  } catch(e) {
+    console.error("DB QUERY ERROR:", e); // Add this
+    return res.status(500).json({ message: "An error occurred getting the user training data" });
   }
 });
+
 
 
 app.post("/send-suggestion", async (req, res) => {
