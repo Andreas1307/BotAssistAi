@@ -1927,21 +1927,32 @@ res.json({ yesterdayMessages: result[0]?.total_messages || 0 });
 })
 
 app.post("/user-training", async (req, res) => {
-const { username } = req.body;
-try {
-  const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username])
-  if(rows.length > 0) {
-    const training = rows[0]
-    return res.status(200).json({ config: training})
-  } else {
-    return res.status(200).json({ config: {} });
+  const { username } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ message: "Username is required" });
   }
-  
-} catch(e) {
-  console.log("Ann error occured getting the user config trining opts");
-  return res.status(500).json({ message: "An error occured getting the user training data"})
-}
-})
+
+  try {
+    
+    const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username]);
+
+    if (rows.length > 0) {
+      const training = rows[0];
+      return res.status(200).json({ config: training });
+    } else {
+      return res.status(200).json({ config: {} }); // No config found, return empty
+    }
+
+  } catch (e) {
+    console.error("Error during /user-training request:", e);
+    return res.status(500).json({ 
+      message: "An error occurred while retrieving the user training data", 
+      error: e.message 
+    });
+  }
+});
+
 
 app.post("/send-suggestion", async (req, res) => {
   const { message } = req.body;
