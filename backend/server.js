@@ -1933,6 +1933,8 @@ try {
   if(rows.length > 0) {
     const training = rows[0]
     return res.status(200).json({ config: training})
+  } else {
+    return res.status(200).json({ config: {} });
   }
   
 } catch(e) {
