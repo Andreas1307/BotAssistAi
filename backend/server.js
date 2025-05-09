@@ -84,9 +84,9 @@ initialisePassport(passport, getUserByEmail, getUserById)
 const devOrigins = new Set(["localhost", "127.0.0.1"]);
 
 const dynamicCors = async (origin, callback) => {
-  try {
-    if (!origin) return callback(null, true);
+  if (!origin) return callback(null, true);
 
+  try {
     const hostname = new URL(origin).hostname;
 
     if (devOrigins.has(hostname)) {
@@ -94,29 +94,35 @@ const dynamicCors = async (origin, callback) => {
     }
 
     const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-
     const allowed = rows.some(row => hostname === row.domain || hostname.endsWith(`.${row.domain}`));
 
     if (allowed) {
       console.log("✅ CORS allowed for:", hostname);
       return callback(null, true);
     } else {
-      console.warn("❌ Blocked by CORS. Not in allowed_domains:", hostname);
-      return callback(new Error("CORS policy: Not allowed by allowed_domains"));
+      console.warn("❌ CORS blocked:", hostname);
+      return callback(new Error("Not allowed by CORS"));
     }
   } catch (err) {
-    console.error("CORS middleware error:", err);
-    callback(new Error("Internal server error during CORS check"));
+    console.error("CORS check failed:", err);
+    return callback(new Error("CORS internal error"));
   }
 };
 
-app.use(
-  cors({
-    origin: dynamicCors,
-    credentials: true
-  })
-);
+app.use(cors({
+  origin: dynamicCors,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
+// Optional but safe: respond to preflight OPTIONS requests quickly
+app.options("*", cors({
+  origin: dynamicCors,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 
 app.use(flash());
