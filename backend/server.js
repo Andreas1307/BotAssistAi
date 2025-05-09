@@ -2,7 +2,7 @@
 if(process.env.NODE_ENV !== "production") {
   require("dotenv").config()
 }
-const directory = "http://168.231.113.72:8090/"
+const directory = "http://168.231.113.72:8090"
 const express = require("express");
 const app = express()
 const nodemailer = require("nodemailer")
