@@ -84,17 +84,20 @@ initialisePassport(passport, getUserByEmail, getUserById)
 const devOrigins = new Set(["localhost", "127.0.0.1"]);
 
 const dynamicCors = async (origin, callback) => {
-  if (!origin) return callback(null, true);
+  if (!origin) return callback(null, true); // Allow non-browser requests (like Postman, curl)
 
   try {
     const hostname = new URL(origin).hostname;
 
     if (devOrigins.has(hostname)) {
+      console.log("✅ Dev CORS allowed for:", hostname);
       return callback(null, true);
     }
 
     const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-    const allowed = rows.some(row => hostname === row.domain || hostname.endsWith(`.${row.domain}`));
+    const allowed = rows.some(
+      row => hostname === row.domain || hostname.endsWith(`.${row.domain}`)
+    );
 
     if (allowed) {
       console.log("✅ CORS allowed for:", hostname);
@@ -104,25 +107,31 @@ const dynamicCors = async (origin, callback) => {
       return callback(new Error("Not allowed by CORS"));
     }
   } catch (err) {
-    console.error("CORS check failed:", err);
+    console.error("❌ CORS check failed:", err);
     return callback(new Error("CORS internal error"));
   }
 };
 
-app.use(cors({
-  origin: dynamicCors,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+// Wrapper to support async CORS origin
+const corsMiddleware = (req, res, next) => {
+  const origin = req.headers.origin;
 
-// Optional but safe: respond to preflight OPTIONS requests quickly
-app.options("*", cors({
-  origin: dynamicCors,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+  dynamicCors(origin, (err, allow) => {
+    if (err) {
+      res.status(403).send("CORS error: " + err.message);
+    } else {
+      cors({
+        origin: origin,
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      })(req, res, next);
+    }
+  });
+};
+
+app.use(corsMiddleware);
+
 
 
 app.use(flash());
