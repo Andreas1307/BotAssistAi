@@ -1,7 +1,7 @@
 (function () {
     const script = document.currentScript;
     const apiKey = script.getAttribute("api-key");
-  const directory = "http://168.231.113.72:8090"
+  const directory = "https://api.botassistai.com"
     if (!apiKey) {
       console.error("❌ Missing API key in <script> tag.");
       return;

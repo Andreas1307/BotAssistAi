@@ -37,7 +37,6 @@ const SignUp = () => {
     if (!loading) {
       const loadGoogleScript = () => {
         if (window.google?.accounts) {
-          console.log("✅ Google API already loaded.");
           setGoogleLoaded(true);
           initializeGoogleAuth();
           return;
@@ -45,8 +44,7 @@ const SignUp = () => {
   
         const existingScript = document.getElementById("google-signin-script");
         if (existingScript) {
-          console.log("✅ Google script already in DOM.");
-          initializeGoogleAuth(); // <<-- very important to call
+          initializeGoogleAuth();
           return;
         }
   
@@ -84,7 +82,7 @@ const SignUp = () => {
     
   const initializeGoogleAuth = () => {
     window.google.accounts.id.initialize({
-      client_id: "850376293780-ajetv489mi9k6quklq6ltdjuo8oh7m4n.apps.googleusercontent.com",
+      client_id: process.env.GOOGLE_CLIENT_ID,
       callback: handleGoogleResponse,
       ux_mode: "popup",
     });
@@ -111,7 +109,6 @@ const SignUp = () => {
         }
       );
          
-      console.log("✅ Google Sign-In button rendered.");
     } catch (error) {
       console.error("❌ Failed to render Google Sign-In button:", error);
       setTimeout(() => renderGoogleButton(), 1000); 
@@ -123,7 +120,7 @@ const SignUp = () => {
     setLoading(true);
     if (password.length < 8) {
       setError("Password must be at least 8 characters");
-      setLoading(false); // 👈 Add this
+      setLoading(false);
       return;
     }
     try {

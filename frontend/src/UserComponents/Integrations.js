@@ -66,7 +66,7 @@ const Integrations = () => {
     --ai-input: #000;
     --ai-border: #f8f8f8;
       </style>
-       <script src="http://botassistai.com/client-chatbot.js" api-key="YOUR API KEY HERE"></script>
+       <script src="https://api.botassistai.com" api-key="YOUR API KEY HERE"></script>
     `,
     },
     {
@@ -90,7 +90,7 @@ const Integrations = () => {
     
           // Dynamically load the chatbot script
           const script = document.createElement("script");
-          script.src = "http://botassistai.com/client-chatbot.js";
+          script.src = "https://api.botassistai.com";
           script.setAttribute("api-key", "YOUR_API_KEY_HERE");
           document.body.appendChild(script);
     
@@ -123,7 +123,7 @@ const Integrations = () => {
         document.head.appendChild(style);
     
         const script = document.createElement("script");
-        script.src = "http://botassistai.com/client-chatbot.js";
+        script.src = "https://api.botassistai.com";
         script.setAttribute("api-key", "YOUR_API_KEY_HERE");
         script.async = true;
         document.body.appendChild(script);
@@ -169,7 +169,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="http://botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE"></script>
+<script src="https://api.botassistai.com" api-key="YOUR_API_KEY_HERE"></script>
     `,
     },
     {
@@ -184,7 +184,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="http://botassistai.com/client-chatbot.js" api-key=\"YOUR_API_KEY_HERE\"></script>
+<script src="https://api.botassistai.com" api-key=\"YOUR_API_KEY_HERE\"></script>
 '; ?>
       `,
     },
@@ -200,7 +200,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="http://botassistai.com/client-chatbot.js" api-key=\"YOUR_API_KEY_HERE\"></script>
+<script src="https://api.botassistai.com" api-key=\"YOUR_API_KEY_HERE\"></script>
 '; ?>
       `,
     }, {
@@ -224,7 +224,7 @@ const Integrations = () => {
     
         // Inject script
         const script = document.createElement('script');
-        script.src = "http://botassistai.com/client-chatbot.js";
+        script.src = "https://api.botassistai.com";
         script.setAttribute("api-key", "YOUR_API_KEY_HERE");
         script.async = true;
         document.body.appendChild(script);
@@ -253,7 +253,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="http://botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE"></script>
+<script src="https://api.botassistai.com" api-key="YOUR_API_KEY_HERE"></script>
       `,
     },
   ];
@@ -317,7 +317,6 @@ const Integrations = () => {
         });
         const botEnabled = !!res.data.bool; // Ensure boolean
         setAiBot(botEnabled);
-        console.log("Bot status:", botEnabled);
       } catch (e) {
         console.log("Error getting the status of bot", e);
         showErrorNotification();

@@ -286,7 +286,6 @@ useEffect(() => {
       });
       const botEnabled = !!res.data.bool; // Ensure boolean
       setAiBot(botEnabled);
-      console.log("Bot status:", botEnabled);
     } catch (e) {
       console.log("Error getting the status of bot", e);
       showErrorNotification();
@@ -452,7 +451,6 @@ const fetchConvHistory = async (loadAllChats = false) => {
       params: { userId: user.user_id, page: loadAllChats ? undefined : page, limit: 20, all: loadAllChats }
     });
 
-    console.log(res.data.message); // Debugging
 
     if (loadAllChats) {
       setConvHistory(res.data.message);

@@ -50,14 +50,14 @@ const Header = () => {
               <FaFacebook />
             </a>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/botassistai/ "
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaInstagram />
             </a>
             <a
-              href="https://tiktok.com"
+              href="https://www.tiktok.com/@botassistai"
               target="_blank"
               rel="noopener noreferrer"
             >

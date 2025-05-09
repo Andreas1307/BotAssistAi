@@ -77,7 +77,6 @@ const LogIn = () => {
             console.error("Failed to load Google Sign-In SDK.");
           };
         } else {
-          console.log("Google script already in DOM.");
           initializeGoogleAuth();
         }
       };
@@ -91,7 +90,7 @@ const LogIn = () => {
   const initializeGoogleAuth = () => {
     if (window.google && window.google.accounts) {
       window.google.accounts.id.initialize({
-        client_id: "850376293780-ajetv489mi9k6quklq6ltdjuo8oh7m4n.apps.googleusercontent.com",
+        client_id: process.env.GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,
         ux_mode: "popup", // Use big popup
       });
@@ -121,7 +120,6 @@ const LogIn = () => {
   const handleGoogleResponse = async (response) => {
     if (response.credential) {
       const token = response.credential;
-      console.log("Sending token to backend:", token);
   
       try {
         const res = await axios.post(`${directory}/auth/google`, { token }, { withCredentials: true});

@@ -118,7 +118,7 @@ const SettingsPage = () => {
       setNewPassword("");
       setOldPassword("");
     } catch (e) {
-      //NOYIFY HERE
+      
       console.log("Error occured with changing the password");
     }
   };
@@ -140,7 +140,6 @@ const SettingsPage = () => {
           params: { userId: user.user_id },
           withCredentials: true, // ✅ Ensures cookies/auth headers are included
         });
-        console.log(res.data.user);
         if (res.data.user.google_id === null) {
           return setGoogle(true);
         } else {

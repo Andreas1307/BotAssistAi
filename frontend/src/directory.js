@@ -1,2 +1,3 @@
-const directory = "http://168.231.113.72:8090"
+const directory = "https://api.botassistai.com"
 export default directory
+

@@ -2,7 +2,7 @@
 if(process.env.NODE_ENV !== "production") {
   require("dotenv").config()
 }
-const directory = "http://168.231.113.72:8090"
+const directory = "https://api.botassistai.com"
 const express = require("express");
 const app = express()
 const nodemailer = require("nodemailer")
