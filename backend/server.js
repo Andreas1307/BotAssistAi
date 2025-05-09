@@ -66,6 +66,7 @@ const upload = multer({ storage: storage });
 app.use(express.static('public'));
 
 
+console.log("🚀 Backend updated and running");
 
 
 
