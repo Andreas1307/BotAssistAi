@@ -21,7 +21,7 @@ const UpgradeNow = ({ closePage }) => {
         const response = await axios.get(`${directory}/auth-check`, { withCredentials: true })
         setUser(response.data.user)
       } catch (e) {
-         ("Error fetching the user", e)
+         console.log("Error fetching the user", e)
       }
     }
     fetchUser()
