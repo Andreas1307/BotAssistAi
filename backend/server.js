@@ -1928,24 +1928,31 @@ res.json({ yesterdayMessages: result[0]?.total_messages || 0 });
 
 app.post("/user-training", async (req, res) => {
   const { username } = req.body;
-  console.log("USERNAME RECEIVED:", username); // Add this
+  console.log("USERNAME RECEIVED:", username);
 
   try {
-    const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username])
-    console.log("DB QUERY RESULT:", rows); // Add this
+    const [tables] = await pool.query("SHOW TABLES LIKE 'FAQ'");
+    if (tables.length === 0) {
+      console.warn("FAQ table does not exist.");
+      return res.status(200).json({ config: {} }); 
+    }
 
-    if(rows.length > 0) {
+    const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username]);
+    console.log("DB QUERY RESULT:", rows);
+
+    if (rows.length > 0) {
       const training = rows[0];
       return res.status(200).json({ config: training });
     } else {
       return res.status(200).json({ config: {} });
     }
 
-  } catch(e) {
-    console.error("DB QUERY ERROR:", e); // Add this
+  } catch (e) {
+    console.error("DB QUERY ERROR:", e);
     return res.status(500).json({ message: "An error occurred getting the user training data" });
   }
 });
+
 
 
 
