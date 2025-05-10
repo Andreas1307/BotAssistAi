@@ -16,7 +16,8 @@ import LogIn from './pages/LogIn';
 import Dashboard from './UserPages/dashboard';
 import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
-
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,14 @@ const router = createBrowserRouter([
   {
     path: "log-in",
     element: <LogIn />
+  },
+  {
+    path: "privacy-policy",
+    element: <PrivacyPolicy />
+  },
+  {
+    path: "/terms",
+    element: <TermsOfService />
   },
   {
     path: "*", 
