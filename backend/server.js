@@ -1879,7 +1879,7 @@ app.post("/user-training", async (req, res) => {
   console.log("USERNAME RECEIVED:", username);
 
   try {
-    const [tables] = await pool.query("SHOW TABLES LIKE 'FAQ'");
+    const [tables] = await pool.query("SHOW TABLES LIKE 'faq'");
     if (tables.length === 0) {
       console.warn("FAQ table does not exist.");
       return res.status(200).json({ config: {} }); 

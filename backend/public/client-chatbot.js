@@ -51,7 +51,7 @@
       bottom: 20px;
       right: 20px;
       width: 50px;
-      height: 50px;
+      height: 52px;
       border-radius: 50%;
       border: none;
       background: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
@@ -76,10 +76,10 @@
       color: #fff;
       z-index: 10000;
       cursor: pointer;
-      padding: 0px 16px 4px;
+      padding: 3px 16px 6px;
       border-radius: 22px;
       background: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-      font-weight: 500;
+      font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
     `;
     helperText.appendChild(closeIcon);
@@ -200,7 +200,8 @@
     logoContainer.target = "_blank"
     
     const logo = document.createElement("img");
-    logo.src = "https://img.favcars.com/bmw/6-series/bmw_6-series_2012_photos_8.jpg";
+    logo.src = "https://botassistai.com/img/logo.png"; // am pus logo, sa updatez codul
+    // si sa vad cum arata 
     logo.style.cssText = `
       height: 55px;
       object-fit: contain;
