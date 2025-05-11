@@ -24,7 +24,7 @@ const PayPalIntegration = () => {
   }, []);
 
   const initialOptions = {
-    clientId: "AeLR7-a4m24hwoJp_te4UIxc2XQvPdv_V4JH2MnUVaWvPfCyiSNwD-413nUW7CgYncWem8tJu4t0MBHt", // Replace this with a real sandbox/live ID
+    clientId: process.env.CLIENT_ID,
     currency: "EUR",
     components: "buttons",
   };
@@ -34,7 +34,7 @@ const PayPalIntegration = () => {
     layout: "vertical", // Button stacked vertically
     color: "blue", // Blue button color
     label: "paypal", // Label for the button
-    height: 40, // Height of the button
+    height: 50, // Height of the button
     tagline: false, // Disables tagline for the button (optional)
     maxWidth: "300px", // Maximum width for the button
     borderRadius: 20, // Rounded corners for the button
@@ -43,7 +43,6 @@ const PayPalIntegration = () => {
 
   return (
     <div>
-      <h2>Subscribe to BotAssist</h2>
 
       {isLoading ? (
         <p>Loading...</p>
