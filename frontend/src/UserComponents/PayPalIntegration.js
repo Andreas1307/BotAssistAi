@@ -30,10 +30,15 @@ const PayPalIntegration = () => {
   };
 
   const styles = {
-    shape: "rect",
-    layout: "vertical",
-    color: "blue",
-    label: "paypal",
+    shape: "rect", // Rectangular button shape
+    layout: "vertical", // Button stacked vertically
+    color: "blue", // Blue button color
+    label: "paypal", // Label for the button
+    height: 40, // Height of the button
+    tagline: false, // Disables tagline for the button (optional)
+    maxWidth: "300px", // Maximum width for the button
+    borderRadius: "20px", // Rounded corners for the button
+    padding: "10px", // Padding around the button content
   };
 
   return (
@@ -46,94 +51,45 @@ const PayPalIntegration = () => {
         <p>You must be logged in to see the payment button.</p>
       ) : (
         <PayPalScriptProvider options={initialOptions}>
-        {/* PayPal button */}
-        <PayPalButtons
-          style={styles}
-          forceReRender={[user.id]}
-          createOrder={(data, actions) => {
-            return actions.order.create({
-              purchase_units: [
-                {
-                  amount: {
-                    value: "20.00",
+          <PayPalButtons
+            style={styles}
+            forceReRender={[user.id]} // re-render if user ID changes
+            createOrder={(data, actions) => {
+              return actions.order.create({
+                purchase_units: [
+                  {
+                    amount: {
+                      value: "20.00",
+                    },
+                    custom_id: `${user.id}`, // attach user ID
                   },
-                  custom_id: `${user.id}`,
-                },
-              ],
-            });
-          }}
-          onApprove={async (data, actions) => {
-            const details = await actions.order.capture();
-            console.log("✅ PayPal Payment successful:", details);
-      
-            try {
-              await axios.post(
-                `${directory}/paypal/webhook`,
-                {
-                  userId: user.id,
-                  orderID: data.orderID,
-                  payerID: data.payerID,
-                  paymentDetails: details,
-                },
-                { withCredentials: true }
-              );
-            } catch (err) {
-              console.error("❌ Failed to notify server:", err);
-            }
-          }}
-          onError={(err) => {
-            console.error("❌ PayPal Checkout error:", err);
-          }}
-        />
-      
-        {/* Debit or Credit Card button */}
-        <PayPalButtons
-          fundingSource="card"
-          style={{
-            color: "black", // ✅ valid color for card button
-            shape: "pill",
-            label: "pay",
-            layout: "vertical",
-          }}
-          forceReRender={[user.id]}
-          createOrder={(data, actions) => {
-            return actions.order.create({
-              purchase_units: [
-                {
-                  amount: {
-                    value: "20.00",
-                  },
-                  custom_id: `${user.id}`,
-                },
-              ],
-            });
-          }}
-          onApprove={async (data, actions) => {
-            const details = await actions.order.capture();
-            console.log("✅ Card Payment successful:", details);
-      
-            try {
-              await axios.post(
-                `${directory}/paypal/webhook`,
-                {
-                  userId: user.id,
-                  orderID: data.orderID,
-                  payerID: data.payerID,
-                  paymentDetails: details,
-                },
-                { withCredentials: true }
-              );
-            } catch (err) {
-              console.error("❌ Failed to notify server:", err);
-            }
-          }}
-          onError={(err) => {
-            console.error("❌ Card Checkout error:", err);
-          }}
-        />
-      </PayPalScriptProvider>
-      
+                ],
+              });
+            }}
+            onApprove={async (data, actions) => {
+              const details = await actions.order.capture();
+              console.log("✅ Payment successful:", details);
 
+              try {
+                await axios.post(
+                  `${directory}/paypal/webhook`,
+                  {
+                    userId: user.id,
+                    orderID: data.orderID,
+                    payerID: data.payerID,
+                    paymentDetails: details,
+                  },
+                  { withCredentials: true }
+                );
+              } catch (err) {
+                console.error("❌ Failed to notify server:", err);
+              }
+            }}
+            onError={(err) => {
+              console.error("❌ PayPal Checkout error:", err);
+            }}
+          />
+        </PayPalScriptProvider>
       )}
     </div>
   );
