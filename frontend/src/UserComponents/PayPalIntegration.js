@@ -37,7 +37,7 @@ const PayPalIntegration = () => {
     height: 40, // Height of the button
     tagline: false, // Disables tagline for the button (optional)
     maxWidth: "300px", // Maximum width for the button
-    borderRadius: "20px", // Rounded corners for the button
+    borderRadius: 20, // Rounded corners for the button
     padding: "10px", // Padding around the button content
   };
 
