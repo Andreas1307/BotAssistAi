@@ -66,8 +66,6 @@ const upload = multer({ storage: storage });
 app.use(express.static('public'));
 
 
-console.log("🚀 Backend updated and running");
-
 
 
 const getUserByEmail = async (email) => {
@@ -152,118 +150,68 @@ app.use(passport.session());
 
 
 
-const PADDLE_WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;  // add after production
 
-// Paddle webhook endpoint
-app.post('/paddle/webhook', async (req, res) => {
-    const data = req.body;
-    console.log("✅ Received Paddle webhook:", JSON.stringify(data, null, 2));
+app.post("/paypal/webhook", async (req, res) => {
+  const { orderID, userId } = req.body;
 
-    // ✅ Verify the webhook signature (IMPORTANT)
-    if (!verifyPaddleWebhook(req)) {
-        console.log("❌ Invalid webhook signature!");
-        return res.status(400).send('Invalid signature');
-    }
-  
-    const eventType = data.event_type || data.alert_name; // Paddle might send 'alert_name'
-    const eventData = data.data || data; // sometimes data is nested in .data
-    
-    if (!eventType) {
-      console.error("❌ Event type is missing");
-      return res.status(400).send('Event type is missing');
+  if (!orderID || !userId) {
+    return res.status(400).json({ error: "Missing orderID or userId" });
   }
-    console.log(`📢 Event type: ${eventType}`);
 
-    const userEmail = eventData.customer_email;
-    const subscriptionId = eventData.subscription_id;
-    const paymentStatus = eventData.status || eventData.subscription_status;
+  try {
+    // Step 1: Get access token from PayPal
+    const auth = await axios({
+      url: "https://api-m.paypal.com/v1/oauth2/token",
+      method: "post",
+      auth: {
+        username: process.env.PAYPAL_CLIENT_ID,
+        password: process.env.PAYPAL_SECRET,
+      },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      data: "grant_type=client_credentials",
+    });
 
+    const accessToken = auth.data.access_token;
 
-    const userId = eventData.custom_data?.userId;
-    
-    if (!userId) {
-      console.log("❌ userId not found in webhook data");
-      return res.status(400).send('userId missing');
+    // Step 2: Verify the order
+    const orderDetails = await axios.get(
+      `https://api-m.paypal.com/v2/checkout/orders/${orderID}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const status = orderDetails.data.status;
+    if (status !== "COMPLETED") {
+      return res.status(400).json({ error: "Payment not completed" });
+    }
+
+    // Step 3: Update user's subscription
+    const now = new Date();
+    const expiry = new Date(now);
+    expiry.setDate(now.getDate() + 30); // 30-day subscription
+
+    const [result] = await pool.query(
+      `UPDATE users 
+       SET subscription_plan = ?, subscribed_at = ?, subscription_expiry = ? 
+       WHERE user_id = ?`,
+      ["Pro", now, expiry, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ message: "Subscription updated successfully" });
+  } catch (err) {
+    console.error("PayPal webhook error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
-    // ✅ Example: Handle a successful payment
-    if (
-        eventType === 'payment_succeeded' || 
-        eventType === 'subscription_created' || 
-        eventType === 'subscription_payment_succeeded'
-    ) {
-        console.log(`💰 Payment succeeded for user: ${userEmail}`);
-        const date = new Date();
-        const dateNow = date.toISOString().slice(0, 19).replace("T", " "); // Format to 'YYYY-MM-DD HH:MM:SS'
-        date.setDate(date.getDate() + 30);
-        const dateIn30Days = date.toISOString().slice(0, 19).replace("T", " ");
-        let type = "Pro";
-
-        try {
-
-          const [result] = await pool.query(
-              "UPDATE users SET subscription_plan = ?, subscribed_at = ?, subscription_expiry = ? WHERE user_id = ?",
-              [type, dateNow, dateIn30Days, userId]
-          );
-
-          if (result.affectedRows === 0) {
-              return res.status(404).json({ message: "User not found" });
-          }
-
-          return res.status(200).json({ message: "Membership updated" });
-      } catch (e) {
-          console.error("Error occurred with /payed-membership:", e);
-          return res.status(500).json({ message: "An error occurred while updating membership" });
-      }
-    }
- 
-    if (
-        eventType === 'subscription_cancelled' || 
-        eventType === 'subscription_paused' ||
-        eventType === 'subscription_payment_failed'
-    ) {
-        console.log(`⚠️ Subscription updated/cancelled for: ${userEmail}`);
-        let type = "Free"
-        try {
-
-          const [result] = await pool.query(
-            "UPDATE users SET subscription_plan = ?, subscribed_at = NULL, subscription_expiry = NULL WHERE user_id = ?",
-            [type, userId]
-        );
-        
-
-          if (result.affectedRows === 0) {
-              return res.status(404).json({ message: "User not found" });
-          }
-
-          return res.status(200).json({ message: "Membership failed sucess" });
-      } catch (e) {
-          console.error("Error occurred with /payed-membership , the owl one:", e);
-          return res.status(500).json({ message: "An error occurred while failing membership" });
-      }
-      
-    }
-    res.status(200).send('OK');
 });
-
-function verifyPaddleWebhook(req) {
-    const signature = req.headers['paddle-signature'];
-    if (!signature) {
-        console.warn('No Paddle signature found in headers.');
-        return false;
-    }
-
-    const computedSignature = crypto
-        .createHmac('sha256', PADDLE_WEBHOOK_SECRET)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
-
-    const isValid = signature === computedSignature;
-    if (!isValid) {
-        console.warn(`Expected signature: ${computedSignature}, got: ${signature}`);
-    }
-    return isValid;
-}
-
 
 
 

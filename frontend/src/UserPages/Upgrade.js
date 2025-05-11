@@ -3,7 +3,7 @@ import { FaRocket, FaCheckCircle, FaTimesCircle, FaStar, FaBolt, FaShieldAlt } f
 import "../styling/upgrade.css"; // Make sure to style this with Tailwind or CSS
 import axios from "axios";
 import directory from '../directory';
-import PaddleCheckout from "../UserComponents/PaddleCheckout";
+import PayPalIntegration from "../UserComponents/PayPalIntegration";
 import { Link } from "react-router-dom"
 const UpgradeNow = ({ closePage }) => {
   const [timer, setTimer] = useState(60);
@@ -80,7 +80,7 @@ const UpgradeNow = ({ closePage }) => {
 
     </div>
 
-    <PaddleCheckout />
+    <PayPalIntegration />
      <Link to={`${user?.username}/dashboard`}> <button  className="back-btn">⬅️ Back</button></Link>
      
     </div>
