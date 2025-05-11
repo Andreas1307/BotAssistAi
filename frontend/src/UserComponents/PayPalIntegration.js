@@ -24,7 +24,7 @@ const PayPalIntegration = () => {
   }, []);
 
   const initialOptions = {
-    clientId: process.env.CLIENT_ID,
+    clientId: "AeLR7-a4m24hwoJp_te4UIxc2XQvPdv_V4JH2MnUVaWvPfCyiSNwD-413nUW7CgYncWem8tJu4t0MBHt",
     currency: "EUR",
     components: "buttons",
   };
