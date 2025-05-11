@@ -24,7 +24,7 @@ const PayPalIntegration = () => {
   }, []);
 
   const initialOptions = {
-    clientId: "BAAqUoXY2ni3sDUU2pXfvs5bPQJ1I2YcG0GrIClwIuTuVOjvS5EHrXESFqBFV3AGh3BWcskm6uyisZBiQ8", // Replace this with a real sandbox/live ID
+    clientId: "AeLR7-a4m24hwoJp_te4UIxc2XQvPdv_V4JH2MnUVaWvPfCyiSNwD-413nUW7CgYncWem8tJu4t0MBHt", // Replace this with a real sandbox/live ID
     currency: "EUR",
     intent: "CAPTURE",
     components: "buttons",
