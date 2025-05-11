@@ -193,7 +193,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding-top: 10px;
+      padding-top: 5px;
       background-color: transparent;
     `;
     logoContainer.href = "https://www.botassistai.com/";
@@ -202,14 +202,15 @@
     const logo = document.createElement("img");
     logo.src = "https://botassistai.com/img/BigLogo.png"; 
     logo.style.cssText = `
-      height: 55px;
+      height: 60px;
       object-fit: contain;
       border-radius: 6px;
     `;
     
     logoContainer.appendChild(logo);
     chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
-    
+    chatbotBox.appendChild(satisfactionDiv);
+
 
 
     const chatLog = document.createElement("div");
@@ -235,7 +236,7 @@
     const input = document.createElement("input");
     input.type = "text";
     input.placeholder = "Ask something...";
-    input.style.cssText = "padding: 11.1px; border: none; width: 70%; background: transparent; border-bottom-right-radius: 13px; border-bottom-left-radius: 13px;";
+    input.style.cssText = "padding: 12.5px; border: none; width: 70%; background: transparent; border-bottom-right-radius: 13px; border-bottom-left-radius: 13px;";
     input.onfocus = () => input.style.outline = "none";
   
     const button = document.createElement("button");
