@@ -2396,7 +2396,7 @@ try {
        fine_tuning_data = ?, businessName = ?, uploaded_file = ?, webUrl = ?, phoneNum = ?, last_updated = NOW() WHERE user_id = ?`,
       [
         userName, faqQuestion, faqAnswer, categories,
-        responseTone, responseDelay, escalationThreshold,
+        responseTone, parseInt(responseDelay) || 500, escalationThreshold,
         businessContext, avoidTopics, languages,
         fineTuningData, businessName, fileReference, webUrl, phoneNum, userId
       ]
@@ -2426,7 +2426,7 @@ try {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId, userName, faqQuestion, faqAnswer, categories,
-        responseTone, responseDelay, escalationThreshold,
+        responseTone, parseInt(responseDelay) || 500, escalationThreshold,
         businessContext, avoidTopics, languages,
         fineTuningData, businessName, fileReference, phoneNum
       ]

@@ -131,7 +131,7 @@ const setFieldValue = (field, value) => {
     const formData = new FormData();
     formData.append("file", file); // Attach file
     formData.append("responseTone", responseTone);
-    formData.append("responseDelay", userData.response_delay_ms);
+    formData.append("responseDelay", userData.response_delay_ms ?? 500);
     formData.append("escalationThreshold", userData.escalation_threshold);
     formData.append("businessContext", userData.business_context);
     formData.append("businessName", userData.businessName);
