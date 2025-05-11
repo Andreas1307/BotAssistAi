@@ -90,7 +90,7 @@ const LogIn = () => {
   const initializeGoogleAuth = () => {
     if (window.google && window.google.accounts) {
       window.google.accounts.id.initialize({
-        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,
         ux_mode: "popup", // Use big popup
       });
