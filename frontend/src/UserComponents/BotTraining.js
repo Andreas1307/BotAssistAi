@@ -85,7 +85,6 @@ const SupportBotCustomization = () => {
           { username: user.username },
           { withCredentials: true }
         );
-  //hellooo
         setUserData(response.data.config || {}); 
         
       } catch (e) {

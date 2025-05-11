@@ -216,7 +216,7 @@ const Contact = () => {
           <button type="submit">🚀 Send Message</button>
         </form>
         </div>
-        <img src={`${process.env.PUBLIC_URL}/img/bigLogo.png`} />
+        <img src={`${process.env.PUBLIC_URL}/img/BigLogo.png`} />
       </div>
 
       

@@ -107,6 +107,9 @@ const SettingsPage = () => {
     hour12: true, // Change to false for 24-hour format
   });
 
+  
+
+
   const saveData = async () => {
     try {
       const response = await axios.post(
@@ -201,24 +204,21 @@ const SettingsPage = () => {
         </div>
 
         <div className="form-group">
-          <label>Membership Expiry:</label>
-          <input
-            type="text"
-            value={
-              user
-                ? new Date(user.subscription_expiry).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }
-                  )
-                : "-"
-            }
-            readOnly
-          />
-        </div>
+  <label>Membership Expiry:</label>
+  <input
+    type="text"
+    value={
+      user?.subscription_expiry
+        ? new Date(user.subscription_expiry).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "Never"
+    }
+    readOnly
+  />
+</div>
 
        
 

@@ -200,8 +200,7 @@
     logoContainer.target = "_blank"
     
     const logo = document.createElement("img");
-    logo.src = "https://botassistai.com/img/logo.png"; // am pus logo, sa updatez codul
-    // si sa vad cum arata 
+    logo.src = "https://botassistai.com/img/BigLogo.png"; 
     logo.style.cssText = `
       height: 55px;
       object-fit: contain;
