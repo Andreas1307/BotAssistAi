@@ -1885,7 +1885,7 @@ app.post("/user-training", async (req, res) => {
       return res.status(200).json({ config: {} }); 
     }
 
-    const [rows] = await pool.query("SELECT * FROM FAQ WHERE username = ?", [username]);
+    const [rows] = await pool.query("SELECT * FROM faq WHERE username = ?", [username]);
     console.log("DB QUERY RESULT:", rows);
 
     if (rows.length > 0) {
