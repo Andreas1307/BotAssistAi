@@ -2382,7 +2382,7 @@ const {
 } = req.body;
 
 const fileReference = req.file ? req.file.path : null; // Get the uploaded file
-
+const parsedThreshold = parseFloat(escalationThreshold) || 0.7;
 
 try {
   const [existingUser] = await pool.query("SELECT * FROM faq WHERE user_id = ?", [userId]);
@@ -2396,7 +2396,7 @@ try {
        fine_tuning_data = ?, businessName = ?, uploaded_file = ?, webUrl = ?, phoneNum = ?, last_updated = NOW() WHERE user_id = ?`,
       [
         userName, faqQuestion, faqAnswer, categories,
-        responseTone, parseInt(responseDelay) || 500, escalationThreshold,
+        responseTone, parseInt(responseDelay) || 500, parsedThreshold,
         businessContext, avoidTopics, languages,
         fineTuningData, businessName, fileReference, webUrl, phoneNum, userId
       ]
@@ -2426,7 +2426,7 @@ try {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId, userName, faqQuestion, faqAnswer, categories,
-        responseTone, parseInt(responseDelay) || 500, escalationThreshold,
+        responseTone, parseInt(responseDelay) || 500, parsedThreshold,
         businessContext, avoidTopics, languages,
         fineTuningData, businessName, fileReference, phoneNum
       ]
