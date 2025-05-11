@@ -46,45 +46,93 @@ const PayPalIntegration = () => {
         <p>You must be logged in to see the payment button.</p>
       ) : (
         <PayPalScriptProvider options={initialOptions}>
-          <PayPalButtons
-            style={styles}
-            forceReRender={[user.id]} // re-render if user ID changes
-            createOrder={(data, actions) => {
-              return actions.order.create({
-                purchase_units: [
-                  {
-                    amount: {
-                      value: "20.00",
-                    },
-                    custom_id: `${user.id}`, // attach user ID
-                  },
-                ],
-              });
-            }}
-            onApprove={async (data, actions) => {
-              const details = await actions.order.capture();
-              console.log("✅ Payment successful:", details);
+  {/* PayPal button */}
+  <PayPalButtons
+    style={styles}
+    forceReRender={[user.id]} // re-render if user ID changes
+    createOrder={(data, actions) => {
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: {
+              value: "20.00",
+            },
+            custom_id: `${user.id}`, // attach user ID
+          },
+        ],
+      });
+    }}
+    onApprove={async (data, actions) => {
+      const details = await actions.order.capture();
+      console.log("✅ PayPal Payment successful:", details);
 
-              try {
-                await axios.post(
-                  `${directory}/paypal/webhook`,
-                  {
-                    userId: user.id,
-                    orderID: data.orderID,
-                    payerID: data.payerID,
-                    paymentDetails: details,
-                  },
-                  { withCredentials: true }
-                );
-              } catch (err) {
-                console.error("❌ Failed to notify server:", err);
-              }
-            }}
-            onError={(err) => {
-              console.error("❌ PayPal Checkout error:", err);
-            }}
-          />
-        </PayPalScriptProvider>
+      try {
+        await axios.post(
+          `${directory}/paypal/webhook`,
+          {
+            userId: user.id,
+            orderID: data.orderID,
+            payerID: data.payerID,
+            paymentDetails: details,
+          },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        console.error("❌ Failed to notify server:", err);
+      }
+    }}
+    onError={(err) => {
+      console.error("❌ PayPal Checkout error:", err);
+    }}
+  />
+
+  {/* Debit or Credit Card button */}
+  <PayPalButtons
+    fundingSource="card"
+    style={{
+      color: "silver",
+      shape: "pill",
+      label: "pay",
+      layout: "vertical",
+    }}
+    forceReRender={[user.id]}
+    createOrder={(data, actions) => {
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: {
+              value: "20.00",
+            },
+            custom_id: `${user.id}`,
+          },
+        ],
+      });
+    }}
+    onApprove={async (data, actions) => {
+      const details = await actions.order.capture();
+      console.log("✅ Card Payment successful:", details);
+
+      try {
+        await axios.post(
+          `${directory}/paypal/webhook`,
+          {
+            userId: user.id,
+            orderID: data.orderID,
+            payerID: data.payerID,
+            paymentDetails: details,
+          },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        console.error("❌ Failed to notify server:", err);
+      }
+    }}
+    onError={(err) => {
+      console.error("❌ Card Checkout error:", err);
+    }}
+  />
+</PayPalScriptProvider>
+
       )}
     </div>
   );
