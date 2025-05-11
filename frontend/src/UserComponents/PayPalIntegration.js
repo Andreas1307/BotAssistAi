@@ -26,7 +26,6 @@ const PayPalIntegration = () => {
   const initialOptions = {
     clientId: "AeLR7-a4m24hwoJp_te4UIxc2XQvPdv_V4JH2MnUVaWvPfCyiSNwD-413nUW7CgYncWem8tJu4t0MBHt", // Replace this with a real sandbox/live ID
     currency: "EUR",
-    intent: "CAPTURE",
     components: "buttons",
   };
 
@@ -90,5 +89,4 @@ const PayPalIntegration = () => {
     </div>
   );
 };
-
 export default PayPalIntegration;
