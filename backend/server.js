@@ -195,7 +195,7 @@ app.post("/paypal/webhook", async (req, res) => {
 
     // Optional: Validate paid amount
     const amount = order.purchase_units?.[0]?.amount?.value;
-    if (amount !== "0.00") {  // Ensure this matches your expected payment amount
+    if (amount !== "0.01") {  // Ensure this matches your expected payment amount
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
