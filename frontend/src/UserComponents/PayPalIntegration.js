@@ -72,7 +72,7 @@ const PayPalIntegration = () => {
                 await axios.post(
                   `${directory}/paypal/webhook`,
                   {
-                    userId: user.id,
+                    userId: user.user_id,
                     orderID: data.orderID,
                     payerID: data.payerID,
                     paymentDetails: details,
