@@ -154,12 +154,17 @@ app.use(passport.session());
 app.post("/paypal/webhook", async (req, res) => {
   const { orderID, userId } = req.body;
 
+  console.log("Received webhook request:", req.body);  // Debugging incoming request
+
   if (!orderID || !userId) {
+    console.log("Error: Missing orderID or userId");  // Debugging missing orderID or userId
     return res.status(400).json({ error: "Missing orderID or userId" });
   }
 
   try {
     // Step 1: Get PayPal access token
+    console.log("Step 1: Requesting PayPal access token...");
+
     const auth = await axios({
       url: "https://api-m.paypal.com/v1/oauth2/token",
       method: "post",
@@ -174,8 +179,11 @@ app.post("/paypal/webhook", async (req, res) => {
     });
 
     const accessToken = auth.data.access_token;
+    console.log("Received PayPal access token:", accessToken);  // Debugging access token
 
     // Step 2: Get order details
+    console.log("Step 2: Fetching order details from PayPal...");
+
     const orderDetails = await axios.get(
       `https://api-m.paypal.com/v2/checkout/orders/${orderID}`,
       {
@@ -190,18 +198,23 @@ app.post("/paypal/webhook", async (req, res) => {
     console.log("Received order details:", order); // Debugging line to check the order details
 
     if (order.status !== "COMPLETED") {
+      console.log("Error: Payment not completed");  // Debugging payment status
       return res.status(400).json({ error: "Payment not completed" });
     }
 
     // Optional: Validate paid amount
     const amount = order.purchase_units?.[0]?.amount?.value;
-    if (amount !== "0.01") {  // Ensure this matches your expected payment amount
+    console.log("Paid amount from PayPal:", amount);  // Debugging paid amount
+    if (amount !== "0.01") {
+      console.log("Error: Incorrect payment amount");  // Debugging incorrect amount
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
     // Optional: Validate user ID matches custom_id (added in frontend)
     const customId = order.purchase_units?.[0]?.custom_id;
+    console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
     if (customId !== userId) {
+      console.log("Error: User ID mismatch in PayPal order");  // Debugging user ID mismatch
       return res.status(400).json({ error: "User ID mismatch in PayPal order" });
     }
 
@@ -209,6 +222,7 @@ app.post("/paypal/webhook", async (req, res) => {
     const now = new Date();
     const expiry = new Date(now);
     expiry.setDate(now.getDate() + 30); // 30-day subscription
+    console.log("Updating subscription for user:", userId);  // Debugging subscription update
 
     const [result] = await pool.query(
       `UPDATE users 
@@ -217,16 +231,21 @@ app.post("/paypal/webhook", async (req, res) => {
       ["Pro", now, expiry, userId]
     );
 
+    console.log("Database update result:", result);  // Debugging database result
+
     if (result.affectedRows === 0) {
+      console.log("Error: User not found");  // Debugging user not found in database
       return res.status(404).json({ error: "User not found" });
     }
 
+    console.log("Subscription updated successfully!");  // Debugging successful update
     res.status(200).json({ message: "✅ Subscription updated successfully" });
   } catch (err) {
-    console.error("❌ PayPal webhook error:", err.response?.data || err.message);
+    console.error("❌ PayPal webhook error:", err.response?.data || err.message);  // Debugging catch block
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
+
 
 
 
