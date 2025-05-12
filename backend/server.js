@@ -187,13 +187,15 @@ app.post("/paypal/webhook", async (req, res) => {
 
     const order = orderDetails.data;
 
+    console.log("Received order details:", order); // Debugging line to check the order details
+
     if (order.status !== "COMPLETED") {
       return res.status(400).json({ error: "Payment not completed" });
     }
 
     // Optional: Validate paid amount
     const amount = order.purchase_units?.[0]?.amount?.value;
-    if (amount !== "0.01") {
+    if (amount !== "0.00") {  // Ensure this matches your expected payment amount
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
@@ -225,6 +227,7 @@ app.post("/paypal/webhook", async (req, res) => {
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
+
 
 
 
