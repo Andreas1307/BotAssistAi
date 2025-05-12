@@ -159,7 +159,7 @@ app.post("/paypal/webhook", async (req, res) => {
   }
 
   try {
-    // Step 1: Get access token from PayPal
+    // Step 1: Get PayPal access token
     const auth = await axios({
       url: "https://api-m.paypal.com/v1/oauth2/token",
       method: "post",
@@ -175,7 +175,7 @@ app.post("/paypal/webhook", async (req, res) => {
 
     const accessToken = auth.data.access_token;
 
-    // Step 2: Verify the order
+    // Step 2: Get order details
     const orderDetails = await axios.get(
       `https://api-m.paypal.com/v2/checkout/orders/${orderID}`,
       {
@@ -185,12 +185,25 @@ app.post("/paypal/webhook", async (req, res) => {
       }
     );
 
-    const status = orderDetails.data.status;
-    if (status !== "COMPLETED") {
+    const order = orderDetails.data;
+
+    if (order.status !== "COMPLETED") {
       return res.status(400).json({ error: "Payment not completed" });
     }
 
-    // Step 3: Update user's subscription
+    // Optional: Validate paid amount
+    const amount = order.purchase_units?.[0]?.amount?.value;
+    if (amount !== "0.01") {
+      return res.status(400).json({ error: "Incorrect payment amount" });
+    }
+
+    // Optional: Validate user ID matches custom_id (added in frontend)
+    const customId = order.purchase_units?.[0]?.custom_id;
+    if (customId !== userId) {
+      return res.status(400).json({ error: "User ID mismatch in PayPal order" });
+    }
+
+    // Step 3: Update subscription
     const now = new Date();
     const expiry = new Date(now);
     expiry.setDate(now.getDate() + 30); // 30-day subscription
@@ -206,12 +219,13 @@ app.post("/paypal/webhook", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ message: "Subscription updated successfully" });
+    res.status(200).json({ message: "✅ Subscription updated successfully" });
   } catch (err) {
-    console.error("PayPal webhook error:", err.response?.data || err.message);
+    console.error("❌ PayPal webhook error:", err.response?.data || err.message);
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
+
 
 
 

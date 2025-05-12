@@ -34,7 +34,7 @@ const PayPalIntegration = () => {
     layout: "vertical", // Button stacked vertically
     color: "blue", // Blue button color
     label: "paypal", // Label for the button
-    height: 50, // Height of the button
+    height: 45, // Height of the button
     tagline: false, // Disables tagline for the button (optional)
     maxWidth: "300px", // Maximum width for the button
     borderRadius: 20, // Rounded corners for the button
@@ -58,7 +58,7 @@ const PayPalIntegration = () => {
                 purchase_units: [
                   {
                     amount: {
-                      value: "00.20",
+                      value: "00.01",
                     },
                     custom_id: `${user.id}`, 
                   },
@@ -67,7 +67,6 @@ const PayPalIntegration = () => {
             }}
             onApprove={async (data, actions) => {
               const details = await actions.order.capture();
-              console.log("✅ Payment successful:", details);
 
               try {
                 await axios.post(
