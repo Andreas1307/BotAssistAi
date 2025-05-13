@@ -60,8 +60,8 @@ const PayPalIntegration = () => {
                     amount: {
                       value: "00.01",
                     },
-                    custom_id: `${user.id}`, 
-                  },
+                    custom_id: `${user.user_id}`, 
+                  }, // sa updatez codul si sa vad daca merge
                 ],
               });
             }}
