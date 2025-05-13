@@ -213,7 +213,7 @@ app.post("/paypal/webhook", async (req, res) => {
     // Optional: Validate user ID matches custom_id (added in frontend)
     const customId = order.purchase_units?.[0]?.custom_id;
     console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
-    if (customId !== userId) {
+    if (customId !== String(userId)) {
       console.log("Error: User ID mismatch in PayPal order");  // Debugging user ID mismatch
       return res.status(400).json({ error: "User ID mismatch in PayPal order" });
     }
