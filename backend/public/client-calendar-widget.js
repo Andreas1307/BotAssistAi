@@ -602,136 +602,152 @@ const sendBookingRequest = async (bookingData) => {
           right: ''
         },
         dateClick: async function (info) {
-          // Ensure required variables are defined
-          const overlay = document.createElement("div");
-          overlay.classList.add("overlay-calendar");
+          try {
+            // Clear any existing overlays
+            const existingOverlay = document.querySelector(".overlay-calendar");
+            if (existingOverlay) existingOverlay.remove();
         
-          // Optional note element (add this only if required)
-          const note = document.createElement("p");
-          note.classList.add("note-text");
-          note.innerText = "Please select a time slot to proceed with booking.";
+            // Create overlay container
+            const overlay = document.createElement("div");
+            overlay.classList.add("overlay-calendar");
         
-          const overlayTitle = document.createElement("h2");
-          overlayTitle.classList.add("overlay-title");
-          overlayTitle.innerHTML = `
-            Available times for <strong>${service}</strong><br>
-            with <strong>${staff}</strong> on <strong>${info.dateStr}</strong>
-          `;
-          overlayTitle.style.cssText = `
-            font-size: 25px;
-            font-weight: 500;
-            margin-top: 0px;
-          `;
-          overlay.appendChild(overlayTitle);
-          overlay.appendChild(note);
+            // Title
+            const overlayTitle = document.createElement("h2");
+            overlayTitle.classList.add("overlay-title");
+            overlayTitle.innerHTML = `
+              Available times for <strong>${service}</strong><br>
+              with <strong>${staff}</strong> on <strong>${info.dateStr}</strong>
+            `;
+            overlayTitle.style.cssText = `
+              font-size: 25px;
+              font-weight: 500;
+              margin-top: 0px;
+            `;
+            overlay.appendChild(overlayTitle);
         
-          let availableTimes = await getAvailableTimes(service, staff, info.dateStr);
-          if (!availableTimes || availableTimes.length === 0) {
-            availableTimes = [`No available times on ${info.dateStr}`];
-          }
+            // Note
+            const note = document.createElement("p");
+            note.classList.add("note-text");
+            note.innerText = "Please select a time slot to proceed with booking.";
+            overlay.appendChild(note);
         
-          const availableTimesDiv = document.createElement("div");
-          availableTimesDiv.classList.add("available-times");
-          overlay.appendChild(availableTimesDiv);
+            // Fetch available times
+            let availableTimes = await getAvailableTimes(service, staff, info.dateStr);
+            if (!availableTimes || availableTimes.length === 0) {
+              availableTimes = [`No available times on ${info.dateStr}`];
+            }
         
-          let selectedTime = null;
+            const availableTimesDiv = document.createElement("div");
+            availableTimesDiv.classList.add("available-times");
+            overlay.appendChild(availableTimesDiv);
         
-          availableTimes.forEach(time => {
-            const span = document.createElement("span");
-            span.classList.add("time-element");
-            span.innerText = time;
+            let selectedTime = null;
+            let formDisplayed = false;
         
-            span.addEventListener("click", () => {
-              selectedTime = time;
+            availableTimes.forEach(time => {
+              const span = document.createElement("span");
+              span.classList.add("time-element");
+              span.innerText = time;
         
-              // Clear previous selections
-              document.querySelectorAll(".time-element.selected-time").forEach(el => {
-                el.classList.remove("selected-time");
+              span.addEventListener("click", () => {
+                if (time.includes("No available")) return;
+        
+                selectedTime = time;
+        
+                // Highlight selected time
+                document.querySelectorAll(".time-element.selected-time").forEach(el => {
+                  el.classList.remove("selected-time");
+                });
+                span.classList.add("selected-time");
+        
+                // Display form only once
+                if (!formDisplayed) {
+                  formDisplayed = true;
+        
+                  const userDetails = document.createElement("form");
+                  userDetails.classList.add("user-details");
+        
+                  const nameInput = document.createElement("input");
+                  nameInput.type = "text";
+                  nameInput.placeholder = "Enter Your Name";
+                  nameInput.required = true;
+        
+                  const emailInput = document.createElement("input");
+                  emailInput.type = "email";
+                  emailInput.placeholder = "Enter Your E-mail";
+                  emailInput.required = true;
+        
+                  const phoneInput = document.createElement("input");
+                  phoneInput.type = "tel";
+                  phoneInput.placeholder = "Enter your phone number";
+                  phoneInput.required = true;
+        
+                  const specialRequirements = document.createElement("textarea");
+                  specialRequirements.rows = 3;
+                  specialRequirements.placeholder = "Enter any special requirements";
+        
+                  const bookBtn = document.createElement("button");
+                  bookBtn.classList.add("bookBtn");
+                  bookBtn.type = "submit";
+                  bookBtn.innerText = "Book";
+        
+                  userDetails.appendChild(nameInput);
+                  userDetails.appendChild(emailInput);
+                  userDetails.appendChild(phoneInput);
+                  userDetails.appendChild(specialRequirements);
+                  userDetails.appendChild(bookBtn);
+        
+                  userDetails.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+        
+                    const bookingData = {
+                      apiKey,
+                      service,
+                      staff,
+                      date: info.dateStr,
+                      selectedTime,
+                      name: nameInput.value,
+                      email: emailInput.value,
+                      phone: phoneInput.value,
+                      specialRequirements: specialRequirements.value
+                    };
+        
+                    await sendBookingRequest(bookingData);
+                  });
+        
+                  overlay.appendChild(userDetails);
+                }
               });
         
-              span.classList.add("selected-time");
-        
-              // Show form only once
-              let userDetails = document.querySelector(".user-details");
-              if (!userDetails) {
-                userDetails = document.createElement("form");
-                userDetails.classList.add("user-details");
-        
-                const nameInput = document.createElement("input");
-                nameInput.required = true;
-                nameInput.type = "text";
-                nameInput.placeholder = "Enter Your Name";
-                userDetails.appendChild(nameInput);
-        
-                const emailInput = document.createElement("input");
-                emailInput.required = true;
-                emailInput.type = "email";
-                emailInput.placeholder = "Enter Your E-mail";
-                userDetails.appendChild(emailInput);
-        
-                const phoneInput = document.createElement("input");
-                phoneInput.required = true;
-                phoneInput.type = "tel";
-                phoneInput.placeholder = "Enter your phone number";
-                userDetails.appendChild(phoneInput);
-        
-                const specialRequirements = document.createElement("textarea");
-                specialRequirements.rows = 3;
-                specialRequirements.placeholder = "Enter any special requirements";
-                userDetails.appendChild(specialRequirements);
-        
-                const bookBtn = document.createElement("button");
-                bookBtn.classList.add("bookBtn");
-                bookBtn.type = "submit";
-                bookBtn.innerText = "Book";
-                userDetails.appendChild(bookBtn);
-        
-                userDetails.addEventListener("submit", async (e) => {
-                  e.preventDefault();
-        
-                  const bookingData = {
-                    apiKey,
-                    service,
-                    staff,
-                    date: info.dateStr,
-                    selectedTime,
-                    name: nameInput.value,
-                    email: emailInput.value,
-                    phone: phoneInput.value,
-                    specialRequirements: specialRequirements.value
-                  };
-        
-                  await sendBookingRequest(bookingData);
-                });
-        
-                overlay.appendChild(userDetails);
-              }
+              availableTimesDiv.appendChild(span);
             });
         
-            availableTimesDiv.appendChild(span);
-          });
+            // Close/Back Button
+            const closeBtn = document.createElement("button");
+            closeBtn.classList.add("closeBtn");
+            closeBtn.textContent = "Back";
+            closeBtn.style.cssText = `
+              position: absolute;
+              top: 20px;
+              right: 20px;
+              border: none;
+              padding: 9px 18px;
+              cursor: pointer;
+              font-size: 16px;
+              font-weight: 500;
+              border-radius: 13px;
+            `;
+            closeBtn.addEventListener("click", () => overlay.remove());
+            overlay.appendChild(closeBtn);
         
-          // Add a close/back button
-          const closeBtn = document.createElement("button");
-          closeBtn.classList.add("closeBtn");
-          closeBtn.textContent = "Back";
-          closeBtn.style.cssText = `
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            border: none;
-            padding: 9px 18px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 13px;
-          `;
-          closeBtn.onclick = () => overlay.remove();
-          overlay.appendChild(closeBtn);
+            // Append overlay to defined container
+            element.appendChild(overlay);
         
-          // Append overlay to the main container (ensure 'element' is defined in your scope)
-          element.appendChild(overlay);
+          } catch (err) {
+            console.error("Error in dateClick function:", err);
+          }
         }
+        
         
       });
   
