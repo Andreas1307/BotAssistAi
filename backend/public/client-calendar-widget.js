@@ -602,109 +602,119 @@ const sendBookingRequest = async (bookingData) => {
           right: ''
         },
         dateClick: async function (info) {
+          // Ensure required variables are defined
           const overlay = document.createElement("div");
           overlay.classList.add("overlay-calendar");
-          
-  
+        
+          // Optional note element (add this only if required)
+          const note = document.createElement("p");
+          note.classList.add("note-text");
+          note.innerText = "Please select a time slot to proceed with booking.";
+        
           const overlayTitle = document.createElement("h2");
-          overlayTitle.classList.add("overlay-title")
+          overlayTitle.classList.add("overlay-title");
           overlayTitle.innerHTML = `
             Available times for <strong>${service}</strong><br>
             with <strong>${staff}</strong> on <strong>${info.dateStr}</strong>
           `;
-          let availableTimes = await getAvailableTimes(service, staff, info.dateStr);
-          if(availableTimes.length === 0) {
-            availableTimes = [`No available times on ${info.dateStr}`]
-          }
           overlayTitle.style.cssText = `
             font-size: 25px;
             font-weight: 500;
             margin-top: 0px;
           `;
           overlay.appendChild(overlayTitle);
-          overlay.appendChild(note)
-          const availableTimesDiv = document.createElement("div")
-          availableTimesDiv.classList.add("available-times")
-          overlay.appendChild(availableTimesDiv)
+          overlay.appendChild(note);
+        
+          let availableTimes = await getAvailableTimes(service, staff, info.dateStr);
+          if (!availableTimes || availableTimes.length === 0) {
+            availableTimes = [`No available times on ${info.dateStr}`];
+          }
+        
+          const availableTimesDiv = document.createElement("div");
+          availableTimesDiv.classList.add("available-times");
+          overlay.appendChild(availableTimesDiv);
+        
           let selectedTime = null;
+        
           availableTimes.forEach(time => {
-            const span = document.createElement("span")
-            span.classList.add("time-element")
+            const span = document.createElement("span");
+            span.classList.add("time-element");
             span.innerText = time;
+        
             span.addEventListener("click", () => {
-                selectedTime = time;
-                document.querySelectorAll(".time-element.selected-time").forEach(el => {
-                    el.classList.remove("selected-time");
-                  });
-              
-                  span.classList.add("selected-time");
-              
-                  selectedTime = time;
-                  console.log("Selected time:", selectedTime);
-                  let userDetails = document.querySelector(".user-details");
-    if (!userDetails) {
-      userDetails = document.createElement("form");
-      userDetails.classList.add("user-details");
-      overlay.appendChild(userDetails);
-
-      const name = document.createElement("input");
-      name.required = true
-      name.type = "text";
-      name.placeholder = "Enter Your Name";
-      userDetails.appendChild(name);
-
-      const email = document.createElement("input");
-      email.required = true
-      email.type = "email";
-      email.placeholder = "Enter Your E-mail";
-      userDetails.appendChild(email)
-
-      const phoneInput = document.createElement("input");
-      phoneInput.required = true
-      phoneInput.type = "tel";
-      phoneInput.placeholder = "Enter your phone number";
-      userDetails.appendChild(phoneInput); 
-
-      const specialRequirements = document.createElement("textarea")
-      specialRequirements.rows = 3;
-      specialRequirements.placeholder = "Enter any special requirements";
-      userDetails.appendChild(specialRequirements)
-
-      const bookBtn = document.createElement("button");
-      bookBtn.classList.add("bookBtn")
-      bookBtn.type = "Submit"
-      bookBtn.innerText = "Book";
-      
-      userDetails.appendChild(bookBtn)
-
-
-      userDetails.addEventListener("submit", async (e) => {
-        e.preventDefault()
-        const bookingData = {
-          apiKey,
-          service,
-          staff,
-          date: info.dateStr,
-          selectedTime,
-          name: name.value,
-          email: email.value,
-          phone: phoneInput.value,
-          specialRequirements: specialRequirements.value
-        }
-        sendBookingRequest(bookingData)
-      })
-
-    }
-            })
-            availableTimesDiv.appendChild(span)
-          })
-
+              selectedTime = time;
         
+              // Clear previous selections
+              document.querySelectorAll(".time-element.selected-time").forEach(el => {
+                el.classList.remove("selected-time");
+              });
         
-  
-          const closeBtn = document.createElement('button');
-          closeBtn.classList.add("closeBtn")
-          closeBtn.textContent = 'Back';
+              span.classList.add("selected-time");
+        
+              // Show form only once
+              let userDetails = document.querySelector(".user-details");
+              if (!userDetails) {
+                userDetails = document.createElement("form");
+                userDetails.classList.add("user-details");
+        
+                const nameInput = document.createElement("input");
+                nameInput.required = true;
+                nameInput.type = "text";
+                nameInput.placeholder = "Enter Your Name";
+                userDetails.appendChild(nameInput);
+        
+                const emailInput = document.createElement("input");
+                emailInput.required = true;
+                emailInput.type = "email";
+                emailInput.placeholder = "Enter Your E-mail";
+                userDetails.appendChild(emailInput);
+        
+                const phoneInput = document.createElement("input");
+                phoneInput.required = true;
+                phoneInput.type = "tel";
+                phoneInput.placeholder = "Enter your phone number";
+                userDetails.appendChild(phoneInput);
+        
+                const specialRequirements = document.createElement("textarea");
+                specialRequirements.rows = 3;
+                specialRequirements.placeholder = "Enter any special requirements";
+                userDetails.appendChild(specialRequirements);
+        
+                const bookBtn = document.createElement("button");
+                bookBtn.classList.add("bookBtn");
+                bookBtn.type = "submit";
+                bookBtn.innerText = "Book";
+                userDetails.appendChild(bookBtn);
+        
+                userDetails.addEventListener("submit", async (e) => {
+                  e.preventDefault();
+        
+                  const bookingData = {
+                    apiKey,
+                    service,
+                    staff,
+                    date: info.dateStr,
+                    selectedTime,
+                    name: nameInput.value,
+                    email: emailInput.value,
+                    phone: phoneInput.value,
+                    specialRequirements: specialRequirements.value
+                  };
+        
+                  await sendBookingRequest(bookingData);
+                });
+        
+                overlay.appendChild(userDetails);
+              }
+            });
+        
+            availableTimesDiv.appendChild(span);
+          });
+        
+          // Add a close/back button
+          const closeBtn = document.createElement("button");
+          closeBtn.classList.add("closeBtn");
+          closeBtn.textContent = "Back";
           closeBtn.style.cssText = `
             position: absolute;
             top: 20px;
@@ -718,9 +728,11 @@ const sendBookingRequest = async (bookingData) => {
           `;
           closeBtn.onclick = () => overlay.remove();
           overlay.appendChild(closeBtn);
-  
+        
+          // Append overlay to the main container (ensure 'element' is defined in your scope)
           element.appendChild(overlay);
         }
+        
       });
   
       calendar.render();
