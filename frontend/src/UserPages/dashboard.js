@@ -304,6 +304,13 @@ useEffect(() => {
         params: { userId: user.user_id}
       })
       const data = res.data.faq;
+
+      if (!data) {
+        setFlaggedIssue("FAQ data not yet initialized");
+        setLastUpdated("N/A");
+        return;
+      }   
+
       setLastUpdated(new Date(data.last_updated).toLocaleString());
 let issues = [];
 
@@ -320,7 +327,7 @@ if (!data.uploaded_file || data.uploaded_file.includes("undefined")) issues.push
 if (issues.length > 0) {
   setFlaggedIssue(issues.join(", "));
 } else {
-  setFlaggedIssue(""); // no issues
+  setFlaggedIssue("");
 }
     } catch (e) {
       console.log("An error occured fetching the flagged issues", e)
