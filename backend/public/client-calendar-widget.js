@@ -603,6 +603,16 @@ const sendBookingRequest = async (bookingData) => {
         },
         dateClick: async function (info) {
           try {
+            // Compare clicked date with today
+            const clickedDate = new Date(info.dateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Strip time portion
+        
+            if (clickedDate < today) {
+              alert("You cannot book appointments for past dates.");
+              return; // Stop execution if the date is in the past
+            }
+        
             // Clear any existing overlays
             const existingOverlay = document.querySelector(".overlay-calendar");
             if (existingOverlay) existingOverlay.remove();
@@ -747,6 +757,7 @@ const sendBookingRequest = async (bookingData) => {
             console.error("Error in dateClick function:", err);
           }
         }
+        
         
         
       });
