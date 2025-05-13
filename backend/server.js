@@ -210,23 +210,7 @@ app.post("/paypal/webhook", async (req, res) => {
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
-    // Optional: Validate user ID matches custom_id (added in frontend)
-    const customId = order.purchase_units?.[0]?.custom_id;
-    console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
-    if (customId !== String(userId)) {
-      console.log("Error: User ID mismatch in PayPal order");  // Debugging user ID mismatch
-      return res.status(400).json({ error: "User ID mismatch in PayPal order" });
-    }
-
-    // Step 3: Update subscription
-    const now = new Date();
-    const expiry = new Date(now);
-    expiry.setDate(now.getDate() + 30); // 30-day subscription
-    console.log("Updating subscription for user:", userId);  // Debugging subscription update
-
-    const [result] = await pool.query(
-      `UPDATE users 
-       SET subscription_plan = ?, subscribed_at = ?, subscription_expiry = ? 
+    // Optional: Vali          subscription_expiry = ? 
        WHERE user_id = ?`,
       ["Pro", now, expiry, userId]
     );

@@ -963,14 +963,13 @@ for (const [day, { blocked }] of Object.entries(workingHours)) {
       <div className="booking-heading">
         <h2>📅 Booking Management</h2>
         {membership ? (
-           <Link to={`/${user?.username}/upgrade-plan`} style={{ textDecoration: "none" }}>
+            <button onClick={handleToggleBooking}>
+    {bookingEnabled ? "Disable Booking" : "Enable Booking"}
+  </button> 
+) : (
+<Link to={`/${user?.username}/upgrade-plan`} style={{ textDecoration: "none" }}>
     <button>Upgrade To Bookings</button>
   </Link>
- 
-) : (
-  <button onClick={handleToggleBooking}>
-    {bookingEnabled ? "Disable Booking" : "Enable Booking"}
-  </button>
 )}
 
       </div>
