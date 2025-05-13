@@ -210,10 +210,26 @@ app.post("/paypal/webhook", async (req, res) => {
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
-    // Optional: Vali          subscription_expiry = ? 
+    const customId = order.purchase_units?.[0]?.custom_id;
+    console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
+    if (customId !== userId) {
+      console.log("Error: User ID mismatch in PayPal order");  // Debugging user ID mismatch
+      return res.status(400).json({ error: "User ID mismatch in PayPal order" });
+    }
+
+    // Step 3: Update subscription
+    const now = new Date();
+    const expiry = new Date(now);
+    expiry.setDate(now.getDate() + 30); // 30-day subscription
+    console.log("Updating subscription for user:", userId);  // Debugging subscription update
+
+    const [result] = await pool.query(
+      `UPDATE users 
+       SET subscription_plan = ?, subscribed_at = ?, subscription_expiry = ? 
        WHERE user_id = ?`,
       ["Pro", now, expiry, userId]
     );
+
 
     console.log("Database update result:", result);  // Debugging database result
 
@@ -1145,18 +1161,24 @@ function findClosestAvailableTimes(chosenTime, availableTimes) {
 
 app.get("/fetch-all-faq", async (req, res) => {
   const { userId } = req.query;
+
   try {
-    const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ?", [userId])
-    if(rows.length > 0) {
-    return res.status(200).json({ faq: rows[0]})
-    } else {
-      return res.status(200)
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId" });
     }
-  } catch(e){
-    console.log("An error occured fetching the flagged issues", e)
-    return res.status(500).json({ err: "An error occured fetching the flagged issues"})
+
+    const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ?", [userId]);
+
+    if (rows.length > 0) {
+      return res.status(200).json({ faq: rows[0] });
+    } else {
+      return res.status(200).json({ faq: null }); // Explicitly return null
+    }
+  } catch (e) {
+    console.error("An error occurred fetching the flagged issues:", e);
+    return res.status(500).json({ error: "Internal server error fetching FAQ" });
   }
-})
+});
 
 
 function generateRandomToken() {
