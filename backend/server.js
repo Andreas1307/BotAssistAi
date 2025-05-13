@@ -147,8 +147,7 @@ cookie: {
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-
+// update code see if it works
 
 
 app.post("/paypal/webhook", async (req, res) => {
@@ -210,6 +209,7 @@ app.post("/paypal/webhook", async (req, res) => {
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
+    // Optional: Validate user ID matches custom_id (added in frontend)
     const customId = order.purchase_units?.[0]?.custom_id;
     console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
     if (customId !== userId) {
@@ -230,7 +230,6 @@ app.post("/paypal/webhook", async (req, res) => {
       ["Pro", now, expiry, userId]
     );
 
-
     console.log("Database update result:", result);  // Debugging database result
 
     if (result.affectedRows === 0) {
@@ -245,6 +244,7 @@ app.post("/paypal/webhook", async (req, res) => {
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
+
 
 
 
