@@ -161,9 +161,6 @@ app.post("/paypal/webhook", async (req, res) => {
   }
 
   try {
-    // Step 1: Get PayPal access token
-    console.log("Step 1: Requesting PayPal access token...");
-
     const auth = await axios({
       url: "https://api-m.paypal.com/v1/oauth2/token",
       method: "post",
@@ -194,7 +191,7 @@ app.post("/paypal/webhook", async (req, res) => {
 
     const order = orderDetails.data;
 
-    console.log("Received order details:", order); // Debugging line to check the order details
+    console.log("Received order details:", order); 
 
     if (order.status !== "COMPLETED") {
       console.log("Error: Payment not completed");  // Debugging payment status
@@ -209,10 +206,9 @@ app.post("/paypal/webhook", async (req, res) => {
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
-    // Optional: Validate user ID matches custom_id (added in frontend)
     const customId = order.purchase_units?.[0]?.custom_id;
     console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
-    if (customId !== userId) {
+    if (String(customId) !== String(userId)) {
       console.log("Error: User ID mismatch in PayPal order");  // Debugging user ID mismatch
       return res.status(400).json({ error: "User ID mismatch in PayPal order" });
     }
