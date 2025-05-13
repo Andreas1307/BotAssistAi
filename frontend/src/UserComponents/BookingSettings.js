@@ -962,15 +962,16 @@ for (const [day, { blocked }] of Object.entries(workingHours)) {
     <div className={`booking-settings-container`} style={{opacity: membership ? 1 : 0.5}}>
       <div className="booking-heading">
         <h2>📅 Booking Management</h2>
-        <button style={{ display: membership ? "block" : "none"}} onClick={handleToggleBooking}>
-  {bookingEnabled ? "Disable Booking" : "Enable Booking"}
-</button>
-<Link to={`/${user?.username}/upgrade-plan`} style={{textDecoration: "none"}}>
-<button style={{display: membership ? "none" : "block"}}>
-  Upgrade To Bookings
-</button>
-</Link>
-
+        {membership ? (
+           <Link to={`/${user?.username}/upgrade-plan`} style={{ textDecoration: "none" }}>
+    <button>Upgrade To Bookings</button>
+  </Link>
+ 
+) : (
+  <button onClick={handleToggleBooking}>
+    {bookingEnabled ? "Disable Booking" : "Enable Booking"}
+  </button>
+)}
 
       </div>
 

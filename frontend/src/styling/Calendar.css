@@ -594,7 +594,11 @@
   font-family: "Space Grotesk", sans-serif;
   font-weight: 500;
 }
-  
+  .updateBookings{
+    position: absolute;
+    right: 0;
+    top: 10px;
+  }
 
 .integration-textarea {
   white-space: pre-wrap;
