@@ -2591,7 +2591,7 @@ const html = `
 
       <p style="font-size: 12px; color: #666; margin-top: 20px;">
         You received this email because you subscribed to our updates. 
-        <a href="${allowedOrigins}/unsubscribe?email=${email}" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
+        <a href="https://botassistai.com/unsubscribe?email=${email}" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
       </p>
   </div>
 `;
@@ -2624,6 +2624,7 @@ try {
       console.error("Error sending email:", error);
       return res.status(500).send("Error sending email");
     }
+    console.log("Email sent successfully:", info.response); 
     res.send("Thanks for subscribing!");
   })
 
