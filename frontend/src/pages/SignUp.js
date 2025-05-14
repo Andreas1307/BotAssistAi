@@ -85,6 +85,8 @@ const SignUp = () => {
       client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
       callback: handleGoogleResponse,
       ux_mode: "popup",
+      auto_select: false,
+      prompt_parent_id: "google-signin-btn"
     });
 
     renderGoogleButton();

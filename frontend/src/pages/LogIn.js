@@ -92,7 +92,9 @@ const LogIn = () => {
       window.google.accounts.id.initialize({
         client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,
-        ux_mode: "popup", // Use big popup
+        ux_mode: "popup",
+        auto_select: false,
+       prompt_parent_id: "google-signin-btn"
       });
 
       // Render Google Sign-In Button

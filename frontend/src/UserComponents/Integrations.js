@@ -65,6 +65,7 @@ const Integrations = () => {
     --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
     --ai-input: #000;
     --ai-border: #f8f8f8;
+    }
       </style>
        <script src="https://api.botassistai.com" api-key="YOUR API KEY HERE"></script>
     `,
@@ -171,22 +172,6 @@ const Integrations = () => {
 </style>
 <script src="https://api.botassistai.com" api-key="YOUR_API_KEY_HERE"></script>
     `,
-    },
-    {
-      proTip: "Place in your PHP template before </body> to load the chatbot site-wide.",
-      Php: `
-      <?php echo '
-<style>
-  :root {
-    --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-    --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-    --ai-input: #000;
-    --ai-border: #f8f8f8;
-  }
-</style>
-<script src="https://api.botassistai.com" api-key=\"YOUR_API_KEY_HERE\"></script>
-'; ?>
-      `,
     },
     {
       proTip: "Add this in your theme’s footer.php file before the closing </body> tag, or  You can also inject it using a plugin like “Insert Headers and Footers”",
