@@ -277,7 +277,7 @@ const Homepage = () => {
         </section>
  */}
         <div className="divs-wrapper">
-      <div className="wrapp">
+      <div className="wrapp2">
         <section className="analytics">
           <h2>
             <FaChartBar className="icon" /> AI-Driven Analytics

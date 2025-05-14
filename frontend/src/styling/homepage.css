@@ -429,7 +429,7 @@
   align-items: center;
   justify-content: center;
 }
-.divs-wrapper .wrapp{
+.divs-wrapper .wrapp2{
   width: 900px;
   height: 370px;
   display: flex;
@@ -438,26 +438,26 @@
   gap: 15px;
   color: #fff;
 }
-.wrapp .collap-two {
+.wrapp2 .collap-two {
   width: 48.5%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 } 
-.divs-wrapper .wrapp .cta {
+.divs-wrapper .wrapp2 .cta {
   background-color: #fff;
   color: #00f5d4;
   font-size: 16px;
   margin-top: 7px;
 }
-.divs-wrapper .wrapp h2 {
+.divs-wrapper .wrapp2 h2 {
   font-size: 28px;
   font-family: "Space Grotesk", sans-serif;
 }
-.divs-wrapper .wrapp .icon {
+.divs-wrapper .wrapp2 .icon {
   margin-bottom: -5px;
 }
-.divs-wrapper .wrapp p {
+.divs-wrapper .wrapp2 p {
   font-weight: 500;
   color: #f8f8f8;
   margin-top: 5px;
@@ -595,7 +595,7 @@
   }
 }
 @media(max-width: 930px) {
-  .divs-wrapper .wrapp {
+  .divs-wrapper .wrapp2 {
     flex-direction: column;
     height: auto;
   }
@@ -683,17 +683,17 @@
   padding-left: 20px;
   padding-right: 20px;
 }
-.divs-wrapper .wrapp h2 {
+.divs-wrapper .wrapp2 h2 {
   font-size: 25px;
 }
-.divs-wrapper .wrapp p {
+.divs-wrapper .wrapp2 p {
   font-size: 15px;
   line-height: 20px;
 }
 .analytics ul li {
   font-size: 15px;
 }
-.divs-wrapper .wrapp .cta {
+.divs-wrapper .wrapp2 .cta {
   font-size: 16px;
 }
 }
