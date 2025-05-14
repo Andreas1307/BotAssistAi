@@ -80,7 +80,7 @@ const Pricing = () => {
             {/* Free Plan */}
             <div className="plan">
               <h2>🚀 Free</h2>
-              <p className="price pro">$0<span>/month</span></p>
+              <p className="price pro">€0<span>/month</span></p>
               <ul>
                 <li>✅ Basic AI chatbot</li>
                 <li>✅ Up to 30 conversations/day</li>
@@ -99,7 +99,7 @@ const Pricing = () => {
             <div className="plan popular">
               <div className="badge">🔥 Most Popular</div>
               <h2>💼 Pro</h2>
-              <p className="price pro">$20<span>/month</span></p>
+              <p className="price pro">€20<span>/month</span></p>
               <ul>
                 <li>🤖 24/7 AI chatbot support</li>
                 <li>💬 Unlimited conversations</li>

@@ -1849,8 +1849,8 @@ app.post("/ping-client", async (req, res) => {
 app.get("/get-connected", async (req, res) => {
   const { userId } = req.query;
   try {
-    const [[user]] = await pool.query("SELECT last_connected FROM users WHERE user_id = ?", [userId]);
-    
+    const [rows] = await pool.query("SELECT last_connected FROM users WHERE user_id = ?", [userId]);
+const user = rows[0];
     if (user && user.last_connected) {
       return res.status(200).json({
         connected: true,

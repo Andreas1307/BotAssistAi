@@ -76,7 +76,7 @@ const UpgradeNow = ({ closePage }) => {
 
      
       <div className="checkout-section">
-        <h3 className="price">$20.00 / month</h3>
+        <h3 className="price">€20.00 / month</h3>
 
     </div>
 

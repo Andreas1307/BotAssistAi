@@ -162,7 +162,7 @@ const Contact = () => {
   <FaUserCheck className="contact-icon" />
   <h3>Talk to a Human</h3>
   <p>Our team is here if the bot can’t handle it. We'll step in when needed — fast.</p>
-  <a href="mailto:support@botassistai.com">📧 support@botassistai.com</a>
+  <a href="mailto:support@botassistai.com">📧 info@botassistai.com</a>
 </div>
 
 <div className="contact-card">

@@ -552,7 +552,7 @@ async function showConfirmation(details) {
       <p><strong>Phone:</strong> ${details.phone}</p>
       ${details.specialRequirements ? `<p><strong>Notes:</strong> ${details.specialRequirements}</p>` : ""}
     </div>
-    <p class="confirm-details2">You will receive a confirmation email shortly.</p>
+    <p class="confirm-details2"></p>
   `;
 
   container.appendChild(confirmationWrapper);
