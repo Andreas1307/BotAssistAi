@@ -53,7 +53,7 @@ export default function BookingSettings() {
         }
       </style>
       <div id="calendar-widget"></div> <!-- Add inside <body> where you want the booking box to be -->
-      <script src="http://botassistai.com/client-calendar-widget.js" api-key="afc350ed-a50b-4ee0-9586-d9a70f6b19e5"></script> <!-- Before </body> -->
+      <script src="https://api.botassistai.com/client-calendar-widget.js" api-key="API_KEY_HERE"></script> <!-- Before </body> -->
       `
     },
     {
@@ -76,8 +76,8 @@ const BookingCalendar = () => {
     document.head.appendChild(style);
 
     const script = document.createElement("script");
-    script.src = "http://botassistai.com/client-calendar-widget.js";
-    script.setAttribute("api-key", "afc350ed-a50b-4ee0-9586-d9a70f6b19e5");
+    script.src = "https://api.botassistai.com/client-calendar-widget.js";
+    script.setAttribute("api-key", "API_KEY_HERE");
     script.async = true;
     document.body.appendChild(script);
   }, []);
@@ -121,8 +121,8 @@ onMounted(() => {
   document.head.appendChild(style);
 
   const script = document.createElement('script'); // 👈 Load calendar script
-  script.src = "http://botassistai.com/client-calendar-widget.js";
-  script.setAttribute("api-key", "afc350ed-a50b-4ee0-9586-d9a70f6b19e5");
+  script.src = "https://api.botassistai.com/client-calendar-widget.js";
+  script.setAttribute("api-key", "API_KEY_HERE");
   script.async = true;
   document.body.appendChild(script);
 });
@@ -149,7 +149,7 @@ onMounted(() => {
         }
       </style>
       <div id="calendar-widget"></div> <!-- Add inside <body> where you want the booking box to appear -->
-      <script src="http://botassistai.com/client-calendar-widget.js" api-key="afc350ed-a50b-4ee0-9586-d9a70f6b19e5"></script> <!-- Before </body> -->
+      <script src="http://botassistai.com/client-calendar-widget.js" api-key="API_KEY_HERE"></script> <!-- Before </body> -->
       `
     },
     {
@@ -165,7 +165,7 @@ onMounted(() => {
         }
       </style>
       <div id="calendar-widget"></div> <!-- Add inside <body> where you want the booking box to be -->
-      <script src="http://botassistai.com/client-calendar-widget.js" api-key="afc350ed-a50b-4ee0-9586-d9a70f6b19e5"></script> <!-- Before </body> -->
+      <script src="http://botassistai.com/client-calendar-widget.js" api-key="API_KEY_HERE"></script> <!-- Before </body> -->
       `
     },
     {
@@ -184,7 +184,7 @@ onMounted(() => {
 
   <div id="calendar-widget"></div> <!-- Place this inside <body> where you want the booking calendar to appear -->
 
-  <script src="http://botassistai.com/client-calendar-widget.js" api-key="afc350ed-a50b-4ee0-9586-d9a70f6b19e5"></script> <!-- Add just before </body> -->
+  <script src="https://api.botassistai.com/client-calendar-widget.js" api-key="API_KEY_HERE"></script> <!-- Add just before </body> -->
 '; ?>
 
 <!-- ✅ How to use:
@@ -213,8 +213,8 @@ function MyApp({ Component, pageProps }) {
     document.head.appendChild(style);
 
     const script = document.createElement("script"); // Inject booking widget
-    script.src = "http://botassistai.com/client-calendar-widget.js";
-    script.setAttribute("api-key", "afc350ed-a50b-4ee0-9586-d9a70f6b19e5");
+    script.src = "https://api.botassistai.com/client-calendar-widget.js";
+    script.setAttribute("api-key", "API_KEY_HERE");
     script.async = true;
     document.body.appendChild(script);
   }, []);
@@ -249,7 +249,7 @@ export default MyApp; // Export app
       <div id="calendar-widget"></div>
       
       <!-- Just before the closing </body> tag -->
-      <script src="http://botassistai.com/client-calendar-widget.js" api-key="afc350ed-a50b-4ee0-9586-d9a70f6b19e5"></script>
+      <script src="http://botassistai.com/client-calendar-widget.js" api-key="API_KEY_HERE"></script>
       
       <!-- ✅ How to use:
       1. Go to Online Store > Themes > Edit Code.
