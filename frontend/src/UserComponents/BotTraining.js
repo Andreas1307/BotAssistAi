@@ -19,7 +19,7 @@ const SupportBotCustomization = () => {
     webUrl: "",
     business_context: "",
     businessName: "",
-    avoidTopics: "",
+    avoid_topics: "",
     question: "",
     answer: "",
     fine_tuning_data: "",
@@ -270,7 +270,7 @@ const setFieldValue = (field, value) => {
     <div>
       <label>Avoid Topics (Optional):</label>
       <textarea
-        value={userData.avoidTopics}
+        value={userData.avoid_topics}
         onChange={(e) => setFieldValue("avoidTopics", e.target.value)}
         placeholder="Enter topics the bot should avoid (e.g., pricing)"
       />

@@ -1919,7 +1919,6 @@ res.json({ yesterdayMessages: result[0]?.total_messages || 0 });
 
 app.post("/user-training", async (req, res) => {
   const { username } = req.body;
-  console.log("USERNAME RECEIVED:", username);
 
   try {
     const [tables] = await pool.query("SHOW TABLES LIKE 'faq'");
