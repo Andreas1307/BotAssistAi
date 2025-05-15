@@ -1383,6 +1383,38 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
 
 
     const lowerMessage = message.toLowerCase();
+
+
+    
+
+
+   
+    const supportKeywords = [
+      "talk to human",
+      "human support",
+      "real person",
+      "speak to agent",
+      "talk to someone",
+      "need help from a person",
+      "can I speak to a human",
+      "contact support",
+      "customer support",
+      "live agent",
+      "human assistant",
+      "talk with a representative",
+      "speak to support",
+      "someone help me",
+      "real support",
+      "help from a human"
+    ];
+    const wantsHumanSupport = supportKeywords.some(phrase => lowerMessage.includes(phrase));
+    
+    if (wantsHumanSupport) {
+      aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum}. `;
+      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Transferred to Agent"]);
+    } 
+
+
     const triggers = [
       "book an appointment",
       "make an appointment",
@@ -1565,34 +1597,7 @@ else if (userConversationState[conversationId] === "waiting_for_time") {
     }
   }
     }
-    
-
-
-   
-    const supportKeywords = [
-      "talk to human",
-      "human support",
-      "real person",
-      "speak to agent",
-      "talk to someone",
-      "need help from a person",
-      "can I speak to a human",
-      "contact support",
-      "customer support",
-      "live agent",
-      "human assistant",
-      "talk with a representative",
-      "speak to support",
-      "someone help me",
-      "real support",
-      "help from a human"
-    ];
-    const wantsHumanSupport = supportKeywords.some(phrase => lowerMessage.includes(phrase));
-    
-    if (wantsHumanSupport) {
-      aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum}. `;
-      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Transferred to Agent"]);
-    } else {
+    else {
     await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Chatbot handled"]);
     }
     

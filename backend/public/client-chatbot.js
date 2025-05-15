@@ -202,7 +202,7 @@
     const logo = document.createElement("img");
     logo.src = "https://botassistai.com/img/BigLogo.png"; 
     logo.style.cssText = `
-      height: 55px;
+      height: 60px;
       object-fit: contain;
       border-radius: 6px;
     `;
