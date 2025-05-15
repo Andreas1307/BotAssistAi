@@ -41,7 +41,7 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} BotAssistAI. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} BotAssistAI. All rights reserved. | <Link to={'/privacy-policy'}> Privacy Policy</Link></p>
       </div>
     </footer>
     )
