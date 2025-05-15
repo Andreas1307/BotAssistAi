@@ -49,7 +49,7 @@ const Newsletter = () => {
           />
           <button type="submit">🚀 Subscribe</button>
         </form>
-        {message && <p style={{color: "#00f5d4", fontSize: "16px", fontWeight: 600, marginBottom: "-10px"}} className="success">{message}</p>}
+        {message && <p style={{color: "#00f5d4", fontSize: "16px", fontWeight: 600, marginBottom: "-10px"}} className="success2">{message}</p>}
         {error && <p className="error">{error}</p>}
         <p className="small-text">No spam, just valuable insights. Unsubscribe anytime.</p>
       </div>

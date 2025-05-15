@@ -1325,7 +1325,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
         userMessage += `\n(Reference URL: ${webUrl})`;
     }
 
-    let systemPrompt = "You are an AI web assistant and support for websites.";
+    let systemPrompt = `You are an AI web assistant and support for websites. That is already integrated on this wensite ${webUrl}`;
     if (response_tone) {
         systemPrompt = `Respond in a ${response_tone} tone.`;
     }
@@ -2544,7 +2544,7 @@ const { email } = req.body;
 const html = `
   <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
       
-     <img src="" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
+     <img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
 
       <h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">merhaba! 🚀</h1>
       

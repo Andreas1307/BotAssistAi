@@ -36,6 +36,10 @@
     transform: skewX(15deg);
     transform-origin: right;
   }
+  .success2 {
+    color: #f8f8f8;
+    margin-top: 0;
+  }
   .newsletter h2 {
     font-size: 37px;
     margin-bottom: 10px;

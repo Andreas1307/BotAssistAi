@@ -202,7 +202,7 @@
     const logo = document.createElement("img");
     logo.src = "https://botassistai.com/img/BigLogo.png"; 
     logo.style.cssText = `
-      height: 60px;
+      height: 55px;
       object-fit: contain;
       border-radius: 6px;
     `;
@@ -223,40 +223,47 @@
   
     const submit = document.createElement("div");
     submit.style.cssText = `
-      width: 100%;
-      display: flex;
-      background: var(--ai-input);
-      border-top: 1px solid var(--ai-border);
-      justify-content: space-between;
-      margin-top: 50px;
-       border-bottom-right-radius: 13px; 
-       border-bottom-left-radius: 13px;
+        width: 100%;
+  display: flex;
+  background: var(--ai-input);
+  border-top: 1px solid var(--ai-border);
+  justify-content: space-between;
+  margin-top: 50px;
+  border-bottom-right-radius: 13px; 
+  border-bottom-left-radius: 13px;
+  overflow: hidden; /* 💡 prevents button overflow causing white space */
     `;
   
     const input = document.createElement("input");
     input.type = "text";
     input.placeholder = "Ask something...";
-    input.style.cssText = "padding: 12.5px; border: none; width: 70%; background: transparent; border-bottom-right-radius: 13px; border-bottom-left-radius: 13px;";
+    input.style.cssText = `
+   padding: 12.5px;
+  border: none;
+  width: 100%;
+  background: var(--ai-input);
+  color: white;
+  outline: none;
+  font-size: 16px;
+  flex: 1; /* 💡 make input take full space */
+    `;
     input.onfocus = () => input.style.outline = "none";
   
     const button = document.createElement("button");
     button.innerHTML = "Send";
     button.className = "diagonal-button"; 
     button.style.cssText = `
-        border: 0;
-  outline: 0;
-  padding: 1px 30px;
+          border: none;
+  outline: none;
+  padding: 0 30px;
   cursor: pointer;
-  margin-left: 10px;
   color: #fff;
   font-weight: 500;
   font-size: 16px;
   background: var(--ai-button);
-  border-bottom-right-radius: 13px;
-  border-bottom-left-radius:0px;
-  border-top-left-radius: 0px;
-  position: relative;
-  overflow: hidden;
+  border-radius: 0;
+  clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
+  height: 100%; 
     `;
   
     submit.appendChild(input);
@@ -275,7 +282,6 @@
       chatLog.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
       input.value = "";
     
-      // 👉 Add a loading indicator
       const loadingId = `loading-${Date.now()}`;
       chatLog.innerHTML += `<div id="${loadingId}"><strong>Bot:</strong> <em>Typing...</em></div>`;
       chatLog.scrollTop = chatLog.scrollHeight;
