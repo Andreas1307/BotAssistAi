@@ -83,23 +83,25 @@ const SupportBotCustomization = () => {
           { username: user.username },
           { withCredentials: true }
         );
-        const defaultConfig = {
-          response_delay_ms: 500,
-          escalation_threshold: 0.7,
-          web_url: "",
-          business_context: "",
-          businessName: "",
-          avoid_topics: "",
-          question: "",
-          answer: "",
-          fine_tuning_data: "",
-          phoneNum: "",
-          responseTone: "",
+        
+        const data = response.data.config || {};
+        
+        const mappedConfig = {
+          response_delay_ms: data.response_delay_ms ?? 500,
+          escalation_threshold: data.escalation_threshold ?? 0.7,
+          web_url: data.webUrl || "",
+          business_context: data.businessContext || "",
+          businessName: data.businessName || "",
+          avoid_topics: data.avoidTopics || "",
+          question: data.question || "",
+          answer: data.answer || "",
+          fine_tuning_data: data.fineTuningData || "",
+          phoneNum: data.phoneNum || "",
+          responseTone: data.responseTone || "",
         };
         
-        const config = { ...defaultConfig, ...response.data.config };
-        setUserData(config);
-        setResponseTone(config.responseTone || '');
+        setUserData(mappedConfig);
+        setResponseTone(mappedConfig.responseTone);
         
       } catch (e) {
         console.log(e);
