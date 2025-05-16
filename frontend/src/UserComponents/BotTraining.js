@@ -16,7 +16,7 @@ const SupportBotCustomization = () => {
   const [userData, setUserData] = useState({
     response_delay_ms: 500,
     escalation_threshold: 0.7,
-    webUrl: "",
+    web_url: "",
     business_context: "",
     businessName: "",
     avoid_topics: "",
@@ -131,17 +131,17 @@ const setFieldValue = (field, value) => {
     formData.append("file", file); // Attach file
     formData.append("responseTone", responseTone);
     formData.append("responseDelay", userData.response_delay_ms ?? 500);
-    formData.append("escalationThreshold", userData.escalation_threshold);
-    formData.append("businessContext", userData.business_context);
-    formData.append("businessName", userData.businessName);
-    formData.append("avoidTopics", userData.avoidTopics);
-    formData.append("fineTuningData", userData.fine_tuning_data);
-    formData.append("userName", user.username);
-    formData.append("userId", user.user_id);
-    formData.append("faqQuestion", userData.question);
-    formData.append("faqAnswer", userData.answer);
-    formData.append("webUrl", userData.webUrl);
-    formData.append("phoneNum", userData.phoneNum);
+    formData.append("escalationThreshold", userData.escalation_threshold ?? "");
+    formData.append("businessContext", userData.business_context ?? "");
+    formData.append("businessName", userData.businessName ?? "");
+    formData.append("avoidTopics", userData.avoid_topics ?? "");
+    formData.append("fineTuningData", userData.fine_tuning_data ?? "");
+    formData.append("userName", user.username ?? "");
+    formData.append("userId", user.user_id ?? "");
+    formData.append("faqQuestion", userData.question ?? "");
+    formData.append("faqAnswer", userData.answer ?? "");
+    formData.append("webUrl", userData.web_url ?? "");
+    formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
       const response = await axios.post(`${directory}/update-config`, formData, {
@@ -234,8 +234,8 @@ const setFieldValue = (field, value) => {
       <label>Website Url:</label>
       <input
         type="text"
-        value={userData.webUrl}
-        onChange={(e) => setFieldValue("webUrl", e.target.value)}
+        value={userData.web_url}
+        onChange={(e) => setFieldValue("web_url", e.target.value)}
         placeholder="Enter your website URL"
       />
     </div>
@@ -271,7 +271,7 @@ const setFieldValue = (field, value) => {
       <label>Avoid Topics (Optional):</label>
       <textarea
         value={userData.avoid_topics}
-        onChange={(e) => setFieldValue("avoidTopics", e.target.value)}
+        onChange={(e) => setFieldValue("avoid_topics", e.target.value)}
         placeholder="Enter topics the bot should avoid (e.g., pricing)"
       />
     </div>
