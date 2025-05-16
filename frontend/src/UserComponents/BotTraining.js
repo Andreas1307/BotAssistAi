@@ -74,9 +74,7 @@ const SupportBotCustomization = () => {
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
+      if (!user?.username) return;
   
     const fetchUserData = async () => {
       try {
@@ -234,7 +232,7 @@ const setFieldValue = (field, value) => {
       <label>Website Url:</label>
       <input
         type="text"
-        value={userData.web_url}
+        value={userData.web_url || ""}
         onChange={(e) => setFieldValue("web_url", e.target.value)}
         placeholder="Enter your website URL"
       />
@@ -244,7 +242,7 @@ const setFieldValue = (field, value) => {
     <div>
       <label>Business Context (Optional):</label>
       <textarea
-        value={userData.business_context}
+        value={userData.business_context || ""}
         onChange={(e) => setFieldValue("business_context", e.target.value)}
         placeholder="Provide details about your business"
       />
@@ -255,7 +253,7 @@ const setFieldValue = (field, value) => {
       <label>Business Name:</label>
       <input
         type="text"
-        value={userData.businessName}
+        value={userData.businessName || ""}
         onChange={(e) => setFieldValue("businessName", e.target.value)}
         placeholder="Enter your business name"
       />
@@ -270,7 +268,7 @@ const setFieldValue = (field, value) => {
     <div>
       <label>Avoid Topics (Optional):</label>
       <textarea
-        value={userData.avoid_topics}
+        value={userData.avoid_topics || ""}
         onChange={(e) => setFieldValue("avoid_topics", e.target.value)}
         placeholder="Enter topics the bot should avoid (e.g., pricing)"
       />
@@ -279,7 +277,7 @@ const setFieldValue = (field, value) => {
       <label>Support phone number: (Optional)</label>
       <input
         type="text"
-        value={userData.phoneNum}
+        value={userData.phoneNum || ""}
         onChange={(e) => setFieldValue("phoneNum", e.target.value)}
         placeholder="Enter your support num for customers needs"
       />
@@ -290,7 +288,7 @@ const setFieldValue = (field, value) => {
         <label>Question:</label>
         <input
           type="text"
-          value={userData.question}
+          value={userData.question || ""}
           onChange={(e) => setFieldValue("question", e.target.value)}
           placeholder="Enter a frequently asked question"
         />
@@ -298,7 +296,7 @@ const setFieldValue = (field, value) => {
       <div>
         <label>Answer:</label>
         <textarea
-          value={userData.answer}
+          value={userData.answer || ""}
           onChange={(e) => setFieldValue("answer", e.target.value)}
           placeholder="Enter the answer"
         />
@@ -308,7 +306,7 @@ const setFieldValue = (field, value) => {
     <div>
       <label>Fine-Tuning Data (Optional):</label>
       <textarea
-        value={userData.fine_tuning_data}
+        value={userData.fine_tuning_data || ""}
         onChange={(e) => setFieldValue("fine_tuning_data", e.target.value)}
         placeholder="Enter fine-tuning data for your chatbot (can include business-specific terminology)"
       />
