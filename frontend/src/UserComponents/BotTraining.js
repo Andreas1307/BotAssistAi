@@ -83,7 +83,23 @@ const SupportBotCustomization = () => {
           { username: user.username },
           { withCredentials: true }
         );
-        setUserData(response.data.config || {}); 
+        const defaultConfig = {
+          response_delay_ms: 500,
+          escalation_threshold: 0.7,
+          web_url: "",
+          business_context: "",
+          businessName: "",
+          avoid_topics: "",
+          question: "",
+          answer: "",
+          fine_tuning_data: "",
+          phoneNum: "",
+          responseTone: "",
+        };
+        
+        const config = { ...defaultConfig, ...response.data.config };
+        setUserData(config);
+        setResponseTone(config.responseTone || '');
         
       } catch (e) {
         console.log(e);
