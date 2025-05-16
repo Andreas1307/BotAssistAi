@@ -289,10 +289,13 @@ const Integrations = () => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(codeSnippets[selectedLanguage]).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    const snippet = codeSnippets.find(snippet => snippet[selectedLanguage])?.[selectedLanguage];
+    if (snippet) {
+      navigator.clipboard.writeText(snippet).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
   };
 
   useEffect(() => {
@@ -588,11 +591,7 @@ const Integrations = () => {
     💡 {codeSnippets.find(snippet => snippet[selectedLanguage])?.proTip}
   </p>
 )}
-       {codeSnippets.find(snippet => snippet[selectedLanguage]) && (
-  <pre>
-    {codeSnippets.find(snippet => snippet[selectedLanguage])[selectedLanguage]}
-  </pre>
-)}
+        <pre>{codeSnippets.find(snippet => snippet[selectedLanguage])?.[selectedLanguage]}</pre>
         <button className="copy-btn" onClick={handleCopy}>
           <FaCopy /> {copied ? "Copied!" : "Copy Code"}
         </button>
