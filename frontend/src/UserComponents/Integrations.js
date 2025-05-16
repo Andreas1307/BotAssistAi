@@ -67,7 +67,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
     }
       </style>
-       <script src="https://api.botassistai.com" api-key="YOUR API KEY HERE"></script>
+       <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR API KEY HERE" defer></script>
     `,
     },
     {
@@ -91,8 +91,9 @@ const Integrations = () => {
     
           // Dynamically load the chatbot script
           const script = document.createElement("script");
-          script.src = "https://api.botassistai.com";
+          script.src = "https://api.botassistai.com/client-chatbot.js";
           script.setAttribute("api-key", "YOUR_API_KEY_HERE");
+          script.defer = true;
           document.body.appendChild(script);
     
           // Cleanup: Remove the script when the component unmounts
@@ -124,8 +125,9 @@ const Integrations = () => {
         document.head.appendChild(style);
     
         const script = document.createElement("script");
-        script.src = "https://api.botassistai.com";
+        script.src = "https://api.botassistai.com/client-chatbot.js";
         script.setAttribute("api-key", "YOUR_API_KEY_HERE");
+        script.defer = true;
         script.async = true;
         document.body.appendChild(script);
       }
@@ -135,28 +137,29 @@ const Integrations = () => {
     {
       proTip: "Add this to base.html to load the chatbot on all pages. Pass needed variables in the template context.",
       Python: `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Chatbot Integration</title>
-          <link rel="stylesheet" href="{{ baseApiUrl }}/bot.css">
-      </head>
-      <body>
-      <script>
-          (function() {
-              var script = document.createElement("script");
-              script.src = "{{ baseApiUrl }}/bot.js";
-              script.async = true;
-              script.dataset.bgColor = "{{ bgColor }}";
-              script.dataset.position = "{{ position }}";
-              script.dataset.welcomeMessage = "{{ welcomeMessage }}";
-              document.body.appendChild(script);
-          })();
-      </script>
-      </body>
-      </html>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Integration</title>
+    <link rel="stylesheet" href="{{ baseApiUrl }}/bot.css">
+</head>
+<body>
+<script>
+    (function() {
+        var script = document.createElement("script");
+        script.src = "https://api.botassistai.com/client-chatbot.js"; 
+        script.defer = true; 
+        script.dataset.apiKey = "{{ apiKey }}"; 
+        script.dataset.bgColor = "{{ bgColor }}";
+        script.dataset.position = "{{ position }}";
+        script.dataset.welcomeMessage = "{{ welcomeMessage }}";
+        document.body.appendChild(script);
+    })();
+</script>
+</body>
+</html>
     `,
     },
     {
@@ -170,7 +173,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="https://api.botassistai.com" api-key="YOUR_API_KEY_HERE"></script>
+<script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
     `,
     },
     {
@@ -185,7 +188,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="https://api.botassistai.com" api-key=\"YOUR_API_KEY_HERE\"></script>
+<script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
 '; ?>
       `,
     }, {
@@ -209,8 +212,9 @@ const Integrations = () => {
     
         // Inject script
         const script = document.createElement('script');
-        script.src = "https://api.botassistai.com";
+        script.src = "https://api.botassistai.com/client-chatbot.js";
         script.setAttribute("api-key", "YOUR_API_KEY_HERE");
+        script.defer = true;
         script.async = true;
         document.body.appendChild(script);
     
@@ -238,7 +242,7 @@ const Integrations = () => {
     --ai-border: #f8f8f8;
   }
 </style>
-<script src="https://api.botassistai.com" api-key="YOUR_API_KEY_HERE"></script>
+<script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
       `,
     },
   ];
@@ -316,7 +320,7 @@ const Integrations = () => {
     const userId = user.user_id;
     try {
       await axios.get(`${directory}/set-bot-status`, {
-        params: { userId, aiBot: status ? 1 : 0 }, // convert to 1/0 for DB
+        params: { userId, aiBot: status ? 1 : 0 }, // convert to  1/0 for DB
       });
     } catch (e) {
       console.log("Error occurred with setting bot on or off", e);
@@ -584,7 +588,11 @@ const Integrations = () => {
     💡 {codeSnippets.find(snippet => snippet[selectedLanguage])?.proTip}
   </p>
 )}
-        <pre>{codeSnippets.find(snippet => snippet[selectedLanguage])?.[selectedLanguage]}</pre>
+       {codeSnippets.find(snippet => snippet[selectedLanguage]) && (
+  <pre>
+    {codeSnippets.find(snippet => snippet[selectedLanguage])[selectedLanguage]}
+  </pre>
+)}
         <button className="copy-btn" onClick={handleCopy}>
           <FaCopy /> {copied ? "Copied!" : "Copy Code"}
         </button>
