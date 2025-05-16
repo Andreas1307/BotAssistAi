@@ -83,7 +83,6 @@ const SupportBotCustomization = () => {
           { username: user.username },
           { withCredentials: true }
         );
-        console.log("API response config:", response.data.config);
 
         const data = response.data.config || {};
   

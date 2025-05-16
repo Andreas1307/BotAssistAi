@@ -201,7 +201,7 @@ app.post("/paypal/webhook", async (req, res) => {
     // Optional: Validate paid amount
     const amount = order.purchase_units?.[0]?.amount?.value;
     console.log("Paid amount from PayPal:", amount);  // Debugging paid amount
-    if (amount !== "0.01") {
+    if (amount !== "20.00") {
       console.log("Error: Incorrect payment amount");  // Debugging incorrect amount
       return res.status(400).json({ error: "Incorrect payment amount" });
     }

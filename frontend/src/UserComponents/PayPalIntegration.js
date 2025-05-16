@@ -98,7 +98,7 @@ const PayPalIntegration = () => {
                 purchase_units: [
                   {
                     amount: {
-                      value: "00.01",
+                      value: "20.00",
                     },
                     custom_id: `${user.user_id}`, 
                   }, 
