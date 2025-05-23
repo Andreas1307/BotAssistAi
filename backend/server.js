@@ -1432,7 +1432,13 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
       "can i book",
       "can i schedule"
     ];
-    
+    const cancelTriggers = ["cancel", "never mind", "forget it", "stop", "exit"];
+
+if (cancelTriggers.some(trigger => lowerMessage.includes(trigger))) {
+  delete userConversationState[conversationId];
+  delete userData[conversationId];
+  aiResponse = "No problem! Let me know if you need anything else.";
+} 
 
     if(subscrptionPlan[0].subscription_plan === "Pro") {
       
@@ -1440,7 +1446,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
       if (!bookingEnabled[0].booking) {
         aiResponse = "Sorry, bookings are currently disabled. Please try again later or contact support.";
       } else {
-        aiResponse = "What service would you like to book?";
+        aiResponse = "What service would you like to book? (type 'exit' to cancel)";
         userConversationState[conversationId] = "waiting_for_service";
       }
     }
@@ -1596,8 +1602,7 @@ else if (userConversationState[conversationId] === "waiting_for_time") {
           }
     }
   }
-    }
-    else {
+    } else {
     await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Chatbot handled"]);
     }
     
