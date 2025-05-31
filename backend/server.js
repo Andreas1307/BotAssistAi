@@ -1189,7 +1189,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post("/ask-ai", async (req, res) => {
   
 try {
-    const { apiKey, message, model = "gpt-4o-mini", temperature = 0.2, ...updates } = req.body;
+    const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
 
     const [users] = await pool.query("SELECT * FROM users")
     const user = users.find((u) => {
@@ -1325,7 +1325,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
         userMessage += `\n(Reference URL: ${webUrl})`;
     }
 
-    let systemPrompt = `You are a helpful, concise AI chatbot for customer support on a website. Keep answers short (under 30 words), friendly, and direct. Avoid long explanations.`;
+    let systemPrompt = `You are a helpful, concise AI chatbot for customer support on a website. Keep answers short (under 30 words), friendly, and direct. Avoid long explanations. And you are only allowed to answer questions about this website ${webUrl}, nothing more anything else not related to the website or products should be out of the discussion.`;
     if (response_tone) {
         systemPrompt = `Respond in a ${response_tone} tone.`;
     }
@@ -1348,7 +1348,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
             { role: "user", content: userMessage }
         ],
         temperature: temperature,
-        max_tokens: 50
+        max_tokens: 40
     });
 
     const endTime = Date.now(); 
