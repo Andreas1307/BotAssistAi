@@ -1325,7 +1325,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
         userMessage += `\n(Reference URL: ${webUrl})`;
     }
 
-    let systemPrompt = `You are a helpful, concise AI chatbot for customer support on a website. Keep answers short (under 30 words), friendly, and direct. Avoid long explanations. And you are only allowed to answer questions about this website ${webUrl}, nothing more anything else not related to the website or products should be out of the discussion.`;
+    let systemPrompt = `You are a helpful, concise AI chatbot for customer support on a website And you are in this website ${webUrl}. Keep answers short (under 30 words), friendly, and direct. Avoid long explanations. And you are only allowed to answer questions about this website ${webUrl}, nothing more anything else not related to the website or products should be out of the discussion.`;
     if (response_tone) {
         systemPrompt = `Respond in a ${response_tone} tone.`;
     }
