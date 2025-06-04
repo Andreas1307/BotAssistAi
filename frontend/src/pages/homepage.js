@@ -86,6 +86,7 @@ const Homepage = () => {
           name="keywords" 
           content="AI chatbot, website support, customer service bot, live chat, automated support, BotAssistAI" 
         />
+            <meta name="facebook-domain-verification" content="e44h0xksgt67xikd7gj15rc5wz64vt" />
         <link rel="canonical" href="https://www.botassistai.com/" />
       </Helmet>
 
