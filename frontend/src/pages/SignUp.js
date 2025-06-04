@@ -133,6 +133,9 @@ const SignUp = () => {
       );
       
       if (res.data?.user?.username) {
+        if (window.fbq) {
+          window.fbq('track', 'Lead');
+        }
         navigate(`/${res.data.user.username}/dashboard`);
       } else {
         setError("Something went wrong during signup.");

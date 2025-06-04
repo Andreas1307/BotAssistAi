@@ -120,6 +120,12 @@ const PayPalIntegration = () => {
                   { withCredentials: true }
                 );
                 showNotification("Payment sucessful!")
+                if (window.fbq) {
+                  window.fbq('track', 'Purchase', {
+                    value: 20.00,
+                    currency: 'USD'
+                  });
+                }
                 navigate(`${user.username}/dashboard`)
               } catch (err) {
                 console.error("❌ Failed to notify server:", err);
