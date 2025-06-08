@@ -54,12 +54,13 @@
       height: 52px;
       border-radius: 50%;
       border: none;
-      background: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
+      background: var(--ai-website-chat-btn);
       color: white;
       font-size: 26px;
       z-index: 10000;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      color: var(--font-color);
     `;
     document.body.appendChild(toggleBtn);
   
@@ -78,9 +79,10 @@
       cursor: pointer;
       padding: 3px 16px 6px;
       border-radius: 22px;
-      background: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
+      background: var(--ai-website-question);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
+      color: var(--font-color);
     `;
     helperText.appendChild(closeIcon);
     setTimeout(() => document.body.appendChild(helperText), 8000);
@@ -104,7 +106,7 @@
     const satisfactionHeading = document.createElement("h2");
     satisfactionHeading.innerText = "Was this helpful?";
     satisfactionHeading.style.cssText = `
-      color: #fff;
+      color: var(--font-color);
       font-size: 17px;
     `;
   
@@ -172,15 +174,15 @@
       position: fixed;
       bottom: 80px;
       right: 17px;
-      width: 310px;
-      height: 390px;
+      width: 360px;
+      height: 440px;
       background: var(--ai-background);
       z-index: 9999;
       display: none;
       flex-direction: column;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       font-family: sans-serif;
-      color: #fff;
+      color: var(--font-color);
       padding-top: 0px;
       border-radius: 13px;
       border-bottom-left-radius: 13px;
@@ -242,10 +244,10 @@
   border: none;
   width: 100%;
   background: var(--ai-input);
-  color: white;
+  color: var(--ai-input-font-color);
   outline: none;
   font-size: 16px;
-  flex: 1; /* 💡 make input take full space */
+  flex: 1; 
     `;
     input.onfocus = () => input.style.outline = "none";
   
