@@ -39,6 +39,39 @@
   transform: skew(-14deg);
   transform-origin: top left;
 }
+
+ .botassist-message {
+    margin-bottom: 12px;
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 1.4;
+    display: inline-block;
+    clear: both;
+  }
+
+  .botassist-user {
+    background-color: var(--ai-user-bg, #d1e7ff);
+    align-self: flex-end;
+    float: right;
+    text-align: right;
+    color: var(--font-color);
+  }
+
+  .botassist-bot {
+    background-color: var(--ai-bot-bg, #f0f0f0);
+    align-self: flex-start;
+    float: left;
+    text-align: left;
+    color: var(--font-color);
+  }
+    #botassist-chatlog::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
     `;
     document.head.appendChild(style);
   
@@ -281,11 +314,11 @@
     async function sendMessage() {
       const message = input.value.trim();
       if (!message) return;
-      chatLog.innerHTML += `<div style="margin-bottom: 5px;"><strong>You:</strong> ${message}</div>`;
+      chatLog.innerHTML += `<div class="botassist-message botassist-user">${message}</div>`;
       input.value = "";
     
       const loadingId = `loading-${Date.now()}`;
-      chatLog.innerHTML += `<div  style="margin-bottom: 5px;" id="${loadingId}"><strong>Bot:</strong> <em>Typing...</em></div>`;
+      chatLog.innerHTML += `<div id="${loadingId}" class="botassist-message botassist-bot"><em>Typing...</em></div>`;
       chatLog.scrollTop = chatLog.scrollHeight;
     
       try {
@@ -305,7 +338,10 @@
           if (loadingElem) loadingElem.innerHTML = `<strong>Bot:</strong> You've reached the limit of free conversations for today 💬`;
           satisfactionDiv.style.display = "none";
         } else {
-          if (loadingElem) loadingElem.innerHTML = `<strong>Bot:</strong> ${botResponse}`;
+          if (loadingElem) {
+            loadingElem.className = "botassist-message botassist-bot";
+            loadingElem.innerHTML = `${botResponse}`;
+          }
           satisfactionDiv.style.display = "flex";
         }
     
