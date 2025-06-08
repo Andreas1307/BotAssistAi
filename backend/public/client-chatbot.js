@@ -174,8 +174,8 @@
       position: fixed;
       bottom: 80px;
       right: 17px;
-      width: 360px;
-      height: 440px;
+      width: 350px;
+      height: 430px;
       background: var(--ai-background);
       z-index: 9999;
       display: none;
@@ -259,7 +259,7 @@
   outline: none;
   padding: 0 30px;
   cursor: pointer;
-  color: #fff;
+  color: var(--font-color);
   font-weight: 500;
   font-size: 16px;
   background: var(--ai-button);
@@ -281,11 +281,11 @@
     async function sendMessage() {
       const message = input.value.trim();
       if (!message) return;
-      chatLog.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      chatLog.innerHTML += `<div style="margin-bottom: 5px;"><strong>You:</strong> ${message}</div>`;
       input.value = "";
     
       const loadingId = `loading-${Date.now()}`;
-      chatLog.innerHTML += `<div id="${loadingId}"><strong>Bot:</strong> <em>Typing...</em></div>`;
+      chatLog.innerHTML += `<div  style="margin-bottom: 5px;" id="${loadingId}"><strong>Bot:</strong> <em>Typing...</em></div>`;
       chatLog.scrollTop = chatLog.scrollHeight;
     
       try {
