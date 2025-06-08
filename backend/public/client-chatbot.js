@@ -52,7 +52,7 @@
   }
 
   .botassist-user {
-    background-color: var(--ai-user-bg, #d1e7ff);
+    background-color: var(--conversation-boxes);
     align-self: flex-end;
     float: right;
     text-align: right;
@@ -60,7 +60,7 @@
   }
 
   .botassist-bot {
-    background-color: var(--ai-bot-bg, #f0f0f0);
+    background-color: var(--conversation-boxes);
     align-self: flex-start;
     float: left;
     text-align: left;
