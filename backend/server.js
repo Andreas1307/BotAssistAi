@@ -2182,10 +2182,14 @@ app.post('/register', async (req, res, next) => {
   }
 
   try {
+    const now = new Date();
+    const expiry = new Date(now);
+    expiry.setDate(now.getDate() + 30);
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
-      'INSERT INTO users (username, email, password, api_key) VALUES (?, ?, ?, ?)',
-      [username, email, hashedPassword, encryptedKey]
+      `INSERT INTO users (username, email, password, api_key, subscription_plan, subscribed_at, subscription_expiry) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [username, email, hashedPassword, encryptedKey, 'Pro', now, expiry]
     );
 
     // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
@@ -2308,10 +2312,16 @@ app.post("/auth/google", async (req, res) => {
       const rawKey = uuidv4();
       const encryptedKey = encryptApiKey(rawKey);
 
-      const [result] = await pool.query(
-        "INSERT INTO users (username, email, google_id, api_key) VALUES (?, ?, ?, ?)",
-        [uniqueUsername, googleUser.email, googleUser.sub, encryptedKey]
-      );
+      const now = new Date();
+const expiry = new Date(now);
+expiry.setDate(now.getDate() + 30);
+
+const [result] = await pool.query(
+  `INSERT INTO users (username, email, google_id, api_key, subscription_plan, subscribed_at, subscription_expiry) 
+   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  [uniqueUsername, googleUser.email, googleUser.sub, encryptedKey, 'Pro', now, expiry]
+);
+
 
       if (result.affectedRows === 1) {
         user = { user_id: result.insertId, username: uniqueUsername, email: googleUser.email };
@@ -2344,8 +2354,6 @@ app.post("/auth/google", async (req, res) => {
 
 // **Google OAuth Redirect Flow**
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-
 
 app.get(
   "/auth/google/callback",
