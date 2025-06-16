@@ -277,7 +277,7 @@
   border: none;
   width: 100%;
   background: var(--ai-input);
-  color: var(--ai-input-font-color);
+  color: var(--font-color);
   outline: none;
   font-size: 16px;
   flex: 1; 
