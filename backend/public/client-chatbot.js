@@ -207,8 +207,8 @@
       position: fixed;
       bottom: 80px;
       right: 17px;
-      width: 350px;
-      height: 430px;
+      width: 335px;
+      height: 420px;
       background: var(--ai-background);
       z-index: 9999;
       display: none;
