@@ -68,11 +68,11 @@
   display: flex;
 }
 .hero-proof img {
-  width: 270px;
+  width: 275px;
   max-height: 655px;
   border-radius: 20px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
-  border: 3px solid #00f5d4;
+  border: 2px solid #dfdfdf;
 }
 .hero-proof span {
   display: flex;

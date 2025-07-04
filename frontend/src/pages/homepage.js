@@ -109,9 +109,9 @@ const Homepage = () => {
                       Try It Free – No Credit Card
                     </button>     
                     </Link>
-                    <Link to={""}>
+                    <a target="_blank" href={"https://shop-ease2.netlify.app/"}>
                     <button className="hero-btn aaaa">See Demo</button>
-                  </Link>
+                  </a>
                   <div className="icon-hero">
                     <div>
                       <FaStar />
