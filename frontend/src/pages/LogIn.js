@@ -147,7 +147,7 @@ const LogIn = () => {
   if (loading) return <h2>Loading...</h2>;
 
   return (
-    <div>
+    <div className="siggnLogg" style={{backgroundColor: "#f2f2f2"}}>
       <Header />
       <div className="user-sign">
         <div className="sign-div">

@@ -1,10 +1,10 @@
 .pricingDiv {
-    color: white;
+    color: #222;
+    background-color: #f2f2f2;
   }
   
   /* Hero Section */
   .pricing-hero {
-    background: linear-gradient(135deg, #004aad, #00c2ff);
     padding: 40px;
     border-radius: 10px;
   }
@@ -12,11 +12,15 @@
   .pricing-hero h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
+    text-align: center;
   }
   
   /* Pricing Plans */
   .pricing-plans {
+    max-width: 1500px;
+    padding: 10px 40px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     gap: 20px;
     margin-top: 10px;
@@ -28,65 +32,118 @@
     padding: 30px 20px 20px;
     border-radius: 10px;
     width: 320px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0px 2px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease-in-out;
     position: relative;
   }
   
-  .plan:hover {
-    transform: translateY(-10px);
-  }
+
   .plan h2 {
     font-size: 30px;
     font-family: "Space Grotesk", sans-serif;
   }
   .price {
-    font-size: 1.5rem;
     font-weight: bold;
     margin: 10px 0;
     font-family: "Space Grotesk", sans-serif;
   }
   .price.pro {
-    color: #fff;
+    color: #222;
     padding: 0;
     background-color: transparent;
-    font-size: 32px;
+    font-size: 38px;
+    text-shadow: none;
   }
   .price span {
-    font-size: 1rem;
+    font-size: 17px;
     opacity: 0.7;
     font-family: "Space Grotesk", sans-serif;
   }
   .plan ul {
     list-style: none;
     padding: 0;
+    margin-bottom: 20px;
   }
   
   .plan li {
-    font-size: 1rem;
-    margin: 8px 0;
+    margin: 12px 0;
     font-weight: 500;
   }
-  
-  .plan button {
-    background: #00c2ff;
-    color: white;
-    padding: 10px 15px;
+  .plan li h5 {
+    font-size: 21px;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 700;
+  }
+  .plan li p {
+    font-size: 15.5px;
+    margin-top: 5px;
     font-weight: 500;
-    margin-top: 10px;
+    margin-left: 35px;
+  }
+  .plan button {
+    background: #00f5d4;
+    color: white;
+    padding: 10.5px 22px;
+    font-weight: 600;
+    margin-right: 10px;
     border: none;
-    border-radius: 10px;
+    border-radius: 18px;
+    font-size: 18.5px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.1s;
+  }
+  .plan .included {
+    margin-top: 20px;
+  }
+  .plan .see {
+    background-color: #f2f2f2;
+    color: #222;
+    border: 2px solid #dfdfdf;
   }
   .plan button:hover {
-    background: #008ac1;
+    scale: 1.03;
   }
   .popular {
-    background: #00f5d4;
-    transform: scale(1.05);
+    width: 100%;
+    display: flex;
+    background: #fff;
+    border: 2px solid #dfdfdf;
   }
-  
+  .popular img {
+    max-width: 300px;
+    max-height: 270px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: .2s ease;
+    margin-right: 25px;
+  }
+  .popular img:hover {
+    scale: 0.99;
+  }
+  .reviews-price {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    max-width: 465px;
+    margin-bottom: 13px;
+  }
+  .popular h3{
+    font-size: 19.5px;
+    margin: 5px 0 7px;
+    font-weight: 600;
+    color: #444;
+  }
+  .popular h4 {
+    font-size: 14.5px;
+    font-weight: 600;
+    margin-top: 3px;
+  }
+  .reviews-price span {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: #444;
+  }
   .badge {
     position: absolute;
     top: -10px;
@@ -98,22 +155,34 @@
     border-radius: 5px;
     font-weight: bold;
   }
-  
-  .savings-calculator {
-    margin-top: 70px;
-    padding: 30px 15px;
+  .plans {
     width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .free {
+    width: 49%;
+    background: #fff;
+    border: 2px solid #dfdfdf;
+  }
+  .savings-calculator {
+    width: 49%;
+    border-radius: 10px;
+    background: #fff;
+    border: 2px solid #dfdfdf;
+    margin-top: 0px;
+    padding: 30px 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
   .savings-calculator h2 {
-    font-size: 45px;
+    font-size: 40px;
     margin-bottom: 5px;
-    color: #fff;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: .3px .3px #00f5d4;
   }
   .savings-calculator p {
     font-weight: 500;
@@ -146,33 +215,35 @@
   
   .feature-highlights {
     margin-top: 50px;
-    padding: 30px 15px;
-    text-align: center;
+    padding: 20px 40px;
+    text-align: start;
   }
   .feature-highlights h2 {
-    font-size: 45px;
-    color: #fff;
+    font-size: 40px;
+    color: #222;
     margin-bottom: 30px;
   }
   .features-grid {
     display: flex;
-    gap: 25px;
-    justify-content: center;
+    gap: 0px;
+    justify-content: start;
     flex-wrap: wrap;
     width: 100%;
   }
   .features-grid h3 {
     font-size: 24px;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: 0.3px 0.3px #00f5d4;
+    color: #222;
   }
   .features-grid p {
-    font-weight: 500;
+    font-weight: 600;
     margin-top: 4px;
     line-height: 24px;
+    color: #444;
   }
   .feature-card {
-    background: #00f5d4;
+    background: #fff;
+    border: 2px solid #dfdfdf;
     color: #f8f8f8;
     padding: 20px;
     border-radius: 10px;
@@ -189,21 +260,20 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: start;
+    justify-content: start;
     margin-top: 0px; 
-    padding: 50px 15px;
+    padding: 20px 40px;
   }
   .pricing-comparison h2 {
-    font-size: 45px;
-    color: #fff;
+    font-size: 40px;
+    color: #222;
     margin-bottom: 30px;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: 0.3px 0.3px #00f5d4;
   }
   .pricing-comparison table {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1250px;
     margin: auto;
     border-collapse: collapse;
     color: #002244;
@@ -213,9 +283,15 @@
   }
   .pricing-comparison table td,
   .pricing-comparison table th {
-    padding: 18px;
-    border: 2px solid #00f5d4;
-    font-size: 17px;
+    padding: 24px;
+    border: 3px solid #00f5d4;
+    font-size: 19px;
+    background-color: #fff;
+  }
+  .pricing-comparison table td {
+    color: #444;
+    font-weight: 500;
+    font-size: 17.5px;
   }
   .pricing-comparison table td:first-child {
     color: #fff;
@@ -226,7 +302,7 @@
   .pricing-comparison table th {
     background-color: #00f5d4;
     font-family: "Space Grotesk", sans-serif;
-    font-size: 18px;
+    font-size: 19px;
   }
   .mobile-cards {
     display: none;
@@ -304,6 +380,25 @@
       border-bottom: none;
     }
   }
+  @media(max-width: 700px) {
+    .popular {
+      flex-direction: column;
+    }
+    .plans {
+      flex-direction: column;
+    }
+    .free {
+      width: 100%;
+    }
+    .savings-calculator {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .popular img {
+      margin-right: 0;
+      margin-bottom: 15px;
+    }
+  }
   @media(max-width: 550px) {
     .savings-calculator h2 {
       font-size: 35px;
@@ -331,6 +426,11 @@
 .feature-highlights {
   margin-top: 0px;
 }
+}
+@media (max-width: 400px) {
+  .popular img {
+    width: 100%;
+  }
 }
 @media(max-width: 380px) {
   .plan {

@@ -1,5 +1,5 @@
 .footer {
-    background: rgba(0, 0, 0, 0.3);
+    background: #fff;
     color: #fff;
     padding: 40px 0 30px;
     text-align: center;
@@ -30,7 +30,7 @@
   
   .footer p {
     font-size: 1rem;
-    color: #ccc;
+    color: #444;
     font-weight: 500;
     line-height: 24px;
   }  
@@ -45,7 +45,7 @@
   }
   .footer-links ul li a {
     text-decoration: none;
-    color: #fff;
+    color: #222;
     transition: 0.3s;
     font-weight: 500;
   }
@@ -58,7 +58,7 @@
     gap: 15px;
   }
   .social-icons a {
-    color: #fff;
+    color: #444;
     font-size: 21px;
     margin: 0 5px;
     transition: 0.3s;

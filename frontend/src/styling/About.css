@@ -1,6 +1,7 @@
 .about-container {
     width: 100%;
-    color: white;
+    background-color: #f2f2f2;
+    color: #222;
   }
   
   .features-hero p {
@@ -9,23 +10,21 @@
     line-height: 25px;
   }
   .about-services {
-    margin-top: 20px;
+    max-width: 1500px;
+    padding: 20px 40px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: start;
+    justify-content: start;
   }
   .about-services h2 {
-    font-size: 47px;
+    font-size: 41px;
     margin-bottom: 5px;
-    color: #fff;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: .3px .3px #00f5d4;
   }
   .about-services p {
-    max-width: 750px;
-    text-align: center;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 10px;
     line-height: 22px;
   }
@@ -33,11 +32,12 @@
     display: flex;
     justify-content: center;
     gap: 25px;
-    margin-top: 20px;
+    margin-top: 10px;
   }
   .service-card,
   .step-card {
-    background: #00f5d4;
+    background: #fff;
+    border: 2px solid #dfdfdf;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
@@ -59,26 +59,28 @@
     margin-top: 3px;
     font-weight: 600;
     line-height: 21px;
+    color: #444;
   }
   .service-icon {
     font-size: 2.5rem;
-    color: #ffcc00;
+    color: #00f5d4;
     margin-bottom: 5px;
   }
   
   .about-process {
-    margin-top: 120px;
+    max-width: 1500px;
+    padding: 20px 40px;
+    margin-top: 40px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: start;
+    justify-content: start;
   }
   .about-process h2 {
-    font-size: 45px;
-    color: #fff;
-    margin-bottom: 13px;
+    font-size: 40px;
+    color: #222;
+    margin-bottom: 3px;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: 0.3px 0.3px #00f5d4;
   }
   .process-steps {
     display: flex;
@@ -89,7 +91,7 @@
   
   .step-icon {
     font-size: 2.5rem;
-    color: #4caf50;
+    color: #00f5d4;
     margin-bottom: 10px;
   }
   
@@ -162,9 +164,9 @@
 
 .about-vision,
 .about-values {
-  padding: 80px 15px;
+  padding: 20px 40px;
   border-radius: 12px;
-  text-align: center;
+  text-align: start;
   position: relative;
   overflow: hidden;
 }
@@ -187,14 +189,13 @@
     margin-right: 70px;
 }
 .about-vision .outer-vision h2 {
-    font-size: 48px;
-    color: #fff;
+    font-size: 44px;
+    color: #222;
     margin-bottom: 5px;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: 0.3px 0.3px #00f5d4;
 }
 .about-vision .outer-vision p {
-    color: #e9e9e9;
+    color: #444;
     font-weight: 500;
     max-width: 700px;
     line-height: 25px;
@@ -213,11 +214,10 @@
 }
 .about-mission h2,
 .about-values h2 {
-    font-size: 47px;
-    margin-bottom: 7px;
-    color: #fff;
+    font-size: 41px;
+    margin-bottom: 12px;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: .3px .3px #00f5d4;
 }
 .values-grid {
   display: flex;
@@ -228,10 +228,11 @@
 .value-card {
   flex: 1;
   max-width: 400px;
-  padding: 30px;
-  background: #00f5d4;
+  padding: 20px 25px;
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease-in-out;
 }
 .value-card:hover {
@@ -239,59 +240,56 @@
 }
 .value-icon {
   font-size: 2.5rem;
-  color: #fff;
+  color: #00f5d4;
   margin-bottom: 10px;
 }
 .value-card h3 {
-  color: #fff;
+  color: #222;
   font-size: 28px;
   margin-bottom: 5px;
   font-family: "Space Grotesk", sans-serif;
 }
 .value-card p {
-  color: #f8f8f8;
+  color: #444;
   font-size: 16.5px;
   font-weight: 500;
 }
 .about-benefits {
-    padding: 80px 5%;
-    text-align: center;
+    padding: 20px 40px;
+    text-align: start;
     border-radius: 12px;
     position: relative;
     overflow: hidden;
   }
   .about-benefits h2 {
-    font-size: 47px;
+    font-size: 41px;
     margin-bottom: 7px;
-    color: #fff;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
-    text-shadow: .3px .3px #00f5d4;
   }
   .about-benefits p {
     font-size: 17px;
-    color: rgba(255, 255, 255, 0.85);
-    max-width: 750px;
-    margin: auto;
-    line-height: 1.7;
+    color: #444;
+    font-weight: 500;
   }
   .about-benefits ul {
     list-style: none;
     padding: 0;
-    margin-top: 30px;
+    margin-top: 20px;
   }
   .about-benefits li {
     font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.9);
+    color: #444;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: start;
+    justify-content: start;
     gap: 17px;
-    padding: 14px 15px;
-    background: #00f5d4;
+    padding: 14px 20px;
+    background: #fff;
     border-radius: 10px;
     margin: 10px auto;
-    max-width: 600px;
-    font-weight: 500;
+    width: 100%;
+    font-weight: 600;
     cursor: pointer;
     transition: transform 0.3s ease-in-out, background 0.3s;
   }
@@ -303,7 +301,7 @@
   }
   .benefit-icon {
     font-size: 1.5rem;
-    color: #fff;
+    color: #222;
   }
   
 
@@ -345,6 +343,17 @@
     }
     .value-card {
       min-width: 400px;
+    }
+  }
+  @media(max-width: 1020px) {
+    .ai {
+      text-align: start;
+    }
+  }
+  @media(max-width: 945px) {
+    
+    .divs-wrapper .wrapp2 {
+      width: 100%;
     }
   }
   @media(max-width: 800px) {
@@ -398,6 +407,7 @@
     font-size: 17px;
   }
   }
+ 
   @media(max-width: 530px) {
     .about-vision {
       display: none;
@@ -423,4 +433,5 @@
 .about-values {
   padding: 60px 10px;
 }
+
 }

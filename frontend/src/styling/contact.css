@@ -1,5 +1,6 @@
 .contact-page {
-    color: white;
+    color: #222;
+    background-color: #f2f2f2;
   }
   
   .contact-hero {
@@ -26,7 +27,8 @@
   }
   
   .contact-card {
-    background: #00ffcc;
+    background: #fff;
+    border: 2px solid #dfdfdf;
     padding: 20px;
     border-radius: 10px;
     width: 320px;
@@ -50,7 +52,7 @@
     text-decoration: none;
     font-weight: 600;
     padding-bottom: -30px;
-    color: #f8f8f8;
+    color: #222;
     font-size: 16.5px;
    }
   .contact-icon {
@@ -99,7 +101,7 @@
     cursor: pointer;
   }
   .contact-form-container {
-    background: #00f5d4;
+    background: #fff;
     padding: 0px;
     border-radius: 10px;
     width: 100%;
@@ -107,6 +109,7 @@
     margin: 100px auto 70px;
     display: flex;
     overflow: hidden;
+    border: 2px solid #dfdfdf;
   }
   .contact-form-container div {
     width: 55%;
@@ -120,7 +123,7 @@
     right: -60px; 
     width: 120px;
     height: 100%;
-    background-color: #00f5d4;
+    background-color: #fff;
     transform: skewX(-12deg);
     transform-origin: left;
   }

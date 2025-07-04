@@ -85,7 +85,7 @@ const FeaturesPage = () => {
   <p className="features-description">
     Empower your business with AI technology that enhances interactions, automates workflows, and ensures security.
 </p>
-  <div className="features-grid">
+  <div className="features-grid2">
     <div className="feature-item1">
       <FaClock className="feature-icon" />
       <h3>24/7 AI Support</h3>
@@ -138,6 +138,7 @@ const FeaturesPage = () => {
           <source src="your-video-url.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
+        <p>Or you can check out the live <a href="">demo</a></p>
       </section>
 
       {/* How It Works */}

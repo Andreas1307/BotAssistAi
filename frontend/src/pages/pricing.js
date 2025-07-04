@@ -7,6 +7,7 @@ import Footer from "../components/footer";
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "axios";
+import { FaStar, FaUsers } from "react-icons/fa";
 import { Helmet } from "react-helmet";
 import { useNavigate, useLocation } from "react-router-dom";
 const Pricing = () => {
@@ -78,7 +79,110 @@ const Pricing = () => {
     
           <div className="pricing-plans">
             {/* Free Plan */}
-            <div className="plan">
+            
+    
+            {/* Business Plan */}
+            <div className="plan popular">
+            <img
+                  src={`${process.env.PUBLIC_URL}/img/bigLogo.png`}
+                  alt="Benefit Image from Ai"
+                />
+              <span>
+                 <div className="badge">🔥 Most Popular</div>
+              <h2>BotAssistAi: The 24/7 AI Support</h2>
+              <div className="reviews-price">
+                <span>
+                  <FaStar />
+                  <FaStar />
+                  <FaStar />
+                  <FaStar />
+                  <FaStar className="hero-icon"/>
+                  5.0 reviews
+                </span>
+                <span>
+                  <FaUsers className="hero-icon"/>
+                  100+ customers
+                </span>
+              </div>
+              <h3>Plan, launch & automate customer support like a pro — 24/7.</h3>
+              <h3>Get 5-tools-in-1 with BotAssistAi for just €20/mo (replaces €500+ in manual support costs).</h3>
+              <h4>
+              ✅ Limited-time: Start for €0 today & become an Early Partner (offer ends soon)
+              </h4>
+              <p className="price pro">€20<span>/month</span></p>
+              <Link to={"/sign-up"}><button>Start Now</button></Link>
+              <Link to={""}><button className="see">See Demo</button></Link>
+              <h2 className="included">
+              Included in Your Plan:
+              </h2>
+              <ul>
+                <li>
+                  <h5>🤖 24/7 AI chatbot support</h5>
+                  <p>
+                  Your AI assistant answers common questions instantly: shipping, returns, sizing, product info, availability, and more — giving your visitors the confidence to buy.
+                  </p>
+                  </li>
+                <li>
+                <h5>💬 Unlimited conversations</h5>
+                <p>
+                Whether you get 10 visitors or 10,000, your chatbot handles them all. No usage caps, hidden charges, or per-conversation fees.
+                  </p>
+                </li>
+                <li>
+                <h5>📅 Booking system</h5>
+                <p>
+                Let customers schedule services straight from the chat.
+                Perfect for salons, consultations, events, or any appointment-based business — no extra tool needed.
+                  </p>
+                </li>
+                <li>
+                <h5>📈 Real-time chat analytics</h5>
+                <p>
+                Get clear insights into what questions get asked most, when people drop off, and how chat boosts your conversions — so you can optimize fast.
+                  </p>
+                </li>
+                <li>
+                  <h5> 🎛️ Fully Brand Customizable</h5>
+                  <p>
+                  Customize the bot’s colors, tone, voice, and name to perfectly match your website. No clunky third-party vibe — it feels native.
+                    </p>
+                </li>
+                <li>
+                <h5>🔍 Smart FAQ Upload</h5>
+                <p>
+                Upload your FAQs, shipping policies, return rules, or product docs — the bot uses this info to give smart, accurate replies in real time.
+                  </p>
+                </li>
+                <li>
+                <h5>🏷️ Searchable Chat History</h5>
+                <p>
+                Whether you want to follow up with a customer or track a common issue, it’s all searchable and saved securely.
+                  </p>
+                </li>
+                <li>
+                <h5>📁 Upload file-based FAQs or business info</h5>
+                <p>
+                No developers, no plugins, no complicated steps. You paste a single line on your site, and your bot goes live. Done in under 30 seconds.
+                  </p>
+                </li>
+                <li>
+                <h5>✅ Works with All Websites</h5>
+                <p>
+                No matter where your site lives, the bot fits right in and starts helping visitors right away.
+                </p>
+                </li>
+          
+              </ul>
+              <h4>
+              ✅ Limited-time: Start for €0 today & become an Early Partner (offer ends soon)
+              </h4>
+              <Link to={"/sign-up"}><button style={{marginTop: "15px"}}>Start Now For Free</button></Link>
+              </span>
+             
+            </div>
+
+<div className="plans">
+  <div className="plan free">
               <h2>🚀 Free</h2>
               <p className="price pro">€0<span>/month</span></p>
               <ul>
@@ -94,26 +198,25 @@ const Pricing = () => {
               </ul>
               <Link to={'/sign-up'}><button>Get Started</button></Link>
             </div>
-    
-            {/* Business Plan */}
-            <div className="plan popular">
-              <div className="badge">🔥 Most Popular</div>
-              <h2>💼 Pro</h2>
-              <p className="price pro">€20<span>/month</span></p>
-              <ul>
-                <li>🤖 24/7 AI chatbot support</li>
-                <li>💬 Unlimited conversations</li>
-                <li>📅 Booking system</li>
-                <li>📈 Real-time chat analytics</li>
-                <li>🎛️ Customizable response tone</li>
-                <li>🔍 Conversation search & history</li>
-                <li>🏷️ Add business name and context</li>
-                <li>📁 Upload file-based FAQs or business info</li>
-                <li></li>
-                <li></li>
-              </ul>
-              <Link to={"/sign-up"}><button>Start Now</button></Link>
+
+
+             <div className="savings-calculator">
+            <h2>💡 How Much Can You Save?</h2>
+            <p>Enter the number of customer inquiries you handle per month:</p>
+            <input 
+              type="number" 
+              value={messages} 
+              onChange={(e) => setMessages(e.target.value)} 
+              min="100"
+            />
+            <div className="cost-comparison">
+              <p>Traditional Support Cost: <strong>${costWithoutBot.toFixed(2)}/month</strong></p>
+              <p>With BotAssistAI: <strong>${botCost}/month</strong></p>
+              <p className="savings">🎉 You Save: <strong>${(costWithoutBot - botCost).toFixed(2)}/month</strong></p>
             </div>
+          </div>
+</div>
+            
     
             {/* Enterprise Plan 
             <div className="plan">
@@ -133,21 +236,7 @@ const Pricing = () => {
           </div>
     
           {/* Savings Calculator */}
-          <div className="savings-calculator">
-            <h2>💡 How Much Can You Save?</h2>
-            <p>Enter the number of customer inquiries you handle per month:</p>
-            <input 
-              type="number" 
-              value={messages} 
-              onChange={(e) => setMessages(e.target.value)} 
-              min="100"
-            />
-            <div className="cost-comparison">
-              <p>Traditional Support Cost: <strong>${costWithoutBot.toFixed(2)}/month</strong></p>
-              <p>With BotAssistAI: <strong>${botCost}/month</strong></p>
-              <p className="savings">🎉 You Save: <strong>${(costWithoutBot - botCost).toFixed(2)}/month</strong></p>
-            </div>
-          </div>
+         
     
     
           <div className="pricing-comparison">
