@@ -871,7 +871,7 @@ body {
   border-radius: 8px !important;
   font-size: 17.5px !important;
   background-color: #fff!important;
-  color: white !important;
+  color: #444 !important;
   font-weight: 600 !important;
   font-family: "Space Grotesk", sans-serif !important;
   backdrop-filter: blur(10px) !important;

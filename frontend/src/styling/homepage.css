@@ -68,7 +68,7 @@
   display: flex;
 }
 .hero-proof img {
-  width: 275px;
+  width: 285px;
   max-height: 655px;
   border-radius: 20px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
@@ -78,6 +78,9 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+.hero-proof span img {
+  width: 270px;
 }
 .icon-hero {
   width: 100%;
