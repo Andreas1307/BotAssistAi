@@ -80,7 +80,7 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", ]);
+const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", "andreas1307.github.io"]);
 
 const dynamicCors = async (origin, callback) => {
   if (!origin) return callback(null, true); // Allow non-browser requests (like Postman, curl)
