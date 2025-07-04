@@ -6,7 +6,7 @@ body {
 }
   .dashboard-container {
     display: flex;
-    color: white;
+    color: #222;
   }
   .main-content {
     width: 100%;
@@ -22,7 +22,7 @@ body {
   .sidebar {
     width: 260px;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -34,7 +34,7 @@ body {
     bottom: 0;
     font-size: 16px;
     background: linear-gradient(90deg, #0077ff, #9b00ff, #ff007a);
-    color: #fff;
+    color: #222;
     font-weight: bold;
     text-align: center;
     padding: 12px 20px 11px;
@@ -81,11 +81,12 @@ body {
     text-decoration: none;
   }
   .nav-item:hover, .nav-item.active {
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 2px solid #dfdfdf;
     border-radius: 5px;
   }
   .nav-item a {
-    color: #fff;
+    color: #444;
     text-decoration: none;
     font-weight: 500;
   }
@@ -270,7 +271,7 @@ body {
   .membership-banner {
     width: 100%;
     background: linear-gradient(90deg, #0077ff, #9b00ff, #ff007a);
-    color: #fff;
+    color: #222;
     padding: 26px;
     border-radius: 12px;
     display: flex;
@@ -325,7 +326,7 @@ body {
     cursor: pointer;
     font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
-    color: #fff;
+    color: #222;
     border-radius: 13px;
     margin-bottom: -20px;
   }
@@ -335,7 +336,8 @@ body {
     color: #00F5D4;
   }
   .status-panel {
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 2px solid #dfdfdf;
     border-radius: 10px;
     padding: 13px 30px 15px;
     flex: 1;
@@ -353,7 +355,8 @@ body {
     font-weight: 500;
   }
   .quick-actions {
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 2px solid #dfdfdf;
     border-radius: 10px;
     padding: 15px 30px 18px;
     min-width: 457px;
@@ -377,7 +380,7 @@ body {
     border-radius: 15px;
     font-size: 14.3px;
     border: 0;
-    color: #fff;
+    color: #222;
     font-weight: 600;
     cursor: pointer;
     transition: .4s ease;
@@ -389,7 +392,7 @@ body {
   }
   .quick-actions button a {
     text-decoration: none;
-    color: #fff;
+    color: #222;
   }
   .quick-actions button:nth-child(2) {
     background: linear-gradient(135deg, #ff9a44, #ff7b00);
@@ -398,7 +401,8 @@ body {
     background: linear-gradient(135deg, #42e695, #3bb2b8);
   }
   .ai-chat-counter {
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 2px solid #dfdfdf;
     border-radius: 10px;
     padding: 15px 30px 18px;
     min-width: 366px;
@@ -426,7 +430,8 @@ body {
     margin-bottom: 10px;
   }
   .graph-card {
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 2px solid #dfdfdf;
     border-radius: 10px;
     padding: 15px 25px 20px;
     flex: 1;
@@ -463,13 +468,14 @@ body {
     cursor: pointer;
     font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
-    color: #fff;
+    color: #222;
     border-radius: 13px;
     margin-bottom: -20px;
   }
 
 .support-section {
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -477,7 +483,7 @@ body {
   text-align: center;
 }
 .support-section h2 {
-  color: #fff;
+  color: #222;
   font-size: 20px;
   margin-bottom: 15px;
   font-size: 34px;
@@ -489,7 +495,8 @@ body {
   min-height: 120px;
   max-height: 500px;
   padding: 16px 17px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #fff;
+  border: 2px solid #dfdfdf;
   border: 2px solid #ccc;
   border-radius: 6px;
   font-size: 16px;
@@ -509,7 +516,7 @@ body {
 .submit-query-btn {
   background: #00F5D4;
   font-weight: 600;
-  color: #fff;
+  color: #222;
   border: none;
   padding: 11px 28px;
   font-size: 17px;
@@ -522,14 +529,15 @@ body {
   background: #00f5d486;
 }
 .improvement-tips {
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   flex: 1;
 }
 .improvement-tips h2 {
-  color: #fff;
+  color: #222;
   font-size: 30px;
   margin-bottom: 15px;
   display: flex;
@@ -545,7 +553,7 @@ body {
 }
 .improvement-tips ul li {
   font-size: 17px;
-  color: #fff;
+  color: #222;
   padding: 7px 0;
   display: flex;
   align-items: center;
@@ -571,14 +579,15 @@ body {
   }
 }
 .faq-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   flex: 1;
 }
 .faq-card h2 {
-  color: #fff;
+  color: #222;
   font-size: 30px;
   margin-bottom: 15px;
   display: flex;
@@ -598,7 +607,7 @@ body {
 }
 .faq-card ul li {
   font-size: 16px;
-  color: #fff;
+  color: #222;
   padding: 10px;
   border-bottom: 2px solid #00F5D4;
   display: flex;
@@ -634,7 +643,8 @@ body {
   width: 100%;
   padding: 15px 20px;
   border-radius: 15px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #fff;
+  border: 2px solid #dfdfdf;
   margin-top: 15px;
 }
 .conversation-list h2 {
@@ -650,7 +660,8 @@ body {
   height: auto;
   padding: 15px 20px;
   border-radius: 15px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #fff;
+  border: 2px solid #dfdfdf;
 }
 .conversation-card h3 {
   font-size: 25px;
@@ -677,13 +688,15 @@ body {
   max-height: 200px;
   overflow-y: auto;
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #00F5D4 rgba(255, 255, 255, 0.1); /* Firefox */
+  scrollbar-color: #00F5D4 #fff;
+  border: 2px solid #dfdfdf; /* Firefox */
 }
 .conversation-details::-webkit-scrollbar {
   width: 8px;
 }
 .conversation-details::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 10px;
 }
 .conversation-details::-webkit-scrollbar-thumb {
@@ -700,7 +713,8 @@ body {
 .support-tools,
 .bot-training-feedback,
 .analytics-reports {
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 15px;
   padding: 15px 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -810,7 +824,7 @@ body {
   max-width: 260px;
   font-size: 15px;
   background: #00F5D4;
-  color: #fff;
+  color: #222;
   font-weight: bold;
   text-align: center;
   padding: 7px 16px 7px;
@@ -832,7 +846,7 @@ body {
   max-width: 260px;
   font-size: 15px;
   background: #00F5D4;
-  color: #fff;
+  color: #222;
   font-weight: bold;
   text-align: center;
   padding: 7px 16px 7px;
@@ -855,7 +869,8 @@ body {
   width: 350px !important;
   border-radius: 8px !important;
   font-size: 17.5px !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #fff 
+  border: 2px solid #dfdfdf;!important;
   color: white !important;
   font-weight: 600 !important;
   font-family: "Space Grotesk", sans-serif !important;
@@ -868,7 +883,8 @@ body {
 .dash-footer {
   flex: 1 1;
   padding: 35px 15px 30px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   transition: 0.3s ease-in-out;
@@ -889,7 +905,7 @@ body {
 .dash-footer .footer-icons svg {
   font-size: 26px;
   margin: 0 13px;
-  color: #fff;
+  color: #222;
   transition: .2s ease;
 }
 .dash-footer .footer-icons svg:hover {
@@ -920,7 +936,7 @@ body {
 .renew-box h2 {
   font-size: 34px;
   margin-bottom: 15px;
-  color: #fff;
+  color: #222;
   font-family: "Space Grotesk", sans-serif;
 }
 
@@ -955,7 +971,7 @@ body {
 .renew-buttons button:first-child {
   font-size: 16.5px;
   background: linear-gradient(90deg, #0077ff, #9b00ff, #ff007a);
-  color: #fff;
+  color: #222;
   font-weight: bold;
   text-align: center;
   padding: 10px 30px 10px;
@@ -1004,7 +1020,7 @@ body {
 .membership-title {
   font-size: 34px;
   margin-bottom: 15px;
-  color: #fff;
+  color: #222;
   font-family: "Space Grotesk", sans-serif;
 }
 
@@ -1048,7 +1064,7 @@ body {
 .membership-renew-btn button {
   background-color: transparent;
   border: none;
-  color: #fff;
+  color: #222;
   font-weight: bold;
   font-size: 16px;
   font-family: "Space Grotesk", sans-serif;
@@ -1076,7 +1092,7 @@ body {
   cursor: pointer;
   font-family: "Space Grotesk", sans-serif;
   font-weight: 700;
-  color: #fff;
+  color: #222;
   border-radius: 13px;
 }
 .integration-popUp {
@@ -1126,7 +1142,7 @@ body {
 
 .integration-steps h2 {
   font-size: 36px;
-  color: #fff;
+  color: #222;
   text-align: center;
   margin-bottom: 0.5rem;
   font-family: "Space Grotesk", sans-serif;
@@ -1152,7 +1168,8 @@ body {
   gap: 1rem;
   position: relative;
   margin-bottom: 30px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border: 2px solid #dfdfdf;
   text-align: center;
 }
 
@@ -1306,7 +1323,8 @@ body {
     flex-direction: column;
     width: 60px;
     height: 96.5vh;
-    background: rgba(255, 255, 255, 0.1);
+    background: #fff;
+    border: 2px solid #dfdfdf;
     padding: 20px;
     position: sticky;
     top: 2vh;
@@ -1485,7 +1503,7 @@ body {
   cursor: pointer;
   font-family: "Space Grotesk", sans-serif;
   font-weight: 700;
-  color: #fff;
+  color: #222;
   border-radius: 13px;
   margin-top: 8px;
   margin-bottom: 0px;
