@@ -92,6 +92,7 @@ body {
   }
   .nav-icon {
     margin-right: 10px;
+    color: #222;
   }
   .dashboard-content,
   .dashboard-analytics,
@@ -326,7 +327,7 @@ body {
     cursor: pointer;
     font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
-    color: #222;
+    color: #fff;
     border-radius: 13px;
     margin-bottom: -20px;
   }
@@ -468,7 +469,7 @@ body {
     cursor: pointer;
     font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
-    color: #222;
+    color: #fff;
     border-radius: 13px;
     margin-bottom: -20px;
   }
@@ -895,7 +896,6 @@ body {
 .dash-footer h2 {
   font-size: 34px;
   font-family: "Space Grotesk", sans-serif;
-  text-shadow: 1px 1px #00F5D4;
 }
 .dash-footer .footer-icons {
   margin-left: 20px;
@@ -1091,7 +1091,7 @@ body {
   cursor: pointer;
   font-family: "Space Grotesk", sans-serif;
   font-weight: 700;
-  color: #222;
+  color: #fff;
   border-radius: 13px;
 }
 .integration-popUp {
