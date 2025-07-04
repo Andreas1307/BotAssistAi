@@ -84,7 +84,7 @@ const Pricing = () => {
             {/* Business Plan */}
             <div className="plan popular">
             <img
-                  src={`${process.env.PUBLIC_URL}/img/bigLogo.png`}
+                  src={`${process.env.PUBLIC_URL}/img/BigLogo.png`}
                   alt="Benefit Image from Ai"
                 />
               <span>
