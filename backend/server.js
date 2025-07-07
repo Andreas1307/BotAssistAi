@@ -83,65 +83,54 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-const devOrigins = new Set([
-  "localhost",
-  "127.0.0.1",
-  "botassistai.com",
-  "www.botassistai.com",
-  "shop-ease2.netlify.app"
-]);
+const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", "shop-ease2.netlify.app"]);
 
-async function isOriginAllowed(origin) {
-  if (!origin) return true; // Allow requests with no origin (Postman, curl, etc)
+const dynamicCors = async (origin, callback) => {
+  if (!origin) return callback(null, true); // Allow non-browser requests (like Postman, curl)
 
   try {
     const hostname = new URL(origin).hostname;
 
     if (devOrigins.has(hostname)) {
       console.log("✅ Dev CORS allowed for:", hostname);
-      return true;
+      return callback(null, true);
     }
 
     const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-    const allowed = rows.some(row => 
-      hostname === row.domain || hostname.endsWith(`.${row.domain}`)
+    const allowed = rows.some(
+      row => hostname === row.domain || hostname.endsWith(`.${row.domain}`)
     );
 
     if (allowed) {
       console.log("✅ CORS allowed for:", hostname);
-      return true;
+      return callback(null, true);
     } else {
       console.warn("❌ CORS blocked:", hostname);
-      return false;
+      return callback(new Error("Not allowed by CORS"));
     }
   } catch (err) {
     console.error("❌ CORS check failed:", err);
-    return false; // Fail closed
+    return callback(new Error("CORS internal error"));
   }
-}
+};
 
-// Async middleware wrapper helper
-function asyncMiddleware(fn) {
-  return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-}
-
-// Your custom CORS middleware using async origin check
-const corsMiddleware = asyncMiddleware(async (req, res, next) => {
+// Wrapper to support async CORS origin
+const corsMiddleware = (req, res, next) => {
   const origin = req.headers.origin;
 
-  if (await isOriginAllowed(origin)) {
-    cors({
-      origin,
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"]
-    })(req, res, next);
-  } else {
-    res.status(403).send("CORS error: Not allowed by CORS");
-  }
-});
+  dynamicCors(origin, (err, allow) => {
+    if (err) {
+      res.status(403).send("CORS error: " + err.message);
+    } else {
+      cors({
+        origin: origin,
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      })(req, res, next);
+    }
+  });
+};
 
 app.use(corsMiddleware);
 
