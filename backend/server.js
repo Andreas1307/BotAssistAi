@@ -42,6 +42,9 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -80,54 +83,65 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", "shop-ease2.netlify.app"]);
+const devOrigins = new Set([
+  "localhost",
+  "127.0.0.1",
+  "botassistai.com",
+  "www.botassistai.com",
+  "shop-ease2.netlify.app"
+]);
 
-const dynamicCors = async (origin, callback) => {
-  if (!origin) return callback(null, true); // Allow non-browser requests (like Postman, curl)
+async function isOriginAllowed(origin) {
+  if (!origin) return true; // Allow requests with no origin (Postman, curl, etc)
 
   try {
     const hostname = new URL(origin).hostname;
 
     if (devOrigins.has(hostname)) {
       console.log("✅ Dev CORS allowed for:", hostname);
-      return callback(null, true);
+      return true;
     }
 
     const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-    const allowed = rows.some(
-      row => hostname === row.domain || hostname.endsWith(`.${row.domain}`)
+    const allowed = rows.some(row => 
+      hostname === row.domain || hostname.endsWith(`.${row.domain}`)
     );
 
     if (allowed) {
       console.log("✅ CORS allowed for:", hostname);
-      return callback(null, true);
+      return true;
     } else {
       console.warn("❌ CORS blocked:", hostname);
-      return callback(new Error("Not allowed by CORS"));
+      return false;
     }
   } catch (err) {
     console.error("❌ CORS check failed:", err);
-    return callback(new Error("CORS internal error"));
+    return false; // Fail closed
   }
-};
+}
 
-// Wrapper to support async CORS origin
-const corsMiddleware = (req, res, next) => {
+// Async middleware wrapper helper
+function asyncMiddleware(fn) {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
+// Your custom CORS middleware using async origin check
+const corsMiddleware = asyncMiddleware(async (req, res, next) => {
   const origin = req.headers.origin;
 
-  dynamicCors(origin, (err, allow) => {
-    if (err) {
-      res.status(403).send("CORS error: " + err.message);
-    } else {
-      cors({
-        origin: origin,
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-      })(req, res, next);
-    }
-  });
-};
+  if (await isOriginAllowed(origin)) {
+    cors({
+      origin,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"]
+    })(req, res, next);
+  } else {
+    res.status(403).send("CORS error: Not allowed by CORS");
+  }
+});
 
 app.use(corsMiddleware);
 
@@ -148,6 +162,254 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // update code see if it works
+
+
+
+
+
+
+
+
+app.get('/shopify/install', (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).send('Log in first');
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send('Missing shop');
+
+  const state = crypto.randomBytes(16).toString('hex');
+  res.cookie('shopify_state', state, { sameSite: 'none', secure: true });
+
+  const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&state=${state}&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
+  res.redirect(installUrl);
+});
+
+
+// Function to verify HMAC
+function verifyHMAC(query, secret) {
+  const { hmac, ...rest } = query;
+  const message = Object.keys(rest)
+    .sort()
+    .map(key => `${key}=${encodeURIComponent(rest[key])}`)
+    .join("&");
+
+  const generated = crypto
+    .createHmac("sha256", secret)
+    .update(message)
+    .digest("hex");
+
+  return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmac));
+}
+async function registerGdprWebhooks(shop, accessToken) {
+  const topics = [
+    {
+      topic: 'customers/data_request',
+      address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request'
+    },
+    {
+      topic: 'customers/redact',
+      address: 'https://api.botassistai.com/shopify/gdpr/customers/redact'
+    },
+    {
+      topic: 'shop/redact',
+      address: 'https://api.botassistai.com/shopify/uninstall'
+    }
+  ];
+
+  try {
+    for (const { topic, address } of topics) {
+      await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
+        webhook: {
+          topic,
+          address,
+          format: 'json'
+        }
+      }, {
+        headers: {
+          'X-Shopify-Access-Token': accessToken,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    console.log('✅ GDPR webhooks registered');
+  } catch (err) {
+    console.error('❌ Failed to register GDPR webhooks:', err.response?.data || err.message);
+  }
+}
+
+// 2. OAuth callback – saves token, injects loader script
+app.get('/shopify/callback', async (req, res) => {
+  const { shop, code, state, hmac } = req.query;
+  const stored = req.cookies.shopify_state;
+
+  // 🚨 HMAC Verification
+  if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
+    console.error("❌ HMAC verification failed");
+    return res.status(400).send("Invalid request signature");
+  }
+
+  // 🚨 CSRF Check
+  if (state !== stored) return res.status(400).send("Invalid state");
+
+  try {
+    const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
+      client_id: process.env.SHOPIFY_API_KEY,
+      client_secret: process.env.SHOPIFY_API_SECRET,
+      code
+    });
+
+    const accessToken = tokenRes.data.access_token;
+
+    // Save to DB
+    await pool.query(
+      `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id = ?`,
+      [shop, accessToken, req.user.user_id]
+    );
+
+    // Register uninstall webhook
+    await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
+      webhook: {
+        topic: 'app/uninstalled',
+        address: 'https://api.botassistai.com/shopify/uninstall',
+        format: 'json'
+      }
+    }, {
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // Inject your chatbot script
+    await registerScriptTag(shop, accessToken);
+
+    // ✅ Register GDPR webhooks here:
+    await registerGdprWebhooks(shop, accessToken);
+
+    res.redirect(`/dashboard?installed=true`);
+  } catch (err) {
+    console.error("OAuth failed:", err.message);
+    res.status(500).send("OAuth failed");
+  }
+});
+
+
+
+
+app.post('/shopify/uninstall', async (req, res) => {
+  const shop = req.headers['x-shopify-shop-domain'];
+
+  if (!shop) return res.status(400).send('Missing shop header');
+
+  try {
+    await pool.query(
+      'UPDATE users SET shopify_access_token=NULL, shopify_installed_at=NULL WHERE shopify_shop_domain=?',
+      [shop]
+    );
+    console.log(`🧹 Uninstalled: ${shop}`);
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('Uninstall cleanup failed:', err.message);
+    res.status(500).send('Error');
+  }
+});
+
+// 3. Inject chatbot script into merchant's store via Shopify ScriptTag API
+async function registerScriptTag(shop, accessToken) {
+  const scriptSrc = `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`;
+  try {
+    const existing = await axios.get(`https://${shop}/admin/api/2023-10/script_tags.json`, {
+      headers: { 'X-Shopify-Access-Token': accessToken }
+    });
+
+    if (existing.data.script_tags.some(st => st.src === scriptSrc)) return;
+
+    await axios.post(`https://${shop}/admin/api/2023-10/script_tags.json`, {
+      script_tag: {
+        event: 'onload',
+        src: scriptSrc
+      }
+    }, {
+      headers: { 'X-Shopify-Access-Token': accessToken }
+    });
+
+    console.log('✅ Script tag injected:', scriptSrc);
+  } catch (err) {
+    console.error('❌ Error injecting script:', err.response?.data || err.message);
+  }
+}
+
+// 4. Serve personalized chatbot loader script to inject your chatbot
+app.get('/chatbot-loader.js', async (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send('Missing shop');
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
+      [shop]
+    );
+    if (!rows.length) return res.status(404).send('Shop not found');
+    const userApiKey = decryptApiKey(rows[0].api_key); // Replace with actual decrypt function
+
+    res.set('Content-Type', 'application/javascript');
+    res.send(`
+      const style = document.createElement('style');
+      style.innerHTML = \`
+        :root {
+          --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
+          --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
+          --ai-input: #000;
+          --ai-input-font-color: #fff;
+          --ai-border: #f8f8f8;
+          --ai-website-chat-btn: #000;
+          --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
+          --font-color: #ff0000;
+          --conversation-boxes: blue;
+        }
+      \`;
+      document.head.appendChild(style);
+
+      const script = document.createElement('script');
+      script.src = "https://api.botassistai.com/client-chatbot.js";
+      script.defer = true;
+      script.setAttribute("api-key", "${userApiKey}");
+      document.head.appendChild(script);
+    `);
+  } catch (err) {
+    console.error('Error loading chatbot script:', err.message);
+    res.status(500).send('Internal server error');
+  }
+});
+
+
+app.post('/shopify/gdpr/customers/data_request', async (req, res) => {
+  const body = req.body;
+  console.log("📦 Customer Data Request:", body);
+
+  // TODO: If you store customer-specific data, find and return it here.
+  // Since you're not storing customer data directly, you can respond with 200.
+
+  res.status(200).send('Customer data request handled');
+});
+
+// GDPR: Customer Data Deletion
+app.post('/shopify/gdpr/customers/redact', async (req, res) => {
+  const body = req.body;
+  console.log("🗑️ Customer Deletion Request:", body);
+
+  // TODO: Delete customer-related data if you store it.
+  // If not, just acknowledge.
+
+  res.status(200).send('Customer data deleted');
+});
+
+
+
+
+
+
+
+
+
 
 
 app.post("/paypal/webhook", async (req, res) => {
@@ -240,11 +502,6 @@ app.post("/paypal/webhook", async (req, res) => {
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
-
-
-
-
-
 
 
 
