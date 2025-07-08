@@ -2430,7 +2430,7 @@ app.post('/register', async (req, res, next) => {
     return res.status(403).json({ error: 'Already logged in' });
   }
 
-  const { username, email, password, shopifyStore } = req.body;
+  const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
