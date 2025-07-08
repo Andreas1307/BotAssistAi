@@ -85,7 +85,7 @@ const FeaturesPage = () => {
   <p className="features-description">
     Empower your business with AI technology that enhances interactions, automates workflows, and ensures security.
 </p>
-  <div className="features-grid2">
+  <div className="features-grid">
     <div className="feature-item1">
       <FaClock className="feature-icon" />
       <h3>24/7 AI Support</h3>
@@ -135,10 +135,9 @@ const FeaturesPage = () => {
         <h2>🎥 See BotAssistAI in Action</h2>
         <p>Watch how AI transforms customer interactions.</p>
         <video controls>
-          <source src={`${process.env.PUBLIC_URL}/img/0704.mp4`} type="video/mp4" />
+          <source src="your-video-url.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-        <p>Or you can check out the live <a target="_blank" href="https://shop-ease2.netlify.app/">demo</a></p>
       </section>
 
       {/* How It Works */}

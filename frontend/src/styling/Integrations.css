@@ -1,5 +1,5 @@
 .api-div {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     padding: 15px 20px;
     padding-bottom: 20px;
@@ -65,7 +65,7 @@
     color: #00F5D4;
 }
   .code-snippet {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     padding: 15px 20px 18px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -91,7 +91,6 @@
     border-radius: 15px;
     margin: 7px 0 20px;
     font-size: 15.5px;
-    color: #fff;
   }
   .pro-tip {
     margin-top: 7px;

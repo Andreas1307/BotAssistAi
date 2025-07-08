@@ -87,7 +87,7 @@ const About = () => {
 
       {/* What We Do */}
       <div className="about-services">
-        <h2>What We Offer</h2>
+        <h2>🌟 What We Offer</h2>
         <p>
           BotAssistAI empowers businesses with intelligent chatbot solutions, ensuring seamless 
           support, automated workflows, and enhanced customer satisfaction.
@@ -113,7 +113,7 @@ const About = () => {
 
       {/* How It Works */}
       <div className="about-process">
-        <h2>How BotAssistAI Works</h2>
+        <h2>⚙️ How BotAssistAI Works</h2>
         <div className="process-steps">
           <div className="step-card">
             <FaGlobe className="step-icon" />
@@ -136,7 +136,7 @@ const About = () => {
       {/* Our Vision */}
       <div className="about-vision">
       <div className="outer-vision">
-<h2>The Future of <br /> AI-Powered Assistance</h2>
+<h2>🚀 The Future of <br /> AI-Powered Assistance</h2>
 <p>
   At BotAssistAI, we believe the future of customer support is <strong>AI-powered, real-time, and deeply personalized</strong>.  
   Our mission is to replace outdated ticket-based systems with intelligent chatbots that provide <strong>instant, helpful responses — anytime, anywhere</strong>.
@@ -153,7 +153,7 @@ const About = () => {
       {/* Core Values */}
       <div className="about-values">
         
-        <h2>Our Core Values</h2>
+        <h2>💡 Our Core Values</h2>
         <div className="values-grid">
           <div className="value-card">
             <FaLightbulb className="value-icon" />
@@ -175,7 +175,7 @@ const About = () => {
 
       {/* Why It Matters */}
       <div className="about-benefits">
-        <h2>Why BotAssistAI Matters</h2>
+        <h2>🌎 Why BotAssistAI Matters</h2>
         <p>Traditional customer support is slow and expensive. We change that.</p>
         <ul>
           <li><FaCheckCircle className="benefit-icon" /> 24/7 AI-driven customer support</li>
