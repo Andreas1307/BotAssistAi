@@ -115,13 +115,13 @@ const corsMiddleware = async (req, res, next) => {
   const origin = req.headers.origin;
   const isAllowed = await dynamicCors(origin);
 
-  if (isAllowed) {
-    res.header("Access-Control-Allow-Origin", origin); // ✅ Use the exact origin
-    res.header("Access-Control-Allow-Credentials", "true");
+  if (isAllowed && origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin); // 👈 Specific origin
+    res.setHeader("Access-Control-Allow-Credentials", "true");
   }
 
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
@@ -129,6 +129,8 @@ const corsMiddleware = async (req, res, next) => {
 
   next();
 };
+
+
 
 
 
