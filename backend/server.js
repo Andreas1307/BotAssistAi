@@ -120,19 +120,20 @@ const corsMiddleware = async (req, res, next) => {
     return res.status(403).send("CORS error: Not allowed");
   }
 
-  // ✅ Set headers manually
-  res.header("Access-Control-Allow-Origin", origin);
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  // ✅ Always set these headers before responding
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
-  // ✅ Handle preflight OPTIONS request immediately
+  // ✅ Respond properly to preflight
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.status(200).end();  // ✅ headers were set above
   }
 
   next();
 };
+
 
 app.use(corsMiddleware);
 
