@@ -81,39 +81,39 @@ return rows[0]
 initialisePassport(passport, getUserByEmail, getUserById)
 
 const allowedOrigins = [
-  "http://localhost:3000",            // local dev frontend
-  "https://www.botassistai.com",      // your production frontend
-  "https://botassistai.com"
+  "http://localhost:3000",
+  "https://botassistai.com",
+  "https://www.botassistai.com",
+  "https://shop-ease2.netlify.app"
 ];
-
-// CORS middleware — single handler, before session/passport
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like Postman)
-    if(!origin) return callback(null, true);
-
-    if(allowedOrigins.includes(origin)) {
+    if (!origin) return callback(null, true); // allow Postman, curl
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      return callback(new Error("CORS not allowed by server"), false);
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(session({ 
-secret: process.env.SESSION_SECRET,
-resave: false, 
-saveUninitialized: false,
-cookie: {
-  secure: process.env.NODE_ENV === 'production',
-  httpOnly: true,
-  sameSite: "none",
-  maxAge: 24 * 60 * 60 * 1000 
-}
-}))
+app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  proxy: true, // important if behind proxy
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // true only in prod, must have HTTPS
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+  },
+}));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
