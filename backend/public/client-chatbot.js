@@ -112,7 +112,7 @@
       cursor: pointer;
       padding: 3px 16px 6px;
       border-radius: 22px;
-      background: var(--ai-website-question);
+      background: var(--need-help-text);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
       color: var(--font-color);
