@@ -155,7 +155,17 @@ app.use(passport.session());
 
 
 
+app.get('/', (req, res) => {
+  const { shop } = req.query;
 
+  // If Shopify is trying to install the app
+  if (shop) {
+    return res.redirect(`/shopify/install?shop=${shop}`);
+  }
+
+  // Otherwise just render homepage
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
 
 
 app.get('/shopify/install', (req, res) => {
