@@ -80,60 +80,29 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", "shop-ease2.netlify.app"]);
+const allowedOrigins = [
+  "http://localhost:3000",            // local dev frontend
+  "https://www.botassistai.com",      // your production frontend
+  "https://botassistai.com"
+];
 
-const dynamicCors = async (origin, callback) => {
-  if (!origin) return callback(null, true); // Allow non-browser requests (like Postman, curl)
+// CORS middleware — single handler, before session/passport
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like Postman)
+    if(!origin) return callback(null, true);
 
-  try {
-    const hostname = new URL(origin).hostname;
-
-    if (devOrigins.has(hostname)) {
-      console.log("✅ Dev CORS allowed for:", hostname);
-      return callback(null, true);
-    }
-
-    const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-    const allowed = rows.some(
-      row => hostname === row.domain || hostname.endsWith(`.${row.domain}`)
-    );
-
-    if (allowed) {
-      console.log("✅ CORS allowed for:", hostname);
+    if(allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      console.warn("❌ CORS blocked:", hostname);
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error("CORS not allowed by server"), false);
     }
-  } catch (err) {
-    console.error("❌ CORS check failed:", err);
-    return callback(new Error("CORS internal error"));
-  }
-};
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
-// Wrapper to support async CORS origin
-const corsMiddleware = (req, res, next) => {
-  const origin = req.headers.origin;
-
-  dynamicCors(origin, (err, allow) => {
-    if (err) {
-      res.status(403).send("CORS error: " + err.message);
-    } else {
-      cors({
-        origin: origin,
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-      })(req, res, next);
-    }
-  });
-};
-
-app.use(corsMiddleware);
-
-
-
-app.use(flash());
 app.use(session({ 
 secret: process.env.SESSION_SECRET,
 resave: false, 
@@ -145,6 +114,7 @@ cookie: {
   maxAge: 24 * 60 * 60 * 1000 
 }
 }))
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
