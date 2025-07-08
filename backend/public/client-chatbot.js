@@ -310,7 +310,7 @@
   background: var(--ai-button);
   border-radius: 0;
   clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
-  height: 100%; 
+  height: 43px; 
     `;
   
     submit.appendChild(input);
