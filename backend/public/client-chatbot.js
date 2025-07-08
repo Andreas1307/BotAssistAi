@@ -112,10 +112,10 @@
       cursor: pointer;
       padding: 3px 16px 6px;
       border-radius: 22px;
-      background: var(--need-help-text);
+      background: var(--ai-website-question);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
-      color: var(--font-color);
+      color: var(--need-help-text);
     `;
     helperText.appendChild(closeIcon);
     setTimeout(() => document.body.appendChild(helperText), 8000);
