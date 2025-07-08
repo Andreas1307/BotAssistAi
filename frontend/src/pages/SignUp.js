@@ -180,7 +180,7 @@ const SignUp = () => {
   if (loading) return <h2>Loading...</h2>;
 
   return (
-    <div style={{backgroundColor: "#f2f2f2"}}>
+    <div>
       <Header />
       <div className="user-sign">
   <div className="sign-div">
@@ -213,7 +213,6 @@ const SignUp = () => {
           required
         />
       </div>
-      
       {error && (<span
             style={{
               color: "red",
