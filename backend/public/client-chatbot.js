@@ -276,6 +276,9 @@
   border-bottom-right-radius: 13px; 
   border-bottom-left-radius: 13px;
   overflow: hidden; /* 💡 prevents button overflow causing white space */
+  position: absolute;
+  bottom: 0;
+  left: 0;
     `;
   
     const input = document.createElement("input");
