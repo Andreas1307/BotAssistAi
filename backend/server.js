@@ -111,24 +111,14 @@ const dynamicCors = async (origin) => {
   }
 };
 
-const corsMiddleware = async (req, res, next) => {
-  const origin = req.headers.origin;
-  const allowed = await dynamicCors(origin);
+const corsMiddleware = (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // 👈 Allow all origins
+  res.header("Access-Control-Allow-Credentials", "true"); // Optional — remove if using "*"
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
-  if (!allowed) {
-    console.warn("❌ CORS blocked:", origin);
-    return res.status(403).send("CORS error: Not allowed");
-  }
-
-  // ✅ Always set these headers before responding
-  res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-
-  // ✅ Respond properly to preflight
   if (req.method === "OPTIONS") {
-    return res.status(200).end();  // ✅ headers were set above
+    return res.sendStatus(200); // 👈 Handle preflight
   }
 
   next();
@@ -355,6 +345,12 @@ app.get('/chatbot-loader.js', async (req, res) => {
   if (!shop) return res.status(400).send('Missing or invalid shop');
 
   try {
+    if (!shop || typeof shop !== 'string') {
+      console.error("❌ Invalid shop value:", shop);
+      return res.status(400).send("Invalid shop parameter");
+    }
+    console.log("🛠️ Running query for shop:", shop);
+
     const [rows] = await pool.query(
       'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
       [shop]
