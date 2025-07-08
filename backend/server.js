@@ -133,7 +133,7 @@ app.use(corsMiddleware);
 
 
 
-app.use(flash());
+
 app.use(session({ 
 secret: process.env.SESSION_SECRET,
 resave: false, 
@@ -141,9 +141,11 @@ saveUninitialized: false,
 cookie: {
   secure: process.env.NODE_ENV === 'production',
   httpOnly: true,
+  sameSite: 'none',
   maxAge: 24 * 60 * 60 * 1000 
 }
 }))
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
