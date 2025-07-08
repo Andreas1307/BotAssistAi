@@ -90,49 +90,47 @@ const devOrigins = new Set([
   "shop-ease2.netlify.app"
 ]);
 
-const dynamicCors = async (origin) => {
-  if (!origin) return true;
+const dynamicCors = async (origin, callback) => {
+  if (!origin) return callback(null, true);
 
   try {
     const hostname = new URL(origin).hostname;
 
     if (devOrigins.has(hostname)) {
       console.log("✅ Dev CORS allowed for:", hostname);
-      return true;
+      return callback(null, {
+        origin: true,
+        credentials: true,
+      });
     }
 
     const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-    return rows.some(row =>
+    const isAllowed = rows.some(row =>
       hostname === row.domain || hostname.endsWith(`.${row.domain}`)
     );
+
+    if (isAllowed) {
+      console.log("✅ DB CORS allowed for:", hostname);
+      return callback(null, {
+        origin: true,
+        credentials: true,
+      });
+    }
+
+    console.log("❌ CORS denied for:", hostname);
+    return callback(new Error("Not allowed by CORS"));
   } catch (err) {
     console.error("❌ CORS check failed:", err);
-    return false;
+    return callback(err);
   }
 };
 
-const corsMiddleware = async (req, res, next) => {
-  const origin = req.headers.origin;
-  const isAllowed = await dynamicCors(origin);
-
-  if (isAllowed) {
-    res.header("Access-Control-Allow-Origin", origin); // ✅ Use the exact origin
-    res.header("Access-Control-Allow-Credentials", "true");
-  }
-
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-};
-
-
-
-app.use(corsMiddleware);
+app.use(cors({
+  origin: dynamicCors,
+  credentials: true,
+  methods: "GET,POST,PUT,DELETE,OPTIONS",
+  allowedHeaders: "Content-Type,Authorization"
+}));
 
 
 
