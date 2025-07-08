@@ -105,23 +105,17 @@
     helperText.style.cssText = `
       position: fixed;
       bottom: 27px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       right: 85px;
       font-size: 14.5px;
       color: #fff;
       z-index: 10000;
       cursor: pointer;
-      padding: 0px 16px 0px;
+      padding: 3px 16px 6px;
       border-radius: 22px;
       background: var(--ai-website-question);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
-      color: var(--need-help-text);
-      height: 37px;
-      max-height: 37px;
-      max-width: 155px;
+      color: var(--font-color);
     `;
     helperText.appendChild(closeIcon);
     setTimeout(() => document.body.appendChild(helperText), 8000);
@@ -260,9 +254,6 @@
       flex: 1;
       overflow-y: auto;
       padding: 10px;
-      min-height: 261px;
-      height: 261px;
-      max-height: 261px;
     `;
   
     const submit = document.createElement("div");
@@ -276,9 +267,6 @@
   border-bottom-right-radius: 13px; 
   border-bottom-left-radius: 13px;
   overflow: hidden; /* 💡 prevents button overflow causing white space */
-  position: absolute;
-  bottom: 0;
-  left: 0;
     `;
   
     const input = document.createElement("input");
@@ -295,7 +283,6 @@
   flex: 1; 
     `;
     input.onfocus = () => input.style.outline = "none";
-    input.onfocus = () => input.style.boxShadow = "none";
   
     const button = document.createElement("button");
     button.innerHTML = "Send";
@@ -311,7 +298,7 @@
   background: var(--ai-button);
   border-radius: 0;
   clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
-  height: 43px; 
+  height: 100%; 
     `;
   
     submit.appendChild(input);

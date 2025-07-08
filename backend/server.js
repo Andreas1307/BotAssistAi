@@ -80,12 +80,7 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-
-
-
-
-app.use(cookieParser(process.env.SESSION_SECRET));
-const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", ]);
+const devOrigins = new Set(["localhost", "127.0.0.1", "botassistai.com", "www.botassistai.com", "shop-ease2.netlify.app"]);
 
 const dynamicCors = async (origin, callback) => {
   if (!origin) return callback(null, true); // Allow non-browser requests (like Postman, curl)
@@ -117,46 +112,28 @@ const dynamicCors = async (origin, callback) => {
 };
 
 // Wrapper to support async CORS origin
-const corsInstance = cors({
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  origin: async (origin, callback) => {
-    if (!origin) return callback(null, true); // allow server-to-server
+const corsMiddleware = (req, res, next) => {
+  const origin = req.headers.origin;
 
-    try {
-      const hostname = new URL(origin).hostname;
-
-      if (devOrigins.has(hostname)) {
-        console.log("✅ Dev CORS allowed for:", hostname);
-        return callback(null, true);
-      }
-
-      const [rows] = await pool.query("SELECT domain FROM allowed_domains");
-      const allowed = rows.some(
-        row => hostname === row.domain || hostname.endsWith(`.${row.domain}`)
-      );
-
-      if (allowed) {
-        console.log("✅ CORS allowed for:", hostname);
-        return callback(null, true);
-      } else {
-        console.warn("❌ CORS blocked:", hostname);
-        return callback(new Error("Not allowed by CORS"));
-      }
-    } catch (err) {
-      console.error("❌ CORS check failed:", err);
-      return callback(new Error("CORS internal error"));
+  dynamicCors(origin, (err, allow) => {
+    if (err) {
+      res.status(403).send("CORS error: " + err.message);
+    } else {
+      cors({
+        origin: origin,
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      })(req, res, next);
     }
-  }
-});
+  });
+};
 
-app.use(corsInstance);
-
-
+app.use(corsMiddleware);
 
 
 
+app.use(flash());
 app.use(session({ 
 secret: process.env.SESSION_SECRET,
 resave: false, 
@@ -164,11 +141,9 @@ saveUninitialized: false,
 cookie: {
   secure: process.env.NODE_ENV === 'production',
   httpOnly: true,
-  sameSite: 'none',
   maxAge: 24 * 60 * 60 * 1000 
 }
 }))
-app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -265,6 +240,12 @@ app.post("/paypal/webhook", async (req, res) => {
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
+
+
+
+
+
+
 
 
 app.post("/create-subscription", async (req, res) => {
