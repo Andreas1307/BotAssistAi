@@ -133,8 +133,6 @@ app.use(corsMiddleware);
 
 
 
-
-
 app.use(flash());
 app.use(session({ 
 secret: process.env.SESSION_SECRET,
@@ -150,8 +148,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // update code see if it works
-
-
 
 
 
@@ -421,8 +417,6 @@ app.post('/shopify/gdpr/customers/redact', (req, res) => {
 
 
 
-
-
 app.post("/paypal/webhook", async (req, res) => {
   const { orderID, userId } = req.body;
 
@@ -513,6 +507,11 @@ app.post("/paypal/webhook", async (req, res) => {
     res.status(500).json({ error: "Server error verifying PayPal payment" });
   }
 });
+
+
+
+
+
 
 
 
@@ -2400,243 +2399,243 @@ app.get("/auth-check", async (req, res) => {
 
 
 app.post("/log-in", async (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return res.status(403).json({ error: "Already logged in" });
-  }
-  
-  passport.authenticate("local", (err, user, info) => {
+if (req.isAuthenticated()) {
+  return res.status(403).json({ error: "Already logged in" });
+}
+
+passport.authenticate("local", (err, user, info) => {
+  if (err) return next(err);
+  if (!user) return res.status(401).json({ error: info ? info.message : "Invalid credentials" });
+
+  req.logIn(user, async (err) => {
     if (err) return next(err);
-    if (!user) return res.status(401).json({ error: info ? info.message : "Invalid credentials" });
-  
-    req.logIn(user, async (err) => {
-      if (err) return next(err);
-  
-  
-      
-      try {
-        const lastLoginTime = new Date().toISOString().slice(0, 19).replace("T", " ");
-        await pool.query("UPDATE users SET last_login = ? WHERE user_id = ?", [lastLoginTime, user.user_id]);
-        
-        console.log("Last login updated:", lastLoginTime);
-      } catch (e) {
-        console.error("Error updating last login date:", e);
-        return res.status(500).json({ error: "Database error" });
-      }
-  
-      return res.json({ success: true, user });
-    });
-  })(req, res, next);
-  });
-  
-  
-  
-  app.post('/register', async (req, res, next) => {
-    if (req.isAuthenticated()) {
-      return res.status(403).json({ error: 'Already logged in' });
-    }
-  
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-  
-    const rawKey = uuidv4();
-    let encryptedKey;
-    try {
-      encryptedKey = encryptApiKey(rawKey);
-    } catch (error) {
-      console.error('Encryption error:', error);
-      return res.status(500).json({ message: 'Error encrypting API key' });
-    }
-  
-    try {
-      const now = new Date();
-      const expiry = new Date(now);
-      expiry.setDate(now.getDate() + 30);
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await pool.query(
-        `INSERT INTO users (username, email, password, api_key, subscription_plan, subscribed_at, subscription_expiry) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [username, email, hashedPassword, encryptedKey, 'Pro', now, expiry]
-      );
-  
-      // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
-      const [userResult] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
-      const user = userResult[0];
-  console.log(user)
-      // Log the user in
-      req.logIn(user, async (err) => {
-        if (err) {
-          console.error("Login error after registration:", err);
-          return next(err);
-        }
-  
-        return res.json({ success: true, user });
-      });
-  
-    } catch (e) {
-      console.error('Error creating the account:', e);
-      return res.status(500).json({ message: 'Internal error creating your account' });
-    }
-  });
-  
-  
-  
-  // Encryption function
-  function encryptApiKey(apiKey) {
-    const iv = crypto.randomBytes(ivLength); // Generate IV
-    console.log('IV Length:', iv.length); // Should be 16 bytes
-    console.log('Raw API Key:', apiKey); // Log the API key being encrypted
-  
-    const cipher = crypto.createCipheriv(algorithm, encryptionKey, iv);
+
+
     
     try {
-        let encrypted = cipher.update(apiKey, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-        return iv.toString('hex') + ':' + encrypted; // IV + encrypted data
-    } catch (error) {
-        console.error('Encryption failed:', error);
-        throw new Error('Encryption failed');
-    }
-  }
-  
-  function decryptApiKey(encryptedKey) {
-    const [ivHex, encrypted] = encryptedKey.split(":");
-    const iv = Buffer.from(ivHex, "hex");
-    const decipher = crypto.createDecipheriv(algorithm, encryptionKey, iv);
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
-  }
-  
-  
-  app.get("/get-api", async (req, res) => {
-    const { userId } = req.query
-    try {
-      const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId])
-      if (rows.length > 0) {
-        const decryptedKey = decryptApiKey(rows[0].api_key)
-      return res.status(200).json({ key: decryptedKey})
-      } else {
-        return
-      }
-    } catch (e) {
-      console.log("Error fetching api", e)
-      return res.status(500).json({ message: "Error"})
-    }
-  })
-  
-  
-  
-  async function verifyGoogleToken(token) {
-    try {
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
-        return ticket.getPayload();
-    } catch (error) {
-        console.log("Error verifying Google token:", error);
-        return null;
-    }
-  }
-  async function generateUniqueUsername(baseUsername) {
-    let username = baseUsername.replace(/\s+/g, ''); // Remove spaces
-    let uniqueUsername = username;
-    let counter = 1;
-  
-    const [rows] = await pool.query(
-      "SELECT username FROM users WHERE username LIKE ?",
-      [`${username}%`]
-    );
-  
-    const taken = new Set(rows.map(r => r.username));
-  
-    while (taken.has(uniqueUsername)) {
-      uniqueUsername = `${username}${counter}`;
-      counter++;
-    }
-  
-    return uniqueUsername;
-  }
-  
-  app.post("/auth/google", async (req, res) => {
-    const { token } = req.body;
-    const googleUser = await verifyGoogleToken(token);
-  
-    if (!googleUser) {
-      return res.status(401).json({ message: "Invalid Google token" });
-    }
-  
-    try {
-      let user;
-      const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [googleUser.email]);
-  
-      if (rows.length === 0) {
-        const baseUsername = googleUser.name || googleUser.email.split("@")[0];
-        const uniqueUsername = await generateUniqueUsername(baseUsername);
-  
-        // Generate and encrypt API key
-        const rawKey = uuidv4();
-        const encryptedKey = encryptApiKey(rawKey);
-  
-        const now = new Date();
-  const expiry = new Date(now);
-  expiry.setDate(now.getDate() + 30);
-  
-  const [result] = await pool.query(
-    `INSERT INTO users (username, email, google_id, api_key, subscription_plan, subscribed_at, subscription_expiry) 
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [uniqueUsername, googleUser.email, googleUser.sub, encryptedKey, 'Pro', now, expiry]
-  );
-  
-  
-        if (result.affectedRows === 1) {
-          user = { user_id: result.insertId, username: uniqueUsername, email: googleUser.email };
-          console.log("New Google user created:", user);
-        } else {
-          return res.status(500).json({ message: "Failed to create Google user." });
-        }
-      } else {
-        user = rows[0];
-      }
-  
-      req.login(user, async (err) => {
-        if (err) {
-          return res.status(500).json({ message: "Login session error" });
-        }
-  
-        try {
-          const lastLoginTime = new Date().toISOString().slice(0, 19).replace("T", " ");
-          await pool.query("UPDATE users SET last_login = ? WHERE email = ?", [lastLoginTime, user.email]);
-          return res.json({ message: "Google login successful", user });
-        } catch (dbError) {
-          return res.status(500).json({ message: "Failed to update last login time" });
-        }
-      });
-  
-    } catch (dbError) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-  
-  // **Google OAuth Redirect Flow**
-  app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-  
-  app.get(
-    "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/log-in" }),
-    (req, res) => {
-      if (!req.user) {
-        return res.redirect("/log-in");
-      }
+      const lastLoginTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+      await pool.query("UPDATE users SET last_login = ? WHERE user_id = ?", [lastLoginTime, user.user_id]);
       
-      // ✅ Redirect to the dashboard with the correct username
-      console.log(`✅ Google OAuth success: Redirecting to /${req.user.username}/dashboard`);
-      res.redirect(`/${req.user.username}/dashboard`);
+      console.log("Last login updated:", lastLoginTime);
+    } catch (e) {
+      console.error("Error updating last login date:", e);
+      return res.status(500).json({ error: "Database error" });
     }
-  );
+
+    return res.json({ success: true, user });
+  });
+})(req, res, next);
+});
+
+
+
+app.post('/register', async (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return res.status(403).json({ error: 'Already logged in' });
+  }
+
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const rawKey = uuidv4();
+  let encryptedKey;
+  try {
+    encryptedKey = encryptApiKey(rawKey);
+  } catch (error) {
+    console.error('Encryption error:', error);
+    return res.status(500).json({ message: 'Error encrypting API key' });
+  }
+
+  try {
+    const now = new Date();
+    const expiry = new Date(now);
+    expiry.setDate(now.getDate() + 30);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      `INSERT INTO users (username, email, password, api_key, subscription_plan, subscribed_at, subscription_expiry) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [username, email, hashedPassword, encryptedKey, 'Pro', now, expiry]
+    );
+
+    // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
+    const [userResult] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    const user = userResult[0];
+console.log(user)
+    // Log the user in
+    req.logIn(user, async (err) => {
+      if (err) {
+        console.error("Login error after registration:", err);
+        return next(err);
+      }
+
+      return res.json({ success: true, user });
+    });
+
+  } catch (e) {
+    console.error('Error creating the account:', e);
+    return res.status(500).json({ message: 'Internal error creating your account' });
+  }
+});
+
+
+
+// Encryption function
+function encryptApiKey(apiKey) {
+  const iv = crypto.randomBytes(ivLength); // Generate IV
+  console.log('IV Length:', iv.length); // Should be 16 bytes
+  console.log('Raw API Key:', apiKey); // Log the API key being encrypted
+
+  const cipher = crypto.createCipheriv(algorithm, encryptionKey, iv);
   
+  try {
+      let encrypted = cipher.update(apiKey, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      return iv.toString('hex') + ':' + encrypted; // IV + encrypted data
+  } catch (error) {
+      console.error('Encryption failed:', error);
+      throw new Error('Encryption failed');
+  }
+}
+
+function decryptApiKey(encryptedKey) {
+  const [ivHex, encrypted] = encryptedKey.split(":");
+  const iv = Buffer.from(ivHex, "hex");
+  const decipher = crypto.createDecipheriv(algorithm, encryptionKey, iv);
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
+
+
+app.get("/get-api", async (req, res) => {
+  const { userId } = req.query
+  try {
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId])
+    if (rows.length > 0) {
+      const decryptedKey = decryptApiKey(rows[0].api_key)
+    return res.status(200).json({ key: decryptedKey})
+    } else {
+      return
+    }
+  } catch (e) {
+    console.log("Error fetching api", e)
+    return res.status(500).json({ message: "Error"})
+  }
+})
+
+
+
+async function verifyGoogleToken(token) {
+  try {
+      const ticket = await client.verifyIdToken({
+          idToken: token,
+          audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      return ticket.getPayload();
+  } catch (error) {
+      console.log("Error verifying Google token:", error);
+      return null;
+  }
+}
+async function generateUniqueUsername(baseUsername) {
+  let username = baseUsername.replace(/\s+/g, ''); // Remove spaces
+  let uniqueUsername = username;
+  let counter = 1;
+
+  const [rows] = await pool.query(
+    "SELECT username FROM users WHERE username LIKE ?",
+    [`${username}%`]
+  );
+
+  const taken = new Set(rows.map(r => r.username));
+
+  while (taken.has(uniqueUsername)) {
+    uniqueUsername = `${username}${counter}`;
+    counter++;
+  }
+
+  return uniqueUsername;
+}
+
+app.post("/auth/google", async (req, res) => {
+  const { token } = req.body;
+  const googleUser = await verifyGoogleToken(token);
+
+  if (!googleUser) {
+    return res.status(401).json({ message: "Invalid Google token" });
+  }
+
+  try {
+    let user;
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [googleUser.email]);
+
+    if (rows.length === 0) {
+      const baseUsername = googleUser.name || googleUser.email.split("@")[0];
+      const uniqueUsername = await generateUniqueUsername(baseUsername);
+
+      // Generate and encrypt API key
+      const rawKey = uuidv4();
+      const encryptedKey = encryptApiKey(rawKey);
+
+      const now = new Date();
+const expiry = new Date(now);
+expiry.setDate(now.getDate() + 30);
+
+const [result] = await pool.query(
+  `INSERT INTO users (username, email, google_id, api_key, subscription_plan, subscribed_at, subscription_expiry) 
+   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  [uniqueUsername, googleUser.email, googleUser.sub, encryptedKey, 'Pro', now, expiry]
+);
+
+
+      if (result.affectedRows === 1) {
+        user = { user_id: result.insertId, username: uniqueUsername, email: googleUser.email };
+        console.log("New Google user created:", user);
+      } else {
+        return res.status(500).json({ message: "Failed to create Google user." });
+      }
+    } else {
+      user = rows[0];
+    }
+
+    req.login(user, async (err) => {
+      if (err) {
+        return res.status(500).json({ message: "Login session error" });
+      }
+
+      try {
+        const lastLoginTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+        await pool.query("UPDATE users SET last_login = ? WHERE email = ?", [lastLoginTime, user.email]);
+        return res.json({ message: "Google login successful", user });
+      } catch (dbError) {
+        return res.status(500).json({ message: "Failed to update last login time" });
+      }
+    });
+
+  } catch (dbError) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// **Google OAuth Redirect Flow**
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/log-in" }),
+  (req, res) => {
+    if (!req.user) {
+      return res.redirect("/log-in");
+    }
+    
+    // ✅ Redirect to the dashboard with the correct username
+    console.log(`✅ Google OAuth success: Redirecting to /${req.user.username}/dashboard`);
+    res.redirect(`/${req.user.username}/dashboard`);
+  }
+);
+
 
 
 
