@@ -160,7 +160,7 @@ app.get('/', (req, res) => {
 
   // If Shopify is trying to install the app
   if (shop) {
-    return res.redirect(`/shopify/install?shop=${shop}`);
+    return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
   }
 
   // Otherwise just render homepage
@@ -170,7 +170,8 @@ app.get('/', (req, res) => {
 
 app.get('/shopify/install', (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).send('Log in first');
-  const shop = req.query.shop;
+
+  const shop = req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing shop');
 
   const state = crypto.randomBytes(16).toString('hex');
@@ -187,15 +188,16 @@ function verifyHMAC(query, secret) {
   const message = Object.keys(rest)
     .sort()
     .map(key => `${key}=${encodeURIComponent(rest[key])}`)
-    .join("&");
+    .join('&');
 
   const generated = crypto
-    .createHmac("sha256", secret)
+    .createHmac('sha256', secret)
     .update(message)
-    .digest("hex");
+    .digest('hex');
 
   return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmac));
 }
+
 async function registerGdprWebhooks(shop, accessToken) {
   const topics = [
     {
@@ -212,26 +214,23 @@ async function registerGdprWebhooks(shop, accessToken) {
     }
   ];
 
-  try {
-    for (const { topic, address } of topics) {
+  for (const { topic, address } of topics) {
+    try {
       await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
-        webhook: {
-          topic,
-          address,
-          format: 'json'
-        }
+        webhook: { topic, address, format: 'json' }
       }, {
         headers: {
           'X-Shopify-Access-Token': accessToken,
           'Content-Type': 'application/json'
         }
       });
+      console.log(`✅ Registered webhook: ${topic}`);
+    } catch (err) {
+      console.error(`❌ Failed webhook (${topic}):`, err.response?.data || err.message);
     }
-    console.log('✅ GDPR webhooks registered');
-  } catch (err) {
-    console.error('❌ Failed to register GDPR webhooks:', err.response?.data || err.message);
   }
 }
+
 
 // 2. OAuth callback – saves token, injects loader script
 app.get('/shopify/callback', async (req, res) => {
@@ -248,7 +247,7 @@ app.get('/shopify/callback', async (req, res) => {
     return res.status(400).send("Invalid state");
   }
 
-  if (!req.isAuthenticated() || !req.user || !req.user.user_id) {
+  if (!req.isAuthenticated() || !req.user?.user_id) {
     console.error("❌ User not authenticated during callback");
     return res.status(401).send("User must be logged in to install the app");
   }
@@ -256,7 +255,6 @@ app.get('/shopify/callback', async (req, res) => {
   const normalizedShop = shop.toLowerCase();
 
   try {
-    // Get access token from Shopify
     const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -265,19 +263,14 @@ app.get('/shopify/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // ✅ Update shop info for the logged-in user
     await pool.query(
       `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id = ?`,
       [normalizedShop, accessToken, req.user.user_id]
     );
 
-    // Inject chatbot script
     await registerScriptTag(normalizedShop, accessToken);
-
-    // Register GDPR webhooks
     await registerGdprWebhooks(normalizedShop, accessToken);
 
-    // Register uninstall webhook
     await axios.post(`https://${normalizedShop}/admin/api/2023-10/webhooks.json`, {
       webhook: {
         topic: 'app/uninstalled',
@@ -286,14 +279,12 @@ app.get('/shopify/callback', async (req, res) => {
       }
     }, {
       headers: {
-        'X-Shopify-Access-Token': accessToken,
-        'Content-Type': 'application/json'
+        'X-Shopify-Access-Token': accessToken
       }
     });
 
     console.log(`✅ App installed for ${normalizedShop}`);
     res.redirect('/dashboard?installed=true');
-
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
@@ -302,7 +293,7 @@ app.get('/shopify/callback', async (req, res) => {
 
 // Inject ScriptTag
 async function registerScriptTag(shop, accessToken) {
-  const scriptSrc = `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`;
+  const scriptSrc = `https://api.botassistai.com/chatbot-loader.js?shop=${encodeURIComponent(shop)}`;
 
   try {
     const existing = await axios.get(`https://${shop}/admin/api/2023-10/script_tags.json`, {
@@ -320,9 +311,7 @@ async function registerScriptTag(shop, accessToken) {
         src: scriptSrc
       }
     }, {
-      headers: {
-        'X-Shopify-Access-Token': accessToken
-      }
+      headers: { 'X-Shopify-Access-Token': accessToken }
     });
 
     console.log('✅ Script tag injected:', scriptSrc);
@@ -334,15 +323,15 @@ async function registerScriptTag(shop, accessToken) {
 
 
 
+
 app.post('/shopify/uninstall', async (req, res) => {
   const shop = req.headers['x-shopify-shop-domain'];
-
   if (!shop) return res.status(400).send('Missing shop header');
 
   try {
     await pool.query(
       'UPDATE users SET shopify_access_token=NULL, shopify_installed_at=NULL WHERE shopify_shop_domain=?',
-      [shop]
+      [shop.toLowerCase()]
     );
     console.log(`🧹 Uninstalled: ${shop}`);
     res.status(200).send('OK');
@@ -353,18 +342,28 @@ app.post('/shopify/uninstall', async (req, res) => {
 });
 
 
+
+
 // 4. Serve personalized chatbot loader script to inject your chatbot
 app.get('/chatbot-loader.js', async (req, res) => {
-  const shop = req.query.shop;
-  if (!shop) return res.status(400).send('Missing shop');
+  const shop = Array.isArray(req.query.shop) ? req.query.shop[0] : req.query.shop?.toLowerCase();
+  if (!shop) return res.status(400).send('Missing or invalid shop');
 
   try {
     const [rows] = await pool.query(
       'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
       [shop]
     );
+
     if (!rows.length) return res.status(404).send('Shop not found');
-    const userApiKey = decryptApiKey(rows[0].api_key); // Replace with actual decrypt function
+
+    let userApiKey;
+    try {
+      userApiKey = decryptApiKey(rows[0].api_key); // replace with your decryption logic
+    } catch (e) {
+      console.error("❌ API Key decrypt error:", e.message);
+      return res.status(500).send("Decryption failed");
+    }
 
     res.set('Content-Type', 'application/javascript');
     res.send(`
@@ -397,27 +396,16 @@ app.get('/chatbot-loader.js', async (req, res) => {
 });
 
 
-app.post('/shopify/gdpr/customers/data_request', async (req, res) => {
-  const body = req.body;
-  console.log("📦 Customer Data Request:", body);
 
-  // TODO: If you store customer-specific data, find and return it here.
-  // Since you're not storing customer data directly, you can respond with 200.
-
-  res.status(200).send('Customer data request handled');
+app.post('/shopify/gdpr/customers/data_request', (req, res) => {
+  console.log("📦 GDPR: Customer Data Request", req.body);
+  res.status(200).send('Handled');
 });
 
-// GDPR: Customer Data Deletion
-app.post('/shopify/gdpr/customers/redact', async (req, res) => {
-  const body = req.body;
-  console.log("🗑️ Customer Deletion Request:", body);
-
-  // TODO: Delete customer-related data if you store it.
-  // If not, just acknowledge.
-
-  res.status(200).send('Customer data deleted');
+app.post('/shopify/gdpr/customers/redact', (req, res) => {
+  console.log("🗑️ GDPR: Customer Redact Request", req.body);
+  res.status(200).send('Handled');
 });
-
 
 
 
