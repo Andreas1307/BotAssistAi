@@ -180,7 +180,7 @@ const SignUp = () => {
   if (loading) return <h2>Loading...</h2>;
 
   return (
-    <div>
+    <div style={{backgroundColor: "#f2f2f2"}}>
       <Header />
       <div className="user-sign">
   <div className="sign-div">

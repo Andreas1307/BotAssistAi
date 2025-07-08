@@ -619,8 +619,7 @@ if (loading) {
       
       <aside className={`sidebar ${collap ? "active" : ""}`}>
   <FaArrowLeft onClick={() => setCollap(false)} className="arrow-left" />
-  <h2 className="logo-dash">
-    <img src={`${process.env.PUBLIC_URL}/img/logo.png`} alt="logo" /> BotAssistAI
+  <h2 className="logo-dash"> BotAssistAI
   </h2>
 
   <ul className="nav-list">

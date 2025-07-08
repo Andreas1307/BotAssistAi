@@ -15,14 +15,9 @@ const Header = () => {
     <header className={`header`}>
       <div className="logo-container">
         <Link to="/">
-          <img
-            src={`${process.env.PUBLIC_URL}/img/logo.png`}
-            alt="BotAssistAI Logo"
-            className="logo"
-          />
+         
           <div className="logo-text">
             <h1>BotAssistAI</h1>
-            <p>Your AI-powered business assistant</p>
           </div>
         </Link>
       </div>
