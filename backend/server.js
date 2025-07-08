@@ -141,6 +141,7 @@ saveUninitialized: false,
 cookie: {
   secure: process.env.NODE_ENV === 'production',
   httpOnly: true,
+  sameSite: "none",
   maxAge: 24 * 60 * 60 * 1000 
 }
 }))
