@@ -236,19 +236,28 @@ async function registerGdprWebhooks(shop, accessToken) {
 // 2. OAuth callback – saves token, injects loader script
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
-  const stored = req.cookies.shopify_state;
+  const storedState = req.cookies.shopify_state;
 
-  // 🚨 HMAC Verification
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
     console.error("❌ HMAC verification failed");
     return res.status(400).send("Invalid request signature");
   }
 
-  // 🚨 CSRF Check
-  if (state !== stored) return res.status(400).send("Invalid state");
+  if (state !== storedState) {
+    console.error("❌ CSRF state mismatch");
+    return res.status(400).send("Invalid state");
+  }
+
+  if (!req.isAuthenticated() || !req.user || !req.user.user_id) {
+    console.error("❌ User not authenticated during callback");
+    return res.status(401).send("User must be logged in to install the app");
+  }
+
+  const normalizedShop = shop.toLowerCase();
 
   try {
-    const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
+    // Get access token from Shopify
+    const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code
@@ -256,14 +265,20 @@ app.get('/shopify/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // Save to DB
+    // ✅ Update shop info for the logged-in user
     await pool.query(
       `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id = ?`,
-      [shop, accessToken, req.user.user_id]
+      [normalizedShop, accessToken, req.user.user_id]
     );
 
+    // Inject chatbot script
+    await registerScriptTag(normalizedShop, accessToken);
+
+    // Register GDPR webhooks
+    await registerGdprWebhooks(normalizedShop, accessToken);
+
     // Register uninstall webhook
-    await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
+    await axios.post(`https://${normalizedShop}/admin/api/2023-10/webhooks.json`, {
       webhook: {
         topic: 'app/uninstalled',
         address: 'https://api.botassistai.com/shopify/uninstall',
@@ -276,18 +291,45 @@ app.get('/shopify/callback', async (req, res) => {
       }
     });
 
-    // Inject your chatbot script
-    await registerScriptTag(shop, accessToken);
+    console.log(`✅ App installed for ${normalizedShop}`);
+    res.redirect('/dashboard?installed=true');
 
-    // ✅ Register GDPR webhooks here:
-    await registerGdprWebhooks(shop, accessToken);
-
-    res.redirect(`/dashboard?installed=true`);
   } catch (err) {
-    console.error("OAuth failed:", err.message);
+    console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
   }
 });
+
+// Inject ScriptTag
+async function registerScriptTag(shop, accessToken) {
+  const scriptSrc = `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`;
+
+  try {
+    const existing = await axios.get(`https://${shop}/admin/api/2023-10/script_tags.json`, {
+      headers: { 'X-Shopify-Access-Token': accessToken }
+    });
+
+    if (existing.data.script_tags.some(tag => tag.src === scriptSrc)) {
+      console.log('⚠️ Script tag already exists, skipping');
+      return;
+    }
+
+    await axios.post(`https://${shop}/admin/api/2023-10/script_tags.json`, {
+      script_tag: {
+        event: 'onload',
+        src: scriptSrc
+      }
+    }, {
+      headers: {
+        'X-Shopify-Access-Token': accessToken
+      }
+    });
+
+    console.log('✅ Script tag injected:', scriptSrc);
+  } catch (err) {
+    console.error('❌ Error injecting script:', err.response?.data || err.message);
+  }
+}
 
 
 
@@ -310,30 +352,6 @@ app.post('/shopify/uninstall', async (req, res) => {
   }
 });
 
-// 3. Inject chatbot script into merchant's store via Shopify ScriptTag API
-async function registerScriptTag(shop, accessToken) {
-  const scriptSrc = `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`;
-  try {
-    const existing = await axios.get(`https://${shop}/admin/api/2023-10/script_tags.json`, {
-      headers: { 'X-Shopify-Access-Token': accessToken }
-    });
-
-    if (existing.data.script_tags.some(st => st.src === scriptSrc)) return;
-
-    await axios.post(`https://${shop}/admin/api/2023-10/script_tags.json`, {
-      script_tag: {
-        event: 'onload',
-        src: scriptSrc
-      }
-    }, {
-      headers: { 'X-Shopify-Access-Token': accessToken }
-    });
-
-    console.log('✅ Script tag injected:', scriptSrc);
-  } catch (err) {
-    console.error('❌ Error injecting script:', err.response?.data || err.message);
-  }
-}
 
 // 4. Serve personalized chatbot loader script to inject your chatbot
 app.get('/chatbot-loader.js', async (req, res) => {
@@ -2422,7 +2440,7 @@ app.post('/register', async (req, res, next) => {
     return res.status(403).json({ error: 'Already logged in' });
   }
 
-  const { username, email, password } = req.body;
+  const { username, email, password, shopifyStore } = req.body;
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
