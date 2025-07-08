@@ -105,17 +105,21 @@
     helperText.style.cssText = `
       position: fixed;
       bottom: 27px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       right: 85px;
       font-size: 14.5px;
       color: #fff;
       z-index: 10000;
       cursor: pointer;
-      padding: 3px 16px 6px;
+      padding: 0px 16px 0px;
       border-radius: 22px;
       background: var(--ai-website-question);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
       color: var(--need-help-text);
+      height: 37px;
       max-height: 37px;
       max-width: 155px;
     `;

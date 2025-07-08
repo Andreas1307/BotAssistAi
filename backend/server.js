@@ -371,7 +371,7 @@ app.get('/chatbot-loader.js', async (req, res) => {
       const style = document.createElement('style');
       style.innerHTML = \`
         :root {
-          ---ai-background: #4C90F7; 
+      --ai-background: #4C90F7; 
       --ai-button: #F59E0B;
       --ai-input: #ffffff;
       --ai-input-font-color: #111827;             
