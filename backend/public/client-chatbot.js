@@ -110,12 +110,17 @@
       color: #fff;
       z-index: 10000;
       cursor: pointer;
-      padding: 3px 16px 6px;
+      padding: 3px 0px 6px;
       border-radius: 22px;
       background: var(--ai-website-question);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
       color: var(--font-color);
+      max-height: 37px;
+      height: 37px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     `;
     helperText.appendChild(closeIcon);
     setTimeout(() => document.body.appendChild(helperText), 8000);
@@ -254,6 +259,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 10px;
+      height: 261px;
     `;
   
     const submit = document.createElement("div");
@@ -267,6 +273,9 @@
   border-bottom-right-radius: 13px; 
   border-bottom-left-radius: 13px;
   overflow: hidden; /* 💡 prevents button overflow causing white space */
+  position: absolute;
+  bottom: 0;
+  left: 0;
     `;
   
     const input = document.createElement("input");
@@ -283,6 +292,7 @@
   flex: 1; 
     `;
     input.onfocus = () => input.style.outline = "none";
+    input.onfocus = () => input.style.boxShadow = "none";
   
     const button = document.createElement("button");
     button.innerHTML = "Send";
@@ -299,6 +309,7 @@
   border-radius: 0;
   clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
   height: 100%; 
+  height: 43px;
     `;
   
     submit.appendChild(input);

@@ -80,15 +80,23 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://botassistai.com",
-  "https://www.botassistai.com",
-  "https://shop-ease2.netlify.app"
-];
+app.use(['/ping-client', '/ask-ai'], cors({
+  origin: '*',  // allow any origin
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false, // credentials cannot be used with wildcard '*'
+}));
+
+// Your existing CORS config for auth and others routes stays intact
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman, curl
+    if (!origin) return callback(null, true);
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "https://botassistai.com",
+      "https://www.botassistai.com",
+      "https://shop-ease2.netlify.app"
+    ];
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
