@@ -261,6 +261,8 @@
       overflow-y: auto;
       padding: 10px;
       min-height: 261px;
+      height: 261px;
+      max-height: 261px;
     `;
   
     const submit = document.createElement("div");
