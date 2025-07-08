@@ -371,15 +371,16 @@ app.get('/chatbot-loader.js', async (req, res) => {
       const style = document.createElement('style');
       style.innerHTML = \`
         :root {
-          --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-          --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-          --ai-input: #000;
-          --ai-input-font-color: #fff;
-          --ai-border: #f8f8f8;
-          --ai-website-chat-btn: #000;
-          --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-          --font-color: #ff0000;
-          --conversation-boxes: blue;
+          ---ai-background: #4C90F7; 
+      --ai-button: #F59E0B;
+      --ai-input: #ffffff;
+      --ai-input-font-color: #111827;             
+      --ai-border: #000;                         
+      --ai-website-chat-btn: #4C90F7;              
+      --ai-website-question: #4C90F7;              
+      --font-color: #3b4352;                        
+      --conversation-boxes: #ffffff;
+      --need-help-text: #fff;
         }
       \`;
       document.head.appendChild(style);

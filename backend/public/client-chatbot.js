@@ -116,6 +116,8 @@
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
       color: var(--need-help-text);
+      max-height: 37px;
+      max-width: 155px;
     `;
     helperText.appendChild(closeIcon);
     setTimeout(() => document.body.appendChild(helperText), 8000);
@@ -254,6 +256,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 10px;
+      min-height: 261px;
     `;
   
     const submit = document.createElement("div");

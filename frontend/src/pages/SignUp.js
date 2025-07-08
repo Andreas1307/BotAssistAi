@@ -12,7 +12,6 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const [shopifyStore, setShopifyStore] = useState("")
   const [error, setError] = useState("")
   const navigate = useNavigate();
 
@@ -129,7 +128,7 @@ const SignUp = () => {
     try {
       const res = await axios.post(
         `${directory}/register`,
-        { username, email, password, shopifyStore },
+        { username, email, password },
         { withCredentials: true }
       );
       
@@ -214,15 +213,7 @@ const SignUp = () => {
           required
         />
       </div>
-      <div className="input-group">
-        <input
-          type="text"
-          value={shopifyStore}
-          onChange={(e) => setShopifyStore(e.target.value)}
-          placeholder="Do you have a Shopify store?"
-          required
-        />
-      </div>
+      
       {error && (<span
             style={{
               color: "red",
