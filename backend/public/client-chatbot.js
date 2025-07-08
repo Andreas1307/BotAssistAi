@@ -295,6 +295,7 @@
   flex: 1; 
     `;
     input.onfocus = () => input.style.outline = "none";
+    input.onfocus = () => input.style.boxShadow = "none";
   
     const button = document.createElement("button");
     button.innerHTML = "Send";
