@@ -2137,7 +2137,7 @@ const userId = user.user_id;
 });
 
 
-app.post("/ping-client", async (req, res) => {
+app.post("/ping-client2", async (req, res) => {
   const { apiKey } = req.body;
 
   try {
