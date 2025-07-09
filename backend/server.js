@@ -922,7 +922,7 @@ app.post("/get-available-times", async (req, res) => {
     const user = users.find(
       (user) => user.api_key && decryptApiKey(user.api_key) === apiKey
     );
-    if (!user) return res.status(401).json({ error: "Invalid API key" });
+    if (!user) return res.status(401).json({ error: "Invalid API key67" });
 
     const userId = user.user_id;
 
@@ -1525,7 +1525,7 @@ app.post("/ask-ai", async (req, res) => {
       }
   
       if(accountType[0].apiBot === 0) {
-        console.log("Invalid API key")
+        console.log("Invalid API key65")
         return res.status(400).json({ error: "Your bot is disabled" });
       }
       
@@ -2117,7 +2117,7 @@ app.post("/submit-feedback", async (req, res) => {
 
 
 if (!user) {
-  return res.status(403).json({ error: "Invalid API key." });
+  return res.status(403).json({ error: "Invalid API key6." });
 }
 
 const userId = user.user_id;
