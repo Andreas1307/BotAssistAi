@@ -144,7 +144,6 @@ app.get('/', (req, res) => {
 
 
 app.get('/shopify/install', (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).send('Log in first');
 
   const shop = req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing shop');
