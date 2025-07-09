@@ -1481,7 +1481,7 @@ try {
     const [users] = await pool.query("SELECT * FROM users")
     const user = users.find((u) => {
       try {
-        console.log("ApiKeysssssssssss", decryptApiKey(u.api_key) === apiKey,  "Api ", apiKey)
+        console.log("ApiKeysssssssssss", decryptApiKey(u.api_key) ,  "Api ", apiKey)
         return decryptApiKey(u.api_key) === apiKey;
       } catch (e) {
         return false;
