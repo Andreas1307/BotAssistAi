@@ -224,14 +224,6 @@ app.get('/shopify/callback', async (req, res) => {
     return res.status(400).send("Invalid state");
   }
 
-  await pool.query(`
-    INSERT INTO users (shopify_shop_domain, shopify_access_token, shopify_installed_at)
-    VALUES (?, ?, NOW())
-    ON DUPLICATE KEY UPDATE
-      shopify_access_token = VALUES(shopify_access_token),
-      shopify_installed_at = NOW()
-  `, [normalizedShop, accessToken]);
-
   const normalizedShop = shop.toLowerCase();
 
   try {
@@ -243,10 +235,13 @@ app.get('/shopify/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    await pool.query(
-      `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id = ?`,
-      [normalizedShop, accessToken, req.user.user_id]
-    );
+    await pool.query(`
+      INSERT INTO users (shopify_shop_domain, shopify_access_token, shopify_installed_at)
+      VALUES (?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        shopify_access_token = VALUES(shopify_access_token),
+        shopify_installed_at = NOW()
+    `, [normalizedShop, accessToken]);
 
     await registerScriptTag(normalizedShop, accessToken);
     await registerGdprWebhooks(normalizedShop, accessToken);
@@ -270,6 +265,7 @@ app.get('/shopify/callback', async (req, res) => {
     res.status(500).send("OAuth failed");
   }
 });
+
 
 // Inject ScriptTag
 async function registerScriptTag(shop, accessToken) {
