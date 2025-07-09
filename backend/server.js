@@ -335,7 +335,6 @@ app.get('/chatbot-loader.js', async (req, res) => {
       'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
       [shop]
     ); 
-console.log("ROWs", decryptApiKey(rows[0].api_key))
     if (!rows.length) return res.status(404).send('Shop not found');
 
     let userApiKey;
@@ -347,10 +346,11 @@ console.log("ROWs", decryptApiKey(rows[0].api_key))
     }
 
     res.set('Content-Type', 'application/javascript');
-    res.send(`
-      const style = document.createElement('style');
-      style.innerHTML = \`
-        :root {
+res.send(`
+  // Inject CSS styles
+  const style = document.createElement('style');
+  style.innerHTML = \`
+    :root {
       --ai-background: #4C90F7; 
       --ai-button: #F59E0B;
       --ai-input: #ffffff;
@@ -361,16 +361,19 @@ console.log("ROWs", decryptApiKey(rows[0].api_key))
       --font-color: #3b4352;                        
       --conversation-boxes: #ffffff;
       --need-help-text: #fff;
-        }
-      \`;
-      document.head.appendChild(style);
+    }
+  \`;
+  document.head.appendChild(style);
 
-      const script = document.createElement('script');
-      script.src = "https://api.botassistai.com/client-chatbot.js";
-      script.defer = true;
-      script.setAttribute("api-key", "${userApiKey}");
-      document.head.appendChild(script);
-    `);
+  // Inject the chatbot script using an inline <script> tag with the api-key attribute
+  const inlineScript = document.createElement('script');
+  inlineScript.setAttribute("type", "text/javascript");
+  inlineScript.setAttribute("api-key", "${userApiKey}");
+  inlineScript.src = "https://api.botassistai.com/client-chatbot.js";
+
+  // Append directly to body so document.currentScript works inside that script
+  document.body.appendChild(inlineScript);
+`);
   } catch (err) {
     console.error('Error loading chatbot script:', err.message);
     res.status(500).send('Internal server error');
