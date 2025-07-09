@@ -2142,19 +2142,34 @@ app.post("/ping-client", async (req, res) => {
 
   try {
     const [users] = await pool.query("SELECT * FROM users");
-    const user = users.find((u) => {
-      if (!u.api_key) return false;
-      return decryptApiKey(u.api_key) === apiKey;
-    })
-    if (!user) return res.status(403).json({ connected: false });
+    
+    let user = null;
+    for (const u of users) {
+      try {
+        if (!u.api_key) continue;
+        if (decryptApiKey(u.api_key) === apiKey) {
+          user = u;
+          break;
+        }
+      } catch (decryptErr) {
+        console.error("Error decrypting api_key for user_id", u.user_id, decryptErr);
+      }
+    }
+
+    if (!user) {
+      return res.status(403).json({ connected: false, message: "API key not found" });
+    }
 
     await pool.query('UPDATE users SET last_connected = NOW() WHERE user_id = ?', [user.user_id]);
-    res.status(200).json({ connected: true });
-  } catch(e) {
-    console.log("Error checking if the api is connected", e);
-    res.status(500).json({ connected: false });
+
+    return res.status(200).json({ connected: true });
+
+  } catch (e) {
+    console.error("Error checking if the api is connected:", e);
+    return res.status(500).json({ connected: false, error: e.message });
   }
-})
+});
+
 
 app.get("/get-connected", async (req, res) => {
   const { userId } = req.query;
