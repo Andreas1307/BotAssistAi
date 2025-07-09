@@ -110,12 +110,12 @@
       color: #fff;
       z-index: 10000;
       cursor: pointer;
-      padding: 3px 0px 6px;
+      padding: 0px 16px 0px;
       border-radius: 22px;
       background: var(--ai-website-question);
       font-weight: 600;
       font-family: "Space Grotesk", sans-serif;
-      color: var(--font-color);
+      color: var(--need-help-text);
       max-height: 37px;
       height: 37px;
       display: flex;
