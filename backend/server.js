@@ -225,10 +225,7 @@ app.get('/shopify/callback', async (req, res) => {
     return res.status(400).send("Invalid state");
   }
 
-  if (!req.isAuthenticated() || !req.user?.user_id) {
-    console.error("❌ User not authenticated during callback");
-    return res.status(401).send("User must be logged in to install the app");
-  }
+  
 
   const normalizedShop = shop.toLowerCase();
 
