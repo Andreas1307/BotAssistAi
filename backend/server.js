@@ -1478,46 +1478,44 @@ app.post("/ask-ai", async (req, res) => {
 try {
     const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
     
-    
+    console.log("Received API key in /ask-ai:", apiKey);
+
     const [users] = await pool.query("SELECT * FROM users");
 
-if (!Array.isArray(users)) {
-  console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
-  return res.status(500).json({ error: "Internal server error" });
-}
-
-let user = null;
-
-for (const u of users) {
-  try {
-    if (!u.api_key) {
-      console.warn("⚠️ Empty API key for user:", u.user_id);
-      continue;
+    if (!Array.isArray(users)) {
+      console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
+      return res.status(500).json({ error: "Internal server error" });
     }
 
-    const decrypted = decryptApiKey(u.api_key);
-    console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
+    let user = null;
 
-    if (decrypted === apiKey) {
-      user = u;
-      console.log(`✅ Match found! user_id: ${u.user_id}, email: ${u.email}`);
-      break;
+    for (const u of users) {
+      try {
+        if (!u.api_key) {
+          console.warn("⚠️ Empty API key for user:", u.user_id);
+          continue;
+        }
+
+        const decrypted = decryptApiKey(u.api_key);
+        console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
+
+        // Normalize by trimming whitespace and comparing lowercase
+        if (decrypted && apiKey && decrypted.trim().toLowerCase() === apiKey.trim().toLowerCase()) {
+          user = u;
+          console.log(`✅ Match found! user_id: ${u.user_id}, email: ${u.email}`);
+          break;
+        }
+      } catch (err) {
+        console.error("❌ Failed to decrypt key:", u.api_key, err);
+      }
     }
-  } catch (err) {
-    console.error("❌ Failed to decrypt key:", u.api_key, err);
-  }
-}
 
-if (!user) {
-  console.error("❌ No matching user found with this API key:", apiKey);
-  return res.status(403).json({ error: "Invalid API key" });
-}
+    if (!user) {
+      console.error("❌ No matching user found with this API key:", apiKey);
+      return res.status(403).json({ error: "Invalid API key" });
+    }
 
-// ✅ THIS IS THE CORRECT WAY TO ASSIGN USER ID
-const user_id = user.user_id;
-
-// ✅ Log final confirmation before proceeding
-console.log(`🚀 Proceeding with user_id: ${user_id}`);
+    const user_id = user.user_id;
 // Ensure that userData and userConversationState are initialized for the conversationId
 if (!userData[conversationId]) {
   userData[conversationId] = {
