@@ -52,7 +52,7 @@
     gap: 1rem;
   }
   .working-hour-day {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 1rem;
     border-radius: 0.75rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -60,7 +60,7 @@
   .working-hour-day label {
     font-size: 19px;
     font-weight: 600;
-    color: white;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
   }
   .working-hour-inputs {
@@ -79,15 +79,15 @@
     font-size: 19px;
     font-weight: 600;
     margin-left: 4px;
-    color: white;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
   }
   .timezoneDiv select {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 0.75rem;
     border-radius: 0.75rem;
     margin-top: 7px;
-    color: white;
+    color: #444;
     font-size: 15.5px;
     border: none;
     width: 100%;
@@ -98,7 +98,7 @@
     font-weight: 500;
   }
   .days-off-container {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 1rem;
     border-radius: 0.75rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -107,7 +107,7 @@
     font-size: 20px;
     font-weight: 600;
     margin-left: 4px;
-    color: white;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
     margin-bottom: 7px;
   }
@@ -164,7 +164,7 @@
     margin-bottom: 4px;
     margin-left: 4px;
     font-weight: 500;
-    color: white;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
   }
   .time-input {
@@ -326,11 +326,11 @@
     margin-top: 1rem;
   }
   .react-calendar {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     border: none;
     border-radius: 13px;
     padding: 1rem;
-    color: white;
+    color: #444;
   }
   .react-calendar__navigation {
     margin-bottom: 20px;
@@ -361,7 +361,7 @@
   }
   .react-calendar__tile {
     background: transparent;
-    color: white;
+    color: #222;
     padding: 20px 3px;
     border-radius: 13px;
     font-size: 15px;
@@ -380,15 +380,15 @@
   }
   
   .react-calendar__tile--now {
-    background: rgba(255, 255, 255, 0.15);
+    background: #f1f1f1;
   }
   
   .react-calendar__tile:enabled:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f1f1;
   }
   
   .react-calendar__month-view__days__day--weekend {
-    color: #fff;
+    color: #333;
     font-weight: 500;
   }
 
@@ -398,11 +398,12 @@
     background-color: rgba(255, 255, 255, 0.1);
     padding: 1rem;
     border-radius: 1rem;
-    color: white;
+    color: #333;
   }
   .appointments-heading {
     font-size: 21.5px;
     font-family: "Space Grotesk", sans-serif;
+    color: #222;
   }
   .appointments-list ul {
     width: 100%;
@@ -414,7 +415,7 @@
   }
   .appointment-entry {
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     border-radius: 13px;
     padding: 13px 18px;
     list-style: none;
@@ -446,10 +447,10 @@
   }
   .service-availability {
     margin: 10px 0;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 0.75rem;
     border-radius: 0.75rem;
-    color: white;
+    color: #444;
     font-size: 1rem;
     border: none;
     width: 100%;
@@ -458,7 +459,7 @@
     font-size: 17.8px;
     margin-bottom: 9px;
     font-weight: 600;
-    color: white;
+    color: #333;
     font-family: "Space Grotesk", sans-serif;
   }
   .service-availability div {
@@ -476,9 +477,9 @@
   .staff-select{
     padding: 8px 22px;
     font-weight: 600;
-    color: #f8f8f8;
+    color: #333;
     font-size: 15.5px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     border-radius: 13px;
     border: 0;
     font-family: "Space Grotesk", sans-serif;
@@ -492,7 +493,7 @@
     padding: 7px 15px 6.5px;
     margin-top: 6px;
     font-weight: 600;
-    color: #f8f8f8;
+    color: #444;
     background-color: #00F5D4;
     border-radius: 13px;
     font-size: 15.5px;
@@ -524,7 +525,7 @@
   
   .react-calendar__tile .appointment-count {
     background-color: rgba(0, 217, 255, 0.2); /* lighter for 0 */
-    color: #fff;
+    color: #222;
   }
   
   .react-calendar__tile .appointment-count:not(:contains('0')) {
@@ -533,11 +534,11 @@
   }
 
   .integration-section {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 20px;
     border-radius: 13px;
     margin-top: 1rem;
-    color: white;
+    color: #222;
   }
   
   .integration-block {
@@ -549,6 +550,7 @@
     font-family: "Space Grotesk", sans-serif;
     font-weight: 600;
     cursor: pointer;
+    color: #222;
   }
   .inteIcon {
     font-size: 18.5px;
@@ -579,10 +581,10 @@
   font-family: "Space Grotesk", sans-serif;
 }
   .integration-input  {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 0.75rem;
     border-radius: 0.75rem;
-    color: white;
+    color: #222;
     font-size: 1rem;
     border: none;
     width: 100%;
@@ -590,7 +592,7 @@
     margin-top: 3px;
 }
 .integration-input::placeholder {
-  color: #fff;
+  color: #333;
   font-family: "Space Grotesk", sans-serif;
   font-weight: 500;
 }

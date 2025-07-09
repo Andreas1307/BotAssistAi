@@ -6,7 +6,7 @@
 .wrapp {
     width: 93%;
     margin: 30px auto;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #f2f2f2;
     padding: 25px;
     color: #e6e6e6 !important;
     border-radius: 20px;
@@ -15,29 +15,32 @@
     font-size: 42px;
     text-align: center;
     font-family: "Space Grotesk", sans-serif;
+    color: #222;
 }
 .wrapp h2 {
     font-size: 30px;
     text-align: center;
     font-family: "Space Grotesk", sans-serif;
     margin: 20px 0 4px;
-    color: #ffff;
+    color: #333;
 }
 .wrapp h3 {
     font-size: 22px;
     font-family: "Space Grotesk", sans-serif;
     margin: 15px 0 4px;
+    color: #333;
 }
 .wrapp p {
     font-weight: 500;
     font-size: 16.5px;
     line-height: 21px;
     margin: 5px 0;
+    color: #444;
 }
 .wrapp a {
     font-family: "Space Grotesk", sans-serif;
     font-weight: 700;
-    color: #e6e6e6;
+    color: #444;
     position: relative;
     text-decoration: none;
 }
@@ -48,7 +51,7 @@
     left: 0;
     width: 70%;
     height: 2px;
-    background-color: #e6e6e6;
+    background-color: #444;
     border-radius: 20px;
     transition: .3s ease;
 }
