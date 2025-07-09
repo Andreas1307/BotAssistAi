@@ -225,7 +225,13 @@ app.get('/shopify/callback', async (req, res) => {
     return res.status(400).send("Invalid state");
   }
 
-  
+  await pool.query(`
+    INSERT INTO users (shopify_shop_domain, shopify_access_token, shopify_installed_at)
+    VALUES (?, ?, NOW())
+    ON DUPLICATE KEY UPDATE
+      shopify_access_token = VALUES(shopify_access_token),
+      shopify_installed_at = NOW()
+  `, [normalizedShop, accessToken]);
 
   const normalizedShop = shop.toLowerCase();
 
