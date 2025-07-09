@@ -1481,26 +1481,39 @@ try {
     
     const [users] = await pool.query("SELECT * FROM users");
 
-if (!Array.isArray(users)) {
-  console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
-  return res.status(500).json({ error: "Internal server error" });
-}
-
-const user = users.find((u) => {
-  try {
-    const decrypted = decryptApiKey(u.api_key);
-    console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
-    return decrypted === apiKey;
-  } catch (e) {
-    console.error("❌ Failed to decrypt key:", u.api_key);
-    return false;
-  }
-});
-
-if (!user) {
-  console.error("❌ No matching user found with this API key:", apiKey);
-  return res.status(403).json({ error: "Invalid API key" });
-}
+    if (!Array.isArray(users)) {
+      console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+    
+    let matchedUser = null;
+    
+    for (const u of users) {
+      try {
+        if (!u.api_key) {
+          console.warn("⚠️ Empty API key for user:", u.id);
+          continue;
+        }
+    
+        const decrypted = decryptApiKey(u.api_key);
+        console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
+    
+        if (decrypted === apiKey) {
+          matchedUser = u;
+          break;
+        }
+      } catch (err) {
+        console.error("❌ Failed to decrypt key:", u.api_key);
+      }
+    }
+    
+    if (!matchedUser) {
+      console.error("❌ No matching user found with this API key:", apiKey);
+      return res.status(403).json({ error: "Invalid API key" });
+    }
+    
+    // ✅ SUCCESS — now continue
+    console.log("✅ Authenticated user:", matchedUser.email || matchedUser.id);
 
 
 const userId = user.user_id
