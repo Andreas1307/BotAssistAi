@@ -1475,497 +1475,476 @@ const conversationId = `${user_id}-${generateRandomToken()}`;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post("/ask-ai", async (req, res) => {
   
-try {
-  const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, conversationId = "default", ...updates } = req.body;
-
-    
-    console.log("Received API key in /ask-ai:", apiKey);
-
-    const [users] = await pool.query("SELECT * FROM users");
-
-    if (!Array.isArray(users)) {
-      console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-
-    let user = null;
-
-    for (const u of users) {
-      try {
-        if (!u.api_key) {
-          console.warn("⚠️ Empty API key for user:", u.user_id);
-          continue;
+  try {
+      const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
+  
+      const [users] = await pool.query("SELECT * FROM users")
+      const user = users.find((u) => {
+        try {
+          return decryptApiKey(u.api_key) === apiKey;
+        } catch (e) {
+          return false;
         }
-
-        const decrypted = decryptApiKey(u.api_key);
-        console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
-
-        // Normalize by trimming whitespace and comparing lowercase
-        if (decrypted && apiKey && decrypted.trim().toLowerCase() === apiKey.trim().toLowerCase()) {
-          user = u;
-          console.log(`✅ Match found! user_id: ${u.user_id}, email: ${u.email}`);
-          break;
+      });
+  
+  
+      if (!user) {
+        console.log("Invalid API key")
+        return res.status(403).json({ error: "Invalid API key" });
+      }
+  
+  
+  const userId = user.user_id
+  user_id = userId
+  // Ensure that userData and userConversationState are initialized for the conversationId
+  if (!userData[conversationId]) {
+    userData[conversationId] = {
+      serviceName: "",
+      staffName: "",
+      date: "",
+      availableTimes: [],
+      selectedTime: "",
+      name: "",
+      email: "",
+      specialRequirements: "",
+    };
+  }
+  
+  if (!userConversationState[conversationId]) {
+    userConversationState[conversationId] = {};  // Initialize empty state for the conversation
+  }
+  const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+      if (accountType[0].subscription_plan === "Free") {
+        const count = await dailyConversations(userId);
+        console.log("👀 Conversations today:", count);
+      
+        if (count >= 30) {
+          console.log("Invalid API key2")
+          return res.status(400).json({ error: "Finished your 30 conversations per day." });
         }
-      } catch (err) {
-        console.error("❌ Failed to decrypt key:", u.api_key, err);
       }
-    }
-
-    if (!user) {
-      console.error("❌ No matching user found with this API key:", apiKey);
-      return res.status(403).json({ error: "Invalid API key" });
-    }
-
-    const user_id = user.user_id;
-// Ensure that userData and userConversationState are initialized for the conversationId
-if (!userData[conversationId]) {
-  userData[conversationId] = {
-    serviceName: "",
-    staffName: "",
-    date: "",
-    availableTimes: [],
-    selectedTime: "",
-    name: "",
-    email: "",
-    specialRequirements: "",
-  };
-}
-
-if (!userConversationState[conversationId]) {
-  userConversationState[conversationId] = {};  // Initialize empty state for the conversation
-}
-const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", [user_id]);
-    if (accountType[0].subscription_plan === "Free") {
-      const count = await dailyConversations(user_id);
-      console.log("👀 Conversations today:", count);
-    
-      if (count >= 30) {
-        console.log("Invalid API key2")
-        return res.status(400).json({ error: "Finished your 30 conversations per day." });
+  
+      if(accountType[0].apiBot === 0) {
+        console.log("Invalid API key")
+        return res.status(400).json({ error: "Your bot is disabled" });
       }
-    }
-
-    if(accountType[0].apiBot === 0) {
-      console.log("Invalid API key")
-      return res.status(400).json({ error: "Your bot is disabled" });
-    }
-    
-    if (!apiKey || !message) {
       
-      console.log("Invalid API key4")
-        return res.status(400).json({ error: "Missing required parameters (userId or message)." });
-    }
-    const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [user_id]);
-
-    if (rows.length === 0) {
-
-        return res.status(404).json({ error: "No customization settings found for this user." });
-    }
-
-    let userSettings = rows[0];
-
-    const updateFields = {};
-    Object.keys(updates).forEach((key) => {
-        if (updates[key] !== "" && updates[key] !== null && updates[key] !== undefined) {
-            updateFields[key] = updates[key];
-        }
-    });
-
-
-    if (Object.keys(updateFields).length > 0) {
-        const updateQuery = `UPDATE faq SET ${Object.keys(updateFields).map(key => `${key} = ?`).join(", ")} WHERE user_id = ?`;
-        const updateValues = [...Object.values(updateFields), user_id];
-
-        console.log("🔄 Executing update query:", updateQuery);
-        console.log("🔄 Update values:", updateValues);
-
-        await pool.query(updateQuery, updateValues);
-    } else {
-        console.log("⚠️ No valid fields to update. Skipping database update.");
-    }
-
-    const [updatedRows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [user_id]);
-    userSettings = updatedRows[0];  
-
-    const { 
-        faq_id,
-        username,
-        tags,
-        category,
-        response_tone,
-        response_delay_ms,
-        escalation_threshold,
-        business_context,
-        avoid_topics,
-        languages_supported,
-        fine_tuning_data,
-        customer_name,
-        uploaded_file,
-        webUrl,
-        phoneNum
-    } = userSettings;
-
-    const businessName = customer_name; 
-
-    let userMessage = message;
-
-    if (business_context) {
-        userMessage = `Context: ${business_context}\nUser: ${message}`;
-    }
-
-    if (avoid_topics) {
-        userMessage += `\n(Note: Avoid discussing these topics: ${avoid_topics})`;
-    }
-
-    if (businessName) {
-        userMessage = `Hello ${businessName},\n` + userMessage;
-    }
-
-    if (languages_supported) {
-        userMessage += `\n(Preferred languages: ${languages_supported})`;
-    }
-
-    if (uploaded_file) {
-        userMessage += `\n(Additional info from uploaded file: ${uploaded_file})`;
-    }
-
-    if (webUrl) {
-        userMessage += `\n(Reference URL: ${webUrl})`;
-    }
-
-    let systemPrompt = `
-    You are a helpful, concise AI chatbot for customer support on this website: ${webUrl}.
-    Keep answers short (under 30 words), friendly, and direct.
-    
-    Only answer questions related to this website (${webUrl}) or its products/services. Politely refuse anything unrelated.
-    
-    If a user asks a broad or general question (e.g., "What's trending?", "Any gift ideas?", "What are bestsellers?", "What's popular right now?", "What do people usually buy?"), always give a helpful answer using common product types or categories relevant to most businesses (e.g., "Popular choices include skincare kits, gift cards, or wireless earbuds.").
-    
-    If no specific product info is available, suggest common, high-interest items for general relevance. Never say “I’m not sure” or refer users to another page.
-    
-    Always be helpful, even with minimal input.
-    
-    Do not assist with order details. If asked, respond with: "Have you completed all the steps correctly, including payment and confirmation?"
-    `;
-
-    if (response_tone) {
-        systemPrompt = `Respond in a ${response_tone} tone.`;
-    }
-    if (fine_tuning_data) {
-        systemPrompt += `\nUse fine-tuned data: ${fine_tuning_data}`;
-    }
-    if (category) {
-        systemPrompt += `\nThe topic is categorized as: ${category}`;
-    }
-    if (tags) {
-        systemPrompt += `\nRelevant keywords: ${tags}`;
-    }
-
-    const startTime = Date.now();
-
-    const response = await openai.chat.completions.create({
-        model: model,
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userMessage }
-        ],
-        temperature: temperature,
-        max_tokens: 40
-    });
-
-    const endTime = Date.now(); 
-
-    const responseTime = endTime - startTime;
-
-    console.log(`Response time: ${responseTime} ms`); 
-
-    const sessionQuery = "SELECT session_id FROM chat_sessions WHERE user_id = ? ORDER BY session_id DESC LIMIT 1";
-    const [sessionRows] = await pool.query(sessionQuery, [user_id]);
-
-    let sessionId;
-    if (sessionRows.length > 0) {
-        sessionId = sessionRows[0].session_id;  
-    } else {
-        const [newSession] = await pool.query("INSERT INTO chat_sessions (user_id) VALUES (?)", [user_id]);
-        sessionId = newSession.insertId;  
-    }
-
-    await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id) VALUES (?, 'user', ?, ?)", [sessionId, message, user_id]);
-
-
-    const [servicesNames] = await pool.query("SELECT name FROM services WHERE user_id = ?", [user_id])
-    const [staffNames] = await pool.query("SELECT name FROM staff WHERE user_id = ?", [user_id])
-    const [bookingEnabled] = await pool.query("SELECT booking FROM users where user_id = ?", [user_id])
-    const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [user_id])
-
-    let aiResponse = response.choices[0].message.content;
-
-    
-    console.log("Parsed Date:", chrono.parseDate("May 7", new Date(), { forwardDate: true }));
-
-
-    const lowerMessage = message.toLowerCase();
-
-
-    
-
-
-   
-    const supportKeywords = [
-      "talk to human",
-      "human support",
-      "real person",
-      "speak to agent",
-      "talk to someone",
-      "need help from a person",
-      "can I speak to a human",
-      "contact support",
-      "customer support",
-      "live agent",
-      "human assistant",
-      "talk with a representative",
-      "speak to support",
-      "someone help me",
-      "real support",
-      "help from a human"
-    ];
-    const wantsHumanSupport = supportKeywords.some(phrase => lowerMessage.includes(phrase));
-    
-    if (wantsHumanSupport) {
-      aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum}. `;
-      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, user_id, responseTime, "Transferred to Agent"]);
-    } 
-
-
-    const triggers = [
-      "book an appointment",
-      "make an appointment",
-      "schedule an appointment",
-      "book a time",
-      "schedule a time",
-      "set up an appointment",
-      "reserve an appointment",
-      "book a meeting",
-      "schedule a meeting",
-      "arrange an appointment",
-      "i need an appointment",
-      "i want to book",
-      "i want to schedule",
-      "can i book",
-      "can i schedule"
-    ];
-    const cancelTriggers = ["cancel", "never mind", "forget it", "stop", "exit"];
-
-if (cancelTriggers.some(trigger => lowerMessage.includes(trigger))) {
-  delete userConversationState[conversationId];
-  delete userData[conversationId];
-  aiResponse = "No problem! Let me know if you need anything else.";
-} 
-
-    if(subscrptionPlan[0].subscription_plan === "Pro") {
-      
-      if (triggers.some(trigger => lowerMessage.includes(trigger))) {
-      if (!bookingEnabled[0].booking) {
-        aiResponse = "Sorry, bookings are currently disabled. Please try again later or contact support.";
-      } else {
-        aiResponse = "What service would you like to book? (type 'exit' to cancel)";
-        userConversationState[conversationId] = "waiting_for_service";
+      if (!apiKey || !message) {
+        
+        console.log("Invalid API key4")
+          return res.status(400).json({ error: "Missing required parameters (userId or message)." });
       }
-    }
-
+      const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [userId]);
   
-    else if (bookingEnabled[0].booking) {
-
- if (userConversationState[conversationId] === "waiting_for_service") {
-  const normalizedMessage = message.toLowerCase().trim();
+      if (rows.length === 0) {
   
-  const service = servicesNames.find(serviceObj => normalizedMessage.includes(serviceObj.name.toLowerCase().trim()));
-
-  if (service) {
-    if (!userData[conversationId]) {
-      userData[conversationId] = {}; 
-    }
-    userData[conversationId].serviceName = service.name;  
-    aiResponse = "Great! Who would you like to book with?";
-    userConversationState[conversationId] = "waiting_for_staff";  
-  } else {
-    aiResponse = "Sorry, I couldn't find that service. Could you double-check the name?";
-  }
-  
-}
-
-else if (userConversationState[conversationId] === "waiting_for_staff") {
-  const staff = staffNames.find(staffObj => message.toLowerCase().includes(staffObj.name.toLowerCase()));
-  
-  if (staff) {
-    userData[conversationId].staffName = staff.name; 
-    aiResponse = "Great! What date would you like to book? (yyyy-mm-dd)";
-    userConversationState[conversationId] = "waiting_for_date";
-
-  } else {
-    aiResponse = "Hmm, I couldn't find that staff member. Could you double-check the name?";
-    
-  }
-}
-
-else if (userConversationState[conversationId] === "waiting_for_date") {
-  const parsedDate = chrono.parseDate(message, new Date(), { forwardDate: true });
-
-  if (parsedDate instanceof Date && !isNaN(parsedDate)) {
-    const selectedDate = new Date(parsedDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    selectedDate.setHours(0, 0, 0, 0);
-
-    if (selectedDate >= today) {
-      // Format date as YYYY-MM-DD
-      const yyyy = selectedDate.getFullYear();
-      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const dd = String(selectedDate.getDate()).padStart(2, '0');
-      userData[conversationId].date = `${yyyy}-${mm}-${dd}`;
-
-      aiResponse = "Great! What time works best for your appointment?";
-      userConversationState[conversationId] = "waiting_for_time";
-      try {
-        const response = await axios.post(`${directory}/get-available-times`, {
-          apiKey,
-          serviceName: userData[conversationId].serviceName,
-          date: userData[conversationId].date,
-          staffName: userData[conversationId].staffName
-        });
-
-        userData[conversationId].availableTimes = response.data.slots;
-        console.log("Available times:", userData[conversationId].availableTimes);
-      } catch (e) {
-        console.error("Error fetching times:", e);
-        aiResponse = "There was a problem checking availability. Please try again.";
+          return res.status(404).json({ error: "No customization settings found for this user." });
       }
-
-    } else {
-      aiResponse = "That date is in the past. Please choose a future date.";
-    }
-
-  } else {
-    aiResponse = "Sorry, I couldn’t understand that date. Try something like 'May 5', 'in 3 days', or 'next Friday'.";
-  }
-}
-
-else if (userConversationState[conversationId] === "waiting_for_time") {
-  const parsedTime = chrono.parseDate(message);
   
-  if (parsedTime) {
-    const inputHours = parsedTime.getHours();
-    const inputMinutes = parsedTime.getMinutes();
-    const formattedTime = `${String(inputHours).padStart(2, '0')}:${String(inputMinutes).padStart(2, '0')}`;
-    
-    // Check if the user has selected an available time
-    if (userData[conversationId].availableTimes.includes(formattedTime)) {
-      userData[conversationId].selectedTime = formattedTime;
-      aiResponse = `Perfect! Please enter your name!`;
-      userConversationState[conversationId] = "waiting_for_name";
-    } else {
-      // If the selected time isn't available, find nearby available times
-      const availableTimes = userData[conversationId].availableTimes;
-      const suggestedTimes = findClosestAvailableTimes(formattedTime, availableTimes);
-      
-      if (suggestedTimes.length > 0) {
-        aiResponse = `That time's taken. How about one of these? ${suggestedTimes.join(', ')}`;
-      } else {
-        aiResponse = "Sorry, that time isn't available. Please choose one of the available times listed.";
-      }
-    }
-  } else {
-    aiResponse = "I couldn't understand the time. Please enter something like '10:30 AM' or '15:00'.";
-  }
-}
-
-    else if (userConversationState[conversationId] === "waiting_for_name") {
-      if(message.length > 30) {
-        aiResponse = "Name is too long!"
-      } else {
-        userData[conversationId].name = message;
-        aiResponse = "Great! What's your email for confirmation?";
-        userConversationState[conversationId] = "waiting_for_email";
-      }
-    }
-    
-    else if (userConversationState[conversationId] === "waiting_for_email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-      if (emailRegex.test(message.trim())) {
-        userData[conversationId].email = message.trim();
-        aiResponse = "Perfect, Do you have any special requirements?";
-        userConversationState[conversationId] = "waiting_for_special_req";
-      } else {
-        aiResponse = "That email looks off—mind checking it again?";
-      }
-    }
-
-    else if(userConversationState[conversationId] === "waiting_for_special_req") {
-      userData[conversationId].specialRequirements = message
-    
-          const bookingData = {
-          apiKey, 
-          service: userData[conversationId].serviceName,
-          staff: userData[conversationId].staffName,
-          date: userData[conversationId].date,
-          selectedTime: userData[conversationId].selectedTime,
-          name: userData[conversationId].name, 
-          email: userData[conversationId].email, 
-          phone: "",
-          specialRequirements: userData[conversationId].specialRequirements
+      let userSettings = rows[0];
+  
+      const updateFields = {};
+      Object.keys(updates).forEach((key) => {
+          if (updates[key] !== "" && updates[key] !== null && updates[key] !== undefined) {
+              updateFields[key] = updates[key];
           }
-          try {
-           await axios.post(`${directory}/send-booking-request` , bookingData , { withCredentials: true})
-             aiResponse = `You are all set! Appoiment is on ${userData[conversationId].date} at ${userData[conversationId].selectedTime}`;
-             userConversationState[conversationId] = null;
-          } catch(e) {
-            console.log("An Error Occured Sending the user's details to the backend from the backend", e)
-          }
-    }
-  }
+      });
+  
+  
+      if (Object.keys(updateFields).length > 0) {
+          const updateQuery = `UPDATE faq SET ${Object.keys(updateFields).map(key => `${key} = ?`).join(", ")} WHERE user_id = ?`;
+          const updateValues = [...Object.values(updateFields), userId];
+  
+          console.log("🔄 Executing update query:", updateQuery);
+          console.log("🔄 Update values:", updateValues);
+  
+          await pool.query(updateQuery, updateValues);
+      } else {
+          console.log("⚠️ No valid fields to update. Skipping database update.");
+      }
+  
+      const [updatedRows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [userId]);
+      userSettings = updatedRows[0];  
+  
+      const { 
+          faq_id,
+          username,
+          tags,
+          category,
+          response_tone,
+          response_delay_ms,
+          escalation_threshold,
+          business_context,
+          avoid_topics,
+          languages_supported,
+          fine_tuning_data,
+          customer_name,
+          uploaded_file,
+          webUrl,
+          phoneNum
+      } = userSettings;
+  
+      const businessName = customer_name; 
+  
+      let userMessage = message;
+  
+      if (business_context) {
+          userMessage = `Context: ${business_context}\nUser: ${message}`;
+      }
+  
+      if (avoid_topics) {
+          userMessage += `\n(Note: Avoid discussing these topics: ${avoid_topics})`;
+      }
+  
+      if (businessName) {
+          userMessage = `Hello ${businessName},\n` + userMessage;
+      }
+  
+      if (languages_supported) {
+          userMessage += `\n(Preferred languages: ${languages_supported})`;
+      }
+  
+      if (uploaded_file) {
+          userMessage += `\n(Additional info from uploaded file: ${uploaded_file})`;
+      }
+  
+      if (webUrl) {
+          userMessage += `\n(Reference URL: ${webUrl})`;
+      }
+  
+      let systemPrompt = `
+      You are a helpful, concise AI chatbot for customer support on this website: ${webUrl}.
+      Keep answers short (under 30 words), friendly, and direct.
+      
+      Only answer questions related to this website (${webUrl}) or its products/services. Politely refuse anything unrelated.
+      
+      If a user asks a broad or general question (e.g., "What's trending?", "Any gift ideas?", "What are bestsellers?", "What's popular right now?", "What do people usually buy?"), always give a helpful answer using common product types or categories relevant to most businesses (e.g., "Popular choices include skincare kits, gift cards, or wireless earbuds.").
+      
+      If no specific product info is available, suggest common, high-interest items for general relevance. Never say “I’m not sure” or refer users to another page.
+      
+      Always be helpful, even with minimal input.
+      
+      Do not assist with order details. If asked, respond with: "Have you completed all the steps correctly, including payment and confirmation?"
+      `;
+  
+      if (response_tone) {
+          systemPrompt = `Respond in a ${response_tone} tone.`;
+      }
+      if (fine_tuning_data) {
+          systemPrompt += `\nUse fine-tuned data: ${fine_tuning_data}`;
+      }
+      if (category) {
+          systemPrompt += `\nThe topic is categorized as: ${category}`;
+      }
+      if (tags) {
+          systemPrompt += `\nRelevant keywords: ${tags}`;
+      }
+  
+      const startTime = Date.now();
+  
+      const response = await openai.chat.completions.create({
+          model: model,
+          messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userMessage }
+          ],
+          temperature: temperature,
+          max_tokens: 40
+      });
+  
+      const endTime = Date.now(); 
+  
+      const responseTime = endTime - startTime;
+  
+      console.log(`Response time: ${responseTime} ms`); 
+  
+      const sessionQuery = "SELECT session_id FROM chat_sessions WHERE user_id = ? ORDER BY session_id DESC LIMIT 1";
+      const [sessionRows] = await pool.query(sessionQuery, [userId]);
+  
+      let sessionId;
+      if (sessionRows.length > 0) {
+          sessionId = sessionRows[0].session_id;  
+      } else {
+          const [newSession] = await pool.query("INSERT INTO chat_sessions (user_id) VALUES (?)", [userId]);
+          sessionId = newSession.insertId;  
+      }
+  
+      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id) VALUES (?, 'user', ?, ?)", [sessionId, message, userId]);
+  
+  
+      const [servicesNames] = await pool.query("SELECT name FROM services WHERE user_id = ?", [userId])
+      const [staffNames] = await pool.query("SELECT name FROM staff WHERE user_id = ?", [userId])
+      const [bookingEnabled] = await pool.query("SELECT booking FROM users where user_id = ?", [userId])
+      const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [userId])
+  
+      let aiResponse = response.choices[0].message.content;
+  
+      
+      console.log("Parsed Date:", chrono.parseDate("May 7", new Date(), { forwardDate: true }));
+  
+  
+      const lowerMessage = message.toLowerCase();
+  
+  
+      
+  
+  
+     
+      const supportKeywords = [
+        "talk to human",
+        "human support",
+        "real person",
+        "speak to agent",
+        "talk to someone",
+        "need help from a person",
+        "can I speak to a human",
+        "contact support",
+        "customer support",
+        "live agent",
+        "human assistant",
+        "talk with a representative",
+        "speak to support",
+        "someone help me",
+        "real support",
+        "help from a human"
+      ];
+      const wantsHumanSupport = supportKeywords.some(phrase => lowerMessage.includes(phrase));
+      
+      if (wantsHumanSupport) {
+        aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum}. `;
+        await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Transferred to Agent"]);
+      } 
+  
+  
+      const triggers = [
+        "book an appointment",
+        "make an appointment",
+        "schedule an appointment",
+        "book a time",
+        "schedule a time",
+        "set up an appointment",
+        "reserve an appointment",
+        "book a meeting",
+        "schedule a meeting",
+        "arrange an appointment",
+        "i need an appointment",
+        "i want to book",
+        "i want to schedule",
+        "can i book",
+        "can i schedule"
+      ];
+      const cancelTriggers = ["cancel", "never mind", "forget it", "stop", "exit"];
+  
+  if (cancelTriggers.some(trigger => lowerMessage.includes(trigger))) {
+    delete userConversationState[conversationId];
+    delete userData[conversationId];
+    aiResponse = "No problem! Let me know if you need anything else.";
+  } 
+  
+      if(subscrptionPlan[0].subscription_plan === "Pro") {
+        
+        if (triggers.some(trigger => lowerMessage.includes(trigger))) {
+        if (!bookingEnabled[0].booking) {
+          aiResponse = "Sorry, bookings are currently disabled. Please try again later or contact support.";
+        } else {
+          aiResponse = "What service would you like to book? (type 'exit' to cancel)";
+          userConversationState[conversationId] = "waiting_for_service";
+        }
+      }
+  
+    
+      else if (bookingEnabled[0].booking) {
+  
+   if (userConversationState[conversationId] === "waiting_for_service") {
+    const normalizedMessage = message.toLowerCase().trim();
+    
+    const service = servicesNames.find(serviceObj => normalizedMessage.includes(serviceObj.name.toLowerCase().trim()));
+  
+    if (service) {
+      if (!userData[conversationId]) {
+        userData[conversationId] = {}; 
+      }
+      userData[conversationId].serviceName = service.name;  
+      aiResponse = "Great! Who would you like to book with?";
+      userConversationState[conversationId] = "waiting_for_staff";  
     } else {
-    await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Chatbot handled"]);
+      aiResponse = "Sorry, I couldn't find that service. Could you double-check the name?";
     }
     
-
-    if (isUnresolved(aiResponse)) {
-        await pool.query("INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, 'unresolved')", [userId, message, aiResponse]);
+  }
+  
+  else if (userConversationState[conversationId] === "waiting_for_staff") {
+    const staff = staffNames.find(staffObj => message.toLowerCase().includes(staffObj.name.toLowerCase()));
+    
+    if (staff) {
+      userData[conversationId].staffName = staff.name; 
+      aiResponse = "Great! What date would you like to book? (yyyy-mm-dd)";
+      userConversationState[conversationId] = "waiting_for_date";
+  
     } else {
-      await pool.query("INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, 'resolved')", [userId, message, aiResponse]);
+      aiResponse = "Hmm, I couldn't find that staff member. Could you double-check the name?";
+      
     }
-
-    const satisfactionPrompt = `Thank you for using our support! Please rate your experience:
-      1. Very Dissatisfied
-      2. Dissatisfied
-      3. Neutral
-      4. Satisfied
-      5. Very Satisfied
-    `;
-
-    setTimeout(() => {
-        res.json({ 
-            response: aiResponse,
-            satisfaction_prompt: satisfactionPrompt, 
-            response_time: responseTime, 
-            metadata: {
-                faq_id,
-                user_id,
-                username,
-                category,
-                response_tone,
-                escalation_threshold,
-                businessName,
-                webUrl 
+  }
+  
+  else if (userConversationState[conversationId] === "waiting_for_date") {
+    const parsedDate = chrono.parseDate(message, new Date(), { forwardDate: true });
+  
+    if (parsedDate instanceof Date && !isNaN(parsedDate)) {
+      const selectedDate = new Date(parsedDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+  
+      if (selectedDate >= today) {
+        // Format date as YYYY-MM-DD
+        const yyyy = selectedDate.getFullYear();
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(selectedDate.getDate()).padStart(2, '0');
+        userData[conversationId].date = `${yyyy}-${mm}-${dd}`;
+  
+        aiResponse = "Great! What time works best for your appointment?";
+        userConversationState[conversationId] = "waiting_for_time";
+        try {
+          const response = await axios.post(`${directory}/get-available-times`, {
+            apiKey,
+            serviceName: userData[conversationId].serviceName,
+            date: userData[conversationId].date,
+            staffName: userData[conversationId].staffName
+          });
+  
+          userData[conversationId].availableTimes = response.data.slots;
+          console.log("Available times:", userData[conversationId].availableTimes);
+        } catch (e) {
+          console.error("Error fetching times:", e);
+          aiResponse = "There was a problem checking availability. Please try again.";
+        }
+  
+      } else {
+        aiResponse = "That date is in the past. Please choose a future date.";
+      }
+  
+    } else {
+      aiResponse = "Sorry, I couldn’t understand that date. Try something like 'May 5', 'in 3 days', or 'next Friday'.";
+    }
+  }
+  
+  else if (userConversationState[conversationId] === "waiting_for_time") {
+    const parsedTime = chrono.parseDate(message);
+    
+    if (parsedTime) {
+      const inputHours = parsedTime.getHours();
+      const inputMinutes = parsedTime.getMinutes();
+      const formattedTime = `${String(inputHours).padStart(2, '0')}:${String(inputMinutes).padStart(2, '0')}`;
+      
+      // Check if the user has selected an available time
+      if (userData[conversationId].availableTimes.includes(formattedTime)) {
+        userData[conversationId].selectedTime = formattedTime;
+        aiResponse = `Perfect! Please enter your name!`;
+        userConversationState[conversationId] = "waiting_for_name";
+      } else {
+        // If the selected time isn't available, find nearby available times
+        const availableTimes = userData[conversationId].availableTimes;
+        const suggestedTimes = findClosestAvailableTimes(formattedTime, availableTimes);
+        
+        if (suggestedTimes.length > 0) {
+          aiResponse = `That time's taken. How about one of these? ${suggestedTimes.join(', ')}`;
+        } else {
+          aiResponse = "Sorry, that time isn't available. Please choose one of the available times listed.";
+        }
+      }
+    } else {
+      aiResponse = "I couldn't understand the time. Please enter something like '10:30 AM' or '15:00'.";
+    }
+  }
+  
+      else if (userConversationState[conversationId] === "waiting_for_name") {
+        if(message.length > 30) {
+          aiResponse = "Name is too long!"
+        } else {
+          userData[conversationId].name = message;
+          aiResponse = "Great! What's your email for confirmation?";
+          userConversationState[conversationId] = "waiting_for_email";
+        }
+      }
+      
+      else if (userConversationState[conversationId] === "waiting_for_email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      
+        if (emailRegex.test(message.trim())) {
+          userData[conversationId].email = message.trim();
+          aiResponse = "Perfect, Do you have any special requirements?";
+          userConversationState[conversationId] = "waiting_for_special_req";
+        } else {
+          aiResponse = "That email looks off—mind checking it again?";
+        }
+      }
+  
+      else if(userConversationState[conversationId] === "waiting_for_special_req") {
+        userData[conversationId].specialRequirements = message
+      
+            const bookingData = {
+            apiKey, 
+            service: userData[conversationId].serviceName,
+            staff: userData[conversationId].staffName,
+            date: userData[conversationId].date,
+            selectedTime: userData[conversationId].selectedTime,
+            name: userData[conversationId].name, 
+            email: userData[conversationId].email, 
+            phone: "",
+            specialRequirements: userData[conversationId].specialRequirements
             }
-        });
-    }, response_delay_ms || 0);
-    
-} catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).json({ error: "AI request failed" });
-}
-});
+            try {
+             await axios.post(`${directory}/send-booking-request` , bookingData , { withCredentials: true})
+               aiResponse = `You are all set! Appoiment is on ${userData[conversationId].date} at ${userData[conversationId].selectedTime}`;
+               userConversationState[conversationId] = null;
+            } catch(e) {
+              console.log("An Error Occured Sending the user's details to the backend from the backend", e)
+            }
+      }
+    }
+      } else {
+      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Chatbot handled"]);
+      }
+      
+  
+      if (isUnresolved(aiResponse)) {
+          await pool.query("INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, 'unresolved')", [userId, message, aiResponse]);
+      } else {
+        await pool.query("INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, 'resolved')", [userId, message, aiResponse]);
+      }
+  
+      const satisfactionPrompt = `Thank you for using our support! Please rate your experience:
+        1. Very Dissatisfied
+        2. Dissatisfied
+        3. Neutral
+        4. Satisfied
+        5. Very Satisfied
+      `;
+  
+      setTimeout(() => {
+          res.json({ 
+              response: aiResponse,
+              satisfaction_prompt: satisfactionPrompt, 
+              response_time: responseTime, 
+              metadata: {
+                  faq_id,
+                  userId,
+                  username,
+                  category,
+                  response_tone,
+                  escalation_threshold,
+                  businessName,
+                  webUrl 
+              }
+          });
+      }, response_delay_ms || 0);
+      
+  } catch (error) {
+      console.error("❌ Error:", error);
+      res.status(500).json({ error: "AI request failed" });
+  }
+  });
 
 
 
