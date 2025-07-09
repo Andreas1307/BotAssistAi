@@ -340,7 +340,7 @@
           },
           body: JSON.stringify({ message, apiKey }),
         });
-    
+        console.log("APIKEYY", apiKey)
         const data = await res.json();
         const botResponse = data.response;
     

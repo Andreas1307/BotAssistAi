@@ -1477,7 +1477,7 @@ app.post("/ask-ai", async (req, res) => {
   
   try {
       const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
-  
+  console.log("APIKEYY", apiKey)
       const [users] = await pool.query("SELECT * FROM users")
       const user = users.find((u) => {
         try {
