@@ -144,16 +144,14 @@ app.get('/', (req, res) => {
 
 
 app.get('/shopify/install', (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).send('Log in first');
 
   const shop = req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing shop');
 
   const state = crypto.randomBytes(16).toString('hex');
-  res.cookie('shopify_state', state, {
-    sameSite: 'Lax', // try Lax instead of None
-    secure: true,
-    httpOnly: true,
-  });
+  res.cookie('shopify_state', state, { sameSite: 'none', secure: true });
+
   const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&state=${state}&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
   res.redirect(installUrl);
 });
@@ -224,6 +222,11 @@ app.get('/shopify/callback', async (req, res) => {
     return res.status(400).send("Invalid state");
   }
 
+  if (!req.isAuthenticated() || !req.user?.user_id) {
+    console.error("❌ User not authenticated during callback");
+    return res.status(401).send("User must be logged in to install the app");
+  }
+
   const normalizedShop = shop.toLowerCase();
 
   try {
@@ -235,13 +238,10 @@ app.get('/shopify/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    await pool.query(`
-      INSERT INTO users (shopify_shop_domain, shopify_access_token, shopify_installed_at)
-      VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE
-        shopify_access_token = VALUES(shopify_access_token),
-        shopify_installed_at = NOW()
-    `, [normalizedShop, accessToken]);
+    await pool.query(
+      `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id = ?`,
+      [normalizedShop, accessToken, req.user.user_id]
+    );
 
     await registerScriptTag(normalizedShop, accessToken);
     await registerGdprWebhooks(normalizedShop, accessToken);
@@ -265,7 +265,6 @@ app.get('/shopify/callback', async (req, res) => {
     res.status(500).send("OAuth failed");
   }
 });
-
 
 // Inject ScriptTag
 async function registerScriptTag(shop, accessToken) {
@@ -389,6 +388,7 @@ app.post('/shopify/gdpr/customers/redact', (req, res) => {
   console.log("🗑️ GDPR: Customer Redact Request", req.body);
   res.status(200).send('Handled');
 });
+
 
 
 
