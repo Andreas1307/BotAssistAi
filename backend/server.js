@@ -1481,16 +1481,18 @@ try {
     const [users] = await pool.query("SELECT * FROM users")
     const user = users.find((u) => {
       try {
-        console.log("ApiKeysssssssssss", decryptApiKey(u.api_key) ,  "Api ", apiKey)
-        return decryptApiKey(u.api_key) === apiKey;
+        const decrypted = decryptApiKey(u.api_key);
+        console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
+        return decrypted === apiKey;
       } catch (e) {
+        console.error("❌ Failed to decrypt key:", u.api_key);
         return false;
       }
     });
 
 
     if (!user) {
-      console.log("Invalid API key")
+      console.error("❌ No matching user found with this API key:", apiKey);
       return res.status(403).json({ error: "Invalid API key" });
     }
 
