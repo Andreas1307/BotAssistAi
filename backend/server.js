@@ -1486,34 +1486,32 @@ try {
       return res.status(500).json({ error: "Internal server error" });
     }
     
-    let matchedUser = null;
-    
-    for (const u of users) {
-      try {
-        if (!u.api_key) {
-          console.warn("⚠️ Empty API key for user:", u.id);
-          continue;
-        }
-    
-        const decrypted = decryptApiKey(u.api_key);
-        console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
-    
-        if (decrypted === apiKey) {
-          matchedUser = u;
-          break;
-        }
-      } catch (err) {
-        console.error("❌ Failed to decrypt key:", u.api_key);
-      }
+    let user = null;
+
+for (const u of users) {
+  try {
+    if (!u.api_key) {
+      console.warn("⚠️ Empty API key for user:", u.id);
+      continue;
     }
-    
-    if (!matchedUser) {
-      console.error("❌ No matching user found with this API key:", apiKey);
-      return res.status(403).json({ error: "Invalid API key" });
+
+    const decrypted = decryptApiKey(u.api_key);
+    console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
+
+    if (decrypted === apiKey) {
+      user = u; // ✅ assign to user directly
+      break;
     }
-    
-    // ✅ SUCCESS — now continue
-    console.log("✅ Authenticated user:", matchedUser.email || matchedUser.id);
+  } catch (err) {
+    console.error("❌ Failed to decrypt key:", u.api_key);
+  }
+}
+
+if (!user) {
+  console.error("❌ No matching user found with this API key:", apiKey);
+  return res.status(403).json({ error: "Invalid API key" });
+}
+
 
 
 const userId = user.user_id
