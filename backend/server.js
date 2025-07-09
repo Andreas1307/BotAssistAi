@@ -333,7 +333,7 @@ app.get('/chatbot-loader.js', async (req, res) => {
 
     const [rows] = await pool.query(
       'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
-      [shop]
+      [encodeURIComponent(shop)]
     );
 
     if (!rows.length) return res.status(404).send('Shop not found');
