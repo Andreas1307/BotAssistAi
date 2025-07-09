@@ -335,7 +335,7 @@ app.get('/chatbot-loader.js', async (req, res) => {
       'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
       [shop]
     ); 
-console.log("ROWs", decryptApiKey(rows[0].api_key)
+console.log("ROWs", decryptApiKey(rows[0].api_key))
     if (!rows.length) return res.status(404).send('Shop not found');
 
     let userApiKey;
