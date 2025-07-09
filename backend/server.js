@@ -1476,7 +1476,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post("/ask-ai", async (req, res) => {
   
 try {
-    const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
+  const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, conversationId = "default", ...updates } = req.body;
+
     
     console.log("Received API key in /ask-ai:", apiKey);
 
@@ -1689,7 +1690,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
         sessionId = newSession.insertId;  
     }
 
-    await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id) VALUES (?, 'user', ?, ?)", [sessionId, message, userId]);
+    await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id) VALUES (?, 'user', ?, ?)", [sessionId, message, user_id]);
 
 
     const [servicesNames] = await pool.query("SELECT name FROM services WHERE user_id = ?", [user_id])
