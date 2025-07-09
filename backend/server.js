@@ -1535,9 +1535,9 @@ if (!userData[conversationId]) {
 if (!userConversationState[conversationId]) {
   userConversationState[conversationId] = {};  // Initialize empty state for the conversation
 }
-const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", [user_id]);
     if (accountType[0].subscription_plan === "Free") {
-      const count = await dailyConversations(userId);
+      const count = await dailyConversations(user_id);
       console.log("👀 Conversations today:", count);
     
       if (count >= 30) {
@@ -1556,7 +1556,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
       console.log("Invalid API key4")
         return res.status(400).json({ error: "Missing required parameters (userId or message)." });
     }
-    const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [userId]);
+    const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [user_id]);
 
     if (rows.length === 0) {
 
@@ -1575,7 +1575,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
 
     if (Object.keys(updateFields).length > 0) {
         const updateQuery = `UPDATE faq SET ${Object.keys(updateFields).map(key => `${key} = ?`).join(", ")} WHERE user_id = ?`;
-        const updateValues = [...Object.values(updateFields), userId];
+        const updateValues = [...Object.values(updateFields), user_id];
 
         console.log("🔄 Executing update query:", updateQuery);
         console.log("🔄 Update values:", updateValues);
@@ -1585,7 +1585,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
         console.log("⚠️ No valid fields to update. Skipping database update.");
     }
 
-    const [updatedRows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [userId]);
+    const [updatedRows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [user_id]);
     userSettings = updatedRows[0];  
 
     const { 
@@ -1681,23 +1681,23 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
     console.log(`Response time: ${responseTime} ms`); 
 
     const sessionQuery = "SELECT session_id FROM chat_sessions WHERE user_id = ? ORDER BY session_id DESC LIMIT 1";
-    const [sessionRows] = await pool.query(sessionQuery, [userId]);
+    const [sessionRows] = await pool.query(sessionQuery, [user_id]);
 
     let sessionId;
     if (sessionRows.length > 0) {
         sessionId = sessionRows[0].session_id;  
     } else {
-        const [newSession] = await pool.query("INSERT INTO chat_sessions (user_id) VALUES (?)", [userId]);
+        const [newSession] = await pool.query("INSERT INTO chat_sessions (user_id) VALUES (?)", [user_id]);
         sessionId = newSession.insertId;  
     }
 
     await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id) VALUES (?, 'user', ?, ?)", [sessionId, message, userId]);
 
 
-    const [servicesNames] = await pool.query("SELECT name FROM services WHERE user_id = ?", [userId])
-    const [staffNames] = await pool.query("SELECT name FROM staff WHERE user_id = ?", [userId])
-    const [bookingEnabled] = await pool.query("SELECT booking FROM users where user_id = ?", [userId])
-    const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [userId])
+    const [servicesNames] = await pool.query("SELECT name FROM services WHERE user_id = ?", [user_id])
+    const [staffNames] = await pool.query("SELECT name FROM staff WHERE user_id = ?", [user_id])
+    const [bookingEnabled] = await pool.query("SELECT booking FROM users where user_id = ?", [user_id])
+    const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [user_id])
 
     let aiResponse = response.choices[0].message.content;
 
@@ -1734,7 +1734,7 @@ const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", 
     
     if (wantsHumanSupport) {
       aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum}. `;
-      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Transferred to Agent"]);
+      await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, user_id, responseTime, "Transferred to Agent"]);
     } 
 
 
@@ -1951,7 +1951,7 @@ else if (userConversationState[conversationId] === "waiting_for_time") {
             response_time: responseTime, 
             metadata: {
                 faq_id,
-                userId,
+                user_id,
                 username,
                 category,
                 response_tone,
