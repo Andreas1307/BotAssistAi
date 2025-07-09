@@ -1481,17 +1481,17 @@ try {
     
     const [users] = await pool.query("SELECT * FROM users");
 
-    if (!Array.isArray(users)) {
-      console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-    
-    let user = null;
+if (!Array.isArray(users)) {
+  console.error("🚨 Unexpected DB result. 'users' is not an array:", users);
+  return res.status(500).json({ error: "Internal server error" });
+}
+
+let user = null;
 
 for (const u of users) {
   try {
     if (!u.api_key) {
-      console.warn("⚠️ Empty API key for user:", u.id);
+      console.warn("⚠️ Empty API key for user:", u.user_id || "unknown");
       continue;
     }
 
@@ -1499,11 +1499,12 @@ for (const u of users) {
     console.log("🔓 Decrypted stored key:", decrypted, "| Received:", apiKey);
 
     if (decrypted === apiKey) {
-      user = u; // ✅ assign to user directly
+      user = u;
+      console.log(`✅ Match found! user_id: ${u.user_id}, email: ${u.email}`);
       break;
     }
   } catch (err) {
-    console.error("❌ Failed to decrypt key:", u.api_key);
+    console.error("❌ Failed to decrypt key:", u.api_key, err);
   }
 }
 
