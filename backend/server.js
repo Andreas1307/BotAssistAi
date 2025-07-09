@@ -1489,7 +1489,7 @@ app.post("/ask-ai", async (req, res) => {
   
   
       if (!user) {
-        console.log("Invalid API key")
+        console.log("Invalid API keyiuioho")
         return res.status(403).json({ error: "Invalid API key" });
       }
   
