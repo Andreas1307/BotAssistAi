@@ -346,34 +346,34 @@ app.get('/chatbot-loader.js', async (req, res) => {
     }
 
     res.set('Content-Type', 'application/javascript');
-res.send(`
-  // Inject CSS styles
-  const style = document.createElement('style');
-  style.innerHTML = \`
-    :root {
-      --ai-background: #4C90F7; 
-      --ai-button: #F59E0B;
-      --ai-input: #ffffff;
-      --ai-input-font-color: #111827;             
-      --ai-border: #000;                         
-      --ai-website-chat-btn: #4C90F7;              
-      --ai-website-question: #4C90F7;              
-      --font-color: #3b4352;                        
-      --conversation-boxes: #ffffff;
-      --need-help-text: #fff;
-    }
-  \`;
-  document.head.appendChild(style);
-
-  // Inject the chatbot script using an inline <script> tag with the api-key attribute
-  const inlineScript = document.createElement('script');
-  inlineScript.setAttribute("type", "text/javascript");
-  inlineScript.setAttribute("api-key", "${userApiKey}");
-  inlineScript.src = "https://api.botassistai.com/client-chatbot.js";
-
-  // Append directly to body so document.currentScript works inside that script
-  document.body.appendChild(inlineScript);
-`);
+    res.send(`
+      // Inject CSS styles
+      const style = document.createElement('style');
+      style.innerHTML = \`
+        :root {
+          --ai-background: #4C90F7; 
+          --ai-button: #F59E0B;
+          --ai-input: #ffffff;
+          --ai-input-font-color: #111827;             
+          --ai-border: #000;                         
+          --ai-website-chat-btn: #4C90F7;              
+          --ai-website-question: #4C90F7;              
+          --font-color: #3b4352;                        
+          --conversation-boxes: #ffffff;
+          --need-help-text: #fff;
+        }
+      \`;
+      document.head.appendChild(style);
+    
+      // Inject the chatbot script using an inline <script> tag with the api-key attribute
+      const inlineScript = document.createElement('script');
+      inlineScript.setAttribute("type", "text/javascript");
+      inlineScript.setAttribute("api-key", "${userApiKey}");
+      inlineScript.src = "https://api.botassistai.com/client-chatbot.js";
+    
+      // Append directly to body so document.currentScript works inside that script
+      document.body.appendChild(inlineScript);
+    `);
   } catch (err) {
     console.error('Error loading chatbot script:', err.message);
     res.status(500).send('Internal server error');
