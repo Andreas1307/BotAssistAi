@@ -61,15 +61,16 @@ const Integrations = () => {
       <style>
        :root {
        /* Change to your preffered colors */
-     --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-     --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-     --ai-input: #000;
-     --ai-input-font-color: #fff;
-     --ai-border: #f8f8f8;
-     --ai-website-chat-btn: #000;
-     --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-     --font-color: #ff0000;
-     --conversation-boxes: blue;
+     --ai-background: #4C90F7; 
+      --ai-button: #F59E0B;
+      --ai-input: #ffffff;
+      --ai-input-font-color: #111827;             
+      --ai-border: #000;                         
+      --ai-website-chat-btn: #4C90F7;              
+      --ai-website-question: #4C90F7;              
+      --font-color: #3b4352;                        
+      --conversation-boxes: #ffffff;
+      --need-help-text: #fff;
     }
       </style>
        <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR API KEY HERE" defer></script>
@@ -86,15 +87,16 @@ const Integrations = () => {
           const style = document.createElement("style");
           style.innerHTML = \`
             :root {
-               --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-               --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-               --ai-input: #000;
-               --ai-input-font-color: #fff;
-               --ai-border: #f8f8f8;
-               --ai-website-chat-btn: #000;
-               --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-               --font-color: #ff0000;
-               --conversation-boxes: blue;
+               --ai-background: #4C90F7; 
+               --ai-button: #F59E0B;
+               --ai-input: #ffffff;
+               --ai-input-font-color: #111827;             
+               --ai-border: #000;                         
+               --ai-website-chat-btn: #4C90F7;              
+               --ai-website-question: #4C90F7;              
+               --font-color: #3b4352;                        
+               --conversation-boxes: #ffffff;
+               --need-help-text: #fff;
             }
           \`;
           document.head.appendChild(style);
@@ -126,15 +128,16 @@ const Integrations = () => {
         const style = document.createElement("style");
         style.innerHTML = \`
           :root {
-             --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-             --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-             --ai-input: #000;
-             --ai-input-font-color: #fff;
-             --ai-border: #f8f8f8;
-             --ai-website-chat-btn: #000;
-             --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-             --font-color: #ff0000;
-             --conversation-boxes: blue;
+             --ai-background: #4C90F7; 
+             --ai-button: #F59E0B;
+             --ai-input: #ffffff;
+             --ai-input-font-color: #111827;             
+             --ai-border: #000;                         
+             --ai-website-chat-btn: #4C90F7;              
+             --ai-website-question: #4C90F7;              
+             --font-color: #3b4352;                        
+             --conversation-boxes: #ffffff;
+             --need-help-text: #fff;
           }
         \`;
         document.head.appendChild(style);
@@ -170,6 +173,7 @@ const Integrations = () => {
             --ai-website-question: {{ ai_website_question | default("linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%)") }};
             --font-color: {{ font_color | default("#ff0000") }};
             --conversation-boxes: {{ conversation_boxes | default("blue") }};
+            --need-help-text: #fff;: {{ need_help_text: #fff; | default("white") }};
         }
     </style>
 
@@ -201,16 +205,17 @@ const Integrations = () => {
       proTip: "Insert into your layout file (e.g. layout.html or base.jsp) before </body> to load globally.",
       Java: `
       <style>
-  :root {
-     --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-     --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-     --ai-input: #000;
-     --ai-input-font-color: #fff;
-     --ai-border: #f8f8f8;
-     --ai-website-chat-btn: #000;
-     --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-     --font-color: #ff0000;
-     --conversation-boxes: blue;
+          :root {
+             --ai-background: #4C90F7; 
+             --ai-button: #F59E0B;
+             --ai-input: #ffffff;
+             --ai-input-font-color: #111827;             
+             --ai-border: #000;                         
+             --ai-website-chat-btn: #4C90F7;              
+             --ai-website-question: #4C90F7;              
+             --font-color: #3b4352;                        
+             --conversation-boxes: #ffffff;
+             --need-help-text: #fff;
   }
 </style>
 <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
@@ -222,15 +227,16 @@ const Integrations = () => {
       <?php echo '
 <style>
   :root {
-    --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-    --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-    --ai-input: #000;
-    --ai-input-font-color: #fff;
-    --ai-border: #f8f8f8;
-    --ai-website-chat-btn: #000;
-    --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-    --font-color: #ff0000;
-    --conversation-boxes: blue;
+             --ai-background: #4C90F7; 
+             --ai-button: #F59E0B;
+             --ai-input: #ffffff;
+             --ai-input-font-color: #111827;             
+             --ai-border: #000;                         
+             --ai-website-chat-btn: #4C90F7;              
+             --ai-website-question: #4C90F7;              
+             --font-color: #3b4352;                        
+             --conversation-boxes: #ffffff;
+             --need-help-text: #fff;
   }
 </style>
 <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
@@ -247,15 +253,16 @@ const Integrations = () => {
         const style = document.createElement('style');
         style.innerHTML = \`
           :root {
-             --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-             --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-             --ai-input: #000;
-             --ai-input-font-color: #fff;
-             --ai-border: #f8f8f8;
-             --ai-website-chat-btn: #000;
-             --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-             --font-color: #ff0000;
-             --conversation-boxes: blue;
+             --ai-background: #4C90F7; 
+             --ai-button: #F59E0B;
+             --ai-input: #ffffff;
+             --ai-input-font-color: #111827;             
+             --ai-border: #000;                         
+             --ai-website-chat-btn: #4C90F7;              
+             --ai-website-question: #4C90F7;              
+             --font-color: #3b4352;                        
+             --conversation-boxes: #ffffff;
+             --need-help-text: #fff;
           }
         \`;
         document.head.appendChild(style);
@@ -286,15 +293,16 @@ const Integrations = () => {
       Shopify: `
      <style>
   :root {
-     --ai-background: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-     --ai-button: linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%);
-     --ai-input: #000;
-     --ai-input-font-color: #fff;
-     --ai-border: #f8f8f8;
-     --ai-website-chat-btn: #000;
-     --ai-website-question: linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%);
-     --font-color: #ff0000;
-     --conversation-boxes: blue;
+             --ai-background: #4C90F7; 
+             --ai-button: #F59E0B;
+             --ai-input: #ffffff;
+             --ai-input-font-color: #111827;             
+             --ai-border: #000;                         
+             --ai-website-chat-btn: #4C90F7;              
+             --ai-website-question: #4C90F7;              
+             --font-color: #3b4352;                        
+             --conversation-boxes: #ffffff;
+             --need-help-text: #fff;
   }
 </style>
 <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
