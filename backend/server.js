@@ -150,8 +150,11 @@ app.get('/shopify/install', (req, res) => {
   if (!shop) return res.status(400).send('Missing shop');
 
   const state = crypto.randomBytes(16).toString('hex');
-  res.cookie('shopify_state', state, { sameSite: 'none', secure: true });
-
+  res.cookie('shopify_state', state, {
+    sameSite: 'Lax', // try Lax instead of None
+    secure: true,
+    httpOnly: true,
+  });
   const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&state=${state}&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
   res.redirect(installUrl);
 });
