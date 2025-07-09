@@ -369,7 +369,7 @@
 
     (async () => {
       try {
-        const res = await fetch(`${directory}/ping-client2`, {
+        const res = await fetch(`${directory}/ping-client`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
