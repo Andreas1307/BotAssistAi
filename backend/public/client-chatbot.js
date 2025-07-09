@@ -371,17 +371,23 @@
       try {
         const res = await fetch(`${directory}/ping-client`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKey })
         });
-    
-        const data = await res.json();
+      
+        const text = await res.text();  // <-- safer than .json() if you expect HTML
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error("Server returned non-JSON: " + text.slice(0, 100));
+        }
+      
         console.log("Bot connected:", data);
       } catch (err) {
         console.error("Bot connection failed:", err);
       }
+      
     })();
 
 

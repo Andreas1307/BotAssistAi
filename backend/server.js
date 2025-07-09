@@ -81,32 +81,29 @@ return rows[0]
 initialisePassport(passport, getUserByEmail, getUserById)
 
 app.use(['/ping-client', '/ask-ai'], cors({
-  origin: '*',  // allow any origin
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false, // credentials cannot be used with wildcard '*'
+  credentials: false
 }));
 
-// Your existing CORS config for auth and others routes stays intact
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    const allowedOrigins = [
-      "http://localhost:3000",
-      "https://botassistai.com",
-      "https://www.botassistai.com",
-      "https://shop-ease2.netlify.app"
-    ];
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// THEN, protected/controlled CORS for other parts (login etc)
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://botassistai.com",
+    "https://www.botassistai.com",
+    "https://shop-ease2.netlify.app"
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  next();
+});
 
 app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
 
