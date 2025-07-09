@@ -1491,7 +1491,7 @@ let user = null;
 for (const u of users) {
   try {
     if (!u.api_key) {
-      console.warn("⚠️ Empty API key for user:", u.user_id || "unknown");
+      console.warn("⚠️ Empty API key for user:", u.user_id);
       continue;
     }
 
@@ -1513,10 +1513,11 @@ if (!user) {
   return res.status(403).json({ error: "Invalid API key" });
 }
 
+// ✅ THIS IS THE CORRECT WAY TO ASSIGN USER ID
+const user_id = user.user_id;
 
-
-const userId = user.user_id
-user_id = userId
+// ✅ Log final confirmation before proceeding
+console.log(`🚀 Proceeding with user_id: ${user_id}`);
 // Ensure that userData and userConversationState are initialized for the conversationId
 if (!userData[conversationId]) {
   userData[conversationId] = {
