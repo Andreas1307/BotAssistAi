@@ -145,7 +145,9 @@ app.get('/', (req, res) => {
 app.get('/shopify/install', (req, res) => {
   const shop = req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing shop');
-
+  const isValidShop = (shop) => /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
+  if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
+  
   const state = crypto.randomBytes(16).toString('hex');
   res.cookie('shopify_state', state, {
     sameSite: 'none',
@@ -177,18 +179,19 @@ function verifyHMAC(query, secret) {
 async function registerGdprWebhooks(shop, accessToken) {
   const topics = [
     {
-      topic: 'CUSTOMERS_DATA_REQUEST',
+      topic: 'customers/data_request',
       address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request'
     },
     {
-      topic: 'CUSTOMERS_REDACT',
+      topic: 'customers/redact',
       address: 'https://api.botassistai.com/shopify/gdpr/customers/redact'
     },
     {
-      topic: 'SHOP_REDACT',
+      topic: 'shop/redact', // ✅ FIXED
       address: 'https://api.botassistai.com/shopify/gdpr/shop/redact'
     }
   ];
+  
 
   for (const { topic, address } of topics) {
     try {
@@ -212,7 +215,9 @@ async function registerGdprWebhooks(shop, accessToken) {
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.cookies.shopify_state;
-
+  const isValidShop = (shop) => /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
+  if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
+  
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
     console.error("❌ HMAC verification failed");
     return res.status(400).send("Invalid request signature");
@@ -341,16 +346,6 @@ app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async 
   // ... your logic
 });
 
-function verifyWebhookRaw(req, secret) {
-  const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
-  const body = req.body; // raw buffer
-  const hash = crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('base64');
-
-  return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(hash, 'utf8'));
-}
 
 
 
@@ -418,7 +413,7 @@ app.get('/chatbot-loader.js', async (req, res) => {
 
 
 app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     console.warn("🔐 Invalid HMAC on data_request");
     return res.status(401).send('Invalid HMAC');
   }
@@ -431,7 +426,7 @@ app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'applicatio
 
 
 app.post('/shopify/gdpr/customers/redact', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
   console.log("🗑️ GDPR: Customer Redact Request", req.body);
@@ -439,7 +434,7 @@ app.post('/shopify/gdpr/customers/redact', express.raw({ type: 'application/json
 });
 
 app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
   console.log("🏪 GDPR: Shop Redact Request", req.body);
@@ -448,18 +443,21 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 
 
 
-function verifyWebhook(req, secret) {
+function verifyWebhookRaw(req, secret) {
   const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
-  const body = req.body; // raw buffer
-  const generatedHash = crypto
+  const body = req.body; // should be a Buffer
+  const hash = crypto
     .createHmac('sha256', secret)
-    .update(body)
+    .update(body) // 🧠 This throws error if body is not Buffer
     .digest('base64');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(hmacHeader, 'utf8'),
-    Buffer.from(generatedHash, 'utf8')
-  );
+    if (!hmacHeader) return false;
+    try {
+      return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(hash, 'utf8'));
+    } catch (e) {
+      return false;
+    }
+    
 }
 
 
