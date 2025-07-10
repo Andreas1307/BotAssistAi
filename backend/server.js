@@ -144,7 +144,7 @@ app.get('/', (req, res) => {
 
 
 app.get('/shopify/install', (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).send('Log in first');
+  
 
   const shop = req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing shop');
@@ -185,8 +185,8 @@ async function registerGdprWebhooks(shop, accessToken) {
     },
     {
       topic: 'shop/redact',
-      address: 'https://api.botassistai.com/shopify/uninstall'
-    }
+      address: 'https://api.botassistai.com/shopify/gdpr/shop/redact'
+    }    
   ];
 
   for (const { topic, address } of topics) {
@@ -222,14 +222,10 @@ app.get('/shopify/callback', async (req, res) => {
     return res.status(400).send("Invalid state");
   }
 
-  if (!req.isAuthenticated() || !req.user?.user_id) {
-    console.error("❌ User not authenticated during callback");
-    return res.status(401).send("User must be logged in to install the app");
-  }
-
   const normalizedShop = shop.toLowerCase();
 
   try {
+    // Get access token from Shopify
     const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -238,11 +234,14 @@ app.get('/shopify/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    await pool.query(
-      `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id = ?`,
-      [normalizedShop, accessToken, req.user.user_id]
-    );
+    // Save install record temporarily — for example in a temp_installs table or memory
+    await pool.query(`
+      INSERT INTO shopify_installs (shop, access_token, installed_at)
+      VALUES (?, ?, NOW())
+      ON DUPLICATE KEY UPDATE access_token=?, installed_at=NOW()
+    `, [normalizedShop, accessToken, accessToken]);
 
+    // Register script and webhooks
     await registerScriptTag(normalizedShop, accessToken);
     await registerGdprWebhooks(normalizedShop, accessToken);
 
@@ -253,18 +252,18 @@ app.get('/shopify/callback', async (req, res) => {
         format: 'json'
       }
     }, {
-      headers: {
-        'X-Shopify-Access-Token': accessToken
-      }
+      headers: { 'X-Shopify-Access-Token': accessToken }
     });
 
     console.log(`✅ App installed for ${normalizedShop}`);
-    res.redirect('/dashboard?installed=true');
+    // Redirect to a public setup UI (no login required)
+    res.redirect(`/shopify/welcome?shop=${normalizedShop}`);
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
   }
 });
+
 
 // Inject ScriptTag
 async function registerScriptTag(shop, accessToken) {
@@ -296,10 +295,42 @@ async function registerScriptTag(shop, accessToken) {
 }
 
 
+app.post('/api/link-shop-to-user', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user?.user_id) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  const { shop } = req.body;
+  if (!shop) return res.status(400).json({ error: "Missing shop" });
+
+  try {
+    // Get token from the install table
+    const [rows] = await pool.query(`SELECT access_token FROM shopify_installs WHERE shop = ?`, [shop]);
+    if (!rows.length) return res.status(404).json({ error: "Shop not found" });
+
+    const accessToken = rows[0].access_token;
+
+    // Save to the actual users table
+    await pool.query(
+      `UPDATE users SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+       WHERE user_id = ?`,
+      [shop.toLowerCase(), accessToken, req.user.user_id]
+    );
+
+    return res.json({ success: true });
+  } catch (e) {
+    console.error("Linking shop failed:", e.message);
+    return res.status(500).json({ error: "Database error" });
+  }
+});
 
 
 
-app.post('/shopify/uninstall', async (req, res) => {
+app.post('/shopify/uninstall', express.json(), async (req, res) => {
+  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+    return res.status(401).send('Invalid HMAC');
+  }
+
   const shop = req.headers['x-shopify-shop-domain'];
   if (!shop) return res.status(400).send('Missing shop header');
 
@@ -309,10 +340,10 @@ app.post('/shopify/uninstall', async (req, res) => {
       [shop.toLowerCase()]
     );
     console.log(`🧹 Uninstalled: ${shop}`);
-    res.status(200).send('OK');
+    res.sendStatus(200);
   } catch (err) {
     console.error('Uninstall cleanup failed:', err.message);
-    res.status(500).send('Error');
+    res.sendStatus(500);
   }
 });
 
@@ -382,17 +413,41 @@ app.get('/chatbot-loader.js', async (req, res) => {
 
 
 
-app.post('/shopify/gdpr/customers/data_request', (req, res) => {
+app.post('/shopify/gdpr/customers/data_request', express.json(), (req, res) => {
+  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+    return res.status(401).send('Invalid HMAC');
+  }
   console.log("📦 GDPR: Customer Data Request", req.body);
-  res.status(200).send('Handled');
+  res.sendStatus(200);
 });
 
-app.post('/shopify/gdpr/customers/redact', (req, res) => {
+app.post('/shopify/gdpr/customers/redact', express.json(), (req, res) => {
+  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+    return res.status(401).send('Invalid HMAC');
+  }
   console.log("🗑️ GDPR: Customer Redact Request", req.body);
-  res.status(200).send('Handled');
+  res.sendStatus(200);
+});
+
+app.post('/shopify/gdpr/shop/redact', express.json(), (req, res) => {
+  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+    return res.status(401).send('Invalid HMAC');
+  }
+  console.log("🏪 GDPR: Shop Redact Request", req.body);
+  res.sendStatus(200);
 });
 
 
+
+function verifyWebhook(req, secret) {
+  const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
+  const body = JSON.stringify(req.body);
+  const generatedHash = crypto
+    .createHmac('sha256', secret)
+    .update(body, 'utf8')
+    .digest('base64');
+  return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(generatedHash, 'utf8'));
+}
 
 
 
