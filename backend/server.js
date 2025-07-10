@@ -6,7 +6,7 @@ const directory = "https://api.botassistai.com"
 const express = require("express");
 const app = express()
 const nodemailer = require("nodemailer")
-app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 const cors = require("cors");
 const { createPool } = require("mysql2")
@@ -342,10 +342,14 @@ app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async 
     return res.status(401).send('Invalid HMAC');
   }
 
+  const parsed = JSON.parse(req.body.toString('utf8'));
   const shop = req.headers['x-shopify-shop-domain'];
-  // ... your logic
-});
+  console.log("🔌 App uninstalled:", shop, parsed);
 
+  // ... your uninstall logic here
+
+  res.sendStatus(200);
+});
 
 
 
@@ -418,18 +422,20 @@ app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'applicatio
     return res.status(401).send('Invalid HMAC');
   }
 
-  const parsedBody = JSON.parse(req.body.toString('utf8'));
-  console.log("📦 GDPR: Customer Data Request", parsedBody);
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("📦 GDPR: Customer Data Request", parsed);
 
   res.sendStatus(200);
 });
-
 
 app.post('/shopify/gdpr/customers/redact', express.raw({ type: 'application/json' }), (req, res) => {
   if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
-  console.log("🗑️ GDPR: Customer Redact Request", req.body);
+
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("🗑️ GDPR: Customer Redact Request", parsed);
+
   res.sendStatus(200);
 });
 
@@ -437,7 +443,10 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
   if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
-  console.log("🏪 GDPR: Shop Redact Request", req.body);
+
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("🏪 GDPR: Shop Redact Request", parsed);
+
   res.sendStatus(200);
 });
 
@@ -445,19 +454,19 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 
 function verifyWebhookRaw(req, secret) {
   const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
-  const body = req.body; // should be a Buffer
+  const body = req.body;
+
+  if (!(body instanceof Buffer)) {
+    console.error("❌ Webhook body is not a Buffer:", typeof body);
+    return false;
+  }
+
   const hash = crypto
     .createHmac('sha256', secret)
-    .update(body) // 🧠 This throws error if body is not Buffer
+    .update(body)
     .digest('base64');
 
-    if (!hmacHeader) return false;
-    try {
-      return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(hash, 'utf8'));
-    } catch (e) {
-      return false;
-    }
-    
+  return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(hash, 'utf8'));
 }
 
 
@@ -465,7 +474,7 @@ function verifyWebhookRaw(req, secret) {
 
 
 
-
+app.use(express.json());
 
 
 
