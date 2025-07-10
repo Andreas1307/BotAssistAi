@@ -133,14 +133,13 @@ app.use(passport.session());
 app.get('/', (req, res) => {
   const { shop } = req.query;
 
-  // If Shopify is trying to install the app
   if (shop) {
     return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
   }
 
-  // Otherwise just render homepage
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
+
 
 
 app.get('/shopify/install', (req, res) => {
@@ -201,9 +200,9 @@ async function registerGdprWebhooks(shop, accessToken) {
           'Content-Type': 'application/json'
         }
       });
-      console.log(`✅ Registered webhook: ${topic}`);
+      console.log(`✅ Registered webhook: ${topic} → ${address}`);
     } catch (err) {
-      console.error(`❌ Failed webhook (${topic}):`, err.response?.data || err.message);
+      console.error(`❌ Failed to register webhook ${topic}:`, err.response?.status, err.response?.data);
     }
   }
 }
@@ -259,7 +258,8 @@ app.get('/shopify/callback', async (req, res) => {
 
     console.log(`✅ App installed for ${normalizedShop}`);
     // Redirect to a public setup UI (no login required)
-    res.redirect(`/shopify/welcome?shop=${normalizedShop}`);
+    res.redirect(`https://api.botassistai.com/shopify/welcome?shop=${normalizedShop}`);
+
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
