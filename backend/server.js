@@ -144,16 +144,18 @@ app.get('/', (req, res) => {
 
 
 app.get('/shopify/install', (req, res) => {
-  
-
   const shop = req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing shop');
 
   const state = crypto.randomBytes(16).toString('hex');
-  res.cookie('shopify_state', state, { sameSite: 'none', secure: true });
+  res.cookie('shopify_state', state, {
+    sameSite: 'none',
+    secure: true,
+    httpOnly: true
+  });
 
   const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&state=${state}&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
-  res.redirect(installUrl);
+  return res.redirect(installUrl);
 });
 
 
@@ -264,6 +266,10 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
+app.get('/shopify/welcome', (req, res) => {
+  res.send(`<h2>🎉 Welcome to BotAssist AI!</h2><p>Installation successful for shop: ${req.query.shop}</p>`);
+});
+
 
 // Inject ScriptTag
 async function registerScriptTag(shop, accessToken) {
@@ -326,27 +332,25 @@ app.post('/api/link-shop-to-user', async (req, res) => {
 
 
 
-app.post('/shopify/uninstall', express.json(), async (req, res) => {
-  if (!verifyWebhook(req, process.env.SHOPIFY_API_SECRET)) {
+app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
 
   const shop = req.headers['x-shopify-shop-domain'];
-  if (!shop) return res.status(400).send('Missing shop header');
-
-  try {
-    await pool.query(
-      'UPDATE users SET shopify_access_token=NULL, shopify_installed_at=NULL WHERE shopify_shop_domain=?',
-      [shop.toLowerCase()]
-    );
-    console.log(`🧹 Uninstalled: ${shop}`);
-    res.sendStatus(200);
-  } catch (err) {
-    console.error('Uninstall cleanup failed:', err.message);
-    res.sendStatus(500);
-  }
+  // ... your logic
 });
 
+function verifyWebhookRaw(req, secret) {
+  const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
+  const body = req.body; // raw buffer
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('base64');
+
+  return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(hash, 'utf8'));
+}
 
 
 
