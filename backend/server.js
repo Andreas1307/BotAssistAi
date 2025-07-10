@@ -7,7 +7,7 @@ const express = require("express");
 const app = express()
 const nodemailer = require("nodemailer")
 
-app.use(express.urlencoded({ extended: true }));
+
 const cors = require("cors");
 const { createPool } = require("mysql2")
 const bcrypt = require("bcrypt");
@@ -119,9 +119,7 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
-app.use(flash());
-app.use(passport.initialize());
-app.use(passport.session());
+
 
 // update code see if it works
 
@@ -466,7 +464,11 @@ function verifyWebhookRaw(req, secret) {
     .update(body)
     .digest('base64');
 
-  return crypto.timingSafeEqual(Buffer.from(hmacHeader, 'utf8'), Buffer.from(hash, 'utf8'));
+    return crypto.timingSafeEqual(
+      Buffer.from(hmacHeader, 'base64'),
+      Buffer.from(hash, 'base64')
+    );
+    
 }
 
 
@@ -475,7 +477,10 @@ function verifyWebhookRaw(req, secret) {
 
 
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 
