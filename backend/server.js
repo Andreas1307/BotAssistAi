@@ -201,7 +201,7 @@ app.get('/shopify/callback', async (req, res) => {
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
-    res.redirect(`https://api.botassistai.com/shopify/welcome?shop=${normalizedShop}`);
+    res.redirect(`https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}`);
 
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
