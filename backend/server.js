@@ -128,20 +128,7 @@ app.get('/shopify/install', (req, res) => {
 
 
 // Function to verify HMAC
-function verifyHMAC(query, secret) {
-  const { hmac, ...rest } = query;
-  const message = Object.keys(rest)
-    .sort()
-    .map(key => `${key}=${encodeURIComponent(rest[key])}`)
-    .join('&');
 
-  const generated = crypto
-    .createHmac('sha256', secret)
-    .update(message)
-    .digest('hex');
-
-  return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmac));
-}
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
