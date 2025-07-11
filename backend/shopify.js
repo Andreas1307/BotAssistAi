@@ -1,5 +1,7 @@
+// shopify.js
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { MemorySessionStorage } = require('@shopify/shopify-app-session-storage-memory');
+require('@shopify/shopify-api/adapters/node'); // ✅ this line is essential
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
