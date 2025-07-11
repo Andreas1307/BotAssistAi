@@ -12,6 +12,7 @@
   "dependencies": {
     "@paypal/checkout-server-sdk": "^1.0.3",
     "@shopify/shopify-api": "^11.13.0",
+    "@shopify/shopify-app-session-storage-memory": "^4.0.18",
     "@stripe/react-stripe-js": "^3.5.1",
     "@stripe/stripe-js": "^6.1.0",
     "axios": "^1.9.0",
