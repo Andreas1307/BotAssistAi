@@ -1,4 +1,5 @@
-const { shopifyApi, LATEST_API_VERSION, MemorySessionStorage } = require('@shopify/shopify-api');
+// shopify.js
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -7,8 +8,8 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/^https?:\/\//, ''),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: MemorySessionStorage,
-  runtime: 'node',  // <-- just a string, not an import
+  sessionStorage: new shopify.Api.Clients.Session.MemorySessionStorage(),
 });
 
 module.exports = shopify;
+

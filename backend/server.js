@@ -41,7 +41,9 @@ password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
 const shopify = require('./shopify.js');
-
+const { SHOPIFY_API_KEY, HOST } = process.env;
+const { registerScriptTag, registerWebhooks } = require('./shopify-helpers'); // adjust if needed
+const verifyHMAC = require('./verifyHMAC');
 
 app.use(cookieParser());
 
@@ -98,23 +100,29 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-
+function isValidShop(shop) {
+  return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
+}
 
 app.get('/shopify/install', (req, res) => {
   const shop = req.query.shop?.toLowerCase();
-  if (!shop) return res.status(400).send('Missing shop');
-  const isValidShop = (shop) => /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
-  if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
-  
+  if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
+
   const state = crypto.randomBytes(16).toString('hex');
+
   res.cookie('shopify_state', state, {
     sameSite: 'none',
     secure: true,
     httpOnly: true,
-    path: "/shopify"
+    path: '/shopify'
   });
 
-  const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&state=${state}&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
+  const installUrl = `https://${shop}/admin/oauth/authorize` +
+    `?client_id=${process.env.SHOPIFY_API_KEY}` +
+    `&scope=${process.env.SHOPIFY_SCOPES}` +
+    `&state=${state}` +
+    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
+
   return res.redirect(installUrl);
 });
 
@@ -169,56 +177,60 @@ async function registerWebhooks(shop, accessToken) {
 
 
 // 2. OAuth callback – saves token, injects loader script
+// 🔁 OAuth Callback Handler
 app.get('/shopify/callback', async (req, res) => {
-  const { shop, code, state, hmac } = req.query;
+  const { shop, code, state } = req.query;
   const storedState = req.cookies.shopify_state;
-  const isValidShop = (shop) => /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
+
+  if (!shop || !code || !state) return res.status(400).send('Missing required parameters');
   if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
-  
-  if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
-    console.error("❌ HMAC verification failed");
-    return res.status(400).send("Invalid request signature");
+
+  // 🔐 CSRF check
+  if (state !== storedState) {
+    console.error("❌ CSRF token mismatch");
+    return res.status(403).send("Invalid state parameter");
   }
 
-  if (state !== storedState) {
-    console.error("❌ CSRF state mismatch");
-    return res.status(400).send("Invalid state");
+  // 🔐 HMAC check
+  const isHmacValid = verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET);
+  if (!isHmacValid) {
+    console.error("❌ HMAC verification failed");
+    return res.status(403).send("Invalid request signature");
   }
 
   const normalizedShop = shop.toLowerCase();
 
   try {
-    // Get access token from Shopify
-    const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
+    // 🚀 Exchange code for access token
+    const tokenResponse = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code
     });
 
-    const accessToken = tokenRes.data.access_token;
+    const accessToken = tokenResponse.data.access_token;
 
-    // Save install record temporarily — for example in a temp_installs table or memory
+    // 💾 Save shop installation
     await pool.query(`
       INSERT INTO shopify_installs (shop, access_token, installed_at)
       VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE access_token=?, installed_at=NOW()
-    `, [normalizedShop, accessToken, accessToken]);
+      ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), installed_at = NOW()
+    `, [normalizedShop, accessToken]);
 
-    // Register script and webhooks
+    // 📦 Post-install actions
     await registerScriptTag(normalizedShop, accessToken);
     await registerWebhooks(normalizedShop, accessToken);
 
-  
+    console.log(`✅ Successfully installed app for ${normalizedShop}`);
 
-    console.log(`✅ App installed for ${normalizedShop}`);
-    // Redirect to a public setup UI (no login required)
+    // ✅ Redirect to your public setup page
     res.redirect(`https://api.botassistai.com/shopify/welcome?shop=${normalizedShop}`);
-
   } catch (err) {
-    console.error("❌ OAuth failed:", err.response?.data || err.message);
-    res.status(500).send("OAuth failed");
+    console.error("❌ OAuth process failed:", err.response?.data || err.message);
+    res.status(500).send("Failed to complete OAuth process");
   }
 });
+
 
 app.get('/shopify/welcome', (req, res) => {
   res.send(`<h2>🎉 Welcome to BotAssist AI!</h2><p>Installation successful for shop: ${req.query.shop}</p>`);
