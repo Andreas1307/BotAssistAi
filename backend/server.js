@@ -6,8 +6,6 @@ const directory = "https://api.botassistai.com"
 const express = require("express");
 const app = express()
 const nodemailer = require("nodemailer")
-
-
 const cors = require("cors");
 const { createPool } = require("mysql2")
 const bcrypt = require("bcrypt");
@@ -42,9 +40,78 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
+const shopify = require('./shopify.js');
+
+
+app.use(cookieParser());
+
+app.use(['/ping-client', '/ask-ai'], cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
+
+// THEN, protected/controlled CORS for other parts (login etc)
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://botassistai.com",
+    "https://www.botassistai.com",
+    "https://shop-ease2.netlify.app"
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  next();
+});
+
+app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  proxy: true, // important if behind proxy
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // true only in prod, must have HTTPS
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+  },
+}));
 
 
 
+import { DeliveryMethod } from '@shopify/shopify-api';
+
+shopify.webhooks.addHandlers({
+  CUSTOMERS_DATA_REQUEST: {
+    deliveryMethod: DeliveryMethod.Http,
+    callbackUrl: "/shopify/gdpr/customers/data_request",
+    callback: async (topic, shop, body) => {
+      // Handle the data request here
+    },
+  },
+  CUSTOMERS_REDACT: {
+    deliveryMethod: DeliveryMethod.Http,
+    callbackUrl: "/shopify/gdpr/customers/redact",
+    callback: async (topic, shop, body) => {
+      // Handle customer data deletion here
+    },
+  },
+  SHOP_REDACT: {
+    deliveryMethod: DeliveryMethod.Http,
+    callbackUrl: "/shopify/gdpr/shop/redact",
+    callback: async (topic, shop, body) => {
+      // Handle shop data deletion here
+    },
+  },
+});
 
 
 
@@ -459,45 +526,6 @@ return rows[0]
 
 initialisePassport(passport, getUserByEmail, getUserById)
 
-app.use(['/ping-client', '/ask-ai'], cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
-}));
-
-// THEN, protected/controlled CORS for other parts (login etc)
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://botassistai.com",
-    "https://www.botassistai.com",
-    "https://shop-ease2.netlify.app"
-  ];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  next();
-});
-
-app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
-
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  proxy: true, // important if behind proxy
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // true only in prod, must have HTTPS
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000,
-  },
-}));
 
 
 // update code see if it works
