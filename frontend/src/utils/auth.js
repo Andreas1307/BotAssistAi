@@ -3,11 +3,12 @@ import { getSessionToken } from "@shopify/app-bridge-utils";
 import createApp from "@shopify/app-bridge";
 
 export async function authenticatedFetch() {
-  const app = createApp({
-    apiKey: process.env.SHOPIFY_API_KEY,
-    host: new URLSearchParams(window.location.search).get("host"),
-    forceRedirect: true
-  });
+    const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: new URLSearchParams(window.location.search).get("host"),
+        forceRedirect: true
+      });
+      
 
   const token = await getSessionToken(app);
 
