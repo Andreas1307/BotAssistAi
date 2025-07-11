@@ -42,89 +42,9 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
-app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + "-" + file.originalname);
-  }
-});
-
-const upload = multer({ storage: storage });
-
-app.use(express.static('public'));
 
 
 
-
-const getUserByEmail = async (email) => {
-const [rows] = await pool.query("SELECT * FROM users where email = ?", [email])
-return rows[0]
-}
-
-const getUserById = async (id) => {
-const [rows] = await pool.query("SELECT * FROM users where user_id = ?", [id])
-return rows[0]
-}
-
-initialisePassport(passport, getUserByEmail, getUserById)
-
-app.use(['/ping-client', '/ask-ai'], cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
-}));
-
-// THEN, protected/controlled CORS for other parts (login etc)
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://botassistai.com",
-    "https://www.botassistai.com",
-    "https://shop-ease2.netlify.app"
-  ];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  next();
-});
-
-app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
-
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  proxy: true, // important if behind proxy
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // true only in prod, must have HTTPS
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000,
-  },
-}));
-
-
-// update code see if it works
-
-
-//update the full app, and check,in terminal as well
 
 
 
@@ -150,7 +70,8 @@ app.get('/shopify/install', (req, res) => {
   res.cookie('shopify_state', state, {
     sameSite: 'none',
     secure: true,
-    httpOnly: true
+    httpOnly: true,
+    path: "/shopify"
   });
 
   const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&state=${state}&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
@@ -174,36 +95,33 @@ function verifyHMAC(query, secret) {
   return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmac));
 }
 
-async function registerGdprWebhooks(shop, accessToken) {
-  const topics = [
-    {
-      topic: 'customers/data_request',
-      address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request'
-    },
-    {
-      topic: 'customers/redact',
-      address: 'https://api.botassistai.com/shopify/gdpr/customers/redact'
-    },
-    {
-      topic: 'shop/redact', // ✅ FIXED
-      address: 'https://api.botassistai.com/shopify/gdpr/shop/redact'
-    }
+async function registerWebhooks(shop, accessToken) {
+  const topicsToRegister = [
+    // ✅ Only include valid API-registerable topics
+    { topic: 'app/uninstalled', address: `https://api.botassistai.com/shopify/uninstall` },
+    // Add more valid topics here if needed
   ];
-  
 
-  for (const { topic, address } of topics) {
+  for (const { topic, address } of topicsToRegister) {
     try {
-      await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
-        webhook: { topic, address, format: 'json' }
+      const response = await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
+        webhook: {
+          topic,
+          address,
+          format: 'json'
+        }
       }, {
         headers: {
           'X-Shopify-Access-Token': accessToken,
           'Content-Type': 'application/json'
         }
       });
+
       console.log(`✅ Registered webhook: ${topic} → ${address}`);
     } catch (err) {
-      console.error(`❌ Failed to register webhook ${topic}:`, err.response?.status, err.response?.data);
+      const status = err.response?.status || 'Unknown';
+      const data = err.response?.data || err.message;
+      console.error(`❌ Failed to register webhook ${topic}: ${status}`, data);
     }
   }
 }
@@ -247,17 +165,9 @@ app.get('/shopify/callback', async (req, res) => {
 
     // Register script and webhooks
     await registerScriptTag(normalizedShop, accessToken);
-    await registerGdprWebhooks(normalizedShop, accessToken);
+    await registerWebhooks(normalizedShop, accessToken);
 
-    await axios.post(`https://${normalizedShop}/admin/api/2023-10/webhooks.json`, {
-      webhook: {
-        topic: 'app/uninstalled',
-        address: 'https://api.botassistai.com/shopify/uninstall',
-        format: 'json'
-      }
-    }, {
-      headers: { 'X-Shopify-Access-Token': accessToken }
-    });
+  
 
     console.log(`✅ App installed for ${normalizedShop}`);
     // Redirect to a public setup UI (no login required)
@@ -448,14 +358,12 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
   res.sendStatus(200);
 });
 
-
-
 function verifyWebhookRaw(req, secret) {
   const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
   const body = req.body;
 
-  if (!(body instanceof Buffer)) {
-    console.error("❌ Webhook body is not a Buffer:", typeof body);
+  if (!hmacHeader || !(body instanceof Buffer)) {
+    console.error("❌ Missing HMAC header or body is not Buffer");
     return false;
   }
 
@@ -464,12 +372,139 @@ function verifyWebhookRaw(req, secret) {
     .update(body)
     .digest('base64');
 
-    return crypto.timingSafeEqual(
-      Buffer.from(hmacHeader, 'base64'),
-      Buffer.from(hash, 'base64')
-    );
-    
+  return crypto.timingSafeEqual(
+    Buffer.from(hmacHeader, 'base64'),
+    Buffer.from(hash, 'base64')
+  );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
+
+app.use(express.static('public'));
+
+
+
+
+const getUserByEmail = async (email) => {
+const [rows] = await pool.query("SELECT * FROM users where email = ?", [email])
+return rows[0]
+}
+
+const getUserById = async (id) => {
+const [rows] = await pool.query("SELECT * FROM users where user_id = ?", [id])
+return rows[0]
+}
+
+initialisePassport(passport, getUserByEmail, getUserById)
+
+app.use(['/ping-client', '/ask-ai'], cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
+
+// THEN, protected/controlled CORS for other parts (login etc)
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://botassistai.com",
+    "https://www.botassistai.com",
+    "https://shop-ease2.netlify.app"
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  next();
+});
+
+app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  proxy: true, // important if behind proxy
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // true only in prod, must have HTTPS
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+  },
+}));
+
+
+// update code see if it works
+
+
+//update the full app, and check,in terminal as well
+
 
 
 
