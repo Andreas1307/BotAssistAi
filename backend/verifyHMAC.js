@@ -2,18 +2,15 @@
 const crypto = require('crypto');
 
 function verifyHMAC(query, secret) {
-  const { hmac, ...params } = query;
-  const message = Object.keys(params)
-    .sort()
-    .map((key) => `${key}=${Array.isArray(params[key]) ? params[key].join(',') : params[key]}`)
-    .join('&');
+  const { hmac, ...rest } = query;
+  const sorted = Object.keys(rest).sort().map(k => `${k}=${rest[k]}`).join('&');
 
-  const generated = crypto
+  const hash = crypto
     .createHmac('sha256', secret)
-    .update(message)
+    .update(sorted)
     .digest('hex');
 
-  return generated === hmac;
+  return hash === hmac;
 }
 
 module.exports = verifyHMAC;
