@@ -41,8 +41,7 @@ password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
 const shopify = require('./shopify.js');
-const { SHOPIFY_API_KEY, HOST } = process.env;
-const { registerScriptTag, registerWebhooks } = require('./shopify-helpers'); // adjust if needed
+const { SHOPIFY_API_KEY, HOST } = process.env;// adjust if needed
 const verifyHMAC = require('./verifyHMAC');
 
 app.use(cookieParser());
