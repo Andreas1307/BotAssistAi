@@ -54,22 +54,24 @@ app.use(['/ping-client', '/ask-ai'], cors({
 }));
 
 // THEN, protected/controlled CORS for other parts (login etc)
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://botassistai.com",
-    "https://www.botassistai.com",
-    "https://shop-ease2.netlify.app"
-  ];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  next();
-});
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://botassistai.com",
+  "https://www.botassistai.com",
+  "https://shop-ease2.netlify.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || /\.myshopify\.com$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 
 app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
 
