@@ -7,7 +7,8 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/^https?:\/\//, ''),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: new MemorySessionStorage(),
+  sessionStorage: MemorySessionStorage,  // no "new"
 });
 
 module.exports = shopify;
+
