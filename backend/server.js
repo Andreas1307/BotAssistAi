@@ -50,15 +50,15 @@ app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
+  credentials: false // ⚠️ NO cookies allowed here
 }));
 
-// THEN, protected/controlled CORS for other parts (login etc)
+// ✅ PROTECTED ROUTES (login, auth-check, etc.)
 const allowedOrigins = [
   "http://localhost:3000",
   "https://botassistai.com",
   "https://www.botassistai.com",
-  "https://shop-ease2.netlify.app"
+  "https://shop-ease2.netlify.app",
 ];
 
 app.use(cors({
@@ -69,20 +69,21 @@ app.use(cors({
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,
+  credentials: true, // ✅ Needed for session cookies
 }));
 
+// 👇 Trust proxy (if on Vercel/Heroku/etc.)
+app.set('trust proxy', 1);
 
-app.set('trust proxy', 1); // if behind proxy (Heroku, nginx, etc)
-
+// 👇 Must come AFTER CORS
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  proxy: true, // important if behind proxy
+  proxy: true,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // true only in prod, must have HTTPS
+    secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000,
   },
