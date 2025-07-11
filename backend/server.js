@@ -40,6 +40,7 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
+const verifySessionToken = require('./verifySessionToken');
 const shopify = require('./shopify.js');
 const { SHOPIFY_API_KEY, HOST } = process.env;// adjust if needed
 const verifyHMAC = require('./verifyHMAC');
@@ -89,6 +90,12 @@ app.use(session({
 }));
 
 
+
+app.post('/api/shop-data', verifySessionToken, async (req, res) => {
+  const shop = req.shop; // from JWT token
+  // Your logic here
+  res.json({ success: true, shop });
+});
 
 
 app.get('/', (req, res) => {

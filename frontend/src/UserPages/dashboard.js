@@ -11,6 +11,7 @@ import AnalyticsPage from "../UserComponents/AnalyticsPage";
 import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
+import { authenticatedFetch } from '../utils/auth';
 import directory from '../directory';
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
@@ -106,6 +107,22 @@ const Dashboard = () => {
   const [userQuery, setUserQuery] = useState("");
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
+
+
+
+  useEffect(() => {
+    async function fetchData() {
+      const fetchWithToken = await authenticatedFetch();
+      const res = await fetchWithToken('/api/shop-data');
+      const data = await res.json();
+      console.log(data);
+    }
+
+    fetchData(); // ⏱️ Auto-runs when dashboard loads
+  }, []);
+
+
+
 
   // FETCH MEMBERSHIP
   useEffect(() => {
