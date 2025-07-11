@@ -87,34 +87,6 @@ app.use(session({
 
 
 
-const { DeliveryMethod } = require('@shopify/shopify-api');
-
-
-shopify.webhooks.addHandlers({
-  CUSTOMERS_DATA_REQUEST: {
-    deliveryMethod: DeliveryMethod.Http,
-    callbackUrl: "/shopify/gdpr/customers/data_request",
-    callback: async (topic, shop, body) => {
-      // Handle the data request here
-    },
-  },
-  CUSTOMERS_REDACT: {
-    deliveryMethod: DeliveryMethod.Http,
-    callbackUrl: "/shopify/gdpr/customers/redact",
-    callback: async (topic, shop, body) => {
-      // Handle customer data deletion here
-    },
-  },
-  SHOP_REDACT: {
-    deliveryMethod: DeliveryMethod.Http,
-    callbackUrl: "/shopify/gdpr/shop/redact",
-    callback: async (topic, shop, body) => {
-      // Handle shop data deletion here
-    },
-  },
-});
-
-
 
 app.get('/', (req, res) => {
   const { shop } = req.query;
@@ -165,9 +137,10 @@ function verifyHMAC(query, secret) {
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
-    // ✅ Only include valid API-registerable topics
-    { topic: 'app/uninstalled', address: `https://api.botassistai.com/shopify/uninstall` },
-    // Add more valid topics here if needed
+    { topic: 'app/uninstalled', address: 'https://api.botassistai.com/shopify/uninstall' },
+    { topic: 'customers/data_request', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
+    { topic: 'customers/redact', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
+    { topic: 'shop/redact', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
   ];
 
   for (const { topic, address } of topicsToRegister) {
