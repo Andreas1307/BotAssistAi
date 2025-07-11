@@ -87,7 +87,8 @@ app.use(session({
 
 
 
-import { DeliveryMethod } from '@shopify/shopify-api';
+const { DeliveryMethod } = require('@shopify/shopify-api');
+
 
 shopify.webhooks.addHandlers({
   CUSTOMERS_DATA_REQUEST: {
