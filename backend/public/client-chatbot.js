@@ -222,6 +222,7 @@
       font-family: sans-serif;
       color: var(--font-color);
       padding-top: 0px;
+      padding-bottom: 100px;
       border-radius: 13px;
       border-bottom-left-radius: 13px;
       border-bottom-right-radius: 13px;
