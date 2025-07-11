@@ -45,6 +45,9 @@ const { SHOPIFY_API_KEY, HOST } = process.env;// adjust if needed
 const verifyHMAC = require('./verifyHMAC');
 
 
+app.set('trust proxy', 1);
+
+app.use(cookieParser());
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -53,27 +56,23 @@ app.use(['/ping-client', '/ask-ai'], cors({
   credentials: false // ⚠️ NO cookies allowed here
 }));
 
-// ✅ PROTECTED ROUTES (login, auth-check, etc.)
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://botassistai.com",
-  "https://www.botassistai.com",
-  "https://shop-ease2.netlify.app",
-];
-
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || /\.myshopify\.com$/.test(origin)) {
+    const allowed = [
+      "http://localhost:3000",
+      "https://botassistai.com",
+      "https://www.botassistai.com",
+      "https://shop-ease2.netlify.app",
+    ];
+    if (!origin || allowed.includes(origin) || /\.myshopify\.com$/.test(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error("Blocked by CORS"));
     }
   },
-  credentials: true, // ✅ Needed for session cookies
+  credentials: true,
 }));
 
-// 👇 Trust proxy (if on Vercel/Heroku/etc.)
-app.set('trust proxy', 1);
 
 // 👇 Must come AFTER CORS
 app.use(session({
@@ -454,10 +453,6 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 
 
-// update code see if it works
-
-
-//update the full app, and check,in terminal as well
 
 
 
@@ -465,7 +460,6 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 
 
-app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(flash());
