@@ -144,7 +144,7 @@
     const satisfactionHeading = document.createElement("h2");
     satisfactionHeading.innerText = "Was this helpful?";
     satisfactionHeading.style.cssText = `
-      color: var(--font-color);
+      color: var(--need-help-text);
       font-size: 17px;
     `;
   
@@ -222,7 +222,7 @@
       font-family: sans-serif;
       color: var(--font-color);
       padding-top: 0px;
-      padding-bottom: 100px;
+      padding-bottom: 90px;
       border-radius: 13px;
       border-bottom-left-radius: 13px;
       border-bottom-right-radius: 13px;
