@@ -115,28 +115,28 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
 app.get('/', async (req, res) => {
   const { shop, host } = req.query;
 
-  if (host && shop) {
-    // 🚀 User came from Shopify Admin — pass host & shop to frontend
-    return res.redirect(`/person-username-here/dashboard?shop=${shop}&host=${host}`);
+  // ✅ This means the app is loaded inside Shopify Admin iframe
+  if (shop && host) {
+    return res.redirect(`/dashboard?shop=${shop}&host=${host}`);
   }
 
+  // 🧪 Opened without a host — likely from Partner dashboard manually
   if (shop) {
     const [rows] = await pool.query(
       `SELECT access_token FROM shopify_installs WHERE shop = ?`, [shop]
     );
 
     if (rows.length) {
-      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
+      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${Buffer.from(shop, 'utf-8').toString('base64')}`;
       return res.redirect(embeddedUrl);
     }
 
     return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
   }
 
+  // Fallback
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
-
-
 
 
 
@@ -251,8 +251,9 @@ app.get('/shopify/callback', async (req, res) => {
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
-    res.redirect(`https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}`);
-
+    res.redirect(
+      `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${Buffer.from(normalizedShop, 'utf-8').toString('base64')}`
+    );
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
