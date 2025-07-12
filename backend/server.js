@@ -104,7 +104,6 @@ app.use((req, res, next) => {
 
 //update the code
 
-
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   const shop = req.shop;
 
@@ -113,15 +112,32 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   res.json({ shopData: response });
 });
 
-app.get('/', (req, res) => {
-  const { shop } = req.query;
+app.get('/', async (req, res) => {
+  const { shop, host } = req.query;
+
+  // If loaded from embedded Shopify Admin, go to dashboard directly
+  if (host) {
+    return res.redirect(`/person-username-here/dashboard?shop=${shop}&host=${host}`);
+  }
 
   if (shop) {
+    // If opened fresh via direct /?shop=..., check if already installed
+    const [rows] = await pool.query(`SELECT access_token FROM shopify_installs WHERE shop = ?`, [shop]);
+    
+    if (rows.length) {
+      // Already installed — redirect to embedded dashboard
+      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
+      return res.redirect(embeddedUrl);
+    }
+
+    // Not installed → redirect to install flow
     return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
   }
 
+  // Default fallback
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
+
 
 function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
