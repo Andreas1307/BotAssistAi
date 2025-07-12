@@ -101,12 +101,17 @@ app.use((req, res, next) => {
 });
 
 
-app.post('/api/shop-data', verifySessionToken, async (req, res) => {
-  const shop = req.shop; // from JWT token
-  // Your logic here
-  res.json({ success: true, shop });
-});
 
+//update the code
+
+
+app.get('/api/shop-data', verifySessionToken, async (req, res) => {
+  const shop = req.shop;
+
+  // ✅ Now you know the user is authenticated via App Bridge session token
+  const response = await shopify.api.rest.Shop.all({ session: res.locals.shopify.session });
+  res.json({ shopData: response });
+});
 
 app.get('/', (req, res) => {
   const { shop } = req.query;

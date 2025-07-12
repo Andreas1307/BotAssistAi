@@ -1,6 +1,6 @@
 // 📄 utils/auth.js
 import { getSessionToken } from "@shopify/app-bridge-utils";
-import createApp from "@shopify/app-bridge";
+const createApp = window['app-bridge'].default;
 
 export async function authenticatedFetch() {
     const app = createApp({
