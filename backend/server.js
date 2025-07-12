@@ -115,28 +115,27 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
 app.get('/', async (req, res) => {
   const { shop, host } = req.query;
 
-  // ✅ This means the app is loaded inside Shopify Admin iframe
   if (shop && host) {
     return res.redirect(`/dashboard?shop=${shop}&host=${host}`);
   }
 
-  // 🧪 Opened without a host — likely from Partner dashboard manually
   if (shop) {
     const [rows] = await pool.query(
       `SELECT access_token FROM shopify_installs WHERE shop = ?`, [shop]
     );
 
     if (rows.length) {
-      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${Buffer.from(shop, 'utf-8').toString('base64')}`;
+      const hostParam = Buffer.from(shop, 'utf-8').toString('base64');
+      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${hostParam}`;
       return res.redirect(embeddedUrl);
     }
 
     return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
   }
 
-  // Fallback
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
+
 
 
 
@@ -204,9 +203,6 @@ async function registerWebhooks(shop, accessToken) {
 
 
 
-// nu ma redirectioneaza unde trebuie sa iau aia cu host de pe web-ul meu ,
-// si ma redsirectioneaza la ala cu admin
-
 
 
 
@@ -251,9 +247,13 @@ app.get('/shopify/callback', async (req, res) => {
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
-    res.redirect(
-      `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${Buffer.from(normalizedShop, 'utf-8').toString('base64')}`
-    );
+   // Convert host from shop name → base64
+const host = Buffer.from(normalizedShop, 'utf-8').toString('base64');
+
+res.redirect(
+  `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`
+);
+
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
