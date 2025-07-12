@@ -2,19 +2,18 @@ import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 
 export async function authenticatedFetch() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const host = urlParams.get("host");
-
+  const query = new URLSearchParams(window.location.search);
+  const host = query.get("host");
+  
   if (!host) {
-    throw new Error("Missing host param");
+    throw new Error("Missing host param in URL");
   }
 
   const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host: new URLSearchParams(window.location.search).get("host"),
-    forceRedirect: true
+    apiKey: process.env.SHOPIFY_API_KEY, // ⛳ Replace this with actual API Key (hardcoded or injected at build time)
+    host,
+    forceRedirect: true,
   });
-  
 
   const token = await getSessionToken(app);
 
