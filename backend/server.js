@@ -50,7 +50,12 @@ app.set('trust proxy', 1);
 
 app.use(cookieParser());
 
-app.use(['/ping-client', '/ask-ai'], cors({
+
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+/*app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -73,7 +78,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-
+*/
 
 // 👇 Must come AFTER CORS
 app.use(session({
@@ -168,11 +173,12 @@ const installUrl = `https://${shop}/admin/oauth/authorize` +
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
-    { topic: 'app/uninstalled', address: 'https://api.botassistai.com/shopify/uninstall' },
-    { topic: 'customers/data_request', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
-    { topic: 'customers/redact', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
-    { topic: 'shop/redact', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
+    { topic: 'APP_UNINSTALLED', address: 'https://api.botassistai.com/shopify/uninstall' },
+    { topic: 'CUSTOMERS_DATA_REQUEST', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
+    { topic: 'CUSTOMERS_REDACT', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
+    { topic: 'SHOP_REDACT', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
   ];
+  
   
 
   for (const { topic, address } of topicsToRegister) {
@@ -202,7 +208,7 @@ async function registerWebhooks(shop, accessToken) {
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.session.shopify_state;
-const host = req.session.shopify_host;
+let host = req.session.shopify_host;
 
   if (!host) {
     console.warn("Missing host cookie, fallback to shop-based host");
