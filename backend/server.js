@@ -146,7 +146,7 @@ function isValidShop(shop) {
 app.get('/shopify/install', (req, res) => {
   const shop = req.query.shop?.toLowerCase();
   if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
-
+const host = req.query.host;
   const state = crypto.randomBytes(16).toString('hex');
 
   res.cookie('shopify_host', host, {
@@ -156,7 +156,7 @@ app.get('/shopify/install', (req, res) => {
     path: '/shopify'
   });
 
-  const host = req.query.host;
+  
 
 const installUrl = `https://${shop}/admin/oauth/authorize` +
   `?client_id=${process.env.SHOPIFY_API_KEY}` +
