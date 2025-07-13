@@ -153,14 +153,14 @@ const host = req.query.host;
     sameSite: 'none',
     secure: true,
     httpOnly: true,
-    path: '/shopify',
+    path: '/',
   });
   
   res.cookie('shopify_state', state, {
     sameSite: 'none',
     secure: true,
     httpOnly: true,
-    path: '/shopify',
+    path: '/',
   });
 
   
