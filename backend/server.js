@@ -136,9 +136,6 @@ app.get('/', async (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-
-
-
 function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
 }
@@ -164,16 +161,12 @@ const installUrl = `https://${shop}/admin/oauth/authorize` +
   return res.redirect(installUrl);
 });
 
-
-// Function to verify HMAC
-
-
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
-    { topic: 'APP_UNINSTALLED', address: 'https://api.botassistai.com/shopify/uninstall' },
-    { topic: 'CUSTOMERS_DATA_REQUEST', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
-    { topic: 'CUSTOMERS_REDACT', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
-    { topic: 'SHOP_REDACT', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
+    { topic: 'app/uninstalled', address: 'https://api.botassistai.com/shopify/uninstall' },
+    { topic: 'customers/data_request', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
+    { topic: 'customers/redact', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
+    { topic: 'shop/redact', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
   ];
   
 
@@ -201,15 +194,6 @@ async function registerWebhooks(shop, accessToken) {
   }
 }
 
-
-
-
-
-
-
-
-// 2. OAuth callback – saves token, injects loader script
-// 🔁 OAuth Callback Handler
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.session.shopify_state;
@@ -267,13 +251,10 @@ return res.redirect(
   }
 });
 
-
 app.get('/shopify/welcome', (req, res) => {
   res.send(`<h2>🎉 Welcome to BotAssist AI!</h2><p>Installation successful for shop: ${req.query.shop}</p>`);
 });
 
-
-// Inject ScriptTag
 async function registerScriptTag(shop, accessToken) {
   const scriptSrc = `https://api.botassistai.com/chatbot-loader.js?shop=${encodeURIComponent(shop)}`;
 
@@ -301,7 +282,6 @@ async function registerScriptTag(shop, accessToken) {
     console.error('❌ Error injecting script:', err.response?.data || err.message);
   }
 }
-
 
 app.post('/api/link-shop-to-user', async (req, res) => {
   if (!req.isAuthenticated() || !req.user?.user_id) {
@@ -332,8 +312,6 @@ app.post('/api/link-shop-to-user', async (req, res) => {
   }
 });
 
-
-
 app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async (req, res) => {
   if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
@@ -348,9 +326,6 @@ app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async 
   res.sendStatus(200);
 });
 
-
-
-// 4. Serve personalized chatbot loader script to inject your chatbot
 app.get('/chatbot-loader.js', async (req, res) => {
   const shop = Array.isArray(req.query.shop) ? req.query.shop[0] : req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing or invalid shop');
@@ -410,8 +385,6 @@ app.get('/chatbot-loader.js', async (req, res) => {
     res.status(500).send('Internal server error');
   }
 });
-
-
 
 app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
   if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
