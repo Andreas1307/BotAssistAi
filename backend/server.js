@@ -83,8 +83,8 @@ app.use(session({
   proxy: true,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true, // Must be true if HTTPS
+    sameSite: 'none', // 🔥 Critical for embedded Shopify apps or cross-origin
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
