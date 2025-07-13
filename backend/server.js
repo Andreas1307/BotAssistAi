@@ -149,20 +149,8 @@ app.get('/shopify/install', (req, res) => {
 const host = req.query.host;
   const state = crypto.randomBytes(16).toString('hex');
 
-  res.cookie('shopify_host', host, {
-    sameSite: 'none',
-    secure: true,
-    httpOnly: true,
-    path: '/',
-  });
-  
-  res.cookie('shopify_state', state, {
-    sameSite: 'none',
-    secure: true,
-    httpOnly: true,
-    path: '/',
-  });
-
+  req.session.shopify_state = state; // ✅ Save to session
+req.session.shopify_host = host;
   
 
 const installUrl = `https://${shop}/admin/oauth/authorize` +
@@ -223,8 +211,9 @@ async function registerWebhooks(shop, accessToken) {
 // 🔁 OAuth Callback Handler
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
-  const storedState = req.cookies.shopify_state;
-  const host = req.cookies.shopify_host;
+  const storedState = req.session.shopify_state;
+const host = req.session.shopify_host;
+
   if (!host) {
     console.warn("Missing host cookie, fallback to shop-based host");
     // Fallback if you want, or handle as error
