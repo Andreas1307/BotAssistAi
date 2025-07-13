@@ -149,18 +149,22 @@ app.get('/shopify/install', (req, res) => {
 
   const state = crypto.randomBytes(16).toString('hex');
 
-  res.cookie('shopify_state', state, {
+  res.cookie('shopify_host', host, {
     sameSite: 'none',
     secure: true,
     httpOnly: true,
     path: '/shopify'
   });
 
-  const installUrl = `https://${shop}/admin/oauth/authorize` +
-    `?client_id=${process.env.SHOPIFY_API_KEY}` +
-    `&scope=${process.env.SHOPIFY_SCOPES}` +
-    `&state=${state}` +
-    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}`;
+  const host = req.query.host;
+
+const installUrl = `https://${shop}/admin/oauth/authorize` +
+  `?client_id=${process.env.SHOPIFY_API_KEY}` +
+  `&scope=${process.env.SHOPIFY_SCOPES}` +
+  `&state=${state}` +
+  `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+  (host ? `&host=${encodeURIComponent(host)}` : '');
+
 
   return res.redirect(installUrl);
 });
@@ -213,7 +217,13 @@ async function registerWebhooks(shop, accessToken) {
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.cookies.shopify_state;
+  const host = req.cookies.shopify_host;
 
+  if (!host) {
+    console.warn("Missing host cookie, fallback to shop-based host");
+    // Fallback if you want, or handle as error
+  }
+  
   if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
 
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
@@ -250,9 +260,10 @@ app.get('/shopify/callback', async (req, res) => {
    // Convert host from shop name → base64
 const host = Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
-res.redirect(
+return res.redirect(
   `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`
 );
+
 
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
