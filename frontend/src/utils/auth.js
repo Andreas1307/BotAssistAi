@@ -12,7 +12,7 @@ export async function authenticatedFetch() {
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host, // ✅ Pass it directly
+    host,
     forceRedirect: true,
   });
 
