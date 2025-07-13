@@ -40,18 +40,18 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
+const RedisStore = require('connect-redis').default;
+const Redis = require('ioredis');
+const redisClient = new Redis(process.env.REDIS_URL);
 const verifySessionToken = require('./verifySessionToken');
 const shopify = require('./shopify.js');
 const { SHOPIFY_API_KEY, HOST } = process.env;// adjust if needed
 const verifyHMAC = require('./verifyHMAC');
 
-
-
-
-
+app.use(cookieParser());
 app.set('trust proxy', 1);
 
-app.use(cookieParser());
+
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -80,6 +80,7 @@ app.use(cors({
 
 // 👇 Must come AFTER CORS
 app.use(session({
+  store: new RedisStore({ client: redisClient }),
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -87,7 +88,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'none', // necessary for embedded Shopify apps
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
@@ -103,33 +104,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const getUserByEmail = async (email) => {
-  const [rows] = await pool.query("SELECT * FROM users where email = ?", [email])
-  return rows[0]
-  }
-  
-  const getUserById = async (id) => {
-  const [rows] = await pool.query("SELECT * FROM users where user_id = ?", [id])
-  return rows[0]
-  }
-  
-  initialisePassport(passport, getUserByEmail, getUserById)
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-  app.use(flash());
-  app.use(passport.initialize());
-  app.use(passport.session());
-  
 
 
 //update the code
@@ -176,16 +150,14 @@ function isValidShop(shop) {
 app.get('/shopify/install', (req, res) => {
   const shop = req.query.shop?.toLowerCase();
   if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
-  let host = req.query.host;
+const host = req.query.host;
   const state = crypto.randomBytes(16).toString('hex');
-  
-  // If host is missing, generate it from shop
+  console.log('➤ Generated state =', state);
   if (!host && shop) {
     host = Buffer.from(shop, 'utf8').toString('base64');
   }
-  
-  req.session.shopify_host = host;
-  req.session.shopify_state = state;
+  req.session.shopify_state = state; // ✅ Save to session
+req.session.shopify_host = host;
   
 
 const installUrl = `https://${shop}/admin/oauth/authorize` +
@@ -231,17 +203,15 @@ async function registerWebhooks(shop, accessToken) {
     }
   }
 }
-
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.session.shopify_state;
-const host = req.session.shopify_host;
+  const sessionHost = req.session.shopify_host;
 
-  if (!host) {
+  if (!sessionHost) {
     console.warn("Missing host cookie, fallback to shop-based host");
-    // Fallback if you want, or handle as error
   }
-  
+
   if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
 
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
@@ -255,6 +225,7 @@ const host = req.session.shopify_host;
   }
 
   const normalizedShop = shop.toLowerCase();
+  console.log('➤ Returned state =', state, '| Stored state =', storedState);
 
   try {
     const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
@@ -270,27 +241,22 @@ const host = req.session.shopify_host;
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE access_token=?, installed_at=NOW()
     `, [normalizedShop, accessToken, accessToken]);
-    
-    // 🔽 ADD THIS
-    if (req.isAuthenticated() && req.user?.user_id) {
-      await pool.query(`
-        UPDATE users
-        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-        WHERE user_id = ?
-      `, [normalizedShop, accessToken, req.user.user_id]);
-    
-      console.log(`✅ Linked shop ${normalizedShop} to user_id ${req.user.user_id}`);
-    }
+
+    await pool.query(`UPDATE users
+      SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+      WHERE shopify_shop_domain = ?`, [normalizedShop, accessToken, normalizedShop]);
+
+    console.log(`✅ Linked shop ${normalizedShop} to user_id ${req.user?.user_id}`);
+
     await registerScriptTag(normalizedShop, accessToken);
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
-const host = Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
-return res.redirect(
-  `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`
-);
-
+    const host = sessionHost || Buffer.from(normalizedShop, 'utf-8').toString('base64');
+    return res.redirect(
+      `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`
+    );
 
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
@@ -515,6 +481,32 @@ app.use(express.static('public'));
 
 
 
+const getUserByEmail = async (email) => {
+const [rows] = await pool.query("SELECT * FROM users where email = ?", [email])
+return rows[0]
+}
+
+const getUserById = async (id) => {
+const [rows] = await pool.query("SELECT * FROM users where user_id = ?", [id])
+return rows[0]
+}
+
+initialisePassport(passport, getUserByEmail, getUserById)
+
+
+
+
+
+
+
+
+
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 
