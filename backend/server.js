@@ -146,13 +146,16 @@ function isValidShop(shop) {
 app.get('/shopify/install', (req, res) => {
   const shop = req.query.shop?.toLowerCase();
   if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
-const host = req.query.host;
+  let host = req.query.host;
   const state = crypto.randomBytes(16).toString('hex');
+  
+  // If host is missing, generate it from shop
   if (!host && shop) {
     host = Buffer.from(shop, 'utf8').toString('base64');
   }
-  req.session.shopify_state = state; // ✅ Save to session
-req.session.shopify_host = host;
+  
+  req.session.shopify_host = host;
+  req.session.shopify_state = state;
   
 
 const installUrl = `https://${shop}/admin/oauth/authorize` +
