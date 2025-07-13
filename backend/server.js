@@ -173,11 +173,12 @@ const installUrl = `https://${shop}/admin/oauth/authorize` +
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
-    { topic: 'APP_UNINSTALLED', address: 'https://api.botassistai.com/shopify/uninstall' },
-    { topic: 'CUSTOMERS_DATA_REQUEST', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
-    { topic: 'CUSTOMERS_REDACT', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
-    { topic: 'SHOP_REDACT', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
+    { topic: 'app/uninstalled', address: 'https://api.botassistai.com/shopify/uninstall' },
+    { topic: 'customers/data_request', address: 'https://api.botassistai.com/shopify/gdpr/customers/data_request' },
+    { topic: 'customers/redact', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
+    { topic: 'shop/redact', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
   ];
+  
   
   
 
