@@ -237,7 +237,17 @@ const host = req.session.shopify_host;
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE access_token=?, installed_at=NOW()
     `, [normalizedShop, accessToken, accessToken]);
-
+    
+    // 🔽 ADD THIS
+    if (req.isAuthenticated() && req.user?.user_id) {
+      await pool.query(`
+        UPDATE users
+        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+        WHERE user_id = ?
+      `, [normalizedShop, accessToken, req.user.user_id]);
+    
+      console.log(`✅ Linked shop ${normalizedShop} to user_id ${req.user.user_id}`);
+    }
     await registerScriptTag(normalizedShop, accessToken);
     await registerWebhooks(normalizedShop, accessToken);
 
