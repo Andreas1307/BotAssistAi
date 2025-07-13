@@ -103,6 +103,9 @@ app.use((req, res, next) => {
 
 
 //update the code
+app.get('/shopify/embedded', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   const shop = req.shop;
@@ -145,7 +148,9 @@ app.get('/shopify/install', (req, res) => {
   if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
 const host = req.query.host;
   const state = crypto.randomBytes(16).toString('hex');
-
+  if (!host && shop) {
+    host = Buffer.from(shop, 'utf8').toString('base64');
+  }
   req.session.shopify_state = state; // ✅ Save to session
 req.session.shopify_host = host;
   
