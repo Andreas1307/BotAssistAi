@@ -46,6 +46,36 @@ const { SHOPIFY_API_KEY, HOST } = process.env;// adjust if needed
 const verifyHMAC = require('./verifyHMAC');
 
 
+const getUserByEmail = async (email) => {
+  const [rows] = await pool.query("SELECT * FROM users where email = ?", [email])
+  return rows[0]
+  }
+  
+  const getUserById = async (id) => {
+  const [rows] = await pool.query("SELECT * FROM users where user_id = ?", [id])
+  return rows[0]
+  }
+  
+  initialisePassport(passport, getUserByEmail, getUserById)
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(flash());
+  app.use(passport.initialize());
+  app.use(passport.session());
+  
+
+
+
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -255,7 +285,6 @@ const host = req.session.shopify_host;
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
-   // Convert host from shop name → base64
 const host = Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
 return res.redirect(
@@ -486,32 +515,6 @@ app.use(express.static('public'));
 
 
 
-const getUserByEmail = async (email) => {
-const [rows] = await pool.query("SELECT * FROM users where email = ?", [email])
-return rows[0]
-}
-
-const getUserById = async (id) => {
-const [rows] = await pool.query("SELECT * FROM users where user_id = ?", [id])
-return rows[0]
-}
-
-initialisePassport(passport, getUserByEmail, getUserById)
-
-
-
-
-
-
-
-
-
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(flash());
-app.use(passport.initialize());
-app.use(passport.session());
 
 
 
