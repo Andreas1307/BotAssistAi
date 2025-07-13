@@ -153,7 +153,14 @@ const host = req.query.host;
     sameSite: 'none',
     secure: true,
     httpOnly: true,
-    path: '/shopify'
+    path: '/shopify',
+  });
+  
+  res.cookie('shopify_state', state, {
+    sameSite: 'none',
+    secure: true,
+    httpOnly: true,
+    path: '/shopify',
   });
 
   
@@ -218,7 +225,6 @@ app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.cookies.shopify_state;
   const host = req.cookies.shopify_host;
-
   if (!host) {
     console.warn("Missing host cookie, fallback to shop-based host");
     // Fallback if you want, or handle as error
