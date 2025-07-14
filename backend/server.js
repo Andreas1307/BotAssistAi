@@ -40,10 +40,12 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise()
+import { shopifyApi, Webhook } from '@shopify/shopify-api';
 const verifySessionToken = require('./verifySessionToken');
 const shopify = require('./shopify.js');
 const { SHOPIFY_API_KEY, HOST } = process.env;// adjust if needed
 const verifyHMAC = require('./verifyHMAC');
+const fetchWebhooks = require('./fetchWebhooks');
 
 
 app.set('trust proxy', 1);
