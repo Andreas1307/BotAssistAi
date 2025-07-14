@@ -200,20 +200,15 @@ async function registerWebhooks(shop, accessToken) {
     { topic: 'customers/redact', address: 'https://api.botassistai.com/shopify/gdpr/customers/redact' },
     { topic: 'shop/redact', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
   ];
-  
+
   const existing = await fetchWebhooks(shop, accessToken);
-  if (existing.find(h => h.topic === topic && h.address === address)) {
-    console.log(`Webhook for ${topic} at ${address} already exists, skipping`);
-    return;
-  }
-  
 
   for (const { topic, address } of topicsToRegister) {
     if (existing.find(h => h.topic === topic && h.address === address)) {
       console.log(`⚠️ Webhook for ${topic} at ${address} already exists, skipping`);
       continue;
     }
-  
+
     try {
       await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
         webhook: { topic, address, format: 'json' }
@@ -228,8 +223,8 @@ async function registerWebhooks(shop, accessToken) {
       console.error(`❌ Failed to register webhook ${topic}:`, err.response?.data || err.message);
     }
   }
-  
 }
+
 
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
