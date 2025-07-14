@@ -1,10 +1,7 @@
-// src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import {
-  AppBridgeProvider
-} from "./utils/AppBridgeProvider.jsx";
+import { AppBridgeProvider } from "./utils/AppBridgeProvider"; // your custom wrapper
 import Integrations from "./UserComponents/Integrations";
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -18,12 +15,14 @@ const config = {
 };
 
 function App() {
-
   return (
     <AppBridgeProvider config={config}>
       <Helmet>
         <title>BotAssist AI</title>
-        <meta name="description" content="BotAssist AI — the ultimate AI chatbot to enhance your website support." />
+        <meta
+          name="description"
+          content="BotAssist AI — the ultimate AI chatbot to enhance your website support."
+        />
         <meta name="keywords" content="AI chatbot, customer support, automation" />
         <link rel="canonical" href="https://www.botassistai.com" />
         <script
