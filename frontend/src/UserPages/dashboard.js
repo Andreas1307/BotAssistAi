@@ -117,6 +117,8 @@ const Dashboard = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
 
+    if (!host) return null;
+
     return createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -126,12 +128,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     async function fetchData() {
+      if (!app) {
+        // For non-Shopify users, fallback to a normal fetch (no auth token)
+        const res = await fetch("/api/shop-data");
+        const data = await res.json();
+        setShopData(data);
+        return;
+      }
+  
       const fetchWithToken = authenticatedFetch(app);
       const res = await fetchWithToken("/api/shop-data");
       const data = await res.json();
       setShopData(data);
     }
-
+  
     fetchData();
   }, [app]);
 
