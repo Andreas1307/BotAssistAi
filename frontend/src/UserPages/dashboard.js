@@ -107,22 +107,6 @@ const Dashboard = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
 
-
-/*
-  useEffect(() => {
-    async function fetchData() {
-      const fetchWithToken = await authenticatedFetch();
-      const res = await fetchWithToken('/api/shop-data');
-      const data = await res.json();
-      console.log(data);
-    }
-
-    fetchData(); // ⏱️ Auto-runs when dashboard loads
-  }, []);
-*/
-
-
-
   // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
