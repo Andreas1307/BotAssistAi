@@ -108,7 +108,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
 
-
+/*
   useEffect(() => {
     async function fetchData() {
       const fetchWithToken = await authenticatedFetch();
@@ -119,7 +119,7 @@ const Dashboard = () => {
 
     fetchData(); // ⏱️ Auto-runs when dashboard loads
   }, []);
-
+*/
 
 
 
