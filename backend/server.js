@@ -111,6 +111,11 @@ app.use((req, res, next) => {
 app.get('/shopify/embedded', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com");
+  next();
+});
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   const shop = req.shop;
@@ -179,7 +184,11 @@ async function registerWebhooks(shop, accessToken) {
     { topic: 'shop/redact', address: 'https://api.botassistai.com/shopify/gdpr/shop/redact' },
   ];
   
-  
+  const existing = await fetchWebhooks(shop, accessToken);
+  if (existing.find(h => h.topic === topic && h.address === address)) {
+    console.log(`Webhook for ${topic} at ${address} already exists, skipping`);
+    return;
+  }
   
 
   for (const { topic, address } of topicsToRegister) {
