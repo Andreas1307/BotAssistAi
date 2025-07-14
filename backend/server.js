@@ -108,6 +108,11 @@ app.use((req, res, next) => {
 });
 
 
+console.log("🛠️ Shopify config:", {
+  SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
+  SHOPIFY_SCOPES: process.env.SHOPIFY_SCOPES,
+  SHOPIFY_REDIRECT_URI: process.env.SHOPIFY_REDIRECT_URI,
+});
 
 //update the code
 app.get('/shopify/embedded', (req, res) => {
@@ -156,27 +161,36 @@ function isValidShop(shop) {
 }
 
 app.get('/shopify/install', (req, res) => {
-  const shop = req.query.shop?.toLowerCase();
-  if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
-let host = req.query.host;
-  const state = crypto.randomBytes(16).toString('hex');
-  if (!host && shop) {
-    host = Buffer.from(shop, 'utf8').toString('base64');
+  try {
+    const shop = req.query.shop?.toLowerCase();
+    if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
+
+    let host = req.query.host;
+    const state = crypto.randomBytes(16).toString('hex');
+
+    if (!host && shop) {
+      host = Buffer.from(shop, 'utf8').toString('base64');
+    }
+
+    req.session.shopify_state = state;
+    req.session.shopify_host = host;
+
+    const installUrl = `https://${shop}/admin/oauth/authorize` +
+      `?client_id=${process.env.SHOPIFY_API_KEY}` +
+      `&scope=${process.env.SHOPIFY_SCOPES}` +
+      `&state=${state}` +
+      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+      (host ? `&host=${encodeURIComponent(host)}` : '');
+
+    console.log("➡️ Redirecting to install URL:", installUrl);
+
+    return res.redirect(installUrl);
+  } catch (err) {
+    console.error("❌ /shopify/install failed:", err);
+    return res.status(500).send("Internal server error");
   }
-  req.session.shopify_state = state; // ✅ Save to session
-req.session.shopify_host = host;
-  
-
-const installUrl = `https://${shop}/admin/oauth/authorize` +
-  `?client_id=${process.env.SHOPIFY_API_KEY}` +
-  `&scope=${process.env.SHOPIFY_SCOPES}` +
-  `&state=${state}` +
-  `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-  (host ? `&host=${encodeURIComponent(host)}` : '');
-
-
-  return res.redirect(installUrl);
 });
+
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
@@ -194,27 +208,26 @@ async function registerWebhooks(shop, accessToken) {
   
 
   for (const { topic, address } of topicsToRegister) {
+    if (existing.find(h => h.topic === topic && h.address === address)) {
+      console.log(`⚠️ Webhook for ${topic} at ${address} already exists, skipping`);
+      continue;
+    }
+  
     try {
-      const response = await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
-        webhook: {
-          topic,
-          address,
-          format: 'json'
-        }
+      await axios.post(`https://${shop}/admin/api/2023-10/webhooks.json`, {
+        webhook: { topic, address, format: 'json' }
       }, {
         headers: {
           'X-Shopify-Access-Token': accessToken,
           'Content-Type': 'application/json'
         }
       });
-
       console.log(`✅ Registered webhook: ${topic} → ${address}`);
     } catch (err) {
-      const status = err.response?.status || 'Unknown';
-      const data = err.response?.data || err.message;
-      console.error(`❌ Failed to register webhook ${topic}: ${status}`, data);
+      console.error(`❌ Failed to register webhook ${topic}:`, err.response?.data || err.message);
     }
   }
+  
 }
 
 app.get('/shopify/callback', async (req, res) => {
