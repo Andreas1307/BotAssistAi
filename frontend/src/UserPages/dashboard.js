@@ -13,7 +13,6 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import createApp from "@shopify/app-bridge";
-import { authenticatedFetch } from "@shopify/app-bridge-utils";
 import axios from "axios";
 import { authenticatedFetch } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";
