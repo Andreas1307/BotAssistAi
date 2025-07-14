@@ -6,7 +6,6 @@ import Integrations from "./UserComponents/Integrations";
 
 const urlParams = new URLSearchParams(window.location.search);
 const host = urlParams.get("host");
-const shop = urlParams.get("shop");
 
 const config = {
   apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -26,6 +25,7 @@ function App() {
         <meta name="keywords" content="AI chatbot, customer support, automation" />
         <link rel="canonical" href="https://www.botassistai.com" />
       </Helmet>
+
       <Router>
         <Routes>
           <Route path="/integrations" element={<Integrations />} />

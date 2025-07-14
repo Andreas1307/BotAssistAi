@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   FaChartLine, FaComments, FaPlug, FaCogs, FaHome, 
   FaRobot, FaClipboardList, FaSearch, FaUserCircle, FaPowerOff, 
@@ -12,6 +12,8 @@ import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
+import createApp from "@shopify/app-bridge";
+import { authenticatedFetch } from "@shopify/app-bridge-utils";
 import axios from "axios";
 import { authenticatedFetch } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";
@@ -110,20 +112,29 @@ const Dashboard = () => {
 
 
 
-
   const [shopData, setShopData] = useState(null);
+
+  const app = useMemo(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host");
+
+    return createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
-      const fetchWithToken = await authenticatedFetch();
+      const fetchWithToken = authenticatedFetch(app);
       const res = await fetchWithToken("/api/shop-data");
       const data = await res.json();
       setShopData(data);
     }
 
     fetchData();
-  }, []);
-
+  }, [app]);
 
 
 
