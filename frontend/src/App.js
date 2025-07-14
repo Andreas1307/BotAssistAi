@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { AppBridgeProvider } from "./components/AppBridgeProvider"; // your custom wrapper
+import { AppBridgeProvider } from "./utils/AppBridgeProvider"; // your custom wrapper
 import Integrations from "./UserComponents/Integrations";
 
 const urlParams = new URLSearchParams(window.location.search);
