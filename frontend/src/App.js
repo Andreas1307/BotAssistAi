@@ -1,21 +1,21 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { Provider } from "@shopify/app-bridge-react";
+import { AppBridgeProvider } from "@shopify/app-bridge-react";
 import Integrations from "./UserComponents/Integrations";
 
 const urlParams = new URLSearchParams(window.location.search);
 const host = urlParams.get("host");
 
 const config = {
-  apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, // Make sure this is loaded in .env
+  apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
   host: host,
   forceRedirect: true,
 };
 
 function App() {
   return (
-    <Provider config={config}>
+    <AppBridgeProvider config={config}>
       <Helmet>
         <title>BotAssist AI</title>
         <meta
@@ -30,7 +30,7 @@ function App() {
           <Route path="/integrations" element={<Integrations />} />
         </Routes>
       </Router>
-    </Provider>
+    </AppBridgeProvider>
   );
 }
 
