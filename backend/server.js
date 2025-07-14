@@ -120,8 +120,11 @@ app.get('/shopify/embedded', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "frame-ancestors https://admin.shopify.com https://*.myshopify.com"
+  );
   res.setHeader('X-Frame-Options', 'ALLOWALL');
-  res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com");
   next();
 });
 
