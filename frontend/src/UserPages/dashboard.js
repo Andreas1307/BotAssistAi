@@ -13,6 +13,7 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "axios";
+import { authenticatedFetch } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
@@ -106,6 +107,27 @@ const Dashboard = () => {
   const [userQuery, setUserQuery] = useState("");
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
+
+
+
+
+  const [shopData, setShopData] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      const fetchWithToken = await authenticatedFetch();
+      const res = await fetchWithToken("/api/shop-data");
+      const data = await res.json();
+      setShopData(data);
+    }
+
+    fetchData();
+  }, []);
+
+
+
+
+
 
   // FETCH MEMBERSHIP
   useEffect(() => {
