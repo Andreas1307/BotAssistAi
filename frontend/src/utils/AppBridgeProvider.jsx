@@ -1,17 +1,15 @@
-// AppBridgeProvider.js
+// utils/ShopifyAppBridgeProvider.js
 import React, { useMemo } from "react";
 import { AppProvider as PolarisProvider } from "@shopify/polaris";
-import { Provider as AppBridgeProvider } from "@shopify/app-bridge-react";
+import { Provider as AppBridgeReactProvider } from "@shopify/app-bridge-react";
 import { Redirect } from "@shopify/app-bridge/actions";
 
 export const ShopifyAppBridgeProvider = ({ children }) => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const host = searchParams.get("host");
-  const shop = searchParams.get("shop");
+  const urlParams = new URLSearchParams(window.location.search);
+  const host = urlParams.get("host");
+  const shop = urlParams.get("shop");
 
-  const isEmbedded = window.top !== window.self;
-
-  const appBridgeConfig = useMemo(() => {
+  const config = useMemo(() => {
     if (!host || !process.env.REACT_APP_SHOPIFY_API_KEY) return null;
     return {
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -20,19 +18,17 @@ export const ShopifyAppBridgeProvider = ({ children }) => {
     };
   }, [host]);
 
-  if (isEmbedded && (!host || !shop)) {
-    // Optional: force re-entry via /auth/embedded if not launched properly
+  if (!host || !shop) {
+    // optional: redirect fallback
     window.location.href = `/auth/embedded?shop=${shop || ""}`;
     return null;
   }
 
   return (
-    <PolarisProvider i18n={{}}>
-      {appBridgeConfig ? (
-        <AppBridgeProvider config={appBridgeConfig}>{children}</AppBridgeProvider>
-      ) : (
-        children // Public access (non-embedded)
-      )}
-    </PolarisProvider>
+    <AppBridgeReactProvider config={config}>
+      <PolarisProvider i18n={{}}>
+        {children}
+      </PolarisProvider>
+    </AppBridgeReactProvider>
   );
 };
