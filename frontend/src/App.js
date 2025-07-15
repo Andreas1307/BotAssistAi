@@ -1,6 +1,5 @@
 // App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { AppBridgeProvider } from "./utils/AppBridgeProvider";
 import Integrations from "./UserComponents/Integrations";
@@ -19,11 +18,10 @@ function App() {
       </Helmet>
 
       <AppBridgeProvider>
-        <Router>
-          <Routes>
-            <Route path="/integrations" element={<Integrations />} />
-          </Routes>
-        </Router>
+        <div style={{ padding: "1rem" }}>
+          <h1>BotAssist Dashboard</h1>
+          <Integrations />
+        </div>
       </AppBridgeProvider>
     </>
   );

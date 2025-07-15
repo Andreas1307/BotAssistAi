@@ -1,10 +1,10 @@
 // AppBridgeProvider.jsx
 import React, { useMemo } from "react";
 import { AppProvider as PolarisProvider } from "@shopify/polaris";
-import createApp from "@shopify/app-bridge";
+import { Provider as AppBridgeReactProvider } from "@shopify/app-bridge-react";
 
 export const AppBridgeProvider = ({ children }) => {
-  const appBridgeConfig = useMemo(() => {
+  const config = useMemo(() => {
     const host = new URLSearchParams(window.location.search).get("host");
     const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY;
 
@@ -17,16 +17,13 @@ export const AppBridgeProvider = ({ children }) => {
     };
   }, []);
 
-  const appBridge = useMemo(() => {
-    if (!appBridgeConfig) return null;
-    return createApp(appBridgeConfig);
-  }, [appBridgeConfig]);
-
-  if (!appBridge) return <>{children}</>; // Non-Shopify path
+  if (!config) return <>{children}</>; // Non-Shopify path
 
   return (
-    <PolarisProvider i18n={{}} appBridge={appBridge}>
-      {children}
-    </PolarisProvider>
+    <AppBridgeReactProvider config={config}>
+      <PolarisProvider i18n={{}}>
+        {children}
+      </PolarisProvider>
+    </AppBridgeReactProvider>
   );
 };

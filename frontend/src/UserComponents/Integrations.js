@@ -14,7 +14,7 @@ import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow } from "date-fns";
 import axios from "axios";
-
+import { authenticatedFetch } from "../utils/app-bridge";
 const Integrations = () => {
   const [bgColor, setBgColor] = useState("#007bff");
   const [position, setPosition] = useState("bottom-right");
@@ -34,6 +34,29 @@ const Integrations = () => {
   const [aiBot, setAiBot] = useState(false);
   let toastId;
 
+
+
+
+  const [shopData, setShopData] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await authenticatedFetch("/api/shop-data");
+        const data = await res.json();
+        setShopData(data);
+      } catch (err) {
+        console.error("Failed to fetch shop data:", err);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+
+
+
+  
   const showErrorNotification = () => {
     toast.error("Something went wrong. Please try again.", {
       position: "top-center",
