@@ -1,4 +1,3 @@
-// AppBridgeProvider.jsx
 import React, { useMemo } from "react";
 import { AppProvider as PolarisProvider } from "@shopify/polaris";
 import { Provider as AppBridgeReactProvider } from "@shopify/app-bridge-react";
@@ -17,7 +16,7 @@ export const AppBridgeProvider = ({ children }) => {
     };
   }, []);
 
-  if (!config) return <>{children}</>; // Non-Shopify path
+  if (!config) return <>{children}</>; // Non-Shopify fallback
 
   return (
     <AppBridgeReactProvider config={config}>
