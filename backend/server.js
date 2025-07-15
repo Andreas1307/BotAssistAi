@@ -54,11 +54,7 @@ app.set('trust proxy', 1);
 app.use(cookieParser());
 
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
-/*app.use(['/ping-client', '/ask-ai'], cors({
+app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -81,7 +77,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-*/
+
 
 // 👇 Must come AFTER CORS
 app.use(session({
