@@ -182,33 +182,38 @@ function verifyHMAC(queryParams, secret) {
   }
 }
 app.get('/', async (req, res) => {
-  const { shop, hmac } = req.query;
+  const { shop, hmac, host } = req.query;
 
+  // Case 1: Embedded app launch
   if (shop && hmac) {
     const isValid = verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET);
-
     if (!isValid) {
-      console.warn('⚠️ Invalid HMAC in / route:', req.query);
+      console.warn("⚠️ Invalid HMAC on /:", req.query);
       return res.status(400).send('Invalid HMAC');
     }
 
-    // Optional: check if app is already installed
+    const normalizedShop = shop.toLowerCase();
+
     const [rows] = await pool.query(
       `SELECT access_token FROM shopify_installs WHERE shop = ?`,
-      [shop.toLowerCase()]
+      [normalizedShop]
     );
 
     if (rows.length === 0) {
-      return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
+      // Not installed yet → redirect to install flow
+      return res.redirect(`/shopify/install?shop=${encodeURIComponent(normalizedShop)}`);
     }
 
-    const host = req.query.host || Buffer.from(shop, 'utf-8').toString('base64');
-    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+    // Redirect into Shopify embedded app
+    const redirectHost = host || Buffer.from(normalizedShop, 'utf-8').toString('base64');
+    const embeddedUrl = `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${redirectHost}`;
     return res.redirect(embeddedUrl);
   }
 
+  // Case 2: Public site visitor (non-Shopify)
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
+
 
 
 function isValidShop(shop) {

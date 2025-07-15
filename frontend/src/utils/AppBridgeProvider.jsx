@@ -1,11 +1,15 @@
 // AppBridgeProvider.js
 import React, { useMemo } from "react";
 import { AppProvider as PolarisProvider } from "@shopify/polaris";
-import createApp from "@shopify/app-bridge";
+import { Provider as AppBridgeProvider } from "@shopify/app-bridge-react";
+import { Redirect } from "@shopify/app-bridge/actions";
 
-export const AppBridgeProvider = ({ children }) => {
-  const host = new URLSearchParams(window.location.search).get("host");
-  const shop = new URLSearchParams(window.location.search).get("shop");
+export const ShopifyAppBridgeProvider = ({ children }) => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const host = searchParams.get("host");
+  const shop = searchParams.get("shop");
+
+  const isEmbedded = window.top !== window.self;
 
   const appBridgeConfig = useMemo(() => {
     if (!host || !process.env.REACT_APP_SHOPIFY_API_KEY) return null;
@@ -16,15 +20,19 @@ export const AppBridgeProvider = ({ children }) => {
     };
   }, [host]);
 
-  if (!host || !shop) {
-    // redirect to the embedded Shopify admin app
-    window.location.href = `/auth/embedded?shop=${shop}`;
+  if (isEmbedded && (!host || !shop)) {
+    // Optional: force re-entry via /auth/embedded if not launched properly
+    window.location.href = `/auth/embedded?shop=${shop || ""}`;
     return null;
   }
 
   return (
     <PolarisProvider i18n={{}}>
-      {children}
+      {appBridgeConfig ? (
+        <AppBridgeProvider config={appBridgeConfig}>{children}</AppBridgeProvider>
+      ) : (
+        children // Public access (non-embedded)
+      )}
     </PolarisProvider>
   );
 };

@@ -1,12 +1,15 @@
 // App.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { AppBridgeProvider } from "./utils/AppBridgeProvider";
+import { ShopifyAppBridgeProvider } from "./utils/AppBridgeProvider"; // renamed for clarity
 import Integrations from "./UserComponents/Integrations";
 import { ensureEmbeddedApp } from './utils/redirectToEmbeddedApp';
 
 function App() {
-  ensureEmbeddedApp();
+  useEffect(() => {
+    ensureEmbeddedApp(); // only runs once on mount
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -19,12 +22,12 @@ function App() {
         <link rel="canonical" href="https://www.botassistai.com" />
       </Helmet>
 
-      <AppBridgeProvider>
+      <ShopifyAppBridgeProvider>
         <div style={{ padding: "1rem" }}>
           <h1>BotAssist Dashboard</h1>
           <Integrations />
         </div>
-      </AppBridgeProvider>
+      </ShopifyAppBridgeProvider>
     </>
   );
 }
