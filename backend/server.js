@@ -99,23 +99,15 @@ app.use(session({
 
 app.use((req, res, next) => {
   res.setHeader(
-    "Content-Security-Policy",
-    "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
+    'Content-Security-Policy',
+    "frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
   );
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.removeHeader("X-Frame-Options"); // Optional but cleaner than setting ALLOWALL
   next();
 });
 
 
-console.log("🛠️ Shopify config:", {
-  SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
-  SHOPIFY_SCOPES: process.env.SHOPIFY_SCOPES,
-  SHOPIFY_REDIRECT_URI: process.env.SHOPIFY_REDIRECT_URI,
-});
 
-//update the code
 app.get('/shopify/embedded', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });

@@ -13,9 +13,9 @@ const config = {
   forceRedirect: true,
 };
 
-function App() {
+function AppContent() {
   return (
-    <AppBridgeProvider config={config}>
+    <>
       <Helmet>
         <title>BotAssist AI</title>
         <meta
@@ -31,8 +31,22 @@ function App() {
           <Route path="/integrations" element={<Integrations />} />
         </Routes>
       </Router>
-    </AppBridgeProvider>
+    </>
   );
+}
+
+function App() {
+  if (host) {
+    // Shopify user — wrap with App Bridge
+    return (
+      <AppBridgeProvider config={config}>
+        <AppContent />
+      </AppBridgeProvider>
+    );
+  }
+
+  // Non-Shopify user — skip App Bridge
+  return <AppContent />;
 }
 
 export default App;
