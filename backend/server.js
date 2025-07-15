@@ -113,13 +113,24 @@ app.get('/shopify/embedded', (req, res) => {
 });
 app.use((req, res, next) => {
   res.setHeader(
-    'Content-Security-Policy',
-    "frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
+    "Content-Security-Policy",
+    "frame-ancestors https://admin.shopify.com https://*.myshopify.com"
   );
-  next(); // Don't need X-Frame-Options anymore
+  next();
 });
 
 
+
+app.get("/auth/embedded", (req, res) => {
+  const { shop, host } = req.query;
+
+  if (!shop || !host) {
+    return res.status(400).send("Missing shop or host");
+  }
+
+  const redirectUrl = `https://admin.shopify.com/store/${shop}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+  return res.redirect(redirectUrl);
+});
 
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {

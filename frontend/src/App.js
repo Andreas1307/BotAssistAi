@@ -3,8 +3,10 @@ import React from "react";
 import { Helmet } from "react-helmet";
 import { AppBridgeProvider } from "./utils/AppBridgeProvider";
 import Integrations from "./UserComponents/Integrations";
+import { ensureEmbeddedApp } from './utils/redirectToEmbeddedApp';
 
 function App() {
+  ensureEmbeddedApp();
   return (
     <>
       <Helmet>
