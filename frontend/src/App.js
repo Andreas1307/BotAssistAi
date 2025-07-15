@@ -2,7 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { AppBridgeProvider } from "./components/AppBridgeProvider";
+import { AppBridgeProvider } from "./utils/AppBridgeProvider";
 import Integrations from "./UserComponents/Integrations";
 
 function App() {
