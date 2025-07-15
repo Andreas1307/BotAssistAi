@@ -126,6 +126,11 @@ const Dashboard = () => {
     });
   }, []);
 
+
+// am reusit sa fac sa merga shopify cu frontend, sa vad daca indeplinesc criiterile alea,
+// si sa se instaleze aplicatia
+
+
   useEffect(() => {
     async function fetchData() {
       if (!app) {

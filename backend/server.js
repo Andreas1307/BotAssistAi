@@ -122,11 +122,13 @@ app.get('/shopify/embedded', (req, res) => {
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "frame-ancestors https://admin.shopify.com https://*.myshopify.com"
+    "frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
   );
-  res.setHeader('X-Frame-Options', 'ALLOWALL');
-  next();
+  next(); // Don't need X-Frame-Options anymore
 });
+
+
+
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   const shop = req.shop;
