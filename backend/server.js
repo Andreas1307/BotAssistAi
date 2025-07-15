@@ -120,7 +120,6 @@ app.use((req, res, next) => {
 });
 
 
-
 app.get("/auth/embedded", (req, res) => {
   const { shop, host } = req.query;
 
@@ -141,58 +140,116 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   res.json({ shopData: response });
 });
 
-app.get('/', async (req, res) => {
-  const { shop, host } = req.query;
+function verifyHMAC(queryParams, secret) {
+  const { hmac, ...rest } = queryParams;
+  const message = Object.keys(rest)
+    .sort()
+    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
+    .join('&');
 
-  if (shop && host) {
-    return res.redirect(`/dashboard?shop=${shop}&host=${host}`);
-  }
+  const digest = crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('hex');
 
-  if (shop) {
-    const [rows] = await pool.query(
-      `SELECT access_token FROM shopify_installs WHERE shop = ?`, [shop]
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(hmac, 'utf-8'),
+      Buffer.from(digest, 'utf-8')
     );
+  } catch (e) {
+    return false;
+  }
+}
 
-    if (rows.length) {
-      const hostParam = Buffer.from(shop, 'utf-8').toString('base64');
-      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${hostParam}`;
-      return res.redirect(embeddedUrl);
+app.get('/', async (req, res) => {
+  const { shop, hmac } = req.query;
+
+  if (shop && hmac) {
+    const isValid = verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET);
+
+    if (!isValid) {
+      console.warn('⚠️ Invalid HMAC in / route:', req.query);
+      return res.status(400).send('Invalid HMAC');
     }
 
-    return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
+    // Optional: check if app is already installed
+    const [rows] = await pool.query(
+      `SELECT access_token FROM shopify_installs WHERE shop = ?`,
+      [shop.toLowerCase()]
+    );
+
+    if (rows.length === 0) {
+      return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop.toLowerCase())}`);
+    }
+
+    const host = req.query.host || Buffer.from(shop, 'utf-8').toString('base64');
+    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+    return res.redirect(embeddedUrl);
   }
 
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
+
 function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
 }
 
+function verifyHMAC(queryParams, secret) {
+  const { hmac, ...rest } = queryParams;
+  const message = Object.keys(rest)
+    .sort()
+    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
+    .join('&');
+
+  const digest = crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('hex');
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hmac, 'utf-8'), Buffer.from(digest, 'utf-8'));
+  } catch (e) {
+    return false;
+  }
+}
+
+function isValidShop(shop) {
+  return /^[a-z0-9][a-z0-9\-]*\.myshopify\.com$/.test(shop);
+}
+
 app.get('/shopify/install', (req, res) => {
   try {
-    const shop = req.query.shop?.toLowerCase();
-    if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid or missing shop');
+    const { shop, hmac } = req.query;
+    const shopLower = shop?.toLowerCase();
 
-    let host = req.query.host;
-    const state = crypto.randomBytes(16).toString('hex');
-
-    if (!host && shop) {
-      host = Buffer.from(shop, 'utf8').toString('base64');
+    // 🚫 Validate basic presence and shop format
+    if (!shopLower || !isValidShop(shopLower)) {
+      return res.status(400).send('❌ Invalid or missing "shop" parameter');
     }
+
+    // 🔐 Validate HMAC signature
+    if (!hmac || !verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
+      return res.status(400).send('❌ Invalid or missing HMAC');
+    }
+
+    // ✅ Safe to proceed
+    const state = crypto.randomBytes(16).toString('hex');
+    let host = req.query.host || Buffer.from(shopLower, 'utf8').toString('base64');
 
     req.session.shopify_state = state;
     req.session.shopify_host = host;
 
-    const installUrl = `https://${shop}/admin/oauth/authorize` +
+    const installUrl =
+      `https://${shopLower}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
       `&scope=${process.env.SHOPIFY_SCOPES}` +
       `&state=${state}` +
       `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-      (host ? `&host=${encodeURIComponent(host)}` : '');
+      `&host=${encodeURIComponent(host)}`;
 
     console.log("➡️ Redirecting to install URL:", installUrl);
-
     return res.redirect(installUrl);
   } catch (err) {
     console.error("❌ /shopify/install failed:", err);
