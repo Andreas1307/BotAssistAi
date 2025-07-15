@@ -61,22 +61,28 @@ app.use(['/ping-client', '/ask-ai'], cors({
   credentials: false // ⚠️ NO cookies allowed here
 }));
 
+const allowedOrigins = [
+  'https://www.botassistai.com',
+  'https://botassistai.com',
+  'https://admin.shopify.com',
+  /\.myshopify\.com$/,
+];
+
 app.use(cors({
   origin: function (origin, callback) {
-    const allowed = [
-      "http://localhost:3000",
-      "https://botassistai.com",
-      "https://www.botassistai.com",
-      "https://shop-ease2.netlify.app",
-    ];
-    if (!origin || allowed.includes(origin) || /\.myshopify\.com$/.test(origin)) {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : false)
+    ) {
       callback(null, true);
     } else {
-      callback(new Error("Blocked by CORS"));
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
 }));
+
 
 
 // 👇 Must come AFTER CORS
