@@ -1,6 +1,8 @@
+// App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { AppBridgeProvider } from "./components/AppBridgeProvider";
 import Integrations from "./UserComponents/Integrations";
 
 function App() {
@@ -16,11 +18,13 @@ function App() {
         <link rel="canonical" href="https://www.botassistai.com" />
       </Helmet>
 
-      <Router>
-        <Routes>
-          <Route path="/integrations" element={<Integrations />} />
-        </Routes>
-      </Router>
+      <AppBridgeProvider>
+        <Router>
+          <Routes>
+            <Route path="/integrations" element={<Integrations />} />
+          </Routes>
+        </Router>
+      </AppBridgeProvider>
     </>
   );
 }

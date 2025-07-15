@@ -102,7 +102,7 @@ app.use((req, res, next) => {
     'Content-Security-Policy',
     "frame-ancestors https://admin.shopify.com https://*.myshopify.com;"
   );
-  res.removeHeader("X-Frame-Options"); // Optional but cleaner than setting ALLOWALL
+  res.removeHeader("X-Frame-Options");
   next();
 });
 
