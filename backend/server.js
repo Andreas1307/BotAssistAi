@@ -163,7 +163,24 @@ function verifyHMAC(queryParams, secret) {
     return false;
   }
 }
+function verifyHMAC(queryParams, secret) {
+  const { hmac, ...rest } = queryParams;
+  const message = Object.keys(rest)
+    .sort()
+    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
+    .join('&');
 
+  const digest = crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('hex');
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hmac, 'utf-8'), Buffer.from(digest, 'utf-8'));
+  } catch (e) {
+    return false;
+  }
+}
 app.get('/', async (req, res) => {
   const { shop, hmac } = req.query;
 
@@ -198,29 +215,6 @@ function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
 }
 
-function verifyHMAC(queryParams, secret) {
-  const { hmac, ...rest } = queryParams;
-  const message = Object.keys(rest)
-    .sort()
-    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
-    .join('&');
-
-  const digest = crypto
-    .createHmac('sha256', secret)
-    .update(message)
-    .digest('hex');
-
-  try {
-    return crypto.timingSafeEqual(Buffer.from(hmac, 'utf-8'), Buffer.from(digest, 'utf-8'));
-  } catch (e) {
-    return false;
-  }
-}
-
-function isValidShop(shop) {
-  return /^[a-z0-9][a-z0-9\-]*\.myshopify\.com$/.test(shop);
-}
-
 app.get('/shopify/install', (req, res) => {
   try {
     const { shop, hmac } = req.query;
@@ -232,7 +226,7 @@ app.get('/shopify/install', (req, res) => {
     }
 
     // 🔐 Validate HMAC signature
-    if (!hmac || !verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
+    if (hmac || !verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
       return res.status(400).send('❌ Invalid or missing HMAC');
     }
 
