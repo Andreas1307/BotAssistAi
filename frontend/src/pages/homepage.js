@@ -17,7 +17,7 @@ import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "axios";
 import { Helmet } from "react-helmet";
-import detectShopifyUser from "../utils/detectShopify"
+import { detectShopifyUser } from "../utils/detectShopify"
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
