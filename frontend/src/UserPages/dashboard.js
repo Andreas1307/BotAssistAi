@@ -26,6 +26,7 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
+import useShopifyInstallRedirect from "../utils/dash-redirect"
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
@@ -110,28 +111,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
 
-  useEffect(() => {
-    const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-    const hasInstalled = localStorage.getItem("shopifyInstalled") === "true";
-    const shop = localStorage.getItem("shop");
-    const clientId = process.env.REACT_APP_SHOPIFY_API_KEY;
-    const redirectUri = "https://api.botassistai.com/shopify/callback"; // Must match your app settings
-  
-    if (isShopifyUser && !hasInstalled && shop && clientId) {
-      const state = crypto.randomUUID(); // You can use a secure random string too
-      localStorage.setItem("shopifyInstalled", "true");
-      localStorage.setItem("shopifyOAuthState", state);
-  
-      const installUrl =
-        `https://${shop}/admin/oauth/authorize?client_id=${clientId}` +
-        `&scope=read_products,read_orders` + // Add your actual scopes
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&state=${state}`;
-  
-      window.location.href = installUrl;
-    }
-  }, []);
-
+  useShopifyInstallRedirect();
 
 
 
