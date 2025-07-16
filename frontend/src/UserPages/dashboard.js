@@ -119,7 +119,7 @@ const Dashboard = () => {
     if (isShopifyUser && !hasInstalled && shop) {
       localStorage.setItem("shopifyInstalled", "true");
       const storeName = shop.replace(".myshopify.com", "");
-      const installUrl = `https://admin.shopify.com/store/${storeName}/app/grant?client_id=${clientId}`;
+      const installUrl = `https://api.botassistai.com/shopify/install`;
       window.location.href = installUrl;
     }
   }, []);
