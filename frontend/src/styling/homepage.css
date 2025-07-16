@@ -7,12 +7,12 @@
   background-color: #f2f2f2;
 }
 .modalNotification {
-  position: absolute;
+  position: fixed;
   max-width: 800px;
   padding: 20px;
   background: #f1f1f1;
   border: 2px solid #dfdfdf;
-  top: 98vh;
+  bottom: 30px;
   margin: 0 auto;
   left: 10%;
   right: 10%
