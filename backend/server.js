@@ -216,8 +216,6 @@ app.get('/', async (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
  
-
-
 function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
 }
@@ -255,7 +253,6 @@ app.get('/shopify/install', (req, res) => {
     return res.status(500).send("Internal server error");
   }
 });
-
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
