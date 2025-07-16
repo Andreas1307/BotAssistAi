@@ -80,8 +80,9 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true, // ✅ Must be true to send cookies
 }));
+
 
 
 
@@ -237,7 +238,7 @@ app.get('/shopify/install', (req, res) => {
 
     req.session.shopify_state = state;
     req.session.shopify_host = host;
-
+    console.log("Generated state:", state);
     const installUrl =
       `https://${shopLower}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
@@ -292,7 +293,8 @@ app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.session.shopify_state;
   const host = req.query.host || req.session.shopify_host; // Fallback-safe
-
+  console.log("Stored state:", req.session.shopify_state);
+  console.log("Received state:", req.query.state);
   if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
 
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
