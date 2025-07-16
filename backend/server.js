@@ -291,13 +291,8 @@ async function registerWebhooks(shop, accessToken) {
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state, hmac } = req.query;
   const storedState = req.session.shopify_state;
-let host = req.session.shopify_host;
+  const host = req.query.host || req.session.shopify_host; // Fallback-safe
 
-  if (!host) {
-    console.warn("Missing host cookie, fallback to shop-based host");
-    // Fallback if you want, or handle as error
-  }
-  
   if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
 
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
@@ -321,29 +316,43 @@ let host = req.session.shopify_host;
 
     const accessToken = tokenRes.data.access_token;
 
+    // ✅ Store in shopify_installs for tracking
     await pool.query(`
       INSERT INTO shopify_installs (shop, access_token, installed_at)
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE access_token=?, installed_at=NOW()
     `, [normalizedShop, accessToken, accessToken]);
 
+    // ✅ Associate Shopify store with currently logged-in user
+    const userId = req.session.userId; // Or use JWT auth if you're using tokens
+
+    if (userId) {
+      await pool.query(`
+        UPDATE users
+        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+        WHERE id = ?
+      `, [normalizedShop, accessToken, userId]);
+    } else {
+      console.warn("⚠️ No logged-in user found to attach Shopify data");
+    }
+
+    // ✅ Register webhooks and script tags
     await registerScriptTag(normalizedShop, accessToken);
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
-   // Convert host from shop name → base64
-const host = Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
-return res.redirect(
-  `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`
-);
+    const base64Host = host || Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
-
+    return res.redirect(
+      `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${base64Host}`
+    );
   } catch (err) {
     console.error("❌ OAuth failed:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
   }
 });
+
 
 app.get('/shopify/welcome', (req, res) => {
   res.send(`<h2>🎉 Welcome to BotAssist AI!</h2><p>Installation successful for shop: ${req.query.shop}</p>`);
