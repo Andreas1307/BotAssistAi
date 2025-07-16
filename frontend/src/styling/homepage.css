@@ -8,8 +8,8 @@
 }
 .modalNotification {
   position: fixed;
-  max-width: 850px;
-  padding: 20px;
+  max-width: 870px;
+  padding: 12px 20px;
   background: #00f5d4;
   border: 2px solid #dfdfdf;
   outline: 2px solid #00f5d4;
@@ -26,7 +26,17 @@
   font-weight: 500;
 }
 .modalNotification p span {
-  color: #00f5d4;
+  position: relative;
+}
+.modalNotification p span::before {
+  content: "";
+  position: absolute;
+  bottom: -2.2px;
+  left: 0;
+  width: 80%;
+  height: 2px;
+  background-color: #fff;
+  border-radius: 10px;
 }
 .hero {
   width: 100%;
