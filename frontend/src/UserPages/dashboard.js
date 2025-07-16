@@ -115,11 +115,19 @@ const Dashboard = () => {
     const hasInstalled = localStorage.getItem("shopifyInstalled") === "true";
     const shop = localStorage.getItem("shop");
     const clientId = process.env.REACT_APP_SHOPIFY_API_KEY;
-
-    if (isShopifyUser && !hasInstalled && shop) {
+    const redirectUri = "https://api.botassistai.com/shopify/callback"; // Must match your app settings
+  
+    if (isShopifyUser && !hasInstalled && shop && clientId) {
+      const state = crypto.randomUUID(); // You can use a secure random string too
       localStorage.setItem("shopifyInstalled", "true");
-      const storeName = shop.replace(".myshopify.com", "");
-      const installUrl = `https://api.botassistai.com/shopify/install`;
+      localStorage.setItem("shopifyOAuthState", state);
+  
+      const installUrl =
+        `https://${shop}/admin/oauth/authorize?client_id=${clientId}` +
+        `&scope=read_products,read_orders` + // Add your actual scopes
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&state=${state}`;
+  
       window.location.href = installUrl;
     }
   }, []);
