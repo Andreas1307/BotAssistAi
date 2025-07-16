@@ -32,3 +32,8 @@ export const ShopifyAppBridgeProvider = ({ children }) => {
     </AppBridgeReactProvider>
   );
 };
+
+
+
+// sa fac asta cu login (pe telefon) si inloc sa imi deschida in iframe imi deschide in website-ul meu direct
+// care poate sa fie bine

@@ -17,8 +17,10 @@ import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "axios";
 import { Helmet } from "react-helmet";
+import detectShopifyUser from "../utils/detectShopify"
 const Homepage = () => {
   const [stars, setStars] = useState([]);
+  const [showModal, setShowModal] = useState(false)
   useEffect(() => {
     const newStars = [];
     for (let i = 0; i < 200; i++) {
@@ -36,6 +38,25 @@ const Homepage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+
+
+  const showPopupToRegister = () => {
+    setTimeout(() => {
+      setShowModal(true)
+    }, [5000])
+  }
+
+
+
+  useEffect(() => {
+    const isShopifyUser = detectShopifyUser();
+    console.log(isShopifyUser)
+    if (isShopifyUser) {
+      showPopupToRegister();
+    }
+  }, []);
+  
 
 
   useEffect(() => {
@@ -97,6 +118,11 @@ const Homepage = () => {
           <div>
             <Header />
             <div className="container">
+              {showModal && (
+                <div className="modalNotification">
+                  <p>👋 Welcome! To continue installing BotAssistAI on your Shopify store, please register or log in first.</p>
+                </div>
+              )}
               <section className="hero">
                 <div className="hero-text">
                   <h1>The <span>24/7 AI</span> Support</h1>

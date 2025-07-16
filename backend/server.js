@@ -213,7 +213,7 @@ app.get('/', async (req, res) => {
   // Case 2: Public site visitor (non-Shopify)
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
-
+ 
 
 
 function isValidShop(shop) {
