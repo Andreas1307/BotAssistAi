@@ -95,7 +95,8 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: true, // Must be true if HTTPS
-    sameSite: 'none', // 🔥 Critical for embedded Shopify apps or cross-origin
+    sameSite: 'none',
+    domain: '.botassistai.com',
     maxAge: 24 * 60 * 60 * 1000,
   },
 }));
