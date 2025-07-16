@@ -8,7 +8,7 @@
 }
 .modalNotification {
   position: fixed;
-  max-width: 890px;
+  max-width: 910px;
   padding: 12px 20px;
   background: #00f5d4;
   border: 2px solid #dfdfdf;
@@ -17,11 +17,11 @@
   margin: 0 auto;
   left: 10%;
   right: 10%;
-  border-radius: 15px;
+  border-radius: 18px;
   z-index: 999;
 }
 .modalNotification p {
-  font-size: 18px;
+  font-size: 18.3px;
   color: #fff;
   font-weight: 500;
 }

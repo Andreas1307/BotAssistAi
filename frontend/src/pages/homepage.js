@@ -44,7 +44,7 @@ const Homepage = () => {
   const showPopupToRegister = () => {
     setTimeout(() => {
       setShowModal(true)
-    }, [2000])
+    }, [1200])
   }
 
 

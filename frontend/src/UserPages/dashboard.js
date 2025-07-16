@@ -110,6 +110,22 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
 
+  useEffect(() => {
+    const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+    const hasInstalled = localStorage.getItem("shopifyInstalled") === "true";
+    const shop = localStorage.getItem("shop");
+    const clientId = process.env.REACT_APP_SHOPIFY_API_KEY;
+
+    if (isShopifyUser && !hasInstalled && shop) {
+      localStorage.setItem("shopifyInstalled", "true");
+      const storeName = shop.replace(".myshopify.com", "");
+      const installUrl = `https://admin.shopify.com/store/${storeName}/app/grant?client_id=${clientId}`;
+      window.location.href = installUrl;
+    }
+  }, []);
+
+
+
 
   const [shopData, setShopData] = useState(null);
 
