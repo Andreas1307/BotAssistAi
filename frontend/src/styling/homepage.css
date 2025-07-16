@@ -12,10 +12,20 @@
   padding: 20px;
   background: #f1f1f1;
   border: 2px solid #dfdfdf;
-  bottom: 30px;
+  bottom: 17px;
   margin: 0 auto;
   left: 10%;
-  right: 10%
+  right: 10%;
+  border-radius: 15px;
+  z-index: 999;
+}
+.modalNotification p {
+  font-size: 17.5px;
+  color: #333;
+  font-weight: 500;
+}
+.modalNotification p span {
+  color: #00f5d4;
 }
 .hero {
   width: 100%;
