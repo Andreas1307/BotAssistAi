@@ -90,7 +90,7 @@ app.use(cors({
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: save,
+  saveUninitialized: true,
   proxy: true,
   cookie: {
     httpOnly: true,
