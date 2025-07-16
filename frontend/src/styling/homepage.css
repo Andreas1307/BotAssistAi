@@ -10,10 +10,12 @@
   position: absolute;
   max-width: 800px;
   padding: 20px;
-  backface-visibility: #f1f1f1;
+  background: #f1f1f1;
   border: 2px solid #dfdfdf;
-  bottom: 20px;
+  top: 98vh;
   margin: 0 auto;
+  left: 10%;
+  right: 10%
 }
 .hero {
   width: 100%;
