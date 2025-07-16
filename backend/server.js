@@ -303,6 +303,8 @@ app.get('/shopify/callback', async (req, res) => {
   }
 
   if (state !== storedState) {
+    console.log("Stored state:", req.session.shopify_state);
+    console.log("Received state:", req.query.state);
     console.error("❌ CSRF state mismatch");
     return res.status(400).send("Invalid state");
   }
