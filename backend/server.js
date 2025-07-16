@@ -39,7 +39,7 @@ host: process.env.DATABASE_HOST,
 user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
-}).promise()
+}).promise();
 const { shopifyApi } = require('@shopify/shopify-api');
 const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
@@ -86,7 +86,6 @@ app.use(cors({
 
 
 
-// 👇 Must come AFTER CORS
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -94,12 +93,13 @@ app.use(session({
   proxy: true,
   cookie: {
     httpOnly: true,
-    secure: true, // Must be true if HTTPS
-    sameSite: 'none',
-    domain: '.botassistai.com',
+    secure: true,           // must be true on HTTPS
+    sameSite: 'none',       // allow cross-origin
     maxAge: 24 * 60 * 60 * 1000,
-  },
+  }
 }));
+
+
 
 app.use((req, res, next) => {
   res.setHeader(

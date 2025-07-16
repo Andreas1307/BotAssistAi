@@ -16,9 +16,9 @@ const useShopifyInstallRedirect = () => {
     const redirectUri = "https://api.botassistai.com/shopify/callback";
 
     if (isShopifyUser && !hasInstalled && shop && clientId) {
-      const state = generateState();
-      localStorage.setItem("shopifyInstalled", "true");
-      localStorage.setItem("shopifyOAuthState", state);
+     // const state = generateState();
+    //  localStorage.setItem("shopifyInstalled", "true");
+     // localStorage.setItem("shopifyOAuthState", state);
 
       const scope = [
         "read_products",
@@ -29,15 +29,11 @@ const useShopifyInstallRedirect = () => {
         "write_script_tags",
       ].join(",");
 
-      const installUrl =
-        `https://${shop}/admin/oauth/authorize` +
-        `?client_id=${clientId}` +
-        `&scope=${scope}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&state=${state}`;
+      const installUrl = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+      //window.location.href = installUrl;
+      window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
 
-      console.log("➡️ Redirecting to install:", installUrl);
-      window.location.href = installUrl;
+      
     }
   }, []);
 };
