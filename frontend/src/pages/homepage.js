@@ -44,7 +44,7 @@ const Homepage = () => {
   const showPopupToRegister = () => {
     setTimeout(() => {
       setShowModal(true)
-    }, [5000])
+    }, [2000])
   }
 
 
@@ -120,7 +120,7 @@ const Homepage = () => {
             <div className="container">
               {showModal && (
                 <div className="modalNotification">
-                  <p>👋 Welcome! To continue installing BotAssistAI on your Shopify store, please register or log in first.</p>
+                  <p>👋 Welcome! To continue installing <span>BotAssistAI</span> on your Shopify store, please register or log in first.</p>
                 </div>
               )}
               <section className="hero">
