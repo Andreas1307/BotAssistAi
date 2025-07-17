@@ -111,7 +111,18 @@ app.use((req, res, next) => {
   next();
 });
 
+app.post('/shopify/session-attach', (req, res) => {
+  const { userId } = req.body;
 
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  req.session.userId = userId;
+  console.log("✅ Attached userId to session:", userId);
+
+  return res.status(200).json({ success: true });
+});
 
 app.get('/shopify/embedded', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
@@ -230,6 +241,11 @@ app.get('/shopify/install', (req, res) => {
       return res.status(400).send('❌ Invalid shop parameter');
     }
 
+    if (!req.session.userId) {
+      req.session.userId = YOUR_LOGGED_IN_USER_ID_HERE;
+    }
+
+
     const state = crypto.randomBytes(16).toString('hex');
     const host = Buffer.from(shopLower, 'utf8').toString('base64');
 
@@ -287,12 +303,18 @@ async function registerWebhooks(shop, accessToken) {
 
 
 app.get('/shopify/callback', async (req, res) => {
-  const { shop, code, state, hmac } = req.query;
+  const { shop, code, state } = req.query;
   const storedState = req.session.shopify_state;
-  const host = req.query.host || req.session.shopify_host; // Fallback-safe
-  console.log("Stored state:", req.session.shopify_state);
-  console.log("Received state:", req.query.state);
-  if (!isValidShop(shop)) return res.status(400).send('Invalid shop domain');
+  const host = req.query.host || req.session.shopify_host;
+  const userId = req.session.userId;
+
+  console.log("🔐 Stored state:", storedState);
+  console.log("📥 Received state:", state);
+  console.log("🧑 Session userId:", userId);
+
+  if (!isValidShop(shop)) {
+    return res.status(400).send('❌ Invalid shop domain');
+  }
 
   if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
     console.error("❌ HMAC verification failed");
@@ -300,8 +322,6 @@ app.get('/shopify/callback', async (req, res) => {
   }
 
   if (state !== storedState) {
-    console.log("Stored state:", req.session.shopify_state);
-    console.log("Received state:", req.query.state);
     console.error("❌ CSRF state mismatch");
     return res.status(400).send("Invalid state");
   }
@@ -317,31 +337,37 @@ app.get('/shopify/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // ✅ Store in shopify_installs for tracking
+    // ✅ Store in shopify_installs table
     await pool.query(`
       INSERT INTO shopify_installs (shop, access_token, installed_at)
       VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE access_token=?, installed_at=NOW()
+      ON DUPLICATE KEY UPDATE access_token = ?, installed_at = NOW()
     `, [normalizedShop, accessToken, accessToken]);
 
-    // ✅ Associate Shopify store with currently logged-in user
-    const userId = req.session.userId; // Or use JWT auth if you're using tokens
-
+    // ✅ Attach to current logged-in user
     if (userId) {
       await pool.query(`
         UPDATE users
-        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-        WHERE id = ?
+        SET 
+          shopify_shop_domain = ?, 
+          shopify_access_token = ?, 
+          shopify_installed_at = NOW()
+        WHERE user_id = ?
       `, [normalizedShop, accessToken, userId]);
+
+      console.log(`✅ Shopify data saved for user ID ${userId}`);
     } else {
-      console.warn("⚠️ No logged-in user found to attach Shopify data");
+      console.warn("⚠️ No userId in session – data not saved to user");
     }
 
-    // ✅ Register webhooks and script tags
+    // ✅ Register Webhooks and ScriptTags
     await registerScriptTag(normalizedShop, accessToken);
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
+
+    // Optional: clear state from session
+    req.session.shopify_state = null;
 
     const base64Host = host || Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
@@ -349,10 +375,11 @@ app.get('/shopify/callback', async (req, res) => {
       `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${base64Host}`
     );
   } catch (err) {
-    console.error("❌ OAuth failed:", err.response?.data || err.message);
+    console.error("❌ OAuth error:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
   }
 });
+
 
 
 app.get('/shopify/welcome', (req, res) => {
