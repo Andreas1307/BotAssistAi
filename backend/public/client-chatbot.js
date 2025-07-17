@@ -375,7 +375,7 @@
           body: JSON.stringify({ apiKey })
         });
       
-        const text = await res.text();  // <-- safer than .json() if you expect HTML
+        const text = await res.text(); 
         let data;
         try {
           data = JSON.parse(text);
@@ -383,7 +383,6 @@
           throw new Error("Server returned non-JSON: " + text.slice(0, 100));
         }
       
-        console.log("Bot connected:", data);
       } catch (err) {
         console.error("Bot connection failed:", err);
       }

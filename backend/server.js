@@ -1724,7 +1724,6 @@ app.post("/ask-ai", async (req, res) => {
   
   const userId = user.user_id
   user_id = userId
-  // Ensure that userData and userConversationState are initialized for the conversationId
   if (!userData[conversationId]) {
     userData[conversationId] = {
       serviceName: "",
@@ -1816,47 +1815,66 @@ app.post("/ask-ai", async (req, res) => {
   
       let userMessage = message;
   
+
+
+      let systemPrompt = `
+      You are a helpful, concise AI chatbot for customer support on this website: ${webUrl}.
+      Keep answers short (under 30 words), friendly, and direct.
+      
+      Only answer questions related to this website or its products/services. Politely decline unrelated topics.
+      
+      If a user asks a broad or general question, use product categories relevant to the business context: ${business_context}.
+      
+      Never say “I’m not sure.” Always be helpful, even with minimal input.
+      
+      Do not assist with specific order issues. Instead say: "Have you completed all the steps correctly, including payment and confirmation?"
+      `;
+
+     
+      if (businessName) {
+          userMessage = `Hello ${businessName},\n` + userMessage;
+          systemPrompt += `\nThis chatbot represents the business: ${businessName}.`;
+      }
+      
+
       if (business_context) {
           userMessage = `Context: ${business_context}\nUser: ${message}`;
+          systemPrompt += `\nThis business context is important: ${business_context}. Tailor all responses accordingly.`;
       }
   
       if (avoid_topics) {
           userMessage += `\n(Note: Avoid discussing these topics: ${avoid_topics})`;
       }
   
-      if (businessName) {
-          userMessage = `Hello ${businessName},\n` + userMessage;
-      }
+      
   
       if (languages_supported) {
           userMessage += `\n(Preferred languages: ${languages_supported})`;
       }
+      if (businessName) {
+        systemPrompt += `\nThis chatbot represents the business: ${businessName}.`;
+    }
   
       if (uploaded_file) {
           userMessage += `\n(Additional info from uploaded file: ${uploaded_file})`;
+          systemPrompt += `\nThis info from the user may be relevant: ${uploaded_file}`;
       }
   
       if (webUrl) {
-          userMessage += `\n(Reference URL: ${webUrl})`;
-      }
+        userMessage += `\n(Reference URL: ${webUrl})`;
+        systemPrompt += `\nAnswer only questions related to the website: ${webUrl}.`;
+    }
+    
   
-      let systemPrompt = `
-      You are a helpful, concise AI chatbot for customer support on this website: ${webUrl}.
-      Keep answers short (under 30 words), friendly, and direct.
-      
-      Only answer questions related to this website (${webUrl}) or its products/services. Politely refuse anything unrelated.
-      
-      If a user asks a broad or general question (e.g., "What's trending?", "Any gift ideas?", "What are bestsellers?", "What's popular right now?", "What do people usually buy?"), always give a helpful answer using common product types or categories relevant to most businesses (e.g., "Popular choices include skincare kits, gift cards, or wireless earbuds.").
-      
-      If no specific product info is available, suggest common, high-interest items for general relevance. Never say “I’m not sure” or refer users to another page.
-      
-      Always be helpful, even with minimal input.
-      
-      Do not assist with order details. If asked, respond with: "Have you completed all the steps correctly, including payment and confirmation?"
-      `;
+   
+    if (languages_supported) {
+      systemPrompt += `\nThe chatbot should prefer responding in these languages: ${languages_supported}.`;
+  }
+  
+    
   
       if (response_tone) {
-          systemPrompt = `Respond in a ${response_tone} tone.`;
+          systemPrompt += `\nRespond in a ${response_tone} tone.`;
       }
       if (fine_tuning_data) {
           systemPrompt += `\nUse fine-tuned data: ${fine_tuning_data}`;
@@ -1868,6 +1886,14 @@ app.post("/ask-ai", async (req, res) => {
           systemPrompt += `\nRelevant keywords: ${tags}`;
       }
   
+
+      systemPrompt += `
+Avoid vague answers. Provide clear value in every reply.
+Use product or service examples that match the business type.
+Never refer users to another page unless explicitly asked.`;
+
+
+
       const startTime = Date.now();
   
       const response = await openai.chat.completions.create({

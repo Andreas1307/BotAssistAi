@@ -114,7 +114,6 @@ const Dashboard = () => {
   useShopifyInstallRedirect();
 
 
-
   const [shopData, setShopData] = useState(null);
 
   const app = useMemo(() => {
