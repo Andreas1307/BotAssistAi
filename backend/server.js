@@ -111,20 +111,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/shopify/session-attach', (req, res) => {
-  console.log("📦 Received body in session-attach:", req.body);
-
-  const { userId } = req.body;
-
-  if (!userId) {
-    return res.status(400).json({ error: "Missing userId" });
-  }
-
-  req.session.userId = userId;
-  console.log("✅ Attached userId to session:", userId);
-
-  return res.status(200).json({ success: true });
-});
 
 
 app.get('/shopify/embedded', (req, res) => {
@@ -630,6 +616,20 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+app.post('/shopify/session-attach', (req, res) => {
+  console.log("📦 Received body in session-attach:", req.body);
+
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  req.session.userId = userId;
+  console.log("✅ Attached userId to session:", userId);
+
+  return res.status(200).json({ success: true });
+});
 
 
 
