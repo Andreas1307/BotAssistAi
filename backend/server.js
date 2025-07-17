@@ -93,8 +93,9 @@ app.use(session({
   proxy: true,
   cookie: {
     httpOnly: true,
-    secure: true,           // must be true on HTTPS
-    sameSite: 'none',       // allow cross-origin
+    secure: true,          
+    sameSite: 'none',   
+    domain: '.botassistai.com',
     maxAge: 24 * 60 * 60 * 1000,
   }
 }));
@@ -222,22 +223,19 @@ function isValidShop(shop) {
 
 app.get('/shopify/install', (req, res) => {
   try {
-    const { shop, hmac } = req.query;
+    const { shop } = req.query;
     const shopLower = shop?.toLowerCase();
 
-    // 🚫 Validate basic presence and shop format
     if (!shopLower || !isValidShop(shopLower)) {
-      return res.status(400).send('❌ Invalid or missing "shop" parameter');
+      return res.status(400).send('❌ Invalid shop parameter');
     }
 
-   
-    // ✅ Safe to proceed
     const state = crypto.randomBytes(16).toString('hex');
-    let host = req.query.host || Buffer.from(shopLower, 'utf8').toString('base64');
+    const host = Buffer.from(shopLower, 'utf8').toString('base64');
 
     req.session.shopify_state = state;
     req.session.shopify_host = host;
-    console.log("Generated state:", state);
+
     const installUrl =
       `https://${shopLower}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
@@ -246,13 +244,14 @@ app.get('/shopify/install', (req, res) => {
       `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
       `&host=${encodeURIComponent(host)}`;
 
-    console.log("➡️ Redirecting to install URL:", installUrl);
+    console.log("✅ [INSTALL] Generated state:", state);
     return res.redirect(installUrl);
   } catch (err) {
     console.error("❌ /shopify/install failed:", err);
     return res.status(500).send("Internal server error");
   }
 });
+
 
 async function registerWebhooks(shop, accessToken) {
   const topicsToRegister = [
