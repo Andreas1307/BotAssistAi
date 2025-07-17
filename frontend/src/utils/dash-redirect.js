@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import directory from '../directory';
 
 const useShopifyInstallRedirect = () => {
   const [user, setUser] = useState(null);
