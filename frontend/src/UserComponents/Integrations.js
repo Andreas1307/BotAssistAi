@@ -37,22 +37,6 @@ const Integrations = () => {
 
 
 
-  const [shopData, setShopData] = useState(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await authenticatedFetch("/api/shop-data");
-        const data = await res.json();
-        setShopData(data);
-      } catch (err) {
-        console.error("Failed to fetch shop data:", err);
-      }
-    }
-
-    fetchData();
-  }, []);
-
 
 
 
