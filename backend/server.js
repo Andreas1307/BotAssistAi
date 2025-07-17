@@ -112,6 +112,8 @@ app.use((req, res, next) => {
 });
 
 app.post('/shopify/session-attach', (req, res) => {
+  console.log("📦 Received body in session-attach:", req.body);
+
   const { userId } = req.body;
 
   if (!userId) {
@@ -123,6 +125,7 @@ app.post('/shopify/session-attach', (req, res) => {
 
   return res.status(200).json({ success: true });
 });
+
 
 app.get('/shopify/embedded', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
