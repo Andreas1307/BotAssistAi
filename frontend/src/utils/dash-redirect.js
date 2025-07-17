@@ -27,8 +27,8 @@ const useShopifyInstallRedirect = () => {
 
         // 2. Attach userId to session
         await axios.post(
-          "https://api.botassistai.com/shopify/session-attach",
-          { userId: user.user_id },
+          `${directory}/shopify/session-attach`,
+          { userId: user?.user_id },
           { withCredentials: true }
         );
 
