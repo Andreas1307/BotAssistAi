@@ -14,7 +14,7 @@ import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import createApp from "@shopify/app-bridge";
 import axios from "axios";
-import { authenticatedFetch } from "../utils/app-bridge";
+import { getAppBridgeInstance, authenticatedFetch } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
