@@ -50,15 +50,16 @@
       src="https://www.facebook.com/tr?id=1885771515529090&ev=PageView&noscript=1"
     /></noscript>
 
-    
-    <script type="module">
-      import { createApp } from "https://cdn.shopify.com/shopifycloud/app-bridge/v2.js";
-      import { getSessionToken } from "https://cdn.shopify.com/shopifycloud/app-bridge-utils/v2.js";
-    
-      window.appBridge = { createApp };
-      window.appBridgeUtils = { getSessionToken };
-    </script>
-    
+
+<script type="module">
+  import { createApp } from "https://cdn.shopify.com/shopifycloud/app-bridge/v2.js";
+  import { getSessionToken } from "https://cdn.shopify.com/shopifycloud/app-bridge-utils/v2.js";
+
+  window.appBridge = {
+    createApp,
+    getSessionToken,
+  };
+</script>
 
   </head>
   <body>

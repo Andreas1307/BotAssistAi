@@ -116,42 +116,32 @@ const Dashboard = () => {
 
   const [shopData, setShopData] = useState(null);
 
-  const app = useMemo(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const host = urlParams.get("host");
-
-    if (!host || !window.appBridge?.createApp) return null;
-
-    return window.appBridge.createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-  }, []);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const app = getAppBridgeInstance();
         let response;
 
         if (app) {
-          const fetchWithToken = authenticatedFetch(app);
-          response = await fetchWithToken("/api/shop-data");
+          response = await authenticatedFetch("/api/shop-data");
         } else {
-          // fallback for non-embedded dev environments
-          response = await fetch("/api/shop-data");
+          // fallback for local development / unauthenticated
+          response = await fetch("/api/shop-data", {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
         }
 
         const data = await response.json();
         setShopData(data);
       } catch (err) {
-        console.error("❌ Failed to fetch shop data", err);
+        console.error("❌ Failed to fetch shop data:", err);
       }
     };
 
     fetchData();
-  }, [app]);
-
+  }, []);
 
 
 
