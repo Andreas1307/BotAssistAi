@@ -138,11 +138,19 @@ app.get("/auth/embedded", (req, res) => {
 
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
-  const shop = req.shop;
+  try {
+    const shop = req.shop;
 
-  // ✅ Now you know the user is authenticated via App Bridge session token
-  const response = await shopify.api.rest.Shop.all({ session: res.locals.shopify.session });
-  res.json({ shopData: response });
+    // ✅ Shopify REST Admin API
+    const response = await shopify.api.rest.Shop.all({
+      session: res.locals.shopify.session,
+    });
+
+    res.json({ shopData: response });
+  } catch (error) {
+    console.error('Failed to fetch shop data', error);
+    res.status(500).send('Error fetching shop data');
+  }
 });
 
 function verifyHMAC(queryParams, secret) {
