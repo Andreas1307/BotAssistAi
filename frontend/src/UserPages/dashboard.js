@@ -12,7 +12,6 @@ import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
-import createApp from "@shopify/app-bridge";
 import axios from "axios";
 import { getAppBridgeInstance, authenticatedFetch } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";

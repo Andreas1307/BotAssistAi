@@ -11,13 +11,19 @@ export function getAppBridgeInstance() {
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host");
 
-  // App Bridge from CDN must be loaded globally
-  if (!host || !window.appBridge?.createApp) {
-    console.warn("⚠️ App Bridge not available or host missing");
+  if (!host) {
+    console.warn("❌ Missing host in URL");
     return null;
   }
 
-  appInstance = window.appBridge.createApp({
+  if (!window.appBridge || !window.appBridge.createApp) {
+    console.warn("❌ App Bridge not loaded yet");
+    return null;
+  }
+
+  const createApp = window.appBridge.createApp;
+
+  appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: true,
