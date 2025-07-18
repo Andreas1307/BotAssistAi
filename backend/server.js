@@ -643,36 +643,6 @@ app.post('/shopify/session-attach', (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 app.post("/paypal/webhook", async (req, res) => {
   const { orderID, userId } = req.body;
 
@@ -1829,13 +1799,19 @@ app.post("/ask-ai", async (req, res) => {
       You are a helpful, concise AI chatbot for customer support on this website: ${webUrl}.
       Keep answers short (under 30 words), friendly, and direct.
       
-      Only answer questions related to this website or its products/services. Politely decline unrelated topics.
+      Only answer questions related to this website or its products/services. Politely decline unrelated topics.And be sure of what that bussines does , like they either sell products or provide services.
       
       If a user asks a broad or general question, use product categories relevant to the business context: ${business_context}.
       
       Never say “I’m not sure.” Always be helpful, even with minimal input.
       
       Do not assist with specific order issues. Instead say: "Have you completed all the steps correctly, including payment and confirmation?"
+      
+      Also if you get asked a question about a product or service I need you to go to that product/service on ${webUrl}, find it, and give it back to the person asked about that product.
+      
+      Give your absolute best to staisfy the customer and answer his questions or requiremnts in the best way possible.
+
+      And don't say in the answer that you give back "you can check out our website for more" because you are already on the website and that answer is no useful to the customer, you go to this ${webUrl} and check what the customer asked you.
       `;
 
      
@@ -2511,7 +2487,6 @@ app.post("/user-training", async (req, res) => {
     }
 
     const [rows] = await pool.query("SELECT * FROM faq WHERE username = ?", [username]);
-    console.log("DB QUERY RESULT:", rows);
 
     if (rows.length > 0) {
       const training = rows[0];
