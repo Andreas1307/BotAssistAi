@@ -139,19 +139,19 @@ app.get("/auth/embedded", (req, res) => {
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
-    const shop = req.shop;
+    const session = res.locals.shopify.session;
 
-    // ✅ Shopify REST Admin API
     const response = await shopify.api.rest.Shop.all({
-      session: res.locals.shopify.session,
+      session,
     });
 
     res.json({ shopData: response });
   } catch (error) {
-    console.error('Failed to fetch shop data', error);
+    console.error('❌ Failed to fetch shop data:', error);
     res.status(500).send('Error fetching shop data');
   }
 });
+
 
 function verifyHMAC(queryParams, secret) {
   const { hmac, ...rest } = queryParams;

@@ -1,4 +1,4 @@
-// middleware/verify-session-token.js ✅
+// middleware/verify-session-token.js
 const { Shopify } = require('@shopify/shopify-api');
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -6,21 +6,25 @@ module.exports = async function verifySessionToken(req, res, next) {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.replace(/^Bearer\s/, '');
 
-    const payload = await Shopify.Utils.decodeSessionToken(token);
-    const shop = payload.dest.replace('https://', '');
+    if (!token) {
+      return res.status(401).send("Missing session token");
+    }
 
-    // OPTIONAL: Store token/session for real use
-    req.shop = shop;
+    const payload = await Shopify.Utils.decodeSessionToken(token);
+
+    const shop = payload.dest.replace(/^https:\/\//, "");
+
     res.locals.shopify = {
       session: {
         shop,
-        accessToken: process.env.SHOPIFY_ADMIN_TOKEN, // <-- use private token here
+        accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN, // for private apps or test tokens
       },
     };
 
+    req.shop = shop;
     next();
   } catch (err) {
-    console.error('Invalid session token', err);
-    return res.status(401).send('Unauthorized');
+    console.error("❌ Invalid session token", err);
+    return res.status(401).send("Unauthorized");
   }
 };

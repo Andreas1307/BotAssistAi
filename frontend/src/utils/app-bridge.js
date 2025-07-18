@@ -1,6 +1,6 @@
 // app-bridge.js
-import createApp from "@shopify/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
+const createApp = window.appBridge.createApp;
+const getSessionToken = window.appBridgeUtils.getSessionToken;
 
 let appInstance = null;
 

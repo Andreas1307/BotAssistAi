@@ -120,33 +120,35 @@ const Dashboard = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
 
-    if (!host) return null;
+    if (!host || !window.appBridge?.createApp) return null;
 
-    return createApp({
+    return window.appBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
       forceRedirect: true,
     });
   }, []);
 
-
-
   useEffect(() => {
-    async function fetchData() {
-      if (!app) {
-        // For non-Shopify users, fallback to a normal fetch (no auth token)
-        const res = await fetch("/api/shop-data");
-        const data = await res.json();
+    const fetchData = async () => {
+      try {
+        let response;
+
+        if (app) {
+          const fetchWithToken = authenticatedFetch(app);
+          response = await fetchWithToken("/api/shop-data");
+        } else {
+          // fallback for non-embedded dev environments
+          response = await fetch("/api/shop-data");
+        }
+
+        const data = await response.json();
         setShopData(data);
-        return;
+      } catch (err) {
+        console.error("❌ Failed to fetch shop data", err);
       }
-  
-      const fetchWithToken = authenticatedFetch(app);
-      const res = await fetchWithToken("/api/shop-data");
-      const data = await res.json();
-      setShopData(data);
-    }
-  
+    };
+
     fetchData();
   }, [app]);
 
