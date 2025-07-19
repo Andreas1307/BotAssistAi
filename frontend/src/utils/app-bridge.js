@@ -1,46 +1,51 @@
+import createApp from "@shopify/app-bridge";
+import { getSessionToken } from "@shopify/app-bridge-utils";
+
 let appInstance = null;
 
-/**
- * Returns a singleton App Bridge instance using the globally created app
- */
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  if (!window.appBridge || !window.appBridge.app) {
-    console.warn("❌ App Bridge not initialized via global script.");
+  const urlParams = new URLSearchParams(window.location.search);
+  const host = urlParams.get("host");
+
+  if (!host) {
+    console.warn("❌ Missing host in URL");
     return null;
   }
 
-  appInstance = window.appBridge.app;
+  appInstance = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, // Must be set in your .env
+    host,
+    forceRedirect: true,
+  });
+
   return appInstance;
 }
 
-/**
- * Authenticated fetch using App Bridge session token
- */
 export async function authenticatedFetch(url, options = {}) {
   const app = getAppBridgeInstance();
 
-  if (!app || !window.appBridge?.getSessionToken) {
-    console.warn("⚠️ App Bridge or session token utility not available. Falling back to regular fetch.");
+  if (!app) {
+    console.warn("⚠️ App Bridge not available. Falling back to regular fetch.");
     return fetch(url, {
       ...options,
       headers: {
-        ...options.headers,
         "Content-Type": "application/json",
+        ...options.headers,
       },
     });
   }
 
   try {
-    const token = await window.appBridge.getSessionToken(app);
+    const token = await getSessionToken(app);
 
     return fetch(url, {
       ...options,
       headers: {
-        ...options.headers,
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        ...options.headers,
       },
     });
   } catch (err) {
