@@ -9,8 +9,9 @@ export function useShopifyInstalled() {
 
     if (host) {
       setShopifyInstalled(true);
+      console.log("hello hello")
     }
   }, []);
-
+  console.log("hello")
   return shopifyInstalled;
 }
