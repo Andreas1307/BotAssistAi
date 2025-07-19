@@ -809,7 +809,7 @@ if (loading) {
           </div>
           <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
             <h2><FaChartLine className="stat-icon" /> Resolved Requests</h2>
-            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : resolvedQueries}</p>
+            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : resolvedQueries / 2}</p>
           </div>
           <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
             <h2><FaClock className="stat-icon" /> Response Time</h2>

@@ -1,9 +1,7 @@
-// src/utils/app-bridge.js
-
 let appInstance = null;
 
 /**
- * Returns a singleton App Bridge instance
+ * Returns a singleton App Bridge instance using the global script-loaded version
  */
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
@@ -12,20 +10,18 @@ export function getAppBridgeInstance() {
   const host = urlParams.get("host");
 
   if (!host) {
-    console.warn("❌ Missing host in URL");
+    console.warn("❌ Missing 'host' parameter in URL");
     return null;
   }
 
   if (!window.appBridge || !window.appBridge.createApp) {
-    console.warn("❌ App Bridge not loaded yet");
+    console.warn("❌ Shopify App Bridge not loaded. Make sure the CDN script is included.");
     return null;
   }
 
-  const createApp = window.appBridge.createApp;
-
-  appInstance = createApp({
+  appInstance = window.appBridge.createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
+    host: host,
     forceRedirect: true,
   });
 
@@ -38,8 +34,8 @@ export function getAppBridgeInstance() {
 export async function authenticatedFetch(url, options = {}) {
   const app = getAppBridgeInstance();
 
-  // Fallback fetch if outside embedded app (no App Bridge)
-  if (!app || !window.appBridge?.getSessionToken) {
+  if (!app || !window.appBridgeUtils?.getSessionToken) {
+    console.warn("⚠️ App Bridge or session token utility not available. Falling back to regular fetch.");
     return fetch(url, {
       ...options,
       headers: {
@@ -50,7 +46,7 @@ export async function authenticatedFetch(url, options = {}) {
   }
 
   try {
-    const token = await window.appBridge.getSessionToken(app);
+    const token = await window.appBridgeUtils.getSessionToken(app);
 
     return fetch(url, {
       ...options,
@@ -61,7 +57,7 @@ export async function authenticatedFetch(url, options = {}) {
       },
     });
   } catch (err) {
-    console.error("❌ Failed to retrieve session token:", err);
+    console.error("❌ Failed to get session token from App Bridge:", err);
     throw err;
   }
 }
