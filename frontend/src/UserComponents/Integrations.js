@@ -15,6 +15,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow } from "date-fns";
 import axios from "axios";
 import { authenticatedFetch } from "../utils/app-bridge";
+import { useShopifyInstalled } from "../utils/useShopifyInstalled";
 const Integrations = () => {
   const [bgColor, setBgColor] = useState("#007bff");
   const [position, setPosition] = useState("bottom-right");
@@ -32,6 +33,7 @@ const Integrations = () => {
   const [lastConnected, setLastConnected] = useState(null);
   const [connected, setConnected] = useState(false);
   const [aiBot, setAiBot] = useState(false);
+  const shopifyInstalled = useShopifyInstalled();
   let toastId;
 
 
@@ -639,7 +641,9 @@ const Integrations = () => {
         <input type={show ? "text" : "password"} value={apiKey} readOnly />
       </div>
 
-      <div className="code-snippet">
+      {!shopifyInstalled && (
+
+           <div className="code-snippet">
         <div className="languages">
           <h3>
             <FaCode className="code-icon" />
@@ -666,6 +670,8 @@ const Integrations = () => {
           <FaCopy /> {copied ? "Copied!" : "Copy Code"}
         </button>
       </div>
+      )}
+   
 
       <div>
         <ToastContainer />
