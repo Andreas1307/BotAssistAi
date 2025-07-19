@@ -1,7 +1,9 @@
+// src/utils/app-bridge.js
+
 let appInstance = null;
 
 /**
- * Returns a singleton App Bridge instance using the global script-loaded version
+ * Returns a singleton App Bridge instance
  */
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
@@ -10,18 +12,20 @@ export function getAppBridgeInstance() {
   const host = urlParams.get("host");
 
   if (!host) {
-    console.warn("❌ Missing 'host' parameter in URL");
+    console.warn("❌ Missing host in URL");
     return null;
   }
 
   if (!window.appBridge || !window.appBridge.createApp) {
-    console.warn("❌ Shopify App Bridge not loaded. Make sure the CDN script is included.");
+    console.warn("❌ App Bridge not loaded yet");
     return null;
   }
 
-  appInstance = window.appBridge.createApp({
+  const createApp = window.appBridge.createApp;
+
+  appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host: host,
+    host,
     forceRedirect: true,
   });
 
@@ -35,7 +39,7 @@ export async function authenticatedFetch(url, options = {}) {
   const app = getAppBridgeInstance();
 
   if (!app || !window.appBridgeUtils?.getSessionToken) {
-    console.warn("⚠️ App Bridge or session token utility not available. Falling back to regular fetch.");
+    console.warn("⚠️ Using unauthenticated fetch");
     return fetch(url, {
       ...options,
       headers: {
@@ -57,7 +61,7 @@ export async function authenticatedFetch(url, options = {}) {
       },
     });
   } catch (err) {
-    console.error("❌ Failed to get session token from App Bridge:", err);
+    console.error("❌ Failed to get session token:", err);
     throw err;
   }
 }

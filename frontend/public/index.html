@@ -51,21 +51,16 @@
     /></noscript>
 
 
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge-utils.js"></script>
-    
-    <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const host = urlParams.get("host");
-    
-      const app = window.appBridge.createApp({
-        apiKey: "f6248b498ce7ac6b85e6c87d01154377", 
-        host: host,
-        forceRedirect: true,
-      });
-    
-      window.app = app;
+<script type="module">
+  import { createApp } from "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+  import { getSessionToken } from "https://cdn.shopify.com/shopifycloud/app-bridge-utils.js";
+
+  window.appBridge = {
+    createApp,
+    getSessionToken,
+  };
 </script>
+
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
