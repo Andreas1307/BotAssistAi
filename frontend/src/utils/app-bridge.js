@@ -22,7 +22,7 @@ export function getAppBridgeInstance() {
   appInstance = window.appBridge.createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host: host,
-    forceRedirect: true,
+    forceRedirect: window.top === window.self,
   });
 
   return appInstance;
