@@ -51,27 +51,15 @@
     /></noscript>
 
 
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<script type="module">
+  import { createApp } from "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+  import { getSessionToken } from "https://cdn.shopify.com/shopifycloud/app-bridge-utils.js";
 
-    <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const shop = urlParams.get("shop");
-      const host = urlParams.get("host");
-    
-      // 🚨 If app is NOT inside the Shopify Admin (i.e., not in iframe)
-      if (window.top === window.self) {
-        const redirectUrl = `/auth/enable_cookies?shop=${shop}`;
-        window.location.assign(redirectUrl);
-      }
-    
-      const app = window.appBridge.createApp({
-        apiKey: "f6248b498ce7ac6b85e6c87d01154377",
-        host,
-        forceRedirect: true, // ✅ Required AFTER embedded load
-      });
-    
-      window.app = app;
-    </script>
+  window.appBridge = {
+    createApp,
+    getSessionToken,
+  };
+</script>
 
   </head>
   <body>
