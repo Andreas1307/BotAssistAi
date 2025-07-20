@@ -137,21 +137,22 @@ app.get("/auth/embedded", (req, res) => {
 });
 
 
-app.get('/api/shop-data', verifySessionToken, async (req, res) => {
+app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
     const session = res.locals.shopify.session;
 
     if (!session) {
-      return res.status(401).json({ error: "No session found" });
+      return res.status(401).json({ error: "Missing session" });
     }
 
     const shop = await shopify.api.rest.Shop.all({ session });
-    res.status(200).json({ shopData: shop });
-  } catch (error) {
-    console.error("❌ Failed to fetch shop data:", error);
-    res.status(500).json({ error: "Server error fetching shop data" });
+    return res.status(200).json({ shopData: shop });
+  } catch (err) {
+    console.error("❌ Backend shop-data error:", err);
+    return res.status(500).json({ error: "Internal error fetching shop data" });
   }
 });
+
 
 
 
