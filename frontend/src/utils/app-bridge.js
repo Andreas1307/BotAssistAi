@@ -1,7 +1,8 @@
 // appBridgeClient.js
 
 import createApp from "@shopify/app-bridge";
-import { authenticatedFetch } from "@shopify/app-bridge/utilities";
+import { authenticatedFetch } from "@shopify/app-bridge-utils";
+
 
 let appInstance = null;
 
