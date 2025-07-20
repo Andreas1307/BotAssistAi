@@ -104,16 +104,16 @@ app.use(session({
 
 app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
-    const session = res.locals.shopify.session;
+    const session = res.locals.shopify?.session;
 
     if (!session) {
-      return res.status(401).json({ error: "Missing session" });
+      return res.status(401).json({ error: "Missing session" }); // Ensure this is JSON!
     }
 
     const shop = await shopify.api.rest.Shop.all({ session });
     return res.status(200).json({ shopData: shop });
   } catch (err) {
-    console.error("❌ Backend shop-data error:", err);
+    console.error("❌ Backend shop-data error:", err.message);
     return res.status(500).json({ error: "Internal error fetching shop data" });
   }
 });
