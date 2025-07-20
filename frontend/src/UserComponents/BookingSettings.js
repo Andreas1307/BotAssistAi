@@ -730,7 +730,6 @@ for (const [day, { blocked }] of Object.entries(workingHours)) {
   
       const raw = res.data.hours;
       if (!raw) {
-        console.warn("No working hours found for user yet.");
         return;
       }
 

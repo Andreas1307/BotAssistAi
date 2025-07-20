@@ -20,20 +20,15 @@ export function getAppBridgeInstance() {
     return null;
   }
 
-  const isEmbedded = window.top !== window.self;
-
-  appInstance = createApp({
+  const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: isEmbedded, // ✅ only redirect if embedded
+    host: host,
+    forceRedirect: window.top !== window.self,
   });
 
-  return appInstance;
+  appInstance = app;
+  return app;
 }
-
-
-
-
 
 
 export async function authenticatedFetch(url, options = {}) {

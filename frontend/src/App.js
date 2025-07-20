@@ -8,9 +8,10 @@ import { detectShopifyUser } from "./utils/detectShopify";
 function App() {
 
   useEffect(() => {
-    ensureEmbeddedApp(); // only runs once on mount
-  }, []);
+    ensureEmbeddedApp(); 
+    
   detectShopifyUser();
+  }, []);
   return (
     <>
       <Helmet>
