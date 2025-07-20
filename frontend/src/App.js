@@ -6,11 +6,11 @@ import Integrations from "./UserComponents/Integrations";
 import { ensureEmbeddedApp } from './utils/redirectToEmbeddedApp';
 import { detectShopifyUser } from "./utils/detectShopify";
 function App() {
-  detectShopifyUser();
+
   useEffect(() => {
     ensureEmbeddedApp(); // only runs once on mount
   }, []);
-
+  detectShopifyUser();
   return (
     <>
       <Helmet>

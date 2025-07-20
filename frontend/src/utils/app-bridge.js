@@ -1,26 +1,17 @@
-// utils/app-bridge.js
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 
 let appInstance = null;
 
-/**
- * Gets the App Bridge instance using host from URL or localStorage
- */
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  let host;
-
-  // Check URL first
   const urlParams = new URLSearchParams(window.location.search);
-  host = urlParams.get("host");
+  let host = urlParams.get("host");
 
-  // If found in URL, store it
   if (host) {
     localStorage.setItem("host", host);
   } else {
-    // Otherwise, try localStorage
     host = localStorage.getItem("host");
   }
 
@@ -29,17 +20,22 @@ export function getAppBridgeInstance() {
     return null;
   }
 
+  const isEmbedded = window.top !== window.self;
+
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true,
+    forceRedirect: isEmbedded, // ✅ only redirect if embedded
   });
 
   return appInstance;
 }
-/**
- * Authenticated fetch using session token
- */
+
+
+
+
+
+
 export async function authenticatedFetch(url, options = {}) {
   const app = getAppBridgeInstance();
 
