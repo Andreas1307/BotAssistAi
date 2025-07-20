@@ -13,7 +13,7 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "axios";
-import { getAppBridgeInstance, authenticatedFetch } from "../utils/app-bridge";
+import { fetchWithAuth } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
@@ -118,28 +118,22 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const app = getAppBridgeInstance();
-  
-        const response = app
-          ? await authenticatedFetch("/api/shop-data")
-          : await fetch("/api/shop-data", {
-              headers: { "Content-Type": "application/json" },
-            });
-  
+        const response = await fetchWithAuth("/api/shop-data");
+
         const contentType = response.headers.get("content-type");
-  
+
         if (!contentType || !contentType.includes("application/json")) {
           const text = await response.text();
-          throw new Error(`Expected JSON but got: ${text.substring(0, 200)}`);
+          throw new Error(`Expected JSON but got: ${text.slice(0, 200)}`);
         }
-  
-        const data = await response.json();
-        setShopData(data);
+
+        const json = await response.json();
+        setShopData(json.shopData); // depends on your backend shape
       } catch (err) {
         console.error("❌ Failed to fetch shop data:", err);
       }
     };
-  
+
     fetchData();
   }, []);
 

@@ -1,5 +1,7 @@
+// appBridgeClient.js
+
 import createApp from "@shopify/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
+import { authenticatedFetch } from "@shopify/app-bridge/utilities";
 
 let appInstance = null;
 
@@ -7,18 +9,14 @@ export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   const urlParams = new URLSearchParams(window.location.search);
-  let host = urlParams.get("host");
-
-  if (host) {
-    localStorage.setItem("host", host);
-  } else {
-    host = localStorage.getItem("host");
-  }
+  let host = urlParams.get("host") || localStorage.getItem("host");
 
   if (!host) {
-    console.warn("❌ Missing host in URL and localStorage");
+    console.warn("❌ Missing host param in URL or localStorage");
     return null;
   }
+
+  localStorage.setItem("host", host);
 
   const isEmbedded = window.top !== window.self;
 
@@ -26,20 +24,19 @@ export function getAppBridgeInstance() {
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
-    // ✅ DISABLE performance tracking to fix `onLCP` error
     performance: {
-      webVitals: false,
+      webVitals: false, // ✅ This disables onLCP and prevents crash
     },
   });
 
   return appInstance;
 }
 
-export async function authenticatedFetch(url, options = {}) {
+export function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
 
   if (!app) {
-    console.warn("⚠️ App Bridge not available. Falling back to regular fetch.");
+    console.warn("⚠️ App Bridge not initialized. Using regular fetch.");
     return fetch(url, {
       ...options,
       headers: {
@@ -49,19 +46,13 @@ export async function authenticatedFetch(url, options = {}) {
     });
   }
 
-  try {
-    const token = await getSessionToken(app);
+  const fetchFunction = authenticatedFetch(app);
 
-    return fetch(url, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-  } catch (err) {
-    console.error("❌ Failed to get session token from App Bridge:", err);
-    throw err;
-  }
+  return fetchFunction(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 }
