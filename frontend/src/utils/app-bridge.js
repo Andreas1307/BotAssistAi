@@ -25,7 +25,7 @@ export function getAppBridgeInstance() {
     host,
     forceRedirect: isEmbedded,
     performance: {
-      webVitals: false, // ✅ This disables onLCP and prevents crash
+      webVitals: false,
     },
   });
 

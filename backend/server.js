@@ -102,6 +102,22 @@ app.use(session({
 
 
 
+app.get("/api/shop-data", verifySessionToken, async (req, res) => {
+  try {
+    const session = res.locals.shopify.session;
+
+    if (!session) {
+      return res.status(401).json({ error: "Missing session" });
+    }
+
+    const shop = await shopify.api.rest.Shop.all({ session });
+    return res.status(200).json({ shopData: shop });
+  } catch (err) {
+    console.error("❌ Backend shop-data error:", err);
+    return res.status(500).json({ error: "Internal error fetching shop data" });
+  }
+});
+
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
@@ -136,22 +152,6 @@ app.get("/auth/embedded", (req, res) => {
   return res.redirect(redirectUrl);
 });
 
-
-app.get("/api/shop-data", verifySessionToken, async (req, res) => {
-  try {
-    const session = res.locals.shopify.session;
-
-    if (!session) {
-      return res.status(401).json({ error: "Missing session" });
-    }
-
-    const shop = await shopify.api.rest.Shop.all({ session });
-    return res.status(200).json({ shopData: shop });
-  } catch (err) {
-    console.error("❌ Backend shop-data error:", err);
-    return res.status(500).json({ error: "Internal error fetching shop data" });
-  }
-});
 
 
 
