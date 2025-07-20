@@ -139,21 +139,20 @@ app.get("/auth/embedded", (req, res) => {
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
-    const session = res.locals.shopify?.session;
+    const session = res.locals.shopify.session;
 
     if (!session) {
-      console.warn('❌ No Shopify session found');
-      return res.status(401).send('Unauthorized');
+      return res.status(401).json({ error: "No session found" });
     }
 
-    const response = await shopify.api.rest.Shop.current({ session });
-
-    res.json({ shopData: response.data }); // ✅ Use .data to return only the shop info
+    const shop = await shopify.api.rest.Shop.all({ session });
+    res.status(200).json({ shopData: shop });
   } catch (error) {
-    console.error('❌ Failed to fetch shop data:', error);
-    res.status(500).send('Error fetching shop data');
+    console.error("❌ Failed to fetch shop data:", error);
+    res.status(500).json({ error: "Server error fetching shop data" });
   }
 });
+
 
 
 

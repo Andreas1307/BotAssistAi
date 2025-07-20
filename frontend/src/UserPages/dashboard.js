@@ -119,21 +119,27 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const app = getAppBridgeInstance();
-
+  
         const response = app
           ? await authenticatedFetch("/api/shop-data")
           : await fetch("/api/shop-data", {
               headers: { "Content-Type": "application/json" },
             });
-
+  
+        const contentType = response.headers.get("content-type");
+  
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          throw new Error(`Expected JSON but got: ${text.substring(0, 200)}`);
+        }
+  
         const data = await response.json();
-
         setShopData(data);
       } catch (err) {
         console.error("❌ Failed to fetch shop data:", err);
       }
     };
-
+  
     fetchData();
   }, []);
 

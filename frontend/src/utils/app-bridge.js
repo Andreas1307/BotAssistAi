@@ -26,7 +26,7 @@ export function getAppBridgeInstance() {
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
-    // ✅ Disable App Bridge Web Vitals collection (the cause of onLCP)
+    // ✅ DISABLE performance tracking to fix `onLCP` error
     performance: {
       webVitals: false,
     },
@@ -34,7 +34,6 @@ export function getAppBridgeInstance() {
 
   return appInstance;
 }
-
 
 export async function authenticatedFetch(url, options = {}) {
   const app = getAppBridgeInstance();
