@@ -6,7 +6,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     const session = await Shopify.Utils.loadCurrentSession(req, res, true);
 
     if (!session || !session.accessToken) {
-      return res.status(401).send("Unauthorized");
+      console.warn("🔒 No valid session. Sending JSON 401.");
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     res.locals.shopify = { session };
@@ -14,6 +15,6 @@ module.exports = async function verifySessionToken(req, res, next) {
     next();
   } catch (err) {
     console.error("❌ Failed to validate session token:", err);
-    return res.status(401).send("Unauthorized");
+    return res.status(401).json({ error: "Session validation failed" });
   }
 };
