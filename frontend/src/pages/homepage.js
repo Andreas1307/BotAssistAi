@@ -51,7 +51,6 @@ const Homepage = () => {
 
   useEffect(() => {
     const isShopifyUser = detectShopifyUser();
-    console.log(isShopifyUser)
     if (isShopifyUser) {
       showPopupToRegister();
     }
