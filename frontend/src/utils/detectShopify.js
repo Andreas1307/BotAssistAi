@@ -5,14 +5,12 @@ export function detectShopifyUser() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  // Shopify shop domain should always be present if embedded properly
-  if (shop && host) {
-    localStorage.setItem("shopifyUser", "true");
-    localStorage.setItem("shop", shop);
-    localStorage.setItem("host", host);
-    return true;
-  }
+  if (shop) localStorage.setItem("shop", shop);
+  if (host) localStorage.setItem("host", host);
 
-  console.warn("❌ Missing shop or host parameter in URL.");
-  return false;
+  // Consider as Shopify user if either shop or host is present
+  const isShopify = !!(shop || host);
+  localStorage.setItem("shopifyUser", isShopify ? "true" : "false");
+
+  return isShopify;
 }
