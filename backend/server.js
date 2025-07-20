@@ -105,10 +105,11 @@ app.use(session({
 app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
     const session = res.locals.shopify?.session;
-
+ console.log("Request to /api/shop-data, session:", res.locals.shopify?.session);
     if (!session) {
       return res.status(401).json({ error: "Missing session" });
     }
+   
 
     const shop = await shopify.api.rest.Shop.get({ session, id: session.shop });
     return res.status(200).json({ shopData: shop });
