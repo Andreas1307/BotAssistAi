@@ -119,23 +119,28 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const response = await fetchWithAuth("/api/shop-data");
-
-        const contentType = response.headers.get("content-type");
-
-        if (!contentType || !contentType.includes("application/json")) {
+  
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`API error: ${response.status} ${response.statusText} - ${text.slice(0, 200)}`);
+        }
+  
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
           const text = await response.text();
           throw new Error(`Expected JSON but got: ${text.slice(0, 200)}`);
         }
-
+  
         const json = await response.json();
-        setShopData(json.shopData); // depends on your backend shape
+        setShopData(json.shopData);
       } catch (err) {
         console.error("❌ Failed to fetch shop data:", err);
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
 
 
