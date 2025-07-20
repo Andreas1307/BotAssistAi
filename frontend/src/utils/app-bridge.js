@@ -20,14 +20,19 @@ export function getAppBridgeInstance() {
     return null;
   }
 
-  const app = createApp({
+  const isEmbedded = window.top !== window.self;
+
+  appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host: host,
-    forceRedirect: window.top !== window.self,
+    host,
+    forceRedirect: isEmbedded,
+    // ✅ Disable App Bridge Web Vitals collection (the cause of onLCP)
+    performance: {
+      webVitals: false,
+    },
   });
 
-  appInstance = app;
-  return app;
+  return appInstance;
 }
 
 
