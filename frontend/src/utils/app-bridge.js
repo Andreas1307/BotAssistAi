@@ -24,9 +24,6 @@ export function getAppBridgeInstance() {
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
-    performance: {
-      webVitals: false,
-    },
   });
 
   return appInstance;
