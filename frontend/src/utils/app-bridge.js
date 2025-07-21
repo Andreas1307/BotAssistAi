@@ -2,10 +2,7 @@ import { authenticatedFetch } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
 
-/**
- * Polls until AppBridge is available on the window object
- */
-function waitForAppBridge(timeout = 5000) {
+function waitForAppBridge(timeout = 10000) { // 10 seconds timeout
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
@@ -13,6 +10,7 @@ function waitForAppBridge(timeout = 5000) {
       const bridge = window?.Shopify?.AppBridge;
 
       if (bridge && typeof bridge.createApp === 'function') {
+        console.log("✅ AppBridge is ready");
         return resolve(bridge);
       }
 
@@ -42,6 +40,9 @@ export async function getAppBridgeInstance() {
 
   try {
     const AppBridge = await waitForAppBridge();
+
+    console.log("Creating AppBridge instance with host:", host);
+    console.log("Shopify API Key:", process.env.REACT_APP_SHOPIFY_API_KEY);
 
     appInstance = AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
