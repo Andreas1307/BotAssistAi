@@ -9,13 +9,20 @@ export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   try {
-    await loadShopifyAppBridgeScripts(); // Ensure scripts are loaded first
+    await loadShopifyAppBridgeScripts(); // dynamically loads app-bridge.js
   } catch (err) {
     console.error("❌ Failed to load App Bridge scripts", err);
     throw err;
   }
 
-  const createApp = window.appBridge?.createApp;
+  const appBridgeModule = window["app-bridge"];
+  const createApp = appBridgeModule?.default || appBridgeModule?.createApp;
+
+  if (!createApp) {
+    console.error("❌ App Bridge createApp is still undefined after script load");
+    return null;
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
 
@@ -27,11 +34,6 @@ export async function getAppBridgeInstance() {
   localStorage.setItem("host", host);
   const isEmbedded = window.top !== window.self;
 
-  if (!createApp) {
-    console.error("❌ App Bridge createApp is still undefined after load");
-    return null;
-  }
-
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -40,6 +42,7 @@ export async function getAppBridgeInstance() {
 
   return appInstance;
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
   const app = await getAppBridgeInstance();
