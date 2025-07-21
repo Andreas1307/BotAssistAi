@@ -1,16 +1,29 @@
 // appBridgeClient.js
-import { loadShopifyAppBridgeScripts } from "./loadShopifyAppBridge";
 const authenticatedFetch = window?.Shopify?.AppBridge?.Utils?.authenticatedFetch;
 
 function waitForAppBridgeLoad(timeout = 10000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
-    const check = () => {
-      if (window.Shopify?.AppBridge?.createApp) return resolve(window.Shopify.AppBridge.createApp);
-      if (Date.now() - start > timeout) return reject(new Error("Timed out waiting for AppBridge to load"));
-      requestAnimationFrame(check);
-    };
-    check();
+
+    function checkReady() {
+      const isReady = typeof window.Shopify?.AppBridge?.createApp === "function";
+
+      if (isReady) {
+        return resolve(window.Shopify.AppBridge.createApp);
+      }
+
+      if (Date.now() - start >= timeout) {
+        return reject(new Error("Timed out waiting for AppBridge to load"));
+      }
+
+      setTimeout(checkReady, 100);
+    }
+
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      checkReady();
+    } else {
+      window.addEventListener("DOMContentLoaded", checkReady);
+    }
   });
 }
 
