@@ -21,7 +21,12 @@ export function getAppBridgeInstance() {
 
   const isEmbedded = window.top !== window.self;
 
-  appInstance = window.appBridge.createApp({
+  if (!createApp) {
+    console.error("❌ App Bridge script not loaded or createApp is undefined");
+    return null;
+  }
+  
+  appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
