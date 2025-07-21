@@ -14,7 +14,6 @@ function waitForAppBridgeLoad(timeout = 10000) {
   });
 }
 
-
 let appInstance = null;
 
 export async function getAppBridgeInstance() {
@@ -28,7 +27,6 @@ export async function getAppBridgeInstance() {
   }
 
   const createApp = window.Shopify.AppBridge.createApp;
-
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
 
@@ -38,6 +36,7 @@ export async function getAppBridgeInstance() {
   }
 
   localStorage.setItem("host", host);
+
   const isEmbedded = window.top !== window.self;
 
   appInstance = createApp({
@@ -48,7 +47,6 @@ export async function getAppBridgeInstance() {
 
   return appInstance;
 }
- 
 
 
 export async function fetchWithAuth(url, options = {}) {
