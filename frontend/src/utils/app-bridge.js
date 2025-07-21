@@ -8,6 +8,8 @@ function waitForAppBridgeLoad(timeout = 10000) {
 
     function checkReady() {
       const createApp = window?.Shopify?.AppBridge?.createApp;
+      console.log('Checking AppBridge:', createApp ? 'Found' : 'Not yet');
+
       if (typeof createApp === "function") return resolve(createApp);
 
       if (Date.now() - start >= timeout) {
@@ -17,9 +19,10 @@ function waitForAppBridgeLoad(timeout = 10000) {
       setTimeout(checkReady, 100);
     }
 
-    checkReady(); // start immediately
+    checkReady();
   });
 }
+
 
 export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
