@@ -3,7 +3,6 @@
 const createApp = window.appBridge.default;
 const { authenticatedFetch } = window.appBridgeUtils;
 
-
 let appInstance = null;
 
 export function getAppBridgeInstance() {
@@ -21,7 +20,7 @@ export function getAppBridgeInstance() {
 
   const isEmbedded = window.top !== window.self;
 
-  appInstance = window.appBridge.default({
+  appInstance = window.appBridge.createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
@@ -33,7 +32,7 @@ export function getAppBridgeInstance() {
 export function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
 
-  if (!app) {
+  if (!app || !window.appBridgeUtils || !window.appBridgeUtils.authenticatedFetch) {
     return fetch(url, {
       ...options,
       headers: {
@@ -43,8 +42,7 @@ export function fetchWithAuth(url, options = {}) {
     });
   }
 
-  const authenticatedFetch = window.appBridgeUtils.authenticatedFetch;
-  const fetchFunction = authenticatedFetch(app);
+  const fetchFunction = window.appBridgeUtils.authenticatedFetch(app);
 
   return fetchFunction(url, {
     ...options,
