@@ -1,16 +1,32 @@
-// src/utils/appBridgeClient.js
 import { authenticatedFetch } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
 
-export function getAppBridgeInstance() {
-  if (appInstance) return appInstance;
+/**
+ * Polls until AppBridge is available on the window object
+ */
+function waitForAppBridge(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
 
-  // ✅ Check App Bridge is loaded
-  if (!window.Shopify || !window.Shopify.AppBridge || typeof window.Shopify.AppBridge.createApp !== "function") {
-    console.error("❌ AppBridge not available or createApp not found");
-    return null;
-  }
+    (function check() {
+      const bridge = window?.Shopify?.AppBridge;
+
+      if (bridge && typeof bridge.createApp === 'function') {
+        return resolve(bridge);
+      }
+
+      if (Date.now() - start > timeout) {
+        return reject(new Error("Timed out waiting for AppBridge to load"));
+      }
+
+      requestAnimationFrame(check);
+    })();
+  });
+}
+
+export async function getAppBridgeInstance() {
+  if (appInstance) return appInstance;
 
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
@@ -24,18 +40,24 @@ export function getAppBridgeInstance() {
 
   const isEmbedded = window.top !== window.self;
 
-  // ✅ Use createApp directly from AppBridge global
-  appInstance = window.Shopify.AppBridge.createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: isEmbedded,
-  });
+  try {
+    const AppBridge = await waitForAppBridge();
 
-  return appInstance;
+    appInstance = AppBridge.createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: isEmbedded,
+    });
+
+    return appInstance;
+  } catch (err) {
+    console.error("❌ App Bridge failed to load:", err);
+    return null;
+  }
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
+  const app = await getAppBridgeInstance();
 
   if (!app) {
     console.warn("⚠️ No AppBridge instance. Using native fetch.");

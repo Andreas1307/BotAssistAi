@@ -118,7 +118,8 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetchWithAuth("/api/shop-data");
+        const response = await fetchWithAuth("https://api.botassistai.com/api/shop-data");
+
   
         const contentType = response.headers.get("content-type") || "";
   
@@ -136,6 +137,7 @@ const Dashboard = () => {
   
     fetchData();
   }, []);
+  
   
   
 
