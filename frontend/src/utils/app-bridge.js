@@ -1,6 +1,6 @@
 // appBridgeClient.js
-import { loadAppBridge } from "./loadAppBridge";
 const authenticatedFetch = window?.Shopify?.AppBridge?.Utils?.authenticatedFetch;
+let appInstance = null;
 
 function waitForAppBridgeLoad(timeout = 10000) {
   return new Promise((resolve, reject) => {
@@ -30,19 +30,15 @@ function waitForAppBridgeLoad(timeout = 10000) {
 
 
 
-let appInstance = null;
-
-export async function getAppBridgeInstance() {
+export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  try {
-    await loadAppBridge();
-  } catch (err) {
-    console.error("❌ Failed to load App Bridge scripts", err);
-    throw err;
+  const createApp = window.Shopify?.AppBridge?.createApp;
+  if (!createApp) {
+    console.error("❌ App Bridge is not available. It must be loaded synchronously before React starts.");
+    return null;
   }
 
-  const createApp = window.Shopify.AppBridge.createApp;
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
 
@@ -52,7 +48,6 @@ export async function getAppBridgeInstance() {
   }
 
   localStorage.setItem("host", host);
-
   const isEmbedded = window.top !== window.self;
 
   appInstance = createApp({
@@ -63,6 +58,8 @@ export async function getAppBridgeInstance() {
 
   return appInstance;
 }
+
+
 
 
 export async function fetchWithAuth(url, options = {}) {
