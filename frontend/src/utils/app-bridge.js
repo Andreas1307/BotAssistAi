@@ -1,6 +1,6 @@
 // appBridgeClient.js
 
-const createApp = window.appBridge?.createApp;
+const createApp = window.appBridge?.default;
 const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
 
 let appInstance = null;
@@ -61,19 +61,17 @@ export async function fetchWithAuth(url, options = {}) {
 }
 
 // Helper to wait until Shopify App Bridge is available
-function waitForAppBridge(timeout = 5000, interval = 100) {
+function waitForAppBridge(timeout = 10000, interval = 100) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
     const check = () => {
-      if (
-        window.appBridge?.default &&
-        window.appBridgeUtils?.authenticatedFetch
-      ) {
-        return resolve();
-      }
+      const isReady = window.appBridge?.default && window.appBridgeUtils?.authenticatedFetch;
+
+      if (isReady) return resolve();
 
       if (Date.now() - startTime >= timeout) {
+        console.error("❌ App Bridge still not loaded after 10 seconds");
         return reject(
           new Error("Timed out waiting for Shopify App Bridge to load.")
         );
@@ -85,3 +83,4 @@ function waitForAppBridge(timeout = 5000, interval = 100) {
     check();
   });
 }
+
