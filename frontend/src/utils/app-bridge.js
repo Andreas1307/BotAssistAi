@@ -1,6 +1,6 @@
 // appBridgeClient.js
 
-const createApp = window.appBridge?.default;
+const createApp = window.appBridge?.createApp;
 const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
 
 let appInstance = null;
@@ -11,7 +11,7 @@ export async function getAppBridgeInstance() {
   // ⏳ Wait for the app bridge to load if not yet available
   await waitForAppBridge();
 
-  const createApp = window.appBridge?.default;
+  const createApp = window.appBridge?.createApp;
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
 
@@ -64,7 +64,7 @@ function waitForAppBridge(timeout = 15000, interval = 100) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
     const check = () => {
-      const hasAppBridge = typeof window.appBridge?.default === "function";
+      const hasAppBridge = typeof window.appBridge?.createApp === "function";
       const hasUtils = typeof window.appBridgeUtils?.authenticatedFetch === "function";
 
       if (hasAppBridge && hasUtils) {
