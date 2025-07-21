@@ -64,8 +64,8 @@ function waitForAppBridge(timeout = 15000, interval = 100) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
     const check = () => {
-      const hasAppBridge = !!window.appBridge?.default || !!window.appBridge;
-      const hasUtils = !!window.appBridgeUtils?.authenticatedFetch;
+      const hasAppBridge = typeof window.appBridge?.default === "function";
+      const hasUtils = typeof window.appBridgeUtils?.authenticatedFetch === "function";
 
       if (hasAppBridge && hasUtils) {
         console.log("✅ Shopify App Bridge loaded");
