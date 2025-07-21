@@ -1,3 +1,4 @@
+// src/utils/appBridgeClient.js
 import { authenticatedFetch } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
@@ -5,13 +6,11 @@ let appInstance = null;
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  // Ensure App Bridge is available
-  if (!window.Shopify || !window.Shopify.AppBridge) {
-    console.error("❌ AppBridge not available on window");
+  // ✅ Check App Bridge is loaded
+  if (!window.Shopify || !window.Shopify.AppBridge || typeof window.Shopify.AppBridge.createApp !== "function") {
+    console.error("❌ AppBridge not available or createApp not found");
     return null;
   }
-
-  const createApp = window.Shopify.AppBridge.default;
 
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
@@ -25,7 +24,8 @@ export function getAppBridgeInstance() {
 
   const isEmbedded = window.top !== window.self;
 
-  appInstance = createApp({
+  // ✅ Use createApp directly from AppBridge global
+  appInstance = window.Shopify.AppBridge.createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
