@@ -6,16 +6,14 @@ function waitForAppBridgeLoad(timeout = 10000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const check = () => {
-      const ready = !!window.Shopify?.AppBridge?.createApp;
-      if (ready) return resolve(window.Shopify.AppBridge.createApp);
-      if (Date.now() - start > timeout) {
-        return reject(new Error("Timed out waiting for AppBridge to load"));
-      }
+      if (window.Shopify?.AppBridge?.createApp) return resolve(window.Shopify.AppBridge.createApp);
+      if (Date.now() - start > timeout) return reject(new Error("Timed out waiting for AppBridge to load"));
       requestAnimationFrame(check);
     };
     check();
   });
 }
+
 
 let appInstance = null;
 
@@ -23,19 +21,13 @@ export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   try {
-    await loadShopifyAppBridgeScripts();
-    await waitForAppBridgeLoad(); // 👈 this is new
+    await waitForAppBridgeLoad();
   } catch (err) {
     console.error("❌ Failed to load App Bridge scripts", err);
     throw err;
   }
 
-  const createApp = window.Shopify?.AppBridge?.createApp;
-
-  if (!createApp) {
-    console.error("❌ App Bridge createApp is still undefined after script load");
-    return null;
-  }
+  const createApp = window.Shopify.AppBridge.createApp;
 
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
@@ -56,7 +48,6 @@ export async function getAppBridgeInstance() {
 
   return appInstance;
 }
-
  
 
 
