@@ -1,7 +1,7 @@
 // appBridgeClient.js
 
-import createApp from "@shopify/app-bridge";
-import { authenticatedFetch } from "@shopify/app-bridge-utils";
+const createApp = window.appBridge.default;
+const { authenticatedFetch } = window.appBridgeUtils;
 
 
 let appInstance = null;
@@ -10,7 +10,7 @@ export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   const urlParams = new URLSearchParams(window.location.search);
-  let host = urlParams.get("host") || localStorage.getItem("host");
+  const host = urlParams.get("host") || localStorage.getItem("host");
 
   if (!host) {
     console.warn("❌ Missing host param in URL or localStorage");
@@ -21,7 +21,7 @@ export function getAppBridgeInstance() {
 
   const isEmbedded = window.top !== window.self;
 
-  appInstance = createApp({
+  appInstance = window.appBridge.default({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: isEmbedded,
@@ -34,7 +34,6 @@ export function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
 
   if (!app) {
-    console.warn("⚠️ App Bridge not initialized. Using regular fetch.");
     return fetch(url, {
       ...options,
       headers: {
@@ -44,6 +43,7 @@ export function fetchWithAuth(url, options = {}) {
     });
   }
 
+  const authenticatedFetch = window.appBridgeUtils.authenticatedFetch;
   const fetchFunction = authenticatedFetch(app);
 
   return fetchFunction(url, {
