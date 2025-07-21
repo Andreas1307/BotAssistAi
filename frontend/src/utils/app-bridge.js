@@ -1,26 +1,28 @@
-import { authenticatedFetch } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
-
-function waitForAppBridge(timeout = 10000) { // 10 seconds timeout
+let authenticatedFetchFn = null;
+function waitForAppBridge(timeout = 15000) { // bump to 15 seconds
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
     (function check() {
-      const bridge = window?.Shopify?.AppBridge;
-
-      if (bridge && typeof bridge.createApp === 'function') {
-        console.log("✅ AppBridge is ready");
-        return resolve(bridge);
+      if (window.Shopify && window.Shopify.AppBridge && typeof window.Shopify.AppBridge.createApp === 'function') {
+        return resolve(window.Shopify.AppBridge);
       }
-
       if (Date.now() - start > timeout) {
         return reject(new Error("Timed out waiting for AppBridge to load"));
       }
-
-      requestAnimationFrame(check);
+      setTimeout(check, 100); // check every 100ms instead of rAF for more reliable polling
     })();
   });
+}
+
+async function getAuthenticatedFetch(app) {
+  if (!authenticatedFetchFn) {
+    const module = await import('@shopify/app-bridge-utils');
+    authenticatedFetchFn = module.authenticatedFetch;
+  }
+  return authenticatedFetchFn(app);
 }
 
 export async function getAppBridgeInstance() {
@@ -71,7 +73,7 @@ export async function fetchWithAuth(url, options = {}) {
     });
   }
 
-  const fetchFn = authenticatedFetch(app);
+  const fetchFn = await getAuthenticatedFetch(app);
 
   return fetchFn(url, {
     ...options,
