@@ -1,12 +1,19 @@
 // appBridgeClient.js
 
 const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
+import { loadShopifyAppBridgeScripts } from "./loadShopifyAppBridge";
+
 let appInstance = null;
 
 export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  await waitForAppBridge();
+  try {
+    await loadShopifyAppBridgeScripts(); // Ensure scripts are loaded first
+  } catch (err) {
+    console.error("❌ Failed to load App Bridge scripts", err);
+    throw err;
+  }
 
   const createApp = window.appBridge?.createApp;
   const urlParams = new URLSearchParams(window.location.search);
@@ -21,7 +28,7 @@ export async function getAppBridgeInstance() {
   const isEmbedded = window.top !== window.self;
 
   if (!createApp) {
-    console.error("❌ App Bridge script not loaded or createApp is undefined");
+    console.error("❌ App Bridge createApp is still undefined after load");
     return null;
   }
 
