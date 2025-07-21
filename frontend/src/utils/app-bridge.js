@@ -1,6 +1,7 @@
 // appBridgeClient.js
 import { loadShopifyAppBridgeScripts } from "./loadShopifyAppBridge";
-const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
+const authenticatedFetch = window?.Shopify?.AppBridge?.Utils?.authenticatedFetch;
+
 
 
 let appInstance = null;
@@ -15,8 +16,7 @@ export async function getAppBridgeInstance() {
     throw err;
   }
 
-  const appBridgeModule = window["app-bridge"];
-  const createApp = appBridgeModule?.default || appBridgeModule?.createApp;
+  const createApp = window?.Shopify?.AppBridge?.createApp;
 
   if (!createApp) {
     console.error("❌ App Bridge createApp is still undefined after script load");
@@ -42,12 +42,13 @@ export async function getAppBridgeInstance() {
 
   return appInstance;
 }
+ 
 
 
 export async function fetchWithAuth(url, options = {}) {
   const app = await getAppBridgeInstance();
 
-  const fetchFunction = window.appBridgeUtils?.authenticatedFetch?.(app);
+  const fetchFunction = authenticatedFetch?.(app);
   if (!app || !fetchFunction) {
     return fetch(url, {
       ...options,
