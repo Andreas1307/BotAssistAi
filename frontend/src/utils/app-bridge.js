@@ -2,7 +2,20 @@
 import { loadShopifyAppBridgeScripts } from "./loadShopifyAppBridge";
 const authenticatedFetch = window?.Shopify?.AppBridge?.Utils?.authenticatedFetch;
 
-
+function waitForAppBridgeLoad(timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      const ready = !!window.Shopify?.AppBridge?.createApp;
+      if (ready) return resolve(window.Shopify.AppBridge.createApp);
+      if (Date.now() - start > timeout) {
+        return reject(new Error("Timed out waiting for AppBridge to load"));
+      }
+      requestAnimationFrame(check);
+    };
+    check();
+  });
+}
 
 let appInstance = null;
 
@@ -10,13 +23,14 @@ export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   try {
-    await loadShopifyAppBridgeScripts(); // dynamically loads app-bridge.js
+    await loadShopifyAppBridgeScripts();
+    await waitForAppBridgeLoad(); // 👈 this is new
   } catch (err) {
     console.error("❌ Failed to load App Bridge scripts", err);
     throw err;
   }
 
-  const createApp = window?.Shopify?.AppBridge?.createApp;
+  const createApp = window.Shopify?.AppBridge?.createApp;
 
   if (!createApp) {
     console.error("❌ App Bridge createApp is still undefined after script load");
@@ -42,6 +56,7 @@ export async function getAppBridgeInstance() {
 
   return appInstance;
 }
+
  
 
 
@@ -68,27 +83,3 @@ export async function fetchWithAuth(url, options = {}) {
   });
 }
 
-function waitForAppBridge(timeout = 15000, interval = 100) {
-  return new Promise((resolve, reject) => {
-    const startTime = Date.now();
-
-    const check = () => {
-      const hasAppBridge = typeof window.appBridge?.createApp === "function";
-      const hasUtils = typeof window.appBridgeUtils?.authenticatedFetch === "function";
-
-      if (hasAppBridge && hasUtils) {
-        console.log("✅ Shopify App Bridge loaded");
-        return resolve();
-      }
-
-      if (Date.now() - startTime >= timeout) {
-        console.error("❌ App Bridge still not loaded after 15 seconds");
-        return reject(new Error("Timed out waiting for Shopify App Bridge to load."));
-      }
-
-      setTimeout(check, interval);
-    };
-
-    check();
-  });
-}
