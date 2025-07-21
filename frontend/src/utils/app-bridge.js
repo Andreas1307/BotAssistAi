@@ -3,12 +3,15 @@
 const createApp = window.appBridge?.createApp;
 const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
 
-
 let appInstance = null;
 
-export function getAppBridgeInstance() {
+export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
+  // ⏳ Wait for the app bridge to load if not yet available
+  await waitForAppBridge();
+
+  const createApp = window.appBridge?.default;
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
 
@@ -18,14 +21,13 @@ export function getAppBridgeInstance() {
   }
 
   localStorage.setItem("host", host);
-
   const isEmbedded = window.top !== window.self;
 
   if (!createApp) {
     console.error("❌ App Bridge script not loaded or createApp is undefined");
     return null;
   }
-  
+
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -35,10 +37,11 @@ export function getAppBridgeInstance() {
   return appInstance;
 }
 
-export function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
+export async function fetchWithAuth(url, options = {}) {
+  const app = await getAppBridgeInstance();
 
-  if (!app || !window.appBridgeUtils || !window.appBridgeUtils.authenticatedFetch) {
+  const fetchFunction = window.appBridgeUtils?.authenticatedFetch?.(app);
+  if (!app || !fetchFunction) {
     return fetch(url, {
       ...options,
       headers: {
@@ -48,13 +51,37 @@ export function fetchWithAuth(url, options = {}) {
     });
   }
 
-  const fetchFunction = window.appBridgeUtils.authenticatedFetch(app);
-
   return fetchFunction(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
+  });
+}
+
+// Helper to wait until Shopify App Bridge is available
+function waitForAppBridge(timeout = 5000, interval = 100) {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    const check = () => {
+      if (
+        window.appBridge?.default &&
+        window.appBridgeUtils?.authenticatedFetch
+      ) {
+        return resolve();
+      }
+
+      if (Date.now() - startTime >= timeout) {
+        return reject(
+          new Error("Timed out waiting for Shopify App Bridge to load.")
+        );
+      }
+
+      setTimeout(check, interval);
+    };
+
+    check();
   });
 }
