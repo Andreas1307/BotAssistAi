@@ -1,21 +1,32 @@
 
 let appInstance = null;
 let authenticatedFetchFn = null;
-function waitForAppBridge(timeout = 15000) { // bump to 15 seconds
+function waitForAppBridge(timeout = 15000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
-    (function check() {
+    function checkBridge() {
       if (window.Shopify && window.Shopify.AppBridge && typeof window.Shopify.AppBridge.createApp === 'function') {
         return resolve(window.Shopify.AppBridge);
       }
       if (Date.now() - start > timeout) {
         return reject(new Error("Timed out waiting for AppBridge to load"));
       }
-      setTimeout(check, 100); // check every 100ms instead of rAF for more reliable polling
-    })();
+      setTimeout(checkBridge, 100);
+    }
+
+    if (document.readyState === 'complete') {
+      // If page fully loaded, start checking immediately
+      checkBridge();
+    } else {
+      // Wait for window load event, then start checking
+      window.addEventListener('load', () => {
+        checkBridge();
+      });
+    }
   });
 }
+
 
 async function getAuthenticatedFetch(app) {
   if (!authenticatedFetchFn) {
