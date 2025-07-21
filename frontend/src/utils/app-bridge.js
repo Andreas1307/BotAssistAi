@@ -7,11 +7,8 @@ function waitForAppBridgeLoad(timeout = 10000) {
     const start = Date.now();
 
     function checkReady() {
-      const isReady = typeof window.Shopify?.AppBridge?.createApp === "function";
-
-      if (isReady) {
-        return resolve(window.Shopify.AppBridge.createApp);
-      }
+      const createApp = window?.Shopify?.AppBridge?.createApp;
+      if (typeof createApp === "function") return resolve(createApp);
 
       if (Date.now() - start >= timeout) {
         return reject(new Error("Timed out waiting for AppBridge to load"));
@@ -20,43 +17,38 @@ function waitForAppBridgeLoad(timeout = 10000) {
       setTimeout(checkReady, 100);
     }
 
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-      checkReady();
-    } else {
-      window.addEventListener("DOMContentLoaded", checkReady);
-    }
+    checkReady(); // start immediately
   });
 }
 
-
-
-export function getAppBridgeInstance() {
+export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  const createApp = window.Shopify?.AppBridge?.createApp;
-  if (!createApp) {
-    console.error("❌ App Bridge is not available. It must be loaded synchronously before React starts.");
+  try {
+    const createApp = await waitForAppBridgeLoad();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host") || localStorage.getItem("host");
+
+    if (!host) {
+      console.warn("❌ Missing host param in URL or localStorage");
+      return null;
+    }
+
+    localStorage.setItem("host", host);
+    const isEmbedded = window.top !== window.self;
+
+    appInstance = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: isEmbedded,
+    });
+
+    return appInstance;
+  } catch (err) {
+    console.error("❌ App Bridge failed to load:", err);
     return null;
   }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const host = urlParams.get("host") || localStorage.getItem("host");
-
-  if (!host) {
-    console.warn("❌ Missing host param in URL or localStorage");
-    return null;
-  }
-
-  localStorage.setItem("host", host);
-  const isEmbedded = window.top !== window.self;
-
-  appInstance = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: isEmbedded,
-  });
-
-  return appInstance;
 }
 
 
