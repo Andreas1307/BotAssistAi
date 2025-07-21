@@ -65,11 +65,13 @@ function waitForAppBridge(timeout = 10000, interval = 100) {
     const startTime = Date.now();
 
     const check = () => {
-      const isReady = window.appBridge?.default && window.appBridgeUtils?.authenticatedFetch;
+      const hasAppBridge = !!window.appBridge?.default;
+      const hasUtils = !!window.appBridgeUtils?.authenticatedFetch;
 
-      console.log("🔍 Checking App Bridge load status...", isReady);
-
-      if (isReady) return resolve();
+      if (hasAppBridge && hasUtils) {
+        console.log("✅ Shopify App Bridge loaded");
+        return resolve();
+      }
 
       if (Date.now() - startTime >= timeout) {
         console.error("❌ App Bridge still not loaded after 10 seconds");
@@ -82,3 +84,4 @@ function waitForAppBridge(timeout = 10000, interval = 100) {
     check();
   });
 }
+
