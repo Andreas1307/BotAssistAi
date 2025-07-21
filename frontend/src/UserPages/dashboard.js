@@ -120,26 +120,23 @@ const Dashboard = () => {
       try {
         const response = await fetchWithAuth("/api/shop-data");
   
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`API error: ${response.status} ${response.statusText} - ${text.slice(0, 200)}`);
-        }
-  
         const contentType = response.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
+  
+        if (!response.ok || !contentType.includes("application/json")) {
           const text = await response.text();
-          throw new Error(`Expected JSON but got: ${text.slice(0, 200)}`);
+          throw new Error(`Bad response: ${text.slice(0, 200)}`);
         }
   
-        const json = await response.json();
-        setShopData(json.shopData);
+        const data = await response.json();
+        setShopData(data.shopData);
       } catch (err) {
-        console.error("❌ Failed to fetch shop data:", err);
+        console.error("❌ Failed to fetch shop data:", err.message);
       }
     };
   
     fetchData();
   }, []);
+  
   
 
 

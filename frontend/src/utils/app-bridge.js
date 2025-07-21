@@ -1,11 +1,17 @@
-// src/utils/appBridgeClient.js
-import createApp from '@shopify/app-bridge';
 import { authenticatedFetch } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
 
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
+
+  // Ensure App Bridge is available
+  if (!window.Shopify || !window.Shopify.AppBridge) {
+    console.error("❌ AppBridge not available on window");
+    return null;
+  }
+
+  const createApp = window.Shopify.AppBridge.default;
 
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
@@ -32,7 +38,7 @@ export async function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
 
   if (!app) {
-    console.warn("⚠️ No AppBridge instance. Falling back to fetch.");
+    console.warn("⚠️ No AppBridge instance. Using native fetch.");
     return fetch(url, {
       ...options,
       headers: {
