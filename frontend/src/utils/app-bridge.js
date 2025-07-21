@@ -1,7 +1,7 @@
 // appBridgeClient.js
-
-const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
 import { loadShopifyAppBridgeScripts } from "./loadShopifyAppBridge";
+const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
+
 
 let appInstance = null;
 
