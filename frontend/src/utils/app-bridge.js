@@ -1,4 +1,5 @@
 // appBridgeClient.js
+import { loadAppBridge } from "./loadAppBridge";
 const authenticatedFetch = window?.Shopify?.AppBridge?.Utils?.authenticatedFetch;
 
 function waitForAppBridgeLoad(timeout = 10000) {
@@ -27,13 +28,15 @@ function waitForAppBridgeLoad(timeout = 10000) {
   });
 }
 
+
+
 let appInstance = null;
 
 export async function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   try {
-    await waitForAppBridgeLoad();
+    await loadAppBridge();
   } catch (err) {
     console.error("❌ Failed to load App Bridge scripts", err);
     throw err;
