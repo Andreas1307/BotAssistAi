@@ -1,7 +1,8 @@
 // appBridgeClient.js
 
-const createApp = window.appBridge.default;
-const { authenticatedFetch } = window.appBridgeUtils;
+const createApp = window.appBridge?.createApp;
+const authenticatedFetch = window.appBridgeUtils?.authenticatedFetch;
+
 
 let appInstance = null;
 
