@@ -1,32 +1,10 @@
 // appBridgeClient.js
-
 import createApp from '@shopify/app-bridge';
 import { authenticatedFetch } from '@shopify/app-bridge-utils';
+
 let appInstance = null;
 
-function waitForAppBridgeLoad(timeout = 10000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-
-    function checkReady() {
-      const createApp = window?.Shopify?.AppBridge?.createApp;
-      console.log('Checking AppBridge:', createApp ? 'Found' : 'Not yet');
-
-      if (typeof createApp === "function") return resolve(createApp);
-
-      if (Date.now() - start >= timeout) {
-        return reject(new Error("Timed out waiting for AppBridge to load"));
-      }
-
-      setTimeout(checkReady, 100);
-    }
-
-    checkReady();
-  });
-}
-
-
-export async function getAppBridgeInstance() {
+export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -49,8 +27,18 @@ export async function getAppBridgeInstance() {
   return appInstance;
 }
 
-export async function fetchWithAuth(url, options = {}) {
-  const app = await getAppBridgeInstance();
+export function fetchWithAuth(url, options = {}) {
+  const app = getAppBridgeInstance();
+
+  if (!app) {
+    return fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+  }
 
   const fetchFn = authenticatedFetch(app);
   return fetchFn(url, {
