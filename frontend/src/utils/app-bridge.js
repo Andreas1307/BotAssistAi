@@ -1,4 +1,4 @@
-// appBridgeClient.js
+// src/utils/appBridgeClient.js
 import createApp from '@shopify/app-bridge';
 import { authenticatedFetch } from '@shopify/app-bridge-utils';
 
@@ -16,6 +16,7 @@ export function getAppBridgeInstance() {
   }
 
   localStorage.setItem("host", host);
+
   const isEmbedded = window.top !== window.self;
 
   appInstance = createApp({
@@ -27,10 +28,11 @@ export function getAppBridgeInstance() {
   return appInstance;
 }
 
-export function fetchWithAuth(url, options = {}) {
+export async function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
 
   if (!app) {
+    console.warn("⚠️ No AppBridge instance. Falling back to fetch.");
     return fetch(url, {
       ...options,
       headers: {
@@ -41,6 +43,7 @@ export function fetchWithAuth(url, options = {}) {
   }
 
   const fetchFn = authenticatedFetch(app);
+
   return fetchFn(url, {
     ...options,
     headers: {
