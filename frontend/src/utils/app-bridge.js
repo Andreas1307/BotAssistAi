@@ -60,12 +60,11 @@ export async function fetchWithAuth(url, options = {}) {
   });
 }
 
-function waitForAppBridge(timeout = 10000, interval = 100) {
+function waitForAppBridge(timeout = 15000, interval = 100) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
-
     const check = () => {
-      const hasAppBridge = !!window.appBridge?.default;
+      const hasAppBridge = !!window.appBridge?.default || !!window.appBridge;
       const hasUtils = !!window.appBridgeUtils?.authenticatedFetch;
 
       if (hasAppBridge && hasUtils) {
@@ -74,7 +73,7 @@ function waitForAppBridge(timeout = 10000, interval = 100) {
       }
 
       if (Date.now() - startTime >= timeout) {
-        console.error("❌ App Bridge still not loaded after 10 seconds");
+        console.error("❌ App Bridge still not loaded after 15 seconds");
         return reject(new Error("Timed out waiting for Shopify App Bridge to load."));
       }
 
@@ -84,4 +83,3 @@ function waitForAppBridge(timeout = 10000, interval = 100) {
     check();
   });
 }
-
