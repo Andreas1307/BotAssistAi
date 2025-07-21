@@ -72,13 +72,35 @@ const router = createBrowserRouter([
     path: "*", 
     element: <Error />
   }
-])
+]);
 
+function waitForAppBridgeScripts(timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
-);
+    function checkReady() {
+      if (typeof window?.Shopify?.AppBridge?.createApp === 'function') {
+        resolve();
+      } else if (Date.now() - start > timeout) {
+        reject(new Error("Timed out waiting for Shopify App Bridge"));
+      } else {
+        setTimeout(checkReady, 100);
+      }
+    }
 
+    checkReady();
+  });
+}
+
+waitForAppBridgeScripts()
+  .catch((e) => {
+    console.warn("⚠️ App Bridge not available. Proceeding anyway:", e.message);
+  })
+  .finally(() => {
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+  });
