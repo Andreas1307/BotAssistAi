@@ -157,7 +157,7 @@ const Dashboard = () => {
       if (!isShopifyUser) return;
   
       try {
-        const app = await waitForAppBridge(); // now waits for script + app instance
+        const app = await waitForAppBridge();
   
         if (!app) throw new Error("AppBridge instance missing");
   
@@ -185,8 +185,12 @@ const Dashboard = () => {
     };
   
     const timeout = setTimeout(() => {
-      init(); // run after 300ms to allow iframe+bridge to be ready
+      init(); // wait 300ms to let iframe + bridge be ready
     }, 300);
+  
+    return () => clearTimeout(timeout);
+  }, []);
+  
   
     return () => clearTimeout(timeout);
   }, []);

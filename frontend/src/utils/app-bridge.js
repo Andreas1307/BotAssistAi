@@ -2,7 +2,11 @@ import { getSessionToken } from "@shopify/app-bridge-utils";
 
 let appInstance = null;
 
-function waitForShopifyAppBridge(timeout = 8000) {
+/**
+ * Wait for Shopify App Bridge global to be available inside the iframe.
+ * Resolves with window.Shopify.AppBridge object or rejects on timeout.
+ */
+function waitForShopifyAppBridge(timeout = 10000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
@@ -11,25 +15,40 @@ function waitForShopifyAppBridge(timeout = 8000) {
         window.Shopify?.AppBridge?.createApp &&
         typeof window.Shopify.AppBridge.createApp === "function";
 
-      if (bridgeReady) return resolve(window.Shopify.AppBridge);
+      if (bridgeReady) {
+        // console.log("✅ AppBridge is ready");
+        return resolve(window.Shopify.AppBridge);
+      }
 
       if (Date.now() - start > timeout) {
         console.error("❌ AppBridge still not ready after timeout");
         return reject(new Error("AppBridge timeout"));
       }
 
+      // Poll every 100ms
       setTimeout(check, 100);
     })();
   });
 }
 
+/**
+ * Waits for App Bridge to be ready, then returns the app instance.
+ */
+export async function waitForAppBridge(timeout = 10000) {
+  // Only try to load App Bridge if inside Shopify embedded iframe
+  const isEmbedded = window.top !== window.self;
+  if (!isEmbedded) {
+    console.warn("⚠️ Not inside embedded iframe, skipping AppBridge initialization");
+    return null;
+  }
 
-
-export async function waitForAppBridge(timeout = 5000) {
   await waitForShopifyAppBridge(timeout);
   return getAppBridgeInstance();
 }
 
+/**
+ * Creates or returns cached App Bridge app instance.
+ */
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
@@ -41,13 +60,11 @@ export function getAppBridgeInstance() {
     return null;
   }
 
-  const isEmbedded = window.top !== window.self;
-
   try {
     appInstance = window.Shopify.AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
-      forceRedirect: isEmbedded,
+      forceRedirect: true, // force redirect inside embedded iframe to login if needed
     });
 
     if (!appInstance) {
@@ -62,7 +79,9 @@ export function getAppBridgeInstance() {
   return appInstance;
 }
 
-
+/**
+ * Helper fetch wrapper to do authenticated fetch with session token.
+ */
 export async function fetchWithAuth(url, options = {}) {
   const app = await waitForAppBridge();
   if (!app) {
