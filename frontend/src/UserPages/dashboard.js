@@ -157,9 +157,8 @@ const Dashboard = () => {
       if (!isShopifyUser) return;
   
       try {
-        await waitForAppBridge();
+        const app = await waitForAppBridge(); // now waits for script + app instance
   
-        const app = getAppBridgeInstance();
         if (!app) throw new Error("AppBridge instance missing");
   
         const token = await getSessionToken(app);
@@ -174,7 +173,6 @@ const Dashboard = () => {
   
         if (response.status === 401) {
           const shop = new URLSearchParams(window.location.search).get("shop");
-          console.warn("🛑 Unauthorized, redirecting to /auth");
           window.location.assign(`/auth?shop=${shop}`);
           return;
         }
@@ -198,7 +196,7 @@ const Dashboard = () => {
   
   
   
-
+// DOAR SA UPDATEZ SI SA VAD DACA MERGE
 
   // FETCH MEMBERSHIP
   useEffect(() => {
