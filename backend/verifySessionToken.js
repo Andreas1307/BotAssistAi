@@ -1,6 +1,6 @@
 // middleware/verifySessionToken.js
 const jwt = require('jsonwebtoken');
-const shopify = require('../shopify'); // adjust path if needed
+const shopify = require('./shopify'); // adjust path if needed
 
 function decodeJWT(token) {
   return jwt.decode(token);
