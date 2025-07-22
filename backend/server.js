@@ -121,7 +121,8 @@ app.get('/auth', async (req, res) => {
 
 app.get("/api/shop-data", async (req, res) => {
   const authHeader = req.headers.authorization;
-
+  console.log("🛬 Incoming request to /api/shop-data");
+  console.log("Authorization header:", req.headers.authorization);
   if (authHeader && authHeader.startsWith("Bearer ")) {
     // 🔐 Shopify flow
     try {
