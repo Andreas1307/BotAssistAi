@@ -1,17 +1,21 @@
 import { getSessionToken } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
-async function waitForAppBridge(timeout = 3000) {
+export async function waitForAppBridge(timeout = 3000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
+
     (function check() {
       const app = getAppBridgeInstance();
       if (app) return resolve(app);
-      if (Date.now() - start > timeout) return reject("AppBridge timeout");
-      setTimeout(check, 100);
+      if (Date.now() - start > timeout) return reject(new Error("AppBridge timeout"));
+      setTimeout(check, 250); // less spam
     })();
   });
-} 
+}
+
+let triedInit = false;
+
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
@@ -19,16 +23,17 @@ export function getAppBridgeInstance() {
   const host = urlParams.get("host") || localStorage.getItem("host");
 
   if (!host) {
-    console.warn("❌ Missing host param in URL or localStorage");
+    if (!triedInit) console.warn("❌ Missing host param in URL or localStorage");
+    triedInit = true;
     return null;
   }
 
   localStorage.setItem("host", host);
-
   const isEmbedded = window.top !== window.self;
 
   if (!window.Shopify || !window.Shopify.AppBridge || typeof window.Shopify.AppBridge.createApp !== "function") {
-    console.error("❌ AppBridge not available or createApp not found");
+    if (!triedInit) console.error("❌ AppBridge not available or createApp not found");
+    triedInit = true;
     return null;
   }
 
@@ -39,7 +44,8 @@ export function getAppBridgeInstance() {
       forceRedirect: isEmbedded,
     });
   } catch (e) {
-    console.error("❌ Failed to create AppBridge instance:", e);
+    if (!triedInit) console.error("❌ Failed to create AppBridge instance:", e);
+    triedInit = true;
     return null;
   }
 
@@ -73,6 +79,4 @@ export async function fetchWithAuth(url, options = {}) {
     return new Response(null, { status: 401 });
   }
 }
-export {
-  waitForAppBridge,
-};
+
