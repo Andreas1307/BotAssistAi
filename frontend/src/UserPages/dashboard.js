@@ -113,6 +113,8 @@ const Dashboard = () => {
   useShopifyInstallRedirect();
 
 
+
+
   const [shopData, setShopData] = useState(null);
 
   useEffect(() => {
@@ -152,7 +154,7 @@ const Dashboard = () => {
         let response;
   
         if (isShopifyUser) {
-          response = await fetchWithAuth("https://api.botassistai.com/api/shop-data");
+          response = await fetchWithAuth("/api/shop-data");
         } else {
           response = await fetch("https://api.botassistai.com/api/shop-data", {
             headers: {

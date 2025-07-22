@@ -1,7 +1,7 @@
 
 let appInstance = null;
 let authenticatedFetchFn = null;
-
+import { getSessionToken } from '@shopify/app-bridge-utils';
 
 
 async function waitForAppBridge(timeout = 15000) {
@@ -81,17 +81,20 @@ export async function fetchWithAuth(url, options = {}) {
     });
   }
 
-  const fetchFn = await getAuthenticatedFetch(app);
-
-  const response = await fetchFn(url, {
-    method: options.method || "GET",
-    body: options.body,
-    headers: {
+  try {
+    const token = await getSessionToken(app); // 👈 Get token manually
+    const headers = {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // 👈 Inject manually
       ...(options.headers || {}),
-    },
-  });
+    };
 
-  // Shopify adds Authorization Bearer token under the hood to this fetch
-  return response;
+    return fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (err) {
+    console.error("❌ Failed to get session token:", err);
+    return fetch(url, options); // fallback
+  }
 }
