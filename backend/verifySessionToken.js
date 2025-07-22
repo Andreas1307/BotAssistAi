@@ -1,4 +1,4 @@
-const { Shopify } = require("@shopify/shopify-api");
+const { decodeSessionToken, Session } = require("@shopify/shopify-api");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -11,7 +11,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     const token = authHeader.replace(/^Bearer\s/, "");
 
     // ✅ Decode the session token
-    const payload = await Shopify.Auth.JWT.decodeSessionToken(token);
+    const payload = await decodeSessionToken(token);
 
     const shop = payload.dest.replace(/^https:\/\//, "");
     const sessionId = Shopify.Session.getJwtSessionId(shop, payload.sub);
