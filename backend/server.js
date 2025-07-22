@@ -119,6 +119,27 @@ app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   }
 });
 
+app.get('/auth/callback', async (req, res) => {
+  try {
+    const session = await shopify.auth.callback({
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    // Store session
+    await shopify.sessionStorage.storeSession(session);
+
+    // Redirect to your embedded app
+    const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
+    res.redirect(redirectUrl);
+  } catch (e) {
+    console.error('❌ Auth callback error:', e);
+    res.status(500).send('Authentication failed');
+  }
+});
+
+
+
 
 app.use((req, res, next) => {
   res.setHeader(
