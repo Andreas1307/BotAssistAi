@@ -116,6 +116,30 @@ const Dashboard = () => {
   const [shopData, setShopData] = useState(null);
 
   useEffect(() => {
+    const ensureAuthenticated = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const host = urlParams.get("host");
+      const shop = urlParams.get("shop");
+  
+      if (!host || !shop) {
+        console.error("Missing host or shop param");
+        return;
+      }
+  
+      const res = await fetch("/api/check-session", {
+        headers: {
+          Authorization: "Bearer token", // dummy, just to try
+        },
+      });
+  
+      if (res.status === 401) {
+        window.location.assign(`/auth?shop=${shop}`);
+      }
+    };
+  
+    ensureAuthenticated();
+  }, []); 
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetchWithAuth("https://api.botassistai.com/api/shop-data");

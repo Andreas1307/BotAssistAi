@@ -102,6 +102,23 @@ app.use(session({
 
 
 
+app.get('/auth', async (req, res) => {
+  try {
+    const redirectUrl = await shopify.auth.begin({
+      shop: req.query.shop,
+      callbackPath: '/auth/callback',
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    // This automatically redirects to Shopify OAuth
+  } catch (e) {
+    console.error('❌ Error beginning auth:', e);
+    return res.status(500).send('Auth error');
+  }
+});
+
 app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
     const session = res.locals.shopify?.session;
