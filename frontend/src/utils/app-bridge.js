@@ -28,7 +28,7 @@ function waitForShopifyAppBridge(timeout = 10000) {
   });
 }
 
-export async function waitForAppBridge(timeout = 10000) {
+export async function waitForAppBridge() {
   const isEmbedded = window.top !== window.self;
   if (!isEmbedded) {
     console.warn("⚠️ Not inside Shopify embedded iframe, skipping AppBridge initialization");
@@ -42,8 +42,7 @@ export async function waitForAppBridge(timeout = 10000) {
     return null;
   }
 
-  await waitForShopifyAppBridge(); // ✅ make sure the global AppBridge is ready
-  return getAppBridgeInstance();
+  return getAppBridgeInstance(); // ✅ no wait needed
 }
 
 
