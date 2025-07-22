@@ -154,42 +154,45 @@ const Dashboard = () => {
     const fetchShopData = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       if (!isShopifyUser) return;
-
+  
       try {
         const app = await waitForAppBridge();
         if (!app) throw new Error("AppBridge not initialized");
-
+  
         const token = await getSessionToken(app);
         if (!token) throw new Error("Session token missing");
-
+  
         const res = await fetch(`${API_BASE}/api/shop-data`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
-
+  
         if (res.status === 401) {
-          const shop = new URLSearchParams(window.location.search).get("shop");
-          console.warn("🛑 Unauthorized, redirecting to /auth");
-          window.location.assign(`/auth?shop=${shop}`);
+          const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+          if (!alreadyRedirected) {
+            sessionStorage.setItem("alreadyRedirected", "true");
+            const shop = new URLSearchParams(window.location.search).get("shop");
+            console.warn("🛑 Unauthorized, redirecting to /auth");
+            window.location.assign(`/auth?shop=${shop}`);
+          } else {
+            console.warn("🔁 Already redirected once. Skipping infinite loop.");
+          }
           return;
         }
-
+  
         const json = await res.json();
         setShopData(json.shopData);
+        sessionStorage.removeItem("alreadyRedirected"); // Clear redirect flag after success
       } catch (err) {
         console.error("❌ Error fetching shop data:", err);
       }
     };
-
-    const timeout = setTimeout(() => {
-      fetchShopData();
-    }, 300);
-
-    return () => clearTimeout(timeout);
+  
+    fetchShopData();
   }, []);
-
+  
   
   
 
