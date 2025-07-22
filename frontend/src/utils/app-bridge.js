@@ -1,5 +1,5 @@
 import { getSessionToken } from "@shopify/app-bridge-utils";
-
+import createApp from "@shopify/app-bridge";
 let appInstance = null;
 
 function waitForShopifyAppBridge(timeout = 10000) {
@@ -38,13 +38,13 @@ export async function waitForAppBridge(timeout = 10000) {
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get("host") || localStorage.getItem("host");
   if (!host) {
-    console.warn("❌ Missing host param in URL or localStorage, cannot init AppBridge");
+    console.warn("❌ Missing host param in URL or localStorage");
     return null;
   }
 
-  await waitForShopifyAppBridge(timeout);
   return getAppBridgeInstance();
 }
+
 
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
@@ -57,18 +57,15 @@ export function getAppBridgeInstance() {
     return null;
   }
 
-  try {
-    appInstance = window.Shopify.AppBridge.createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-    return appInstance;
-  } catch (e) {
-    console.error("❌ Failed to create AppBridge instance:", e);
-    return null;
-  }
+  appInstance = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
+
+  return appInstance;
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
   const app = await waitForAppBridge();
