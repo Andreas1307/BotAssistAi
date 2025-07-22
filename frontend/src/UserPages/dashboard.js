@@ -147,34 +147,41 @@ const Dashboard = () => {
   }, []);
   
   useEffect(() => {
-    const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-    if (!isShopifyUser) return;
+    const init = async () => {
+      const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+      if (!isShopifyUser) return;
   
-    async function fetchShopData() {
       try {
-        await waitForAppBridge(); 
+        await waitForAppBridge();
   
-        const response = await fetchWithAuth(`${API_BASE}/api/shop-data`);
+        const app = getAppBridgeInstance();
+        if (!app) throw new Error("AppBridge instance missing");
+  
+        const token = await getSessionToken(app);
+        if (!token) throw new Error("Missing session token");
+  
+        const response = await fetch(`${API_BASE}/api/shop-data`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
         if (response.status === 401) {
           const shop = new URLSearchParams(window.location.search).get("shop");
-          console.log("🛑 Unauthorized, redirecting to /auth");
+          console.warn("🛑 Unauthorized, redirecting to /auth");
           window.location.assign(`/auth?shop=${shop}`);
           return;
-        }
-  
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`Bad response: ${text}`);
         }
   
         const data = await response.json();
         setShopData(data.shopData);
       } catch (err) {
-        console.error("❌ Failed to fetch shop data:", err.message);
+        console.error("❌ Error during shop data fetch:", err.message);
       }
-    }
+    };
   
-    fetchShopData();
+    init();
   }, []);
   
   useEffect(() => {
