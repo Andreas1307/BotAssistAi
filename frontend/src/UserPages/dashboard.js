@@ -192,8 +192,7 @@ const Dashboard = () => {
   }, []);
   
   
-    return () => clearTimeout(timeout);
-  }, []);
+  
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
