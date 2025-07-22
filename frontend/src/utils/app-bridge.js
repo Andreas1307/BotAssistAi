@@ -6,24 +6,19 @@ let authenticatedFetchFn = null;
 
 async function waitForAppBridge(timeout = 15000) {
   const start = Date.now();
-
   while (Date.now() - start < timeout) {
     try {
-      const module = await import('@shopify/app-bridge'); // 👈 real ESM module
+      const module = await import('@shopify/app-bridge');
       if (typeof module.createApp === 'function') {
         return module;
       }
-    } catch (e) {
-      // Might fail if not resolved yet, keep retrying
+    } catch {
+      // ignore
     }
-
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 100));
   }
-
   throw new Error("Timed out waiting for AppBridge to load");
 }
-
-
 
 async function getAuthenticatedFetch(app) {
   if (!authenticatedFetchFn) {
@@ -50,9 +45,6 @@ export async function getAppBridgeInstance() {
 
   try {
     const AppBridge = await waitForAppBridge();
-
-    console.log("Creating AppBridge instance with host:", host);
-    console.log("Shopify API Key:", process.env.REACT_APP_SHOPIFY_API_KEY);
 
     appInstance = AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -82,10 +74,10 @@ export async function fetchWithAuth(url, options = {}) {
   }
 
   try {
-    const token = await getSessionToken(app); // 👈 Get token manually
+    const token = await getSessionToken(app);
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // 👈 Inject manually
+      Authorization: `Bearer ${token}`,
       ...(options.headers || {}),
     };
 
@@ -95,6 +87,6 @@ export async function fetchWithAuth(url, options = {}) {
     });
   } catch (err) {
     console.error("❌ Failed to get session token:", err);
-    return fetch(url, options); // fallback
+    return fetch(url, options); // fallback without auth
   }
 }

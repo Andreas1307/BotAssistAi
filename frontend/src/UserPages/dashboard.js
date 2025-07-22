@@ -149,24 +149,18 @@ const Dashboard = () => {
   const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchShopData() {
       try {
-        let response;
-  
-        if (isShopifyUser) {
-          response = await fetchWithAuth(`${API_BASE}/api/shop-data`);
-        } else {
-          response = await fetch("https://api.botassistai.com/api/shop-data", {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+        const response = await fetchWithAuth(`${API_BASE}/api/shop-data`);
+        if (response.status === 401) {
+          const shop = new URLSearchParams(window.location.search).get("shop");
+          window.location.assign(`/auth?shop=${shop}`);
+          return;
         }
   
-        const contentType = response.headers.get("content-type") || "";
-        if (!response.ok || !contentType.includes("application/json")) {
+        if (!response.ok) {
           const text = await response.text();
-          throw new Error(`Bad response: ${text.slice(0, 200)}`);
+          throw new Error(`Bad response: ${text}`);
         }
   
         const data = await response.json();
@@ -174,10 +168,11 @@ const Dashboard = () => {
       } catch (err) {
         console.error("❌ Failed to fetch shop data:", err.message);
       }
-    };
+    }
   
-    fetchData();
+    fetchShopData();
   }, []);
+  
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("shopifyUser") === "true") {

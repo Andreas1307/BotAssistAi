@@ -1,6 +1,6 @@
 // middleware/verifySessionToken.js
 const jwt = require('jsonwebtoken');
-const { shopify, sessionStorage } = require('./shopify'); // ✅ import both
+const { shopify, sessionStorage } = require('./shopify'); // import both properly
 
 function decodeJWT(token) {
   return jwt.decode(token);
@@ -9,7 +9,6 @@ function decodeJWT(token) {
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Missing or invalid Authorization header" });
     }
@@ -23,15 +22,14 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     const shop = payload.dest.replace(/^https:\/\//, "");
     const sessionId = shopify.session.getJwtSessionId(shop, payload.sub);
-
-    const session = await sessionStorage.loadSession(sessionId); // ✅ fix is here
+    const session = await sessionStorage.loadSession(sessionId);
 
     if (!session || !session.accessToken) {
       return res.status(401).json({ error: "Invalid or expired session" });
     }
 
     res.locals.shopify = { session };
-    next();
+    return next();
   } catch (err) {
     console.error("❌ Error verifying session token:", err.message);
     return res.status(401).json({ error: "Session token invalid" });
