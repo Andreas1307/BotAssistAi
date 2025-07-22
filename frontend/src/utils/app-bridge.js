@@ -1,7 +1,7 @@
+import { getSessionToken } from '@shopify/app-bridge-utils';
 
 let appInstance = null;
 let authenticatedFetchFn = null;
-import { getSessionToken } from '@shopify/app-bridge-utils';
 
 
 async function waitForAppBridge(timeout = 15000) {
