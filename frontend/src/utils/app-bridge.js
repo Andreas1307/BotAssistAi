@@ -6,17 +6,6 @@ function waitForShopifyAppBridge(timeout = 8000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
-    // Add script if not already present
-    if (!document.querySelector("#app-bridge-script")) {
-      const script = document.createElement("script");
-      script.id = "app-bridge-script";
-      script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-      script.defer = true;
-      script.onload = () => console.log("✅ AppBridge script loaded");
-      script.onerror = () => reject(new Error("❌ Failed to load AppBridge script"));
-      document.head.appendChild(script);
-    }
-
     (function check() {
       const bridgeReady =
         window.Shopify?.AppBridge?.createApp &&
@@ -33,6 +22,7 @@ function waitForShopifyAppBridge(timeout = 8000) {
     })();
   });
 }
+
 
 
 export async function waitForAppBridge(timeout = 5000) {
