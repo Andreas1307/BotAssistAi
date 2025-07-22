@@ -20,7 +20,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const shop = payload.dest.replace(/^https:\/\//, "");
-    const sessionId = shopify.session.getJwtSessionId(shop, payload.sub);
+    // FIX: build sessionId manually instead of calling non-existent method
+    const sessionId = `${shop}_${payload.sub}`;
     const session = await sessionStorage.loadSession(sessionId);
 
     if (!session || !session.accessToken) {
