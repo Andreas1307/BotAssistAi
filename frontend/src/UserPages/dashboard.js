@@ -121,10 +121,11 @@ const Dashboard = () => {
       if (!isShopifyUser) return;
   
       const urlParams = new URLSearchParams(window.location.search);
-      const shop = urlParams.get("shop");
   
+      const shop = urlParams.get("shop") || localStorage.getItem("shop");
+
       if (!shop) {
-        console.error("Missing shop param");
+        console.error("Missing shop param from URL or localStorage");
         return;
       }
   
