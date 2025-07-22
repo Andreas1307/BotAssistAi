@@ -146,14 +146,18 @@ const Dashboard = () => {
     ensureShopifyAuthenticated();
   }, []);
   
-  const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-
   useEffect(() => {
+    const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+  
+    if (!isShopifyUser) return;
+  
     async function fetchShopData() {
       try {
         const response = await fetchWithAuth(`${API_BASE}/api/shop-data`);
+  
         if (response.status === 401) {
           const shop = new URLSearchParams(window.location.search).get("shop");
+          console.log("🛑 Unauthorized, redirecting to /auth");
           window.location.assign(`/auth?shop=${shop}`);
           return;
         }

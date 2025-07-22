@@ -34,18 +34,17 @@ export async function getAppBridgeInstance() {
 export async function fetchWithAuth(url, options = {}) {
   const app = await getAppBridgeInstance();
   if (!app) {
-    console.warn("⚠️ No AppBridge instance, doing regular fetch");
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
+    console.warn("⚠️ No AppBridge instance, skipping fetch");
+    return new Response(null, { status: 401 });
   }
 
   try {
     const token = await getSessionToken(app);
+    if (!token) {
+      console.warn("⚠️ No session token, skipping fetch");
+      return new Response(null, { status: 401 });
+    }
+
     return fetch(url, {
       ...options,
       headers: {
@@ -56,6 +55,6 @@ export async function fetchWithAuth(url, options = {}) {
     });
   } catch (err) {
     console.error("❌ Failed to get session token:", err);
-    return fetch(url, options);
+    return new Response(null, { status: 401 });
   }
 }
