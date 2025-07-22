@@ -47,6 +47,7 @@
     "react": "^19.1.0",
     "react-calendar": "^5.1.0",
     "react-dom": "^19.1.0",
+    "shopify-app-session-storage-redis": "^0.0.1-security",
     "sitemap": "^8.0.0",
     "stripe": "^17.7.0",
     "uuid": "^11.1.0"

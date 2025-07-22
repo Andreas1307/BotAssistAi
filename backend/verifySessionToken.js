@@ -1,9 +1,8 @@
-// middleware/verifySessionToken.js
 const jwt = require('jsonwebtoken');
-const { shopify, sessionStorage } = require('./shopify'); // import both properly
+const { shopify, sessionStorage } = require('./shopify');
 
-function decodeJWT(token) {
-  return jwt.decode(token);
+function verifyJWT(token) {
+  return jwt.verify(token, process.env.SHOPIFY_API_SECRET);
 }
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -14,7 +13,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace(/^Bearer\s/, "");
-    const payload = decodeJWT(token);
+    const payload = verifyJWT(token); // <-- verifies signature
 
     if (!payload || !payload.dest || !payload.sub) {
       throw new Error("Invalid token payload");
