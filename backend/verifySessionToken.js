@@ -1,5 +1,3 @@
-// middleware/verify-session-token.js
-
 const { Shopify } = require("@shopify/shopify-api");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -12,11 +10,13 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     const token = authHeader.replace(/^Bearer\s/, "");
 
-    // ✅ Decode the session token (JWT)
+    // ✅ Decode the session token
     const payload = await Shopify.Auth.JWT.decodeSessionToken(token);
 
-    const shop = payload.dest.replace(/^https:\/\//, ""); // get shop domain from token
-    const session = await Shopify.Session.Storage.findByShop(shop);
+    const shop = payload.dest.replace(/^https:\/\//, "");
+    const sessionId = Shopify.Session.getJwtSessionId(shop, payload.sub);
+
+    const session = await Shopify.Session.Storage.loadSession(sessionId);
 
     if (!session || !session.accessToken) {
       return res.status(401).json({ error: "Invalid or expired session" });
