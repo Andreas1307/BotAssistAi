@@ -10,8 +10,10 @@ function waitForShopifyAppBridge(timeout = 8000) {
     if (!document.querySelector("#app-bridge-script")) {
       const script = document.createElement("script");
       script.id = "app-bridge-script";
-      script.src = "https://unpkg.com/@shopify/app-bridge@3";
-      script.async = true;
+      script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+      script.defer = true;
+      script.onload = () => console.log("✅ AppBridge script loaded");
+      script.onerror = () => reject(new Error("❌ Failed to load AppBridge script"));
       document.head.appendChild(script);
     }
 
