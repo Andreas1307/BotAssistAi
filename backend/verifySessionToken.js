@@ -1,6 +1,6 @@
 // middleware/verifySessionToken.js
 const jwt = require('jsonwebtoken');
-const shopify = require('./shopify'); // adjust path if needed
+const { shopify, sessionStorage } = require('../shopify'); // ✅ import both
 
 function decodeJWT(token) {
   return jwt.decode(token);
@@ -15,15 +15,16 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace(/^Bearer\s/, "");
-
     const payload = decodeJWT(token);
+
     if (!payload || !payload.dest || !payload.sub) {
       throw new Error("Invalid token payload");
     }
 
     const shop = payload.dest.replace(/^https:\/\//, "");
     const sessionId = shopify.session.getJwtSessionId(shop, payload.sub);
-    const session = await shopify.sessionStorage.loadSession(sessionId);
+
+    const session = await sessionStorage.loadSession(sessionId); // ✅ fix is here
 
     if (!session || !session.accessToken) {
       return res.status(401).json({ error: "Invalid or expired session" });
