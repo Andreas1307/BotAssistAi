@@ -28,7 +28,7 @@ function waitForShopifyAppBridge(timeout = 10000) {
   });
 }
 
-export async function waitForAppBridge() {
+export async function waitForAppBridge(timeout = 10000) {
   const isEmbedded = window.top !== window.self;
   if (!isEmbedded) {
     console.warn("⚠️ Not inside Shopify embedded iframe, skipping AppBridge initialization");
@@ -42,7 +42,13 @@ export async function waitForAppBridge() {
     return null;
   }
 
-  return getAppBridgeInstance(); // ✅ no wait needed
+  try {
+    await waitForShopifyAppBridge(timeout); // 👈 wait for Shopify script to fully load
+    return getAppBridgeInstance();
+  } catch (err) {
+    console.error("❌ AppBridge load failed:", err);
+    return null;
+  }
 }
 
 
@@ -77,8 +83,8 @@ export async function fetchWithAuth(url, options = {}) {
 
   try {
     const token = await getSessionToken(app);
-    if (!token) {
-      console.warn("⚠️ No session token, skipping fetch");
+    if (!token || typeof token !== "string") {
+      console.warn("⚠️ Invalid session token received");
       return new Response(null, { status: 401 });
     }
 
@@ -95,6 +101,7 @@ export async function fetchWithAuth(url, options = {}) {
     return new Response(null, { status: 401 });
   }
 }
+
 
 
 
