@@ -2,7 +2,7 @@ const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { SQLiteSessionStorage } = require('@shopify/shopify-app-session-storage-sqlite');
 require('@shopify/shopify-api/adapters/node');
 
-const sessionStorage = new SQLiteSessionStorage('./shopify_sessions.sqlite'); // ⬅️ Persistent
+const sessionStorage = new SQLiteSessionStorage('./shopify_sessions.sqlite');
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
