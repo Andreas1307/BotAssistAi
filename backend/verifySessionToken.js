@@ -1,6 +1,6 @@
 // middleware/verifySessionToken.js
 const jwt = require('jsonwebtoken');
-const { shopify, sessionStorage } = require('../shopify'); // ✅ import both
+const { shopify, sessionStorage } = require('./shopify'); // ✅ import both
 
 function decodeJWT(token) {
   return jwt.decode(token);
