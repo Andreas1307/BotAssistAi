@@ -118,14 +118,6 @@ const Dashboard = () => {
   useShopifyInstallRedirect();
 
   const API_BASE = "https://api.botassistai.com";
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const host = urlParams.get("host");
-    if (host) {
-      localStorage.setItem("host", host);
-    }
-  }, []);
   
   const [shopData, setShopData] = useState(null);
 
@@ -159,6 +151,12 @@ const Dashboard = () => {
   }, []);
   
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host");
+    if (host) {
+      localStorage.setItem("host", host);
+    }
+  
     const init = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       if (!isShopifyUser) return;
@@ -192,25 +190,16 @@ const Dashboard = () => {
     };
   
     const timeout = setTimeout(() => {
-      init(); // wait 300ms to let iframe + bridge be ready
+      init();
     }, 300);
   
     return () => clearTimeout(timeout);
   }, []);
   
   
+
+
   
-  
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("shopifyUser") === "true") {
-      localStorage.setItem("shopifyUser", "true");
-    }
-  }, []);
-  
-  
-  
-// DOAR SA UPDATEZ SI SA VAD DACA MERGE
 
   // FETCH MEMBERSHIP
   useEffect(() => {

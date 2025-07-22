@@ -10,18 +10,21 @@ function waitForShopifyAppBridge(timeout = 10000) {
       const bridgeReady =
         window.Shopify?.AppBridge?.createApp &&
         typeof window.Shopify.AppBridge.createApp === "function";
-
+    
+      console.log("Checking AppBridge availability:", bridgeReady);
+    
       if (bridgeReady) {
         return resolve(window.Shopify.AppBridge);
       }
-
+    
       if (Date.now() - start > timeout) {
         console.error("❌ AppBridge still not ready after timeout");
         return reject(new Error("AppBridge timeout"));
       }
-
+    
       setTimeout(check, 100);
     })();
+    
   });
 }
 
