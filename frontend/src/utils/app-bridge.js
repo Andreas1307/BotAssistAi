@@ -25,8 +25,6 @@ async function waitForAppBridge(timeout = 15000) {
 
 
 
-
-
 async function getAuthenticatedFetch(app) {
   if (!authenticatedFetchFn) {
     const module = await import('@shopify/app-bridge-utils');
@@ -85,11 +83,15 @@ export async function fetchWithAuth(url, options = {}) {
 
   const fetchFn = await getAuthenticatedFetch(app);
 
-  return fetchFn(url, {
-    ...options,
+  const response = await fetchFn(url, {
+    method: options.method || "GET",
+    body: options.body,
     headers: {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...(options.headers || {}),
     },
   });
+
+  // Shopify adds Authorization Bearer token under the hood to this fetch
+  return response;
 }
