@@ -1,31 +1,30 @@
 
 let appInstance = null;
 let authenticatedFetchFn = null;
-function waitForAppBridge(timeout = 15000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
 
-    function checkBridge() {
-      if (window.Shopify && window.Shopify.AppBridge && typeof window.Shopify.AppBridge.createApp === 'function') {
-        return resolve(window.Shopify.AppBridge);
+
+
+async function waitForAppBridge(timeout = 15000) {
+  const start = Date.now();
+
+  while (Date.now() - start < timeout) {
+    try {
+      const module = await import('@shopify/app-bridge'); // 👈 real ESM module
+      if (typeof module.createApp === 'function') {
+        return module;
       }
-      if (Date.now() - start > timeout) {
-        return reject(new Error("Timed out waiting for AppBridge to load"));
-      }
-      setTimeout(checkBridge, 100);
+    } catch (e) {
+      // Might fail if not resolved yet, keep retrying
     }
 
-    if (document.readyState === 'complete') {
-      // If page fully loaded, start checking immediately
-      checkBridge();
-    } else {
-      // Wait for window load event, then start checking
-      window.addEventListener('load', () => {
-        checkBridge();
-      });
-    }
-  });
+    await new Promise((r) => setTimeout(r, 100));
+  }
+
+  throw new Error("Timed out waiting for AppBridge to load");
 }
+
+
+
 
 
 async function getAuthenticatedFetch(app) {
