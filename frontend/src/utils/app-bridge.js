@@ -74,7 +74,6 @@ export async function fetchWithAuth(url, options = {}) {
   }
 }
 export {
-  getAppBridgeInstance,
   fetchWithAuth,
   waitForAppBridge,
 };
