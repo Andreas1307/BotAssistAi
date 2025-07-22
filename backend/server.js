@@ -119,22 +119,30 @@ app.get('/auth', async (req, res) => {
   }
 });
 
-app.get("/api/shop-data", verifySessionToken, async (req, res) => {
-  try {
-    const session = res.locals.shopify?.session;
- console.log("Request to /api/shop-data, session:", res.locals.shopify?.session);
-    if (!session) {
-      return res.status(401).json({ error: "Missing session" });
-    }
-   
+app.get("/api/shop-data", async (req, res) => {
+  const authHeader = req.headers.authorization;
 
-    const shop = await shopify.api.rest.Shop.get({ session, id: session.shop });
-    return res.status(200).json({ shopData: shop });
-  } catch (err) {
-    console.error("❌ Backend shop-data error:", err.message);
-    return res.status(500).json({ error: "Internal error fetching shop data" });
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    // 🔐 Shopify flow
+    try {
+      await verifySessionToken(req, res, async () => {
+        const session = res.locals.shopify?.session;
+        console.log("🔐 Shopify session found:", session?.shop);
+
+        const shop = await shopify.api.rest.Shop.get({ session });
+        return res.status(200).json({ shopData: shop });
+      });
+    } catch (err) {
+      console.error("❌ Shopify session error:", err.message);
+      return res.status(401).json({ error: "Session token invalid" });
+    }
+  } else {
+    // 🟢 Public/non-Shopify fallback
+    console.log("⚠️ No Shopify token, returning default public shop data");
+    return res.status(200).json({ shopData: { name: "Non-Shopify User", domain: "public" } });
   }
 });
+
 
 app.get('/auth/callback', async (req, res) => {
   try {
@@ -148,7 +156,7 @@ app.get('/auth/callback', async (req, res) => {
 
     // Redirect to your embedded app
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
-    res.redirect(redirectUrl);
+    res.redirect(`${redirectUrl}&shopifyUser=true`);
   } catch (e) {
     console.error('❌ Auth callback error:', e);
     res.status(500).send('Authentication failed');

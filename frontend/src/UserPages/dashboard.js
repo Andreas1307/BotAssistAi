@@ -116,37 +116,51 @@ const Dashboard = () => {
   const [shopData, setShopData] = useState(null);
 
   useEffect(() => {
-    const ensureAuthenticated = async () => {
+    const ensureShopifyAuthenticated = async () => {
+      const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+      if (!isShopifyUser) return;
+  
       const urlParams = new URLSearchParams(window.location.search);
-      const host = urlParams.get("host");
       const shop = urlParams.get("shop");
   
-      if (!host || !shop) {
-        console.error("Missing host or shop param");
+      if (!shop) {
+        console.error("Missing shop param");
         return;
       }
   
       const res = await fetch("/api/check-session", {
         headers: {
-          Authorization: "Bearer token", // dummy, just to try
+          Authorization: "Bearer placeholder", // triggers your verifySessionToken
         },
       });
   
       if (res.status === 401) {
+        console.log("🛑 Session missing, redirecting to /auth");
         window.location.assign(`/auth?shop=${shop}`);
       }
     };
   
-    ensureAuthenticated();
-  }, []); 
+    ensureShopifyAuthenticated();
+  }, []);
+  
+  const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetchWithAuth("https://api.botassistai.com/api/shop-data");
-
+        let response;
+  
+        if (isShopifyUser) {
+          response = await fetchWithAuth("https://api.botassistai.com/api/shop-data");
+        } else {
+          response = await fetch("https://api.botassistai.com/api/shop-data", {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
   
         const contentType = response.headers.get("content-type") || "";
-  
         if (!response.ok || !contentType.includes("application/json")) {
           const text = await response.text();
           throw new Error(`Bad response: ${text.slice(0, 200)}`);
@@ -160,6 +174,12 @@ const Dashboard = () => {
     };
   
     fetchData();
+  }, []);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("shopifyUser") === "true") {
+      localStorage.setItem("shopifyUser", "true");
+    }
   }, []);
   
   
