@@ -1,4 +1,4 @@
-import { getSessionToken } from '@shopify/app-bridge-utils';
+import { getSessionToken } from "@shopify/app-bridge-utils";
 
 let appInstance = null;
 
@@ -7,10 +7,16 @@ function waitForShopifyAppBridge(timeout = 5000) {
     const start = Date.now();
 
     (function check() {
-      if (window.Shopify && window.Shopify.AppBridge && typeof window.Shopify.AppBridge.createApp === "function") {
-        return resolve(window.Shopify.AppBridge);
-      }
-      if (Date.now() - start > timeout) return reject(new Error("AppBridge timeout"));
+      const available =
+        window.Shopify &&
+        window.Shopify.AppBridge &&
+        typeof window.Shopify.AppBridge.createApp === "function";
+
+      if (available) return resolve(window.Shopify.AppBridge);
+
+      if (Date.now() - start > timeout)
+        return reject(new Error("AppBridge timeout"));
+
       setTimeout(check, 100);
     })();
   });
@@ -35,11 +41,6 @@ export function getAppBridgeInstance() {
   localStorage.setItem("host", host);
   const isEmbedded = window.top !== window.self;
 
-  if (!window.Shopify || !window.Shopify.AppBridge || typeof window.Shopify.AppBridge.createApp !== "function") {
-    console.error("❌ AppBridge not available or createApp not found");
-    return null;
-  }
-
   try {
     appInstance = window.Shopify.AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -55,7 +56,7 @@ export function getAppBridgeInstance() {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const app = await getAppBridgeInstance();
+  const app = await waitForAppBridge();
   if (!app) {
     console.warn("⚠️ No AppBridge instance, skipping fetch");
     return new Response(null, { status: 401 });
@@ -81,4 +82,3 @@ export async function fetchWithAuth(url, options = {}) {
     return new Response(null, { status: 401 });
   }
 }
-
