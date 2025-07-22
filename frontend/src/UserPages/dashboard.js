@@ -13,7 +13,12 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "axios";
-import { fetchWithAuth, waitForAppBridge } from "../utils/app-bridge";
+import {
+  fetchWithAuth,
+  waitForAppBridge,
+  getAppBridgeInstance,
+} from "../utils/app-bridge";
+import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
