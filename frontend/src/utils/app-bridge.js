@@ -73,3 +73,4 @@ export async function fetchWithAuth(url, options = {}) {
     return new Response(null, { status: 401 });
   }
 }
+export { waitForAppBridge };
