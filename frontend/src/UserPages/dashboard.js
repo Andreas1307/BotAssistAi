@@ -119,7 +119,14 @@ const Dashboard = () => {
 
   const API_BASE = "https://api.botassistai.com";
 
-
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host");
+    if (host) {
+      localStorage.setItem("host", host);
+    }
+  }, []);
+  
   const [shopData, setShopData] = useState(null);
 
   useEffect(() => {
