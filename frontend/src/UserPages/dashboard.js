@@ -13,7 +13,7 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "axios";
-import { fetchWithAuth } from "../utils/app-bridge";
+import { fetchWithAuth, waitForAppBridge } from "../utils/app-bridge";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
@@ -148,13 +148,13 @@ const Dashboard = () => {
   
   useEffect(() => {
     const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-  
     if (!isShopifyUser) return;
   
     async function fetchShopData() {
       try {
-        const response = await fetchWithAuth(`${API_BASE}/api/shop-data`);
+        await waitForAppBridge(); 
   
+        const response = await fetchWithAuth(`${API_BASE}/api/shop-data`);
         if (response.status === 401) {
           const shop = new URLSearchParams(window.location.search).get("shop");
           console.log("🛑 Unauthorized, redirecting to /auth");
