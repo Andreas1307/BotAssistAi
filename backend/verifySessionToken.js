@@ -1,9 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { shopify, sessionStorage } = require('./shopify');
-
-function verifyJWT(token) {
-  return jwt.verify(token, process.env.SHOPIFY_API_SECRET);
-}
+// middleware/verifySessionToken.js
+const { shopify } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -13,17 +9,11 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace(/^Bearer\s/, "");
-    const payload = verifyJWT(token); // <-- verifies signature
 
-    if (!payload || !payload.dest || !payload.sub) {
-      throw new Error("Invalid token payload");
-    }
+    // 🛡️ Validate the token using Shopify
+    const session = await shopify.auth.validateAuthenticatedSession(token);
 
-    const shop = payload.dest.replace(/^https:\/\//, "");
-    const sessionId = shopify.session.getJwtSessionId(shop, payload.sub);
-    const session = await sessionStorage.loadSession(sessionId);
-
-    if (!session || !session.accessToken) {
+    if (!session || !session.shop || !session.accessToken) {
       return res.status(401).json({ error: "Invalid or expired session" });
     }
 

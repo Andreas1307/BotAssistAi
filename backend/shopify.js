@@ -1,11 +1,8 @@
-// shopify.js
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { RedisSessionStorage } = require('shopify-app-session-storage-redis');
-const Redis = require('ioredis');
+const { SQLiteSessionStorage } = require('@shopify/shopify-app-session-storage-sqlite');
+require('@shopify/shopify-api/adapters/node');
 
-const redisClient = new Redis(process.env.REDIS_URL);
-
-const sessionStorage = new RedisSessionStorage(redisClient);
+const sessionStorage = new SQLiteSessionStorage('./shopify_sessions.sqlite'); // ⬅️ Persistent
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -18,4 +15,3 @@ const shopify = shopifyApi({
 });
 
 module.exports = { shopify, sessionStorage };
-
