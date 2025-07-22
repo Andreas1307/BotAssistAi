@@ -16,7 +16,6 @@ import axios from "axios";
 import {
   fetchWithAuth,
   waitForAppBridge,
-  getAppBridgeInstance,
 } from "../utils/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Link, useNavigate } from "react-router-dom";
@@ -125,76 +124,72 @@ const Dashboard = () => {
     const ensureShopifyAuthenticated = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       if (!isShopifyUser) return;
-  
-      const urlParams = new URLSearchParams(window.location.search);
-  
-      const shop = urlParams.get("shop") || localStorage.getItem("shop");
 
-      if (!shop) {
-        console.error("Missing shop param from URL or localStorage");
-        return;
-      }
-  
+      const urlParams = new URLSearchParams(window.location.search);
+      const shop = urlParams.get("shop") || localStorage.getItem("shop");
+      if (!shop) return;
+
       const res = await fetch("/api/check-session", {
         headers: {
-          Authorization: "Bearer placeholder", // triggers your verifySessionToken
+          Authorization: "Bearer placeholder",
         },
       });
-  
+
       if (res.status === 401) {
         console.log("🛑 Session missing, redirecting to /auth");
         window.location.assign(`/auth?shop=${shop}`);
       }
     };
-  
+
     ensureShopifyAuthenticated();
   }, []);
-  
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
-    if (host) {
-      localStorage.setItem("host", host);
-    }
-  
-    const init = async () => {
+    if (host) localStorage.setItem("host", host);
+  }, []);
+
+  useEffect(() => {
+    const fetchShopData = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       if (!isShopifyUser) return;
-  
+
       try {
         const app = await waitForAppBridge();
-  
-        if (!app) throw new Error("AppBridge instance missing");
-  
+        if (!app) throw new Error("AppBridge not initialized");
+
         const token = await getSessionToken(app);
-        if (!token) throw new Error("Missing session token");
-  
-        const response = await fetch(`${API_BASE}/api/shop-data`, {
+        if (!token) throw new Error("Session token missing");
+
+        const res = await fetch(`${API_BASE}/api/shop-data`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
-  
-        if (response.status === 401) {
+
+        if (res.status === 401) {
           const shop = new URLSearchParams(window.location.search).get("shop");
+          console.warn("🛑 Unauthorized, redirecting to /auth");
           window.location.assign(`/auth?shop=${shop}`);
           return;
         }
-  
-        const data = await response.json();
-        setShopData(data.shopData);
+
+        const json = await res.json();
+        setShopData(json.shopData);
       } catch (err) {
-        console.error("❌ Error during shop data fetch:", err.message);
+        console.error("❌ Error fetching shop data:", err);
       }
     };
-  
+
     const timeout = setTimeout(() => {
-      init();
+      fetchShopData();
     }, 300);
-  
+
     return () => clearTimeout(timeout);
   }, []);
+
   
   
 

@@ -42,8 +42,10 @@ export async function waitForAppBridge(timeout = 10000) {
     return null;
   }
 
+  await waitForShopifyAppBridge(); // ✅ make sure the global AppBridge is ready
   return getAppBridgeInstance();
 }
+
 
 
 export function getAppBridgeInstance() {
