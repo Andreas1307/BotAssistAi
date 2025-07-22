@@ -184,7 +184,11 @@ const Dashboard = () => {
       }
     };
   
-    init();
+    const timeout = setTimeout(() => {
+      init(); // run after 300ms to allow iframe+bridge to be ready
+    }, 300);
+  
+    return () => clearTimeout(timeout);
   }, []);
   
   useEffect(() => {

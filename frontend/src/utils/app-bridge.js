@@ -2,35 +2,30 @@ import { getSessionToken } from "@shopify/app-bridge-utils";
 
 let appInstance = null;
 
-function waitForShopifyAppBridge(timeout = 5000) {
+function waitForShopifyAppBridge(timeout = 8000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
 
-    // Inject the App Bridge script if it doesn't exist
+    // Add script if not already present
     if (!document.querySelector("#app-bridge-script")) {
       const script = document.createElement("script");
       script.id = "app-bridge-script";
-      script.src = "https://unpkg.com/@shopify/app-bridge@3"; // Shopify's recommended CDN
+      script.src = "https://unpkg.com/@shopify/app-bridge@3";
       script.async = true;
-      script.onload = () => {
-        console.log("✅ AppBridge script loaded.");
-      };
-      script.onerror = () => {
-        reject(new Error("❌ Failed to load AppBridge script"));
-      };
       document.head.appendChild(script);
     }
 
     (function check() {
-      const available =
-        window.Shopify &&
-        window.Shopify.AppBridge &&
+      const bridgeReady =
+        window.Shopify?.AppBridge?.createApp &&
         typeof window.Shopify.AppBridge.createApp === "function";
 
-      if (available) return resolve(window.Shopify.AppBridge);
+      if (bridgeReady) return resolve(window.Shopify.AppBridge);
 
-      if (Date.now() - start > timeout)
+      if (Date.now() - start > timeout) {
+        console.error("❌ AppBridge still not ready after timeout");
         return reject(new Error("AppBridge timeout"));
+      }
 
       setTimeout(check, 100);
     })();
@@ -54,7 +49,6 @@ export function getAppBridgeInstance() {
     return null;
   }
 
-  localStorage.setItem("host", host);
   const isEmbedded = window.top !== window.self;
 
   try {
@@ -63,6 +57,11 @@ export function getAppBridgeInstance() {
       host,
       forceRedirect: isEmbedded,
     });
+
+    if (!appInstance) {
+      throw new Error("Failed to initialize AppBridge");
+    }
+
   } catch (e) {
     console.error("❌ Failed to create AppBridge instance:", e);
     return null;
@@ -70,6 +69,7 @@ export function getAppBridgeInstance() {
 
   return appInstance;
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
   const app = await waitForAppBridge();
