@@ -18,10 +18,11 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(400).json({ error: "Shop domain is required" });
     }
 
-    const client = new shopify.api.clients.Rest({
+    const client = new shopify.clients.Rest({
       domain: shop,
       accessToken: token,
     });
+    
 
     // Try a test request to validate the token
     await client.get({ path: 'shop' });

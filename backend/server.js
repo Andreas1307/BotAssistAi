@@ -135,7 +135,7 @@ app.get("/api/shop-data", async (req, res) => {
     }
 
     // Create REST client with the token and shop
-    const client = new shopify.api.clients.Rest({
+    const client = new shopify.clients.Rest({
       domain: shop,
       accessToken: token,
     });
