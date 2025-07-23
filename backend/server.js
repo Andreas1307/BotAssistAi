@@ -46,7 +46,6 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, sessionStorage } = require('./shopify');
-const { decodeSessionToken } = require('@shopify/shopify-api/lib/auth/session/token-decode');
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -81,9 +80,6 @@ app.use(cors({
   credentials: true, // ✅ Must be true to send cookies
 }));
 
-
-
-
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -117,40 +113,17 @@ app.get('/auth', async (req, res) => {
   }
 });
 
-app.get("/api/shop-data", async (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.error("❌ Missing or invalid auth header");
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
+app.get('/api/shop-data', shopify.auth.authenticate(), async (req, res) => {
   try {
-    const token = authHeader.replace("Bearer ", "");
+    const session = res.locals.shopify.session;
 
-    // ✅ Decode session token (App Bridge token)
-    const payload = await decodeSessionToken(token);
-
-    const shop = payload.dest.replace(/^https:\/\//, "");
-    if (!shop) {
-      console.error("❌ Could not extract shop from token");
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    // ✅ Rebuild a temporary session using the token
-    const session = shopify.api.session.customAppSession(shop);
-
-    // ✅ Use REST client with token
-    const client = new shopify.clients.Rest({
-      session,
-      accessToken: token,
-    });
+    const client = new shopify.api.clients.Rest({ session });
 
     const response = await client.get({ path: 'shop' });
 
     res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
-    console.error("❌ Failed to verify session or fetch shop:", err.message);
+    console.error("❌ Failed to fetch shop data:", err);
     return res.status(401).json({ error: "Unauthorized" });
   }
 });
