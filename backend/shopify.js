@@ -1,4 +1,4 @@
-const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION, decodeSessionToken } = require('@shopify/shopify-api');
 const { SQLiteSessionStorage } = require('@shopify/shopify-app-session-storage-sqlite');
 require('@shopify/shopify-api/adapters/node');
 
@@ -11,7 +11,7 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/^https?:\/\//, ''),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage, // pass the sessionStorage instance here
+  sessionStorage,
 });
 
-module.exports = { shopify, sessionStorage };
+module.exports = { shopify, sessionStorage, decodeSessionToken };

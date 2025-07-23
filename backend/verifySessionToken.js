@@ -1,4 +1,4 @@
-const { shopify } = require("./shopify");
+const { shopify, decodeSessionToken } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -9,9 +9,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace("Bearer ", "");
-
-    // Decode and verify token
-    const payload = await shopify.auth.decodeSessionToken(token);
+    const payload = await decodeSessionToken(token);
 
     if (!payload?.dest) {
       console.error("❌ Token payload missing 'dest' property.");

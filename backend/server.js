@@ -45,7 +45,7 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, sessionStorage } = require('./shopify');
+const { shopify, sessionStorage, decodeSessionToken } = require('./shopify');
 
 app.set('trust proxy', 1);
 
@@ -120,16 +120,14 @@ app.get('/auth', async (req, res) => {
 app.get("/api/shop-data", async (req, res) => {
   const authHeader = req.headers.authorization;
 
-  console.log("🛬 Incoming request to /api/shop-data");
-  console.log("Authorization header:", authHeader);
-
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Missing or invalid authorization header" });
   }
 
   try {
     const token = authHeader.replace("Bearer ", "");
-    const payload = await shopify.auth.decodeSessionToken(token);  // <--- await here
+    // Use the imported decodeSessionToken here:
+    const payload = await decodeSessionToken(token);
 
     if (!payload?.dest) {
       console.error("❌ Token payload missing 'dest' property.");
