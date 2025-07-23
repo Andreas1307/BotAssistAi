@@ -137,7 +137,7 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    const sessionId = getOnlineSessionId(session.shop); // ✅ FIXED
+    const sessionId = `online_${session.shop}`; // ✅ manual fallback
     session.id = sessionId;
 
     await sessionStorage.storeSession(session);
@@ -150,6 +150,8 @@ app.get('/auth/callback', async (req, res) => {
     res.status(500).send('Authentication failed');
   }
 });
+
+
 
 
 

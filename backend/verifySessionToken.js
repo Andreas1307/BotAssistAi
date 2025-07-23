@@ -19,7 +19,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const sessionId = getOnlineSessionId(shop); // ✅ FIXED
+    const sessionId = `online_${shop}`; // ✅ manual fallback
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);
@@ -35,3 +35,4 @@ module.exports = async function verifySessionToken(req, res, next) {
     return res.status(401).json({ error: "Invalid session" });
   }
 };
+
