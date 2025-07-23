@@ -46,7 +46,7 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, sessionStorage } = require('./shopify');
-const jwt = require('jsonwebtoken');
+const { decodeSessionToken } = require("@shopify/shopify-api");
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -119,45 +119,39 @@ app.get('/auth', async (req, res) => {
 
 app.get("/api/shop-data", async (req, res) => {
   const authHeader = req.headers.authorization;
-  const shopDomain = req.headers['x-shopify-shop-domain'];
 
-  if (!authHeader || !authHeader.startsWith("Bearer ") || !shopDomain) {
-    console.error("❌ Missing auth header or shop domain");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.error("❌ Missing or invalid auth header");
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
     const token = authHeader.replace("Bearer ", "");
 
-    // Verify JWT with your app secret
-    const payload = jwt.verify(token, process.env.SHOPIFY_API_SECRET);
-    if (!payload || !payload.dest) {
-      console.error("❌ Invalid token payload");
+    // ✅ Decode session token (App Bridge token)
+    const payload = await decodeSessionToken(token);
+
+    const shop = payload.dest.replace(/^https:\/\//, "");
+    if (!shop) {
+      console.error("❌ Could not extract shop from token");
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    // Use verified shop domain from token
-    const verifiedShop = payload.dest.replace(/^https:\/\//, '');
+    // ✅ Rebuild a temporary session using the token
+    const session = shopify.api.session.customAppSession(shop);
 
-    // Load stored offline session
-    const sessionId = shopify.session.getOfflineId(verifiedShop);
-    const session = await sessionStorage.loadSession(sessionId);
-
-    if (!session || !session.accessToken) {
-      console.error("❌ No valid session found for this shop");
-      return res.status(401).json({ error: "No valid session" });
-    }
-
+    // ✅ Use REST client with token
     const client = new shopify.clients.Rest({
-      accessToken: session.accessToken,
-      domain: session.shop,
+      session,
+      accessToken: token,
     });
 
-    const shopData = await client.get({ path: 'shop' });
-    return res.status(200).json({ shopData: shopData.body.shop });
+    const response = await client.get({ path: 'shop' });
+
+    res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
-    console.error("❌ Token validation or API call failed:", err.message);
-    return res.status(401).json({ error: "Invalid or expired token" });
+    console.error("❌ Failed to verify session or fetch shop:", err.message);
+    return res.status(401).json({ error: "Unauthorized" });
   }
 });
 

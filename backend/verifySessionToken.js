@@ -1,33 +1,24 @@
-const { shopify } = require('./shopify');
+const { shopify } = require("./shopify");
+const { decodeSessionToken } = require("@shopify/shopify-api");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.error("❌ Missing or invalid authorization header.");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const token = authHeader.replace("Bearer ", "");
+    const payload = await decodeSessionToken(token);
+    const shop = payload.dest.replace(/^https:\/\//, "");
 
-    // You must pass the correct shop domain – extract it from query or headers
-    const shop = req.query.shop || req.headers['x-shopify-shop-domain'];
     if (!shop) {
-      console.error("❌ Shop domain not provided.");
-      return res.status(400).json({ error: "Shop domain is required" });
+      console.error("❌ No shop found in token payload");
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const client = new shopify.clients.Rest({
-      domain: shop,
-      accessToken: token,
-    });
-    
-
-    // Try a test request to validate the token
-    await client.get({ path: 'shop' });
-
-    res.locals.shopify = { accessToken: token, shop };
+    req.shopify = { shop, token };
     next();
   } catch (err) {
     console.error("❌ Token validation failed:", err.message);
