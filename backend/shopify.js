@@ -1,4 +1,5 @@
-const { shopifyApi, LATEST_API_VERSION, decodeSessionToken } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
+const { decodeSessionToken } = require('@shopify/shopify-api/auth/session-token');  // <-- import from here
 const { SQLiteSessionStorage } = require('@shopify/shopify-app-session-storage-sqlite');
 require('@shopify/shopify-api/adapters/node');
 
