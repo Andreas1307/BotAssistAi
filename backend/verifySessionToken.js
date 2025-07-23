@@ -1,4 +1,5 @@
 const { shopify, sessionStorage } = require("./shopify");
+const { getOnlineSessionId } = require('@shopify/shopify-api');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -19,7 +20,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     // ✅ CORRECT session ID generator
-    const sessionId = shopify.session.getOnlineId(shop);
+    const sessionId = getOnlineSessionId(shop); // ✅
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);

@@ -46,6 +46,8 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, sessionStorage } = require('./shopify');
+const { getOnlineSessionId } = require('@shopify/shopify-api');
+
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -136,7 +138,7 @@ app.get('/auth/callback', async (req, res) => {
     });
 
     // ✅ Use official method to generate the correct session ID
-    const sessionId = shopify.session.getOnlineId(session.shop);
+    const sessionId = getOnlineSessionId(shop); // ✅
     session.id = sessionId;
 
     // ✅ Store it with that ID
