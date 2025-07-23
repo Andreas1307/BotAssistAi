@@ -122,26 +122,30 @@ app.get("/api/shop-data", async (req, res) => {
   const shopDomain = req.headers['x-shopify-shop-domain'];
 
   if (!authHeader || !authHeader.startsWith("Bearer ") || !shopDomain) {
+    console.error("❌ Missing auth header or shop domain");
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
     const token = authHeader.replace("Bearer ", "");
 
-    // Decode JWT just for validation
-    const payload = jwt.decode(token);
+    // Verify JWT with your app secret
+    const payload = jwt.verify(token, process.env.SHOPIFY_API_SECRET);
     if (!payload || !payload.dest) {
       console.error("❌ Invalid token payload");
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    // Load the stored OAuth session (from after auth callback)
-    const sessionId = shopify.session.getOfflineId(shopDomain);
+    // Use verified shop domain from token
+    const verifiedShop = payload.dest.replace(/^https:\/\//, '');
+
+    // Load stored offline session
+    const sessionId = shopify.session.getOfflineId(verifiedShop);
     const session = await sessionStorage.loadSession(sessionId);
 
     if (!session || !session.accessToken) {
       console.error("❌ No valid session found for this shop");
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "No valid session" });
     }
 
     const client = new shopify.clients.Rest({
@@ -152,11 +156,10 @@ app.get("/api/shop-data", async (req, res) => {
     const shopData = await client.get({ path: 'shop' });
     return res.status(200).json({ shopData: shopData.body.shop });
   } catch (err) {
-    console.error("❌ Error validating session or fetching shop data:", err.message);
-    return res.status(401).json({ error: "Invalid or expired session" });
+    console.error("❌ Token validation or API call failed:", err.message);
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 });
-
 
 app.get('/auth/callback', async (req, res) => {
   try {
