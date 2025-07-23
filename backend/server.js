@@ -115,9 +115,12 @@ app.get('/auth', async (req, res) => {
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
-    const session = req.shopify.session; // ✅ CORRECT: session is on req
+    const { shop, token } = req.shopify;
 
-    const client = new shopify.api.clients.Rest({ session }); // ✅ cleaner usage
+    const client = new shopify.api.clients.Rest({
+      domain: shop,
+      accessToken: token, // ✅ Use the actual session token here
+    });
 
     const response = await client.get({ path: 'shop' });
 
@@ -127,6 +130,7 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 });
+
 
 
 app.get('/auth/callback', async (req, res) => {
