@@ -137,10 +137,11 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    const sessionId = await shopify.session.getSessionId(session.shop, true); // ✅ use this instead
-    session.id = sessionId;
+    const sessionId = shopify.session.getOnlineId(session.shop);
+session.id = sessionId;
 
-    await sessionStorage.storeSession(session);
+await sessionStorage.storeSession(session);
+
     console.log("✅ Stored session with ID:", session.id);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });

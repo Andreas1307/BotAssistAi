@@ -19,7 +19,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     // ✅ Use built-in session ID generator
-    const sessionId = await shopify.session.getSessionId(shop, true);
+    const sessionId = shopify.session.getOnlineId(shop);
+
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);
