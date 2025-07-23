@@ -19,7 +19,8 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const sessionId = shopify.session.getOnlineId(shop);
+    // ✅ Create the correct session ID manually
+    const sessionId = `online_${shop}`;
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);
