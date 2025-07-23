@@ -1,4 +1,5 @@
 const { shopify, sessionStorage } = require("./shopify");
+const { getOnlineSessionId } = require('@shopify/shopify-api'); // ✅ FIXED
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -18,9 +19,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // ✅ Use built-in session ID generator
-    const sessionId = shopify.session.getOnlineId(shop);
-
+    const sessionId = getOnlineSessionId(shop); // ✅ FIXED
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);
