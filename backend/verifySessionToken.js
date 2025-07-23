@@ -1,4 +1,4 @@
-const { shopify, decodeSessionToken } = require('./shopify');
+const { shopify } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -9,25 +9,20 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const payload = await decodeSessionToken(token);
 
-    if (!payload?.dest) {
-      console.error("❌ Token payload missing 'dest' property.");
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    // Attempt to use the token by creating a REST client
+    const client = new shopify.api.clients.Rest({
+      accessToken: token,
+      domain: req.query.shop || req.body.shop || '',
+    });
 
-    const shopDomain = payload.dest.replace(/^https?:\/\//, "");
-    const session = await shopify.api.session.customAppSession(shopDomain);
+    // Make a dummy call to verify token validity
+    await client.get({ path: 'shop' });
 
-    if (!session) {
-      console.error("❌ Failed to create session for shop:", shopDomain);
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    res.locals.shopify = { session };
+    res.locals.shopify = { accessToken: token, shop: req.query.shop };
     return next();
   } catch (err) {
-    console.error("❌ Session verification failed:", err.message);
-    return res.status(401).json({ error: "Invalid session" });
+    console.error("❌ Invalid session token:", err.message);
+    return res.status(401).json({ error: "Unauthorized" });
   }
 };
