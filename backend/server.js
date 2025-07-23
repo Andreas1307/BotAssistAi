@@ -46,7 +46,7 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, sessionStorage } = require('./shopify');
-const { validateAuthenticatedSession } = require('@shopify/shopify-api');
+const jwt = require('jsonwebtoken');
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -127,22 +127,19 @@ app.get("/api/shop-data", async (req, res) => {
   try {
     const token = authHeader.replace("Bearer ", "");
 
-    // Validate session token and load session
-    const session = await validateAuthenticatedSession({
-      rawRequest: req,
-      rawResponse: res,
-      sessionStorage,
-      isOnline: true,
-    });
+    // Decode the JWT manually
+    const payload = jwt.decode(token); // NOTE: this does NOT verify, just decode
 
-    if (!session || !session.accessToken || !session.shop) {
-      console.error("❌ No valid session found for this token.");
-      return res.status(401).json({ error: "Unauthorized" });
+    if (!payload || !payload.dest) {
+      console.error("❌ Invalid token payload");
+      return res.status(401).json({ error: "Invalid token" });
     }
 
+    const shopDomain = payload.dest.replace(/^https:\/\//, '');
+
     const client = new shopify.clients.Rest({
-      accessToken: session.accessToken,
-      domain: session.shop,
+      accessToken: token,
+      domain: shopDomain,
     });
 
     const shopData = await client.get({ path: 'shop' });
@@ -153,6 +150,7 @@ app.get("/api/shop-data", async (req, res) => {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 });
+
 
 app.get('/auth/callback', async (req, res) => {
   try {
