@@ -43,10 +43,9 @@ database: process.env.DATABASE
 const { shopifyApi } = require('@shopify/shopify-api');
 const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
-const shopify = require('./shopify.js');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-
+const { shopify, sessionStorage } = require('./shopify');
 
 app.set('trust proxy', 1);
 
@@ -155,10 +154,9 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    // Store session
-    await shopify.sessionStorage.storeSession(session);
+    // Use the imported sessionStorage here, NOT shopify.sessionStorage
+    await sessionStorage.storeSession(session);
 
-    // Redirect to your embedded app
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
     res.redirect(`${redirectUrl}&shopifyUser=true`);
   } catch (e) {
@@ -166,6 +164,7 @@ app.get('/auth/callback', async (req, res) => {
     res.status(500).send('Authentication failed');
   }
 });
+
 
 
 
