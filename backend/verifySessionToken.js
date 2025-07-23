@@ -13,18 +13,16 @@ module.exports = async function verifySessionToken(req, res, next) {
     const payload = await shopify.session.decodeSessionToken(token);
 
     const shop = payload.dest?.replace(/^https:\/\//, "");
-
     if (!shop) {
       console.error("❌ No shop found in token payload");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // ✅ Create the correct session ID manually
-    const sessionId = `online_${shop}`;
+    // ✅ CORRECT session ID generator
+    const sessionId = shopify.session.getOnlineId(shop);
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);
-
     if (!session || !session.accessToken) {
       console.error("❌ No valid stored session for shop:", shop);
       return res.status(401).json({ error: "Session expired or missing" });
