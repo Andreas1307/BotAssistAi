@@ -1,8 +1,8 @@
-const { shopify } = require("./shopify");
+const { loadCurrentSession } = require("@shopify/shopify-api");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
-    const session = await shopify.utils.loadCurrentSession(req, res, true); // true = isOnline
+    const session = await loadCurrentSession(req, res, true); // true = isOnline session
 
     if (!session || !session.accessToken) {
       console.error("❌ No valid Shopify session found.");
