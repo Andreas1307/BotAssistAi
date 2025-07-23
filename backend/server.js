@@ -46,7 +46,6 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, sessionStorage } = require('./shopify');
-const { getOnlineSessionId } = require('@shopify/shopify-api');
 
 app.set('trust proxy', 1);
 
@@ -132,17 +131,22 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
 
 app.get('/auth/callback', async (req, res) => {
   try {
+    // Complete the OAuth callback & get the session object
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
     });
 
-    const sessionId = `online_${session.shop}`; // ✅ manual fallback
+    // Manually create the session ID for an online session:
+    // Format: "online_" + shop domain
+    const sessionId = `online_${session.shop}`;
     session.id = sessionId;
 
+    // Store the session for later use
     await sessionStorage.storeSession(session);
     console.log("✅ Stored session with ID:", session.id);
 
+    // Redirect to your embedded Shopify app URL
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
     res.redirect(`${redirectUrl}&shopifyUser=true`);
   } catch (e) {
