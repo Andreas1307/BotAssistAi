@@ -137,11 +137,9 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    // ✅ Use official method to generate the correct session ID
-    const sessionId = getOnlineSessionId(shop); // ✅
+    const sessionId = await shopify.session.getSessionId(session.shop, true); // ✅ use this instead
     session.id = sessionId;
 
-    // ✅ Store it with that ID
     await sessionStorage.storeSession(session);
     console.log("✅ Stored session with ID:", session.id);
 
