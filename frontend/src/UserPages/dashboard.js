@@ -162,10 +162,15 @@ const Dashboard = () => {
         const token = await getSessionToken(app);
         if (!token) throw new Error("Session token missing");
   
+        const shop = localStorage.getItem("shop");
+        if (!shop) {
+          console.error("No shop found")
+        }
         const res = await fetch(`${API_BASE}/api/shop-data`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
+            "X-Shopify-Shop-Domain": shop, // ✅ Send shop domain here
           },
         });
   
