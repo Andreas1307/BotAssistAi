@@ -113,11 +113,11 @@ app.get('/auth', async (req, res) => {
   }
 });
 
-app.get('/api/shop-data', shopify.auth.authenticate(), async (req, res) => {
+app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
     const session = res.locals.shopify.session;
 
-    const client = new shopify.api.clients.Rest({ session });
+    const client = new shopify.api.clients.Rest({ session: req.shopify.session });
 
     const response = await client.get({ path: 'shop' });
 
