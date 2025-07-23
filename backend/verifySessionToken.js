@@ -1,5 +1,4 @@
 const { shopify } = require("./shopify");
-const { decodeSessionToken } = require("@shopify/shopify-api");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -10,14 +9,15 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const payload = decodeSessionToken(token); // Verify and decode JWT
+
+    // Decode and verify token
+    const payload = await shopify.auth.decodeSessionToken(token);
 
     if (!payload?.dest) {
       console.error("❌ Token payload missing 'dest' property.");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Create a Shopify session using the shop domain extracted from the token's dest
     const shopDomain = payload.dest.replace(/^https?:\/\//, "");
     const session = await shopify.api.session.customAppSession(shopDomain);
 
