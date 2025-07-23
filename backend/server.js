@@ -45,7 +45,7 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, sessionStorage, decodeSessionToken } = require('./shopify');
+const { shopify, sessionStorage } = require('./shopify');
 
 app.set('trust proxy', 1);
 
@@ -126,19 +126,24 @@ app.get("/api/shop-data", async (req, res) => {
 
   try {
     const token = authHeader.replace("Bearer ", "");
-    // Use the imported decodeSessionToken here:
-    const payload = await decodeSessionToken(token);
 
-    if (!payload?.dest) {
-      console.error("❌ Token payload missing 'dest' property.");
-      return res.status(401).json({ error: "Unauthorized" });
+    // Extract the shop domain from the query or headers
+    const shop = req.query.shop || req.headers['x-shopify-shop-domain'];
+    if (!shop) {
+      console.error("❌ Shop domain not provided.");
+      return res.status(400).json({ error: "Shop domain is required" });
     }
 
-    const session = await shopify.api.session.customAppSession(payload.dest.replace(/^https?:\/\//, ""));
+    // Create REST client with the token and shop
+    const client = new shopify.api.clients.Rest({
+      domain: shop,
+      accessToken: token,
+    });
 
-    const shop = await shopify.api.rest.Shop.get({ session });
+    // Validate the token by attempting to call Shopify
+    const shopData = await client.get({ path: 'shop' });
 
-    return res.status(200).json({ shopData: shop });
+    return res.status(200).json({ shopData: shopData.body.shop });
   } catch (err) {
     console.error("❌ Failed to validate token / fetch shop:", err.message);
     return res.status(401).json({ error: "Unauthorized" });
@@ -152,7 +157,7 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    // Use the imported sessionStorage here, NOT shopify.sessionStorage
+    // Save the session using your own sessionStorage instance
     await sessionStorage.storeSession(session);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
