@@ -46,7 +46,7 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, sessionStorage } = require('./shopify');
-const { decodeSessionToken } = require("@shopify/shopify-api");
+const { decodeSessionToken } = require('@shopify/shopify-api/lib/auth/session/token-decode');
 app.set('trust proxy', 1);
 
 app.use(cookieParser());

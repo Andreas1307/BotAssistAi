@@ -1,5 +1,5 @@
 const { shopify } = require("./shopify");
-const { decodeSessionToken } = require("@shopify/shopify-api");
+const { decodeSessionToken } = require('@shopify/shopify-api/lib/auth/session/token-decode');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
