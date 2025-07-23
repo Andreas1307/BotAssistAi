@@ -148,8 +148,6 @@ app.get("/api/shop-data", async (req, res) => {
   }
 });
 
-
-
 app.get('/auth/callback', async (req, res) => {
   try {
     const session = await shopify.auth.callback({

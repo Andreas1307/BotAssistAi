@@ -1,10 +1,6 @@
-const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { SQLiteSessionStorage } = require('@shopify/shopify-app-session-storage-sqlite');
-require('@shopify/shopify-api/adapters/node');
+const { Shopify, LATEST_API_VERSION } = require('@shopify/shopify-api');
 
-const sessionStorage = new SQLiteSessionStorage('./shopify_sessions.sqlite');
-
-const shopify = shopifyApi({
+const shopify = new Shopify({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_SCOPES.split(','),
