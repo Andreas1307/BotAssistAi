@@ -21,11 +21,8 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Rebuild a temporary custom app session
-    const session = shopify.api.session.customAppSession(shop);
-
-    // Attach session + token to request for downstream use
-    req.shopify = { shop, token, session };
+    // ✅ NO session here — it's not needed
+    req.shopify = { shop, token };
 
     next();
   } catch (err) {
