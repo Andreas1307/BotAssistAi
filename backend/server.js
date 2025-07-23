@@ -130,10 +130,15 @@ app.get("/api/shop-data", async (req, res) => {
 
   try {
     const token = authHeader.replace("Bearer ", "");
-    const payload = decodeSessionToken(token); // Decodes and verifies JWT signature
-    const session = await shopify.api.session.customAppSession(payload.dest.replace("https://", ""));
+    const payload = await shopify.auth.decodeSessionToken(token);  // <--- await here
 
-    // ✅ Now make authenticated API request using the custom session
+    if (!payload?.dest) {
+      console.error("❌ Token payload missing 'dest' property.");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const session = await shopify.api.session.customAppSession(payload.dest.replace(/^https?:\/\//, ""));
+
     const shop = await shopify.api.rest.Shop.get({ session });
 
     return res.status(200).json({ shopData: shop });
@@ -142,6 +147,7 @@ app.get("/api/shop-data", async (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 });
+
 
 
 app.get('/auth/callback', async (req, res) => {
