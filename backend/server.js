@@ -135,11 +135,13 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    const sessionId = `online_${session.shop}`; // force online session ID format
-session.id = sessionId;
+    // ✅ Use official method to generate the correct session ID
+    const sessionId = shopify.session.getOnlineId(session.shop);
+    session.id = sessionId;
 
-await sessionStorage.storeSession(session);
-console.log("✅ Stored session with ID:", session.id);
+    // ✅ Store it with that ID
+    await sessionStorage.storeSession(session);
+    console.log("✅ Stored session with ID:", session.id);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
     res.redirect(`${redirectUrl}&shopifyUser=true`);
@@ -148,6 +150,7 @@ console.log("✅ Stored session with ID:", session.id);
     res.status(500).send('Authentication failed');
   }
 });
+
 
 
 
