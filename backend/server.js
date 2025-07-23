@@ -120,26 +120,26 @@ app.get('/auth', async (req, res) => {
 
 app.get("/api/shop-data", async (req, res) => {
   const authHeader = req.headers.authorization;
-  console.log("🛬 Incoming request to /api/shop-data");
-  console.log("Authorization header:", req.headers.authorization);
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    // 🔐 Shopify flow
-    try {
-      await verifySessionToken(req, res, async () => {
-        const session = res.locals.shopify?.session;
-        console.log("🔐 Shopify session found:", session?.shop);
 
-        const shop = await shopify.api.rest.Shop.get({ session });
-        return res.status(200).json({ shopData: shop });
-      });
-    } catch (err) {
-      console.error("❌ Shopify session error:", err.message);
-      return res.status(401).json({ error: "Session token invalid" });
-    }
-  } else {
-    // 🟢 Public/non-Shopify fallback
-    console.log("⚠️ No Shopify token, returning default public shop data");
-    return res.status(200).json({ shopData: { name: "Non-Shopify User", domain: "public" } });
+  console.log("🛬 Incoming request to /api/shop-data");
+  console.log("Authorization header:", authHeader);
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing or invalid authorization header" });
+  }
+
+  try {
+    const token = authHeader.replace("Bearer ", "");
+    const payload = decodeSessionToken(token); // Decodes and verifies JWT signature
+    const session = await shopify.api.session.customAppSession(payload.dest.replace("https://", ""));
+
+    // ✅ Now make authenticated API request using the custom session
+    const shop = await shopify.api.rest.Shop.get({ session });
+
+    return res.status(200).json({ shopData: shop });
+  } catch (err) {
+    console.error("❌ Failed to validate token / fetch shop:", err.message);
+    return res.status(401).json({ error: "Unauthorized" });
   }
 });
 

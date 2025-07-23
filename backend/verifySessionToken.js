@@ -1,11 +1,28 @@
-const { loadCurrentSession } = require("@shopify/shopify-api");
+const { shopify } = require("./shopify");
+const { decodeSessionToken } = require("@shopify/shopify-api");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
-    const session = await loadCurrentSession(req, res, true); // true = isOnline session
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("❌ Missing or invalid authorization header.");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    if (!session || !session.accessToken) {
-      console.error("❌ No valid Shopify session found.");
+    const token = authHeader.replace("Bearer ", "");
+    const payload = decodeSessionToken(token); // Verify and decode JWT
+
+    if (!payload?.dest) {
+      console.error("❌ Token payload missing 'dest' property.");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Create a Shopify session using the shop domain extracted from the token's dest
+    const shopDomain = payload.dest.replace(/^https?:\/\//, "");
+    const session = await shopify.api.session.customAppSession(shopDomain);
+
+    if (!session) {
+      console.error("❌ Failed to create session for shop:", shopDomain);
       return res.status(401).json({ error: "Unauthorized" });
     }
 
