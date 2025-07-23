@@ -119,35 +119,41 @@ app.get('/auth', async (req, res) => {
 
 app.get("/api/shop-data", async (req, res) => {
   const authHeader = req.headers.authorization;
+  const shopDomain = req.headers['x-shopify-shop-domain'];
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid authorization header" });
+  if (!authHeader || !authHeader.startsWith("Bearer ") || !shopDomain) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
     const token = authHeader.replace("Bearer ", "");
 
-    // Decode the JWT manually
-    const payload = jwt.decode(token); // NOTE: this does NOT verify, just decode
-
+    // Decode JWT just for validation
+    const payload = jwt.decode(token);
     if (!payload || !payload.dest) {
       console.error("❌ Invalid token payload");
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    const shopDomain = payload.dest.replace(/^https:\/\//, '');
+    // Load the stored OAuth session (from after auth callback)
+    const sessionId = shopify.session.getOfflineId(shopDomain);
+    const session = await sessionStorage.loadSession(sessionId);
+
+    if (!session || !session.accessToken) {
+      console.error("❌ No valid session found for this shop");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
     const client = new shopify.clients.Rest({
-      accessToken: token,
-      domain: shopDomain,
+      accessToken: session.accessToken,
+      domain: session.shop,
     });
 
     const shopData = await client.get({ path: 'shop' });
-
     return res.status(200).json({ shopData: shopData.body.shop });
   } catch (err) {
-    console.error("❌ Failed to validate token / fetch shop:", err.message);
-    return res.status(401).json({ error: "Invalid or expired token" });
+    console.error("❌ Error validating session or fetching shop data:", err.message);
+    return res.status(401).json({ error: "Invalid or expired session" });
   }
 });
 
