@@ -1,4 +1,5 @@
 const { shopify } = require('./shopify');
+const sessionStorage = require('./sessionStorage');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -9,13 +10,24 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     const token = authHeader.replace('Bearer ', '');
     const payload = await shopify.session.decodeSessionToken(token);
-    const shop = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
 
-    if (!shop) {
+    const shop = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
+    const sessionId = payload?.sid;
+
+    if (!shop || !sessionId) {
       return res.status(401).json({ error: 'Invalid token payload' });
     }
 
-    req.shopify = { shop };
+    const session = await sessionStorage.loadSession(sessionId);
+    if (!session?.accessToken) {
+      return res.status(401).json({ error: 'Session not found or expired' });
+    }
+
+    req.shopify = {
+      shop,
+      session,
+    };
+
     next();
   } catch (err) {
     console.error('❌ Session token validation failed:', err);

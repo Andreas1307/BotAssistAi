@@ -136,21 +136,15 @@ console.log(`✅ Confirmed session stored:`, test);
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
-    const shop = req.shopify.shop;
-    console.log("🔎 Looking for session for:", shop);
+    const session = req.shopify.session;
 
-    const sessions = await sessionStorage.findSessionsByShop(shop);
-    console.log("🧠 Sessions found:", sessions);
+    if (!session?.accessToken || !session?.shop) {
+      throw new Error("Missing session or access token");
+    }
 
-    const storedSession = sessions?.[0];
-    if (!storedSession?.accessToken) throw new Error("Missing access token");
+    console.log("🔎 Using validated session for:", session.shop);
 
-    const client = new shopify.clients.Rest({
-      session: {
-        accessToken: storedSession.accessToken,
-        shop,
-      },
-    });
+    const client = new shopify.clients.Rest({ session });
 
     const response = await client.get({ path: 'shop' });
     return res.status(200).json({ shopData: response.body.shop });
@@ -159,6 +153,7 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
+
 
 
 
