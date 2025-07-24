@@ -136,9 +136,16 @@ app.get('/auth/callback', async (req, res) => {
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
-    const { session } = req.shopify;
+    const { shop, token } = req.shopify;
+
+    const session = {
+      shop,
+      accessToken: token,
+    };
+
     const client = new shopify.clients.Rest({ session });
     const response = await client.get({ path: 'shop' });
+
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error('❌ Failed to fetch shop data:', err);
