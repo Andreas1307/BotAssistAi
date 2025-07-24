@@ -1,4 +1,4 @@
-const { shopifyApi, LATEST_API_VERSION, MemorySessionStorage } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
 
 const shopify = shopifyApi({
@@ -7,7 +7,7 @@ const shopify = shopifyApi({
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   hostName: process.env.HOST.replace(/^https?:\/\//, ''),
-  sessionStorage: new MemorySessionStorage(), // ✅ No external DB
+  sessionStorage: new (require('@shopify/shopify-api').session.MemorySessionStorage)(), // ✅ this is the fix
 });
 
 module.exports = { shopify };
