@@ -113,21 +113,16 @@ app.get('/auth', async (req, res) => {
 });
 
 app.get("/auth/callback", async (req, res) => {
-  console.log("📞 /auth/callback hit");
-
   try {
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
     });
 
-    console.log("📥 Got session from Shopify:", session);
-    console.log("💳 AccessToken:", session.accessToken);
-    console.log("🔑 Session ID:", session.id);
+    // Store session in your custom session storage
+    await customSessionStorage.storeSession(session);
 
-    // ❌ REMOVE: await sessionStorage.storeSession(session);
-    const test = await customSessionStorage.findSessionsByShop(session.shop);
-    console.log("🔍 After callback — Found sessions:", test.length);
+    console.log("📥 Got session from Shopify:", session);
 
     res.redirect(`/?shop=${session.shop}`);
   } catch (err) {
