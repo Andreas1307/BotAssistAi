@@ -1,5 +1,4 @@
 const { shopify, sessionStorage } = require("./shopify");
-const { getOnlineSessionId } = require('@shopify/shopify-api'); // ✅ Correct for v6+
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -18,13 +17,12 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const sessionId = getOnlineSessionId(shop); // ✅ This works in v6+
-    console.log("✅ Decoded shop from token:", shop);
-    console.log("🔍 Looking for session ID:", sessionId);
+    // 🔍 Load *any* valid session for this shop
+    const sessions = await sessionStorage.findSessionsByShop(shop);
 
-    const session = await sessionStorage.loadSession(sessionId);
+    const session = sessions?.[0];
     if (!session || !session.accessToken) {
-      console.error("❌ No valid stored session for shop:", shop);
+      console.error("❌ No valid session found for shop:", shop);
       return res.status(401).json({ error: "Session expired or missing" });
     }
 
