@@ -136,11 +136,16 @@ res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
   }
 });
 
-
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
     const { session } = req.shopify;
-    const client = new shopify.clients.Rest({ session });
+
+    const client = new shopify.clients.Rest({
+      session: {
+        accessToken: session.accessToken,
+        shop: session.shop,
+      },
+    });
 
     const response = await client.get({ path: 'shop' });
     return res.status(200).json({ shopData: response.body.shop });
@@ -149,6 +154,7 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
+
 
 
 
