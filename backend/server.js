@@ -120,12 +120,10 @@ app.get("/auth/callback", async (req, res) => {
       rawResponse: res,
     });
 
-    // ✅ Make sure this is being called and session is valid
     await sessionStorage.storeSession(session);
 
     console.log("✅ Stored session:", session);
 
-    // Optionally confirm it's stored
     const test = await sessionStorage.findSessionsByShop(session.shop);
     console.log("🔍 After storeSession — Found sessions:", test.length);
 
@@ -135,6 +133,7 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
+
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {

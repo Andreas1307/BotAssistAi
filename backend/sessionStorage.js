@@ -33,8 +33,8 @@ module.exports = {
   storeSession: async (session) => {
     const sessions = loadSessions();
     const normalizedShop = normalizeShop(session.shop);
-    session.shop = normalizedShop;
-    sessions[normalizedShop] = session; // ✅ use shop instead of session.id
+    
+    sessions[normalizedShop] = session; // ✅ do not mutate session.shop
     saveSessions(sessions);
     console.log("💾 Stored session for:", normalizedShop);
     return true;
@@ -45,8 +45,7 @@ module.exports = {
     const normalized = normalizeShop(shop);
     const matched = sessions[normalized] ? [sessions[normalized]] : [];
     console.log("🛠 Normalized (lookup):", normalized);
-console.log("📂 Current keys in sessions:", Object.keys(sessions));
-
+    console.log("📂 Current keys in sessions:", Object.keys(sessions));
     console.log("🔍 Looking for:", normalized);
     console.log("🧠 Found matching sessions:", matched.length);
     return matched;
