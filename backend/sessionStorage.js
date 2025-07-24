@@ -3,6 +3,10 @@ const path = require('path');
 
 const SESSIONS_FILE = path.resolve(__dirname, 'sessions.json');
 
+function normalizeShop(shop) {
+  return shop.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
 function loadSessions() {
   try {
     return JSON.parse(fs.readFileSync(SESSIONS_FILE));
@@ -18,20 +22,24 @@ function saveSessions(sessions) {
 module.exports = {
   storeSession: async (session) => {
     const sessions = loadSessions();
-    const normalizedShop = session.shop.toLowerCase().replace(/^https:\/\//, '').replace(/\/$/, '');
+    const normalizedShop = normalizeShop(session.shop);
     const sessionId = session.id;
+
+    session.shop = normalizedShop; // 🚨 Normalize before saving
     sessions[sessionId] = session;
+
     saveSessions(sessions);
+    console.log("💾 Stored session for:", normalizedShop);
     return true;
   },
 
   findSessionsByShop: async (shop) => {
     const sessions = loadSessions();
-    const normalized = shop.toLowerCase().replace(/^https:\/\//, '').replace(/\/$/, '');
-    return Object.values(sessions).filter(s => {
-      const storedShop = s.shop?.toLowerCase().replace(/^https:\/\//, '');
-      return storedShop === normalized;
-    });
+    const normalized = normalizeShop(shop);
+    const matched = Object.values(sessions).filter(s => normalizeShop(s.shop) === normalized);
+    console.log("🔍 Looking for:", normalized);
+    console.log("🧠 Found matching sessions:", matched.length);
+    return matched;
   },
 
   loadSession: async (id) => {

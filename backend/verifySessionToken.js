@@ -16,7 +16,10 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
 
-    const [session] = await sessionStorage.findSessionsByShop(shop);
+    console.log("🔐 Decoded session token for shop:", shop);
+const [session] = await sessionStorage.findSessionsByShop(shop);
+console.log("📦 Matched stored session:", session?.id || "None");
+
     if (!session?.accessToken) {
       return res.status(401).json({ error: 'Session not found or expired' });
     }
