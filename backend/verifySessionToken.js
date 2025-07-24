@@ -1,13 +1,9 @@
 const { shopify, sessionStorage } = require("./shopify");
-
-function getOnlineSessionId(shop) {
-  return `online_${shop}`;
-}
+const { getSessionId } = require('@shopify/shopify-api');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.error("❌ Missing or invalid authorization header.");
       return res.status(401).json({ error: "Unauthorized" });
@@ -16,13 +12,13 @@ module.exports = async function verifySessionToken(req, res, next) {
     const token = authHeader.replace("Bearer ", "");
     const payload = await shopify.session.decodeSessionToken(token);
 
-    const shop = payload.dest?.replace(/^https:\/\//, "");
+    const shop = payload.shop; // ✅ Use .shop instead of dest
     if (!shop) {
       console.error("❌ No shop found in token payload");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const sessionId = getOnlineSessionId(shop);
+    const sessionId = getSessionId({ isOnline: true, shop });
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await sessionStorage.loadSession(sessionId);

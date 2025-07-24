@@ -136,17 +136,18 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
+    console.log("✅ Callback session created:", session.id); // Log session ID
 
-    await sessionStorage.storeSession(session);
-
+    await sessionStorage.storeSession(session); // ✅ Store to SQLite
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
-    res.redirect(`${redirectUrl}&shopifyUser=true`);
+    return res.redirect(`${redirectUrl}&shopifyUser=true`);
   } catch (e) {
     console.error('❌ Auth callback error:', e);
-    res.status(500).send('Authentication failed');
+    return res.status(500).send('Authentication failed');
   }
 });
+
 
 
 
