@@ -136,14 +136,9 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    // Shopify expects online sessions to be saved with id like this:
-    const sessionId = `online_${session.shop}`;
-    session.id = sessionId;
 
-    // Store session - THIS MUST SUCCEED
     await sessionStorage.storeSession(session);
 
-    console.log("✅ Stored session with ID:", session.id);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
     res.redirect(`${redirectUrl}&shopifyUser=true`);
