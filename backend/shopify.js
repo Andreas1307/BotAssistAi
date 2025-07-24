@@ -5,17 +5,23 @@ const { MemorySessionStorage } = require('@shopify/shopify-app-session-storage-m
 
 const sessionStorage = new MemorySessionStorage();
 
+// Validate env vars
+const apiKey = process.env.SHOPIFY_API_KEY;
+const apiSecret = process.env.SHOPIFY_API_SECRET;
 const rawHost = process.env.HOST;
-if (!rawHost) {
-  throw new Error('Missing required environment variable: HOST');
-}
+
+if (!apiKey) throw new Error('Missing environment variable: SHOPIFY_API_KEY');
+if (!apiSecret) throw new Error('Missing environment variable: SHOPIFY_API_SECRET');
+if (!rawHost) throw new Error('Missing environment variable: HOST');
+
+const hostName = rawHost.replace(/^https?:\/\//, '').replace(/\/$/, ''); // strip protocol and trailing slash
 
 const shopify = shopifyApi({
-  apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET,
+  apiKey,
+  apiSecretKey: apiSecret,
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  hostName: rawHost.replace(/^https:\/\//, ''), // e.g. api.botassistai.com
+  hostName,          // must be host without protocol
   sessionStorage,
 });
 
