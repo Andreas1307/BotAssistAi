@@ -155,10 +155,6 @@ const Dashboard = () => {
     if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
   }, []);
   
-
-  //sa updatez tot codul si frontend-ul
-
-
   useEffect(() => {
     const fetchShopData = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";

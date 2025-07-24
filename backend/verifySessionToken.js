@@ -1,3 +1,7 @@
+// ✅ ADD THIS LINE:
+const { shopify } = require('./shopify');  // Or your actual path
+const sessionStorage = require('./sessionStorage');
+
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -27,7 +31,6 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: 'Session not found or expired' });
     }
 
-    // Use first matching session (you can improve by checking freshness)
     req.shopify = {
       shop,
       session: sessions[0],

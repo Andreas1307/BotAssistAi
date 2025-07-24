@@ -134,7 +134,6 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
-
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
     const session = req.shopify.session;
