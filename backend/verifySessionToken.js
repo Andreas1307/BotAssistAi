@@ -1,4 +1,5 @@
 const { shopify, sessionStorage } = require("./shopify");
+const { getTokenSessionId } = require("@shopify/shopify-api"); // ✅ Correct import
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -17,12 +18,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // ✅ CORRECT way to get session ID (works for both online/offline)
-    const sessionId = shopify.session.getTokenSessionId({
-      shop,
-      isOnline: true,
-    });
-
+    const sessionId = getTokenSessionId(shop, true); // ✅ shop, isOnline = true
     console.log("✅ Decoded shop from token:", shop);
     console.log("🔍 Looking for session ID:", sessionId);
 
