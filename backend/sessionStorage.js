@@ -44,6 +44,9 @@ module.exports = {
     const sessions = loadSessions();
     const normalized = normalizeShop(shop);
     const matched = sessions[normalized] ? [sessions[normalized]] : [];
+    console.log("🛠 Normalized (lookup):", normalized);
+console.log("📂 Current keys in sessions:", Object.keys(sessions));
+
     console.log("🔍 Looking for:", normalized);
     console.log("🧠 Found matching sessions:", matched.length);
     return matched;

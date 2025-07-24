@@ -113,6 +113,7 @@ app.get('/auth', async (req, res) => {
 });
 
 app.get("/auth/callback", async (req, res) => {
+  console.log("📞 /auth/callback hit");
   try {
     const session = await shopify.auth.callback({
       rawRequest: req,

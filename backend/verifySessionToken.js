@@ -28,6 +28,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     console.log("📦 Matched stored sessions count:", sessions.length);
 
     if (sessions.length === 0) {
+      console.warn("⚠️ No session found. Try re-authenticating or reinstalling the app.");
       return res.status(401).json({ error: 'Session not found or expired' });
     }
 
