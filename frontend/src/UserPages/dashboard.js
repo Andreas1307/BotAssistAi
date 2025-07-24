@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   FaChartLine, FaComments, FaPlug, FaCogs, FaHome, 
   FaRobot, FaClipboardList, FaSearch, FaUserCircle, FaPowerOff, 
@@ -119,32 +119,45 @@ const Dashboard = () => {
   const API_BASE = "https://api.botassistai.com";
   
   const [shopData, setShopData] = useState(null);
+  const sessionChecked = useRef(false);
 
+  
   useEffect(() => {
     const ensureShopifyAuthenticated = async () => {
+      if (sessionChecked.current) return;
+      sessionChecked.current = true;
+  
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       if (!isShopifyUser) return;
   
-      const app = await waitForAppBridge();
-      const token = await getSessionToken(app);
-      const shop = localStorage.getItem("shop");
+      try {
+        const app = await waitForAppBridge();
+        const token = await getSessionToken(app);
+        const shop = localStorage.getItem("shop");
   
-      if (!token || !shop) return;
+        if (!token || !shop) return;
   
-      const res = await fetch(`${API_BASE}/api/check-session`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ VALID TOKEN
-        },
-      });
+        const res = await fetch(`${API_BASE}/api/check-session`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Shopify-Shop-Domain": shop,
+          },
+        });
   
-      if (res.status === 401) {
-        console.log("🛑 Session missing, redirecting to /auth");
-        window.location.assign(`/auth?shop=${shop}`);
+        if (res.status === 401) {
+          console.warn("🛑 Invalid session, redirecting to /auth");
+          window.location.assign(`/auth?shop=${shop}`);
+        } else {
+          console.log("✅ Session valid");
+        }
+      } catch (err) {
+        console.error("❌ Error verifying session:", err);
       }
     };
   
     ensureShopifyAuthenticated();
   }, []);
+  
   
 
   useEffect(() => {
