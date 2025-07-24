@@ -121,49 +121,58 @@ const Dashboard = () => {
   const [shopData, setShopData] = useState(null);
   const sessionChecked = useRef(false);
 
-
- useEffect(() => {
-  const ensureShopifyAuthenticated = async () => {
-    if (sessionChecked.current) return;
-    sessionChecked.current = true;
-
-    const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-    if (!isShopifyUser) return;
-
-    try {
-      const app = await waitForAppBridge();
-      const token = await getSessionToken(app);
-      const shop = localStorage.getItem("shop");
-
-      if (!token || !shop) return;
-
-      const res = await fetch(`${API_BASE}/api/check-session`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-Shopify-Shop-Domain": shop,
-        },
-      });
-
-      if (res.status === 401) {
-        const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
-        if (!alreadyRedirected) {
-          sessionStorage.setItem("alreadyRedirected", "true");
-          console.warn("🛑 Invalid session, redirecting to /auth");
-          window.location.assign(`/auth?shop=${shop}`);
-        } else {
-          console.warn("🔁 Already redirected once. Skipping infinite loop.");
-        }
-      } else {
-        console.log("✅ Session valid");
-        sessionStorage.removeItem("alreadyRedirected");
+  useEffect(() => {
+    const ensureShopifyAuthenticated = async () => {
+      if (sessionChecked.current) {
+        console.log("⚠️ Session check already done, skipping...");
+        return;
       }
-    } catch (err) {
-      console.error("❌ Error verifying session:", err);
-    }
-  };
-
-  ensureShopifyAuthenticated();
-}, []);
+  
+      sessionChecked.current = true;
+  
+      const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+      const shop = localStorage.getItem("shop");
+  
+      if (!isShopifyUser || !shop) {
+        console.log("🚫 Not a Shopify user or missing shop");
+        return;
+      }
+  
+      try {
+        const app = await waitForAppBridge();
+        const token = await getSessionToken(app);
+  
+        if (!token) throw new Error("Missing session token");
+  
+        console.log("🔐 Verifying session with token:", token);
+  
+        const res = await fetch(`${API_BASE}/api/check-session`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Shopify-Shop-Domain": shop,
+          },
+        });
+  
+        if (res.status === 401) {
+          const redirected = sessionStorage.getItem("alreadyRedirected");
+          if (!redirected) {
+            console.warn("🛑 Session invalid. Redirecting to /auth");
+            sessionStorage.setItem("alreadyRedirected", "true");
+            window.location.assign(`/auth?shop=${shop}`);
+          } else {
+            console.warn("🔁 Already redirected once. Not doing it again.");
+          }
+        } else {
+          console.log("✅ Session valid");
+          sessionStorage.removeItem("alreadyRedirected");
+        }
+      } catch (err) {
+        console.error("❌ Error verifying session:", err);
+      }
+    };
+  
+    ensureShopifyAuthenticated();
+  }, []);
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
