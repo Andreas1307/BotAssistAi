@@ -18,10 +18,11 @@ function saveSessions(sessions) {
 }
 
 const sessions = loadSessions();
-
+ console.log('📄 Using sessions file at:', SESSIONS_FILE);
 module.exports = {
+   
     storeSession: async (session) => {
-        const sessionId = session.id || session.shop; // fallback
+        const sessionId = session.id || `${session.shop}_${session.scope || 'default'}`;
         if (!sessionId) {
           console.error('❌ Cannot store session: no ID or shop', session);
           return false;
@@ -45,9 +46,10 @@ module.exports = {
 
   findSessionsByShop: async (shop) => {
     const normalizedShop = shop.replace(/^https:\/\//, '').toLowerCase();
-    return Object.values(sessions).filter((s) => {
+    const result = Object.values(sessions).filter((s) => {
       return s.shop?.toLowerCase() === normalizedShop;
     });
+    console.log(`🔍 Looking for shop "${normalizedShop}". Found:`, result.length);
+    return result;
   }
-  
 };
