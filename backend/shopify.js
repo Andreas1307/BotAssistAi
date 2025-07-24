@@ -1,23 +1,17 @@
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
+require('@shopify/shopify-api/adapters/node');
 require('dotenv').config();
 
-// 🧩 Import Node adapter for Shopify API (this is mandatory!)
-require('@shopify/shopify-api/adapters/node');
+const sessionStorage = require('./sessionStorage'); // 👈 replace this
 
-const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { MemorySessionStorage } = require('@shopify/shopify-app-session-storage-memory');
-
-const sessionStorage = new MemorySessionStorage();
-
-// ✅ Validate required env vars
 const apiKey = process.env.SHOPIFY_API_KEY;
 const apiSecret = process.env.SHOPIFY_API_SECRET;
 const rawHost = process.env.HOST;
 
-if (!apiKey) throw new Error('Missing environment variable: SHOPIFY_API_KEY');
-if (!apiSecret) throw new Error('Missing environment variable: SHOPIFY_API_SECRET');
-if (!rawHost) throw new Error('Missing environment variable: HOST');
+if (!apiKey || !apiSecret || !rawHost) {
+  throw new Error('Missing required Shopify environment variables');
+}
 
-// 🚫 Strip protocol & trailing slashes
 const hostName = rawHost.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 const shopify = shopifyApi({
@@ -26,7 +20,7 @@ const shopify = shopifyApi({
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   hostName,
-  sessionStorage,
+  sessionStorage, // 👈 use file-based session storage here
 });
 
 module.exports = { shopify, sessionStorage };
