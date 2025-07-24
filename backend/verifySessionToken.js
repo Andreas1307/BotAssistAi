@@ -10,7 +10,6 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     const token = authHeader.replace('Bearer ', '');
     const payload = await shopify.session.decodeSessionToken(token);
-
     console.log('🪪 Token payload:', payload);
 
     const shop = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
@@ -18,13 +17,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: 'Invalid token payload' });
     }
 
-    // ✅ Use stateless REST client with decoded token
-    const session = {
-      shop,
-      accessToken: token,
-    };
-
-    req.shopify = { shop, session };
+    req.shopify = { shop }; // ✅ only pass shop
     next();
   } catch (err) {
     console.error('❌ Session token validation failed:', err);

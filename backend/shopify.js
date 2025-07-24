@@ -1,6 +1,7 @@
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
 require('dotenv').config();
+const sessionStorage = require('./sessionStorage');
 
 const apiKey = process.env.SHOPIFY_API_KEY;
 const apiSecret = process.env.SHOPIFY_API_SECRET;
@@ -12,13 +13,7 @@ const shopify = shopifyApi({
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   hostName,
-  sessionStorage: {
-    // Optional stub for legacy compatibility; not used in this fix
-    storeSession: async () => true,
-    loadSession: async () => undefined,
-    deleteSession: async () => true,
-    findSessionsByShop: async () => [],
-  },
+  sessionStorage, // ✅ Use your real file-backed session store
 });
 
 module.exports = { shopify };
