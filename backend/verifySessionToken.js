@@ -1,16 +1,16 @@
-// ✅ FIXED: Add this import (adjust path as needed)
-const { shopify } = require('./shopify'); 
-const sessionStorage = require('./sessionStorage');
+// ✅ FIXED: Use the same session store Shopify uses
+const { shopify, customSessionStorage } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const payload = await shopify.session.decodeSessionToken(token); // ✅ will now work
+    const payload = await shopify.session.decodeSessionToken(token); // ✅ Works correctly now
 
     if (!payload) {
       console.error("❌ Decoded session token payload is null");
@@ -24,7 +24,7 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     console.log("🔐 Decoded session token for shop:", shop);
 
-    const sessions = await sessionStorage.findSessionsByShop(shop);
+    const sessions = await customSessionStorage.findSessionsByShop(shop); // ✅ FIXED
     console.log("📦 Matched stored sessions count:", sessions.length);
 
     if (sessions.length === 0) {
