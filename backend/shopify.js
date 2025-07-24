@@ -8,7 +8,7 @@ const shopify = shopifyApi({
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  hostName: process.env.SHOPIFY_APP_URL.replace(/^https:\/\//, ''),
+  hostName: process.env.HOST.replace(/^https:\/\//, ''), // ✅ FIXED
   sessionStorage,
 });
 
