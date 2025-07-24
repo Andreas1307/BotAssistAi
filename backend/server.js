@@ -122,31 +122,25 @@ app.get('/auth/callback', async (req, res) => {
     console.log('✅ Auth callback success for', session.shop);
     await sessionStorage.storeSession(session);
 
-    const storedSessions = await sessionStorage.findSessionsByShop(session.shop);
-    console.log(`🧠 Stored ${storedSessions.length} session(s) for ${session.shop}`);
-
-
-    const test = await sessionStorage.findSessionsByShop(session.shop);
-    console.log(`✅ Confirmed session stored:`, test);
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
-res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
+    res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
   } catch (e) {
     console.error('❌ Auth callback error:', e);
     res.status(500).send('Authentication failed');
   }
 });
 
+
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
     const shop = req.shopify.shop;
     console.log("🔎 Looking for session for:", shop);
-    // 🔑 Load stored session to get valid access token
-    const sessions = await sessionStorage.findSessionsByShop(shop);
-    const storedSession = sessions?.[0];
 
-    if (!storedSession?.accessToken) {
-      throw new Error('Missing access token');
-    }
+    const sessions = await sessionStorage.findSessionsByShop(shop);
+    console.log("🧠 Sessions found:", sessions);
+
+    const storedSession = sessions?.[0];
+    if (!storedSession?.accessToken) throw new Error("Missing access token");
 
     const client = new shopify.clients.Rest({
       session: {
@@ -156,13 +150,13 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     });
 
     const response = await client.get({ path: 'shop' });
-    console.log("🧠 Sessions found:", sessions);
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error('❌ Failed to fetch shop data:', err);
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
+
 
 
 

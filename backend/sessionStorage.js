@@ -5,8 +5,7 @@ const SESSIONS_FILE = path.resolve(__dirname, 'sessions.json');
 
 function loadSessions() {
   try {
-    const raw = fs.readFileSync(SESSIONS_FILE);
-    return JSON.parse(raw);
+    return JSON.parse(fs.readFileSync(SESSIONS_FILE));
   } catch {
     return {};
   }
@@ -20,11 +19,11 @@ module.exports = {
   storeSession: async (session) => {
     const sessions = loadSessions();
     const normalizedShop = session.shop.toLowerCase().replace(/^https:\/\//, '');
-    const sessionId = session.id || `${normalizedShop}_${session.scope || 'default'}`;
+    const sessionId = session.id;
     sessions[sessionId] = session;
     saveSessions(sessions);
     return true;
-  },  
+  },
 
   findSessionsByShop: async (shop) => {
     const sessions = loadSessions();
@@ -34,17 +33,16 @@ module.exports = {
       return storedShop === normalized;
     });
   },
-  
 
   loadSession: async (id) => {
-    const sessions = loadSessions(); // ✅ reload every time
+    const sessions = loadSessions();
     return sessions[id] || null;
   },
 
   deleteSession: async (id) => {
-    const sessions = loadSessions(); // ✅ reload every time
+    const sessions = loadSessions();
     delete sessions[id];
     saveSessions(sessions);
     return true;
-  }
+  },
 };
