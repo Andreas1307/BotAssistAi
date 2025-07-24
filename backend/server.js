@@ -124,7 +124,13 @@ app.get("/auth/callback", async (req, res) => {
     await customSessionStorage.storeSession(session); // ✅ CRITICAL LINE
 
     console.log("💾 Session stored for shop:", session.shop);
-
+    console.log("💾 Stored session:", {
+      shop: session.shop,
+      accessToken: session.accessToken,
+      isOnline: session.isOnline,
+      expires: session.expires,
+    });
+    
     res.redirect(`/?shop=${session.shop}`);
   } catch (err) {
     console.error("❌ Auth callback error:", err);

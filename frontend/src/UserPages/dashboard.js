@@ -124,25 +124,28 @@ const Dashboard = () => {
     const ensureShopifyAuthenticated = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       if (!isShopifyUser) return;
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const shop = urlParams.get("shop") || localStorage.getItem("shop");
-      if (!shop) return;
-
+  
+      const app = await waitForAppBridge();
+      const token = await getSessionToken(app);
+      const shop = localStorage.getItem("shop");
+  
+      if (!token || !shop) return;
+  
       const res = await fetch(`${API_BASE}/api/check-session`, {
         headers: {
-          Authorization: "Bearer placeholder",
+          Authorization: `Bearer ${token}`, // ✅ VALID TOKEN
         },
       });
-
+  
       if (res.status === 401) {
         console.log("🛑 Session missing, redirecting to /auth");
         window.location.assign(`/auth?shop=${shop}`);
       }
     };
-
+  
     ensureShopifyAuthenticated();
   }, []);
+  
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
