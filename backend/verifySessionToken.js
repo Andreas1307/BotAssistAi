@@ -12,13 +12,11 @@ module.exports = async function verifySessionToken(req, res, next) {
     const payload = await shopify.session.decodeSessionToken(token);
 
     const shop = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
-    const sessionId = payload?.sid;
-
-    if (!shop || !sessionId) {
-      return res.status(401).json({ error: 'Invalid token payload' });
+    if (!shop) {
+      return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
 
-    const session = await sessionStorage.loadSession(sessionId);
+    const [session] = await sessionStorage.findSessionsByShop(shop);
     if (!session?.accessToken) {
       return res.status(401).json({ error: 'Session not found or expired' });
     }

@@ -133,7 +133,6 @@ console.log(`✅ Confirmed session stored:`, test);
   }
 });
 
-
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
     const session = req.shopify.session;
