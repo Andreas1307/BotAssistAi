@@ -45,8 +45,8 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, sessionStorage } = require('./shopify');
-
+const { shopify } = require('./shopify');
+const sessionStorage = require('./sessionStorage');
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -138,12 +138,20 @@ res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
-    const { session } = req.shopify;
+    const shop = req.shopify.shop;
+
+    // 🔑 Load stored session to get valid access token
+    const sessions = await sessionStorage.findSessionsByShop(shop);
+    const storedSession = sessions?.[0];
+
+    if (!storedSession?.accessToken) {
+      throw new Error('Missing access token');
+    }
 
     const client = new shopify.clients.Rest({
       session: {
-        accessToken: session.accessToken,
-        shop: session.shop,
+        accessToken: storedSession.accessToken,
+        shop,
       },
     });
 
