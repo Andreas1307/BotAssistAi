@@ -20,11 +20,18 @@ function saveSessions(sessions) {
 const sessions = loadSessions();
 
 module.exports = {
-  storeSession: async (session) => {
-    sessions[session.id] = session;
-    saveSessions(sessions);
-    return true;
-  },
+    storeSession: async (session) => {
+        const sessionId = session.id || session.shop; // fallback
+        if (!sessionId) {
+          console.error('❌ Cannot store session: no ID or shop', session);
+          return false;
+        }
+      
+        sessions[sessionId] = session;
+        console.log('💾 Saving session with ID:', sessionId);
+        saveSessions(sessions);
+        return true;
+      },
 
   loadSession: async (id) => {
     return sessions[id] || null;
