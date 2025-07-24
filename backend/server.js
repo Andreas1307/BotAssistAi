@@ -126,7 +126,7 @@ app.get('/auth/callback', async (req, res) => {
     console.log(`🧠 Stored ${storedSessions.length} session(s) for ${session.shop}`);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
-    res.redirect(`${redirectUrl}&shopifyUser=true`);
+res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
   } catch (e) {
     console.error('❌ Auth callback error:', e);
     res.status(500).send('Authentication failed');
