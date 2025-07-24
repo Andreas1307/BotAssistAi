@@ -12,7 +12,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     const token = authHeader.replace("Bearer ", "");
     const payload = await shopify.session.decodeSessionToken(token);
 
-    const shop = payload.shop; // ✅ Use .shop instead of dest
+    const shop = payload.shop || payload.dest?.replace(/^https:\/\//, '');
+
     if (!shop) {
       console.error("❌ No shop found in token payload");
       return res.status(401).json({ error: "Unauthorized" });
