@@ -1,4 +1,4 @@
-const { shopifyApi, LATEST_API_VERSION, MemorySessionStorage } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
 require('dotenv').config();
 
@@ -12,7 +12,24 @@ if (!apiKey || !apiSecret || !rawHost) {
 
 const hostName = rawHost.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
-const sessionStorage = new MemorySessionStorage(); // ✅ FIXED
+// 👇 Minimal in-memory session storage (DB-free)
+const memorySessionStore = new Map();
+
+const sessionStorage = {
+  storeSession: async (session) => {
+    memorySessionStore.set(session.id, session);
+    return true;
+  },
+  loadSession: async (id) => {
+    return memorySessionStore.get(id) || undefined;
+  },
+  deleteSession: async (id) => {
+    return memorySessionStore.delete(id);
+  },
+  findSessionsByShop: async (shop) => {
+    return [...memorySessionStore.values()].filter(session => session.shop === shop);
+  },
+};
 
 const shopify = shopifyApi({
   apiKey,
