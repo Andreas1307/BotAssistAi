@@ -96,6 +96,8 @@ app.use(session({
 }));
 
 
+// update the code and get the error and fix it again
+
 
 app.get("/auth", async (req, res) => {
   try {
@@ -126,9 +128,9 @@ app.get("/auth/callback", async (req, res) => {
     const normalized = session.shop.toLowerCase();
     console.log("💾 Session stored for:", normalized);
 
-    // 🧠 Confirm session is stored before redirect
+    // ✅ Check if it was really stored
     const check = await customSessionStorage.findSessionsByShop(normalized);
-    if (check.length === 0) {
+    if (!check || check.length === 0) {
       console.warn("❗Session failed to store before redirect");
     }
 

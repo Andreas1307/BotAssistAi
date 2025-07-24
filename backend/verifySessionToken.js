@@ -14,15 +14,19 @@ module.exports = async function verifySessionToken(req, res, next) {
     console.log("🔐 Verifying session for shop:", shop);
 
     const sessions = await customSessionStorage.findSessionsByShop(shop);
-    if (sessions.length === 0) {
+    if (!sessions || sessions.length === 0) {
       console.warn("⚠️ No session found for shop:", shop);
       return res.status(401).json({ error: "Session not found or expired" });
     }
 
-    req.shopify = { shop, session: sessions[0] };
-    next();
+    req.shopify = {
+      shop,
+      session: sessions[0], // ✅ Attach session for later use
+    };
+
+    return next();
   } catch (err) {
     console.error("❌ verifySessionToken failed:", err);
-    res.status(401).json({ error: "Invalid session token" });
+    return res.status(401).json({ error: "Invalid session token" });
   }
 };
