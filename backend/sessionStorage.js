@@ -9,24 +9,32 @@ function normalizeShop(shop) {
 
 function loadSessions() {
   try {
-    return JSON.parse(fs.readFileSync(SESSIONS_FILE));
-  } catch {
+    if (!fs.existsSync(SESSIONS_FILE)) {
+      fs.writeFileSync(SESSIONS_FILE, JSON.stringify({}));
+      return {};
+    }
+    const data = fs.readFileSync(SESSIONS_FILE);
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("❌ Error loading sessions file:", err);
     return {};
   }
 }
 
 function saveSessions(sessions) {
-  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
+  try {
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
+  } catch (err) {
+    console.error("❌ Error saving sessions file:", err);
+  }
 }
 
 module.exports = {
   storeSession: async (session) => {
     const sessions = loadSessions();
     const normalizedShop = normalizeShop(session.shop);
-    const sessionId = session.id;
-
-    session.shop = normalizedShop; // 🚨 Normalize before saving
-    sessions[sessionId] = session;
+    session.shop = normalizedShop; // Normalize before saving
+    sessions[session.id] = session;
 
     saveSessions(sessions);
     console.log("💾 Stored session for:", normalizedShop);

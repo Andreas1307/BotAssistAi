@@ -156,6 +156,9 @@ const Dashboard = () => {
   }, []);
   
 
+  //sa updatez tot codul si frontend-ul
+
+
   useEffect(() => {
     const fetchShopData = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
@@ -168,15 +171,19 @@ const Dashboard = () => {
         const token = await getSessionToken(app);
         if (!token) throw new Error("Session token missing");
   
+        console.log("🔑 Using session token:", token);
+  
         const shop = localStorage.getItem("shop");
         if (!shop) {
-          console.error("No shop found")
+          console.error("No shop found in localStorage");
+          return;
         }
+  
         const res = await fetch(`${API_BASE}/api/shop-data`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-            "X-Shopify-Shop-Domain": shop, // ✅ Send shop domain here
+            "X-Shopify-Shop-Domain": shop,
           },
         });
   
@@ -184,9 +191,9 @@ const Dashboard = () => {
           const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
           if (!alreadyRedirected) {
             sessionStorage.setItem("alreadyRedirected", "true");
-            const shop = new URLSearchParams(window.location.search).get("shop");
+            const shopParam = new URLSearchParams(window.location.search).get("shop");
             console.warn("🛑 Unauthorized, redirecting to /auth");
-            window.location.assign(`/auth?shop=${shop}`);
+            window.location.assign(`/auth?shop=${shopParam}`);
           } else {
             console.warn("🔁 Already redirected once. Skipping infinite loop.");
           }
@@ -203,6 +210,7 @@ const Dashboard = () => {
   
     fetchShopData();
   }, []);
+  
   
   
   

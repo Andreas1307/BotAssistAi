@@ -1,6 +1,3 @@
-const { shopify } = require('./shopify');
-const sessionStorage = require('./sessionStorage');
-
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -11,22 +8,29 @@ module.exports = async function verifySessionToken(req, res, next) {
     const token = authHeader.replace('Bearer ', '');
     const payload = await shopify.session.decodeSessionToken(token);
 
+    if (!payload) {
+      console.error("❌ Decoded session token payload is null");
+      return res.status(401).json({ error: 'Invalid session token payload' });
+    }
+
     const shop = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
     if (!shop) {
       return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
 
     console.log("🔐 Decoded session token for shop:", shop);
-const [session] = await sessionStorage.findSessionsByShop(shop);
-console.log("📦 Matched stored session:", session?.id || "None");
 
-    if (!session?.accessToken) {
+    const sessions = await sessionStorage.findSessionsByShop(shop);
+    console.log("📦 Matched stored sessions count:", sessions.length);
+
+    if (sessions.length === 0) {
       return res.status(401).json({ error: 'Session not found or expired' });
     }
 
+    // Use first matching session (you can improve by checking freshness)
     req.shopify = {
       shop,
-      session,
+      session: sessions[0],
     };
 
     next();
