@@ -121,14 +121,19 @@ app.get("/auth/callback", async (req, res) => {
 
     console.log("✅ Received session from Shopify:", session);
 
-    await customSessionStorage.storeSession(session); // 👈 Must store the session
+    await customSessionStorage.storeSession(session);
 
-    console.log("💾 Session stored:", {
-      shop: session.shop,
-      accessToken: session.accessToken,
-    });
+    const normalized = session.shop.toLowerCase();
+    console.log("💾 Session stored for:", normalized);
 
-    // 👇 Ensure this param is passed back
+    // ✅ Extra confirmation
+    const check = await customSessionStorage.findSessionsByShop(normalized);
+    console.log("🔎 Found session immediately after storing:", check.length);
+
+    if (check.length === 0) {
+      console.warn("❗Session failed to store before redirect");
+    }
+
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
     console.error("❌ Auth callback error:", err);

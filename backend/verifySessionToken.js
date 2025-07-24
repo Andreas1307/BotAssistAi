@@ -17,6 +17,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const shop = payload.dest?.replace(/^https:\/\//, '').toLowerCase();
+    console.log("🔐 Verifying session for shop:", shop);
     if (!shop) {
       return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
