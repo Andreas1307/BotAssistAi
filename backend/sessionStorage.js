@@ -31,14 +31,27 @@ function saveSessions(sessions) {
 
 module.exports = {
   storeSession: async (session) => {
-    const sessions = loadSessions();
-    const normalizedShop = normalizeShop(session.shop);
-    
-    sessions[normalizedShop] = session; // ✅ do not mutate session.shop
-    saveSessions(sessions);
-    console.log("💾 Stored session for:", normalizedShop);
-    return true;
-  },
+    try {
+      const sessions = loadSessions();
+      const normalizedShop = normalizeShop(session.shop);
+  
+      if (!session.accessToken) {
+        console.warn("⚠️ Session has no access token, skipping store");
+        return false;
+      }
+  
+      sessions[normalizedShop] = session;
+      saveSessions(sessions);
+  
+      console.log("💾 Stored session for:", normalizedShop);
+      return true;
+    } catch (err) {
+      console.error("❌ Failed to store session:", err);
+      return false;
+    }
+  }
+  ,
+  
 
   findSessionsByShop: async (shop) => {
     const sessions = loadSessions();
