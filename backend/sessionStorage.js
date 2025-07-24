@@ -18,18 +18,23 @@ function saveSessions(sessions) {
 
 module.exports = {
   storeSession: async (session) => {
-    const sessions = loadSessions(); // ✅ reload every time
-    const sessionId = session.id || `${session.shop}_${session.scope || 'default'}`;
+    const sessions = loadSessions();
+    const normalizedShop = session.shop.toLowerCase().replace(/^https:\/\//, '');
+    const sessionId = session.id || `${normalizedShop}_${session.scope || 'default'}`;
     sessions[sessionId] = session;
     saveSessions(sessions);
     return true;
-  },
+  },  
 
   findSessionsByShop: async (shop) => {
-    const sessions = loadSessions(); // ✅ reload every time
-    const normalized = shop.toLowerCase();
-    return Object.values(sessions).filter(s => s.shop?.toLowerCase() === normalized);
+    const sessions = loadSessions();
+    const normalized = shop.toLowerCase().replace(/^https:\/\//, '');
+    return Object.values(sessions).filter(s => {
+      const storedShop = s.shop?.toLowerCase().replace(/^https:\/\//, '');
+      return storedShop === normalized;
+    });
   },
+  
 
   loadSession: async (id) => {
     const sessions = loadSessions(); // ✅ reload every time

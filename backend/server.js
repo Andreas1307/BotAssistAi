@@ -139,7 +139,7 @@ res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {
     const shop = req.shopify.shop;
-
+    console.log("🔎 Looking for session for:", shop);
     // 🔑 Load stored session to get valid access token
     const sessions = await sessionStorage.findSessionsByShop(shop);
     const storedSession = sessions?.[0];
@@ -156,6 +156,7 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     });
 
     const response = await client.get({ path: 'shop' });
+    console.log("🧠 Sessions found:", sessions);
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error('❌ Failed to fetch shop data:', err);
