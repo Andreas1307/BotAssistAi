@@ -129,7 +129,7 @@ const Dashboard = () => {
       const shop = urlParams.get("shop") || localStorage.getItem("shop");
       if (!shop) return;
 
-      const res = await fetch("/api/check-session", {
+      const res = await fetch(`${API_BASE}/api/check-session`, {
         headers: {
           Authorization: "Bearer placeholder",
         },
@@ -158,22 +158,32 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchShopData = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-      if (!isShopifyUser) return;
+      if (!isShopifyUser) {
+        console.log("🚫 Not a Shopify user, skipping fetchShopData");
+        return;
+      }
   
       try {
+        console.log("⌛ Initializing App Bridge...");
         const app = await waitForAppBridge();
-        if (!app) throw new Error("AppBridge not initialized");
+  
+        if (!app) {
+          throw new Error("AppBridge not initialized");
+        }
+        console.log("✅ App Bridge initialized");
   
         const token = await getSessionToken(app);
-        if (!token) throw new Error("Session token missing");
-  
-        console.log("🔑 Using session token:", token);
+        if (!token) {
+          throw new Error("Session token missing");
+        }
+        console.log("🔑 Retrieved session token:", token);
   
         const shop = localStorage.getItem("shop");
         if (!shop) {
-          console.error("No shop found in localStorage");
+          console.error("❌ No shop found in localStorage");
           return;
         }
+        console.log("🏷 Using shop:", shop);
   
         const res = await fetch(`${API_BASE}/api/shop-data`, {
           headers: {
@@ -182,6 +192,8 @@ const Dashboard = () => {
             "X-Shopify-Shop-Domain": shop,
           },
         });
+  
+        console.log("📡 /api/shop-data response status:", res.status);
   
         if (res.status === 401) {
           const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
@@ -197,8 +209,11 @@ const Dashboard = () => {
         }
   
         const json = await res.json();
+        console.log("📥 Shop data fetched:", json.shopData);
         setShopData(json.shopData);
-        sessionStorage.removeItem("alreadyRedirected"); // Clear redirect flag after success
+  
+        sessionStorage.removeItem("alreadyRedirected");
+        console.log("✅ Cleared redirect flag after successful fetch");
       } catch (err) {
         console.error("❌ Error fetching shop data:", err);
       }
@@ -206,6 +221,7 @@ const Dashboard = () => {
   
     fetchShopData();
   }, []);
+  
   
   
   

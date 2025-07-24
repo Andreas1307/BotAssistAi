@@ -1,16 +1,22 @@
-// ✅ FIXED: Use the same session store Shopify uses
 const { shopify, customSessionStorage } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
+    console.log("🔍 Verifying session token...");
+
     const authHeader = req.headers.authorization;
+    console.log("📥 Authorization header:", authHeader);
 
     if (!authHeader?.startsWith('Bearer ')) {
+      console.warn("⚠️ Missing or invalid authorization header");
       return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const payload = await shopify.session.decodeSessionToken(token); // ✅ Works correctly now
+    console.log("🔑 Extracted token:", token);
+
+    const payload = await shopify.session.decodeSessionToken(token);
+    console.log("📦 Decoded session token payload:", payload);
 
     if (!payload) {
       console.error("❌ Decoded session token payload is null");
@@ -18,17 +24,18 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const shop = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
+    console.log("🏷 Shop extracted from token payload:", shop);
+
     if (!shop) {
+      console.warn("⚠️ Token payload missing shop domain");
       return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
 
-    console.log("🔐 Decoded session token for shop:", shop);
-
-    const sessions = await customSessionStorage.findSessionsByShop(shop); // ✅ FIXED
-    console.log("📦 Matched stored sessions count:", sessions.length);
+    const sessions = await customSessionStorage.findSessionsByShop(shop);
+    console.log(`📦 Found ${sessions.length} session(s) for shop ${shop}`);
 
     if (sessions.length === 0) {
-      console.warn("⚠️ No session found. Try re-authenticating or reinstalling the app.");
+      console.warn("⚠️ No session found for shop, user must re-authenticate");
       return res.status(401).json({ error: 'Session not found or expired' });
     }
 
@@ -37,6 +44,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       session: sessions[0],
     };
 
+    console.log("✅ Session verified, proceeding to next middleware");
     next();
   } catch (err) {
     console.error('❌ Session token validation failed:', err);
