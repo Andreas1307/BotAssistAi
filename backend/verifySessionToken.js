@@ -1,35 +1,31 @@
-const { shopify, sessionStorage } = require("./shopify");
+const { shopify } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.error("❌ Missing or invalid authorization header.");
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "Missing or invalid authorization header" });
     }
 
     const token = authHeader.replace("Bearer ", "");
     const payload = await shopify.session.decodeSessionToken(token);
-
     const shop = payload.shop || payload.dest?.replace(/^https:\/\//, '');
+
     if (!shop) {
-      console.error("❌ No shop found in token payload");
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "Invalid session token" });
     }
 
-    // 🔍 Load *any* valid session for this shop
-    const sessions = await sessionStorage.findSessionsByShop(shop);
-
+    const sessions = await shopify.sessionStorage.findSessionsByShop(shop);
     const session = sessions?.[0];
+
     if (!session || !session.accessToken) {
-      console.error("❌ No valid session found for shop:", shop);
       return res.status(401).json({ error: "Session expired or missing" });
     }
 
     req.shopify = { shop, session };
     next();
   } catch (err) {
-    console.error("❌ Token validation failed:", err.message);
+    console.error("❌ Session validation failed:", err);
     return res.status(401).json({ error: "Invalid session" });
   }
 };

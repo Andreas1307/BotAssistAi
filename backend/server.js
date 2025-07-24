@@ -106,26 +106,10 @@ app.get('/auth', async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-
-    // This automatically redirects to Shopify OAuth
+    // redirect happens automatically
   } catch (e) {
     console.error('❌ Error beginning auth:', e);
-    return res.status(500).send('Auth error');
-  }
-});
-
-app.get('/api/shop-data', verifySessionToken, async (req, res) => {
-  try {
-    const { session } = req.shopify;
-
-    const client = new shopify.clients.Rest({ session });
-
-    const response = await client.get({ path: 'shop' });
-
-    res.status(200).json({ shopData: response.body.shop });
-  } catch (err) {
-    console.error("❌ Failed to fetch shop data:", err);
-    return res.status(401).json({ error: "Unauthorized" });
+    res.status(500).send('Auth error');
   }
 });
 
@@ -136,18 +120,34 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    console.log("✅ Callback session created:", session.id); // Log session ID
-
-    await sessionStorage.storeSession(session); // ✅ Store to SQLite
+    console.log('✅ Auth callback success:', session.shop);
+    await sessionStorage.storeSession(session);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
-    return res.redirect(`${redirectUrl}&shopifyUser=true`);
+    res.redirect(`${redirectUrl}&shopifyUser=true`);
   } catch (e) {
     console.error('❌ Auth callback error:', e);
-    return res.status(500).send('Authentication failed');
+    res.status(500).send('Authentication failed');
   }
 });
 
+app.get('/api/shop-data', verifySessionToken, async (req, res) => {
+  try {
+    const { session } = req.shopify;
+    const client = new shopify.clients.Rest({ session });
+    const response = await client.get({ path: 'shop' });
+
+    res.status(200).json({ shopData: response.body.shop });
+  } catch (err) {
+    console.error('❌ Failed to fetch shop data:', err);
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ App listening on port ${PORT}`);
+});
 
 
 
