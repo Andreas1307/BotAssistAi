@@ -125,6 +125,9 @@ app.get('/auth/callback', async (req, res) => {
     const storedSessions = await sessionStorage.findSessionsByShop(session.shop);
     console.log(`🧠 Stored ${storedSessions.length} session(s) for ${session.shop}`);
 
+
+    const test = await sessionStorage.findSessionsByShop(session.shop);
+    console.log(`✅ Confirmed session stored:`, test);
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
 res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
   } catch (e) {

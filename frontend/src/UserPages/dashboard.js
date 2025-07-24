@@ -147,12 +147,14 @@ const Dashboard = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
-    if (host) localStorage.setItem("host", host);
     const shop = urlParams.get("shop");
-  if (shop) {
-    localStorage.setItem("shop", shop);
-  }
+    const shopifyUser = urlParams.get("shopifyUser");
+  
+    if (host) localStorage.setItem("host", host);
+    if (shop) localStorage.setItem("shop", shop);
+    if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
   }, []);
+  
 
   useEffect(() => {
     const fetchShopData = async () => {
