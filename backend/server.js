@@ -112,25 +112,26 @@ app.get('/auth', async (req, res) => {
   }
 });
 
-app.get('/auth/callback', async (req, res) => {
+app.get("/auth/callback", async (req, res) => {
   try {
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
     });
 
-    console.log('✅ Auth callback success for shop:', session.shop);
-
-    // Store session and confirm storage
+    // ✅ Make sure this is being called and session is valid
     await sessionStorage.storeSession(session);
-    const storedSessions = await sessionStorage.findSessionsByShop(session.shop);
-    console.log(`✅ Confirmed session stored for ${session.shop}:`, storedSessions);
 
-    const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
-    res.redirect(`${redirectUrl}&shopifyUser=true&shop=${session.shop}`);
-  } catch (e) {
-    console.error('❌ Auth callback error:', e);
-    res.status(500).send('Authentication failed');
+    console.log("✅ Stored session:", session);
+
+    // Optionally confirm it's stored
+    const test = await sessionStorage.findSessionsByShop(session.shop);
+    console.log("🔍 After storeSession — Found sessions:", test.length);
+
+    res.redirect(`/?shop=${session.shop}`);
+  } catch (err) {
+    console.error("❌ Auth callback error:", err);
+    res.status(500).send("Authentication error");
   }
 });
 
@@ -153,13 +154,6 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
-
-
-
-
-
-
-
 
 
 
