@@ -1,13 +1,26 @@
-const { shopifyApi, LATEST_API_VERSION, session } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION, MemorySessionStorage } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
+require('dotenv').config();
+
+const apiKey = process.env.SHOPIFY_API_KEY;
+const apiSecret = process.env.SHOPIFY_API_SECRET;
+const rawHost = process.env.HOST;
+
+if (!apiKey || !apiSecret || !rawHost) {
+  throw new Error('Missing required Shopify environment variables');
+}
+
+const hostName = rawHost.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+const sessionStorage = new MemorySessionStorage(); // ✅ FIXED
 
 const shopify = shopifyApi({
-  apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET,
+  apiKey,
+  apiSecretKey: apiSecret,
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  hostName: process.env.HOST.replace(/^https?:\/\//, ''),
-  sessionStorage: new session.MemorySessionStorage(), // ✅ In-memory
+  hostName,
+  sessionStorage,
 });
 
-module.exports = { shopify, sessionStorage: shopify.config.sessionStorage };
+module.exports = { shopify, sessionStorage };
