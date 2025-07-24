@@ -1,4 +1,3 @@
-// backend/sessionStorage.js
 const fs = require('fs');
 const path = require('path');
 
@@ -18,43 +17,25 @@ function saveSessions(sessions) {
 }
 
 const sessions = loadSessions();
- console.log('📄 Using sessions file at:', SESSIONS_FILE);
+
 module.exports = {
-   
-    storeSession: async (session) => {
-        const sessionId = session.id || `${session.shop}_${session.scope || 'default'}`;
-        if (!sessionId) {
-          console.error('❌ Cannot store session: no ID or shop', session);
-          return false;
-        }
-      
-        sessions[sessionId] = session;
-        console.log('💾 Saving session with ID:', sessionId);
-        saveSessions(sessions);
-        return true;
-      },
-
-  loadSession: async (id) => {
-    return sessions[id] || null;
-  },
-
-  deleteSession: async (id) => {
-    delete sessions[id];
+  storeSession: async (session) => {
+    const sessionId = session.id || `${session.shop}_${session.scope || 'default'}`;
+    sessions[sessionId] = session;
     saveSessions(sessions);
     return true;
   },
 
   findSessionsByShop: async (shop) => {
-    const normalizedShop = shop.replace(/^https:\/\//, '').toLowerCase();
-    const results = Object.values(sessions).filter((s) => {
-      const shopInStore = s.shop?.toLowerCase();
-      const match = shopInStore === normalizedShop;
-      console.log(`🧪 Comparing stored shop "${shopInStore}" with "${normalizedShop}" → ${match}`);
-      return match;
-    });
-  
-    console.log(`🔍 Found ${results.length} sessions for shop "${normalizedShop}"`);
-    return results;
+    const normalized = shop.toLowerCase();
+    return Object.values(sessions).filter(s => s.shop?.toLowerCase() === normalized);
+  },
+
+  loadSession: async (id) => sessions[id] || null,
+
+  deleteSession: async (id) => {
+    delete sessions[id];
+    saveSessions(sessions);
+    return true;
   }
-  
 };

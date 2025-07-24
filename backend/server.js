@@ -106,9 +106,8 @@ app.get('/auth', async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    // Redirects automatically
   } catch (e) {
-    console.error('❌ Error beginning auth:', e);
+    console.error('❌ Error starting auth:', e);
     res.status(500).send('Auth error');
   }
 });
@@ -120,14 +119,11 @@ app.get('/auth/callback', async (req, res) => {
       rawResponse: res,
     });
 
-    console.log('✅ Auth callback success:', session.shop);
-    console.log('📦 Session object:', session);
-
+    console.log('✅ Auth callback success for', session.shop);
     await sessionStorage.storeSession(session);
 
-    // Confirm it's saved
-    const saved = await sessionStorage.findSessionsByShop(session.shop);
-    console.log('🧠 Sessions found after saving:', saved.length);
+    const storedSessions = await sessionStorage.findSessionsByShop(session.shop);
+    console.log(`🧠 Stored ${storedSessions.length} session(s) for ${session.shop}`);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
     res.redirect(`${redirectUrl}&shopifyUser=true`);
@@ -143,13 +139,13 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     const { session } = req.shopify;
     const client = new shopify.clients.Rest({ session });
     const response = await client.get({ path: 'shop' });
-
-    res.status(200).json({ shopData: response.body.shop });
+    return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error('❌ Failed to fetch shop data:', err);
-    res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 });
+
 
 
 
