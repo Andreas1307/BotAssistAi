@@ -31,14 +31,14 @@ function saveSessions(sessions) {
 
 module.exports = {
   storeSession: async (session) => {
+    if (!session || !session.shop || !session.accessToken) {
+      console.warn("⚠️ Session missing required fields:", session);
+      return false;
+    }
+  
     try {
       const sessions = loadSessions();
       const normalizedShop = normalizeShop(session.shop);
-  
-      if (!session.accessToken) {
-        console.warn("⚠️ Session has no access token, skipping store");
-        return false;
-      }
   
       sessions[normalizedShop] = session;
       saveSessions(sessions);
@@ -49,8 +49,7 @@ module.exports = {
       console.error("❌ Failed to store session:", err);
       return false;
     }
-  }
-  ,
+  },
   
 
   findSessionsByShop: async (shop) => {
