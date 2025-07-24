@@ -97,18 +97,18 @@ app.use(session({
 
 
 
-app.get('/auth', async (req, res) => {
+app.get("/auth", async (req, res) => {
   try {
     const redirectUrl = await shopify.auth.begin({
       shop: req.query.shop,
-      callbackPath: '/auth/callback',
+      callbackPath: "/auth/callback",
       isOnline: false,
       rawRequest: req,
       rawResponse: res,
     });
   } catch (e) {
-    console.error('❌ Error starting auth:', e);
-    res.status(500).send('Auth error');
+    console.error("❌ Error starting auth:", e);
+    res.status(500).send("Auth error");
   }
 });
 
@@ -126,10 +126,8 @@ app.get("/auth/callback", async (req, res) => {
     const normalized = session.shop.toLowerCase();
     console.log("💾 Session stored for:", normalized);
 
-    // ✅ Extra confirmation
+    // 🧠 Confirm session is stored before redirect
     const check = await customSessionStorage.findSessionsByShop(normalized);
-    console.log("🔎 Found session immediately after storing:", check.length);
-
     if (check.length === 0) {
       console.warn("❗Session failed to store before redirect");
     }
@@ -141,40 +139,31 @@ app.get("/auth/callback", async (req, res) => {
   }
 });
 
+app.get("/api/check-session", verifySessionToken, (req, res) => {
+  console.log("✅ /api/check-session passed");
+  res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
+});
 
-app.get('/api/shop-data', verifySessionToken, async (req, res) => {
+app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
-    console.log("🛎 /api/shop-data called");
-
     const session = req.shopify.session;
-    console.log("🔍 Using session:", session);
-
-    if (!session?.accessToken || !session?.shop) {
-      throw new Error("Missing session or access token");
-    }
-
-    console.log("🔎 Validated session for shop:", session.shop);
-
     const client = new shopify.clients.Rest({ session });
 
-    console.log("🚀 Making REST API call to Shopify shop endpoint");
-
-    const response = await client.get({ path: 'shop' });
-
-    console.log("✅ Shopify API response received");
+    const response = await client.get({ path: "shop" });
 
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
-    console.error('❌ Failed to fetch shop data:', err);
-    return res.status(401).json({ error: 'Unauthorized' });
+    console.error("❌ Failed to fetch shop data:", err);
+    res.status(401).json({ error: "Unauthorized" });
   }
 });
 
-app.get('/api/check-session', verifySessionToken, (req, res) => {
-  // If middleware passes, session is valid
-  console.log("hello api/check-session")
-  res.status(200).json({ message: 'Session is valid', shop: req.shopify.shop });
+// ✅ Debug route to see sessions
+app.get("/debug/sessions", (req, res) => {
+  const { loadSessions } = require("./shopifyStorage");
+  res.json(loadSessions());
 });
+
 
 
 
