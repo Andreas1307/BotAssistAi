@@ -124,7 +124,10 @@ app.get('/auth/callback', async (req, res) => {
     console.log('📦 Session object:', session);
 
     await sessionStorage.storeSession(session);
-    console.log('💾 Session saved!');
+
+    // Confirm it's saved
+    const saved = await sessionStorage.findSessionsByShop(session.shop);
+    console.log('🧠 Sessions found after saving:', saved.length);
 
     const redirectUrl = shopify.auth.getEmbeddedAppUrl({ session });
     res.redirect(`${redirectUrl}&shopifyUser=true`);
@@ -133,6 +136,7 @@ app.get('/auth/callback', async (req, res) => {
     res.status(500).send('Authentication failed');
   }
 });
+
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
   try {

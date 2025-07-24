@@ -9,6 +9,8 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     const token = authHeader.replace("Bearer ", "");
     const payload = await shopify.session.decodeSessionToken(token);
+    console.log("🪪 Token payload:", payload);
+
 
     const shopFromToken = payload?.shop || payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
     if (!shopFromToken) {

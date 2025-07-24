@@ -46,10 +46,15 @@ module.exports = {
 
   findSessionsByShop: async (shop) => {
     const normalizedShop = shop.replace(/^https:\/\//, '').toLowerCase();
-    const result = Object.values(sessions).filter((s) => {
-      return s.shop?.toLowerCase() === normalizedShop;
+    const results = Object.values(sessions).filter((s) => {
+      const shopInStore = s.shop?.toLowerCase();
+      const match = shopInStore === normalizedShop;
+      console.log(`🧪 Comparing stored shop "${shopInStore}" with "${normalizedShop}" → ${match}`);
+      return match;
     });
-    console.log(`🔍 Looking for shop "${normalizedShop}". Found:`, result.length);
-    return result;
+  
+    console.log(`🔍 Found ${results.length} sessions for shop "${normalizedShop}"`);
+    return results;
   }
+  
 };
