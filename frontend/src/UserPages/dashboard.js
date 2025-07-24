@@ -121,45 +121,50 @@ const Dashboard = () => {
   const [shopData, setShopData] = useState(null);
   const sessionChecked = useRef(false);
 
-  
-  useEffect(() => {
-    const ensureShopifyAuthenticated = async () => {
-      if (sessionChecked.current) return;
-      sessionChecked.current = true;
-  
-      const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-      if (!isShopifyUser) return;
-  
-      try {
-        const app = await waitForAppBridge();
-        const token = await getSessionToken(app);
-        const shop = localStorage.getItem("shop");
-  
-        if (!token || !shop) return;
-  
-        const res = await fetch(`${API_BASE}/api/check-session`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-Shopify-Shop-Domain": shop,
-          },
-        });
-  
-        if (res.status === 401) {
+
+ useEffect(() => {
+  const ensureShopifyAuthenticated = async () => {
+    if (sessionChecked.current) return;
+    sessionChecked.current = true;
+
+    const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+    if (!isShopifyUser) return;
+
+    try {
+      const app = await waitForAppBridge();
+      const token = await getSessionToken(app);
+      const shop = localStorage.getItem("shop");
+
+      if (!token || !shop) return;
+
+      const res = await fetch(`${API_BASE}/api/check-session`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Shopify-Shop-Domain": shop,
+        },
+      });
+
+      if (res.status === 401) {
+        const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+        if (!alreadyRedirected) {
+          sessionStorage.setItem("alreadyRedirected", "true");
           console.warn("🛑 Invalid session, redirecting to /auth");
           window.location.assign(`/auth?shop=${shop}`);
         } else {
-          console.log("✅ Session valid");
+          console.warn("🔁 Already redirected once. Skipping infinite loop.");
         }
-      } catch (err) {
-        console.error("❌ Error verifying session:", err);
+      } else {
+        console.log("✅ Session valid");
+        sessionStorage.removeItem("alreadyRedirected");
       }
-    };
-  
-    ensureShopifyAuthenticated();
-  }, []);
-  
-  
+    } catch (err) {
+      console.error("❌ Error verifying session:", err);
+    }
+  };
 
+  ensureShopifyAuthenticated();
+}, []);
+  
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
@@ -174,32 +179,19 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchShopData = async () => {
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-      if (!isShopifyUser) {
-        console.log("🚫 Not a Shopify user, skipping fetchShopData");
+      const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+  
+      if (!isShopifyUser || alreadyRedirected === "true") {
+        console.log("⏳ Waiting for session verification to finish");
         return;
       }
   
       try {
-        console.log("⌛ Initializing App Bridge...");
         const app = await waitForAppBridge();
-  
-        if (!app) {
-          throw new Error("AppBridge not initialized");
-        }
-        console.log("✅ App Bridge initialized");
-  
         const token = await getSessionToken(app);
-        if (!token) {
-          throw new Error("Session token missing");
-        }
-        console.log("🔑 Retrieved session token:", token);
-  
         const shop = localStorage.getItem("shop");
-        if (!shop) {
-          console.error("❌ No shop found in localStorage");
-          return;
-        }
-        console.log("🏷 Using shop:", shop);
+  
+        if (!token || !shop) return;
   
         const res = await fetch(`${API_BASE}/api/shop-data`, {
           headers: {
@@ -209,27 +201,14 @@ const Dashboard = () => {
           },
         });
   
-        console.log("📡 /api/shop-data response status:", res.status);
-  
         if (res.status === 401) {
-          const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
-          if (!alreadyRedirected) {
-            sessionStorage.setItem("alreadyRedirected", "true");
-            const shopParam = new URLSearchParams(window.location.search).get("shop");
-            console.warn("🛑 Unauthorized, redirecting to /auth");
-            window.location.assign(`/auth?shop=${shopParam}`);
-          } else {
-            console.warn("🔁 Already redirected once. Skipping infinite loop.");
-          }
+          console.warn("🛑 Unauthorized. Not fetching shop data.");
           return;
         }
   
         const json = await res.json();
-        console.log("📥 Shop data fetched:", json.shopData);
         setShopData(json.shopData);
-  
         sessionStorage.removeItem("alreadyRedirected");
-        console.log("✅ Cleared redirect flag after successful fetch");
       } catch (err) {
         console.error("❌ Error fetching shop data:", err);
       }
@@ -237,6 +216,7 @@ const Dashboard = () => {
   
     fetchShopData();
   }, []);
+  
   
   
   

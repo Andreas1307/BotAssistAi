@@ -121,22 +121,17 @@ app.get("/auth/callback", async (req, res) => {
 
     console.log("✅ Received session from Shopify:", session);
 
-    await customSessionStorage.storeSession(session); // ✅ CRITICAL LINE
+    await customSessionStorage.storeSession(session); // this MUST succeed
 
     console.log("💾 Session stored for shop:", session.shop);
-    console.log("💾 Stored session:", {
-      shop: session.shop,
-      accessToken: session.accessToken,
-      isOnline: session.isOnline,
-      expires: session.expires,
-    });
-    
-    res.redirect(`/?shop=${session.shop}`);
+
+    res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
     console.error("❌ Auth callback error:", err);
     res.status(500).send("Authentication error");
   }
 });
+
 
 
 app.get('/api/shop-data', verifySessionToken, async (req, res) => {
