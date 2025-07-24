@@ -37,6 +37,10 @@ module.exports = {
   },
 
   findSessionsByShop: async (shop) => {
-    return Object.values(sessions).filter((s) => s.shop === shop);
-  },
+    const normalizedShop = shop.replace(/^https:\/\//, '').toLowerCase();
+    return Object.values(sessions).filter((s) => {
+      return s.shop?.toLowerCase() === normalizedShop;
+    });
+  }
+  
 };
