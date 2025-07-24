@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load env variables immediately
+
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { MemorySessionStorage } = require('@shopify/shopify-app-session-storage-memory');
 
@@ -8,7 +10,7 @@ const shopify = shopifyApi({
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  hostName: process.env.HOST.replace(/^https:\/\//, ''), // ✅ FIXED
+  hostName: process.env.HOST.replace(/^https:\/\//, ''), // removes protocol, e.g. api.botassistai.com
   sessionStorage,
 });
 

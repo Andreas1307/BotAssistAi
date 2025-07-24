@@ -106,7 +106,7 @@ app.get('/auth', async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    // redirect happens automatically
+    // Redirects automatically
   } catch (e) {
     console.error('❌ Error beginning auth:', e);
     res.status(500).send('Auth error');
@@ -143,8 +143,6 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
     res.status(401).json({ error: 'Unauthorized' });
   }
 });
-
-
 
 
 
