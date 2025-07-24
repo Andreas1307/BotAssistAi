@@ -1,4 +1,4 @@
-const { shopify, sessionStorage } = require('./shopify');
+const { shopify } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -12,19 +12,21 @@ module.exports = async function verifySessionToken(req, res, next) {
     console.log('🪪 Token payload:', payload);
 
     const shopDomain = payload?.dest?.replace(/^https:\/\//, '').toLowerCase();
-    if (!shopDomain) {
+    const shop = shopDomain;
+
+    if (!shop) {
       return res.status(401).json({ error: 'Invalid token payload' });
     }
 
-    const sessions = await sessionStorage.findSessionsByShop(shopDomain);
-    if (!sessions?.length || !sessions[0].accessToken) {
-      return res.status(401).json({ error: 'No valid access token found for this shop' });
-    }
-
-    req.shopify = {
-      session: sessions[0], // this includes accessToken
+    // ✅ Rebuild a session object manually (no DB needed)
+    const session = {
+      id: `offline_${shop}`,
+      shop,
+      isOnline: true,
+      accessToken: token, // Using JWT as accessToken
     };
 
+    req.shopify = { session };
     next();
   } catch (err) {
     console.error('❌ Session token validation failed:', err);

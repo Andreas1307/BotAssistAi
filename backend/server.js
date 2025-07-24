@@ -156,6 +156,7 @@ app.get('/api/shop-data', verifySessionToken, async (req, res) => {
 
 
 
+
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
