@@ -1,4 +1,4 @@
-const { shopify } = require('./shopify');
+const { shopify, sessionStorage } = require('./shopify');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -15,7 +15,8 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Invalid session token" });
     }
 
-    const sessions = await shopify.sessionStorage.findSessionsByShop(shop);
+    // ✅ Use the actual sessionStorage object, NOT shopify.sessionStorage
+    const sessions = await sessionStorage.findSessionsByShop(shop);
     const session = sessions?.[0];
 
     if (!session || !session.accessToken) {
