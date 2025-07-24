@@ -1,5 +1,5 @@
-// ✅ ADD THIS LINE:
-const { shopify } = require('./shopify');  // Or your actual path
+// ✅ FIXED: Add this import (adjust path as needed)
+const { shopify } = require('./shopify'); 
 const sessionStorage = require('./sessionStorage');
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -10,7 +10,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const payload = await shopify.session.decodeSessionToken(token);
+    const payload = await shopify.session.decodeSessionToken(token); // ✅ will now work
 
     if (!payload) {
       console.error("❌ Decoded session token payload is null");
