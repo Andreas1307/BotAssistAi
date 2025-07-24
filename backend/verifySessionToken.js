@@ -1,5 +1,5 @@
 const { shopify, sessionStorage } = require("./shopify");
-const { getOnlineId } = require('@shopify/shopify-api'); // ✅ Correct import
+const { getOnlineSessionId } = require('@shopify/shopify-api'); // ✅ Correct for v6+
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -18,7 +18,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const sessionId = getOnlineId(shop); // ✅ Use named import
+    const sessionId = getOnlineSessionId(shop); // ✅ This works in v6+
     console.log("✅ Decoded shop from token:", shop);
     console.log("🔍 Looking for session ID:", sessionId);
 
