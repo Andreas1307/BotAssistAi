@@ -9,12 +9,25 @@ const normalizeShop = (shop) =>
   shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 function loadSessions() {
-  if (!fs.existsSync(SESSION_FILE)) fs.writeFileSync(SESSION_FILE, JSON.stringify({}));
-  return JSON.parse(fs.readFileSync(SESSION_FILE));
+  if (!fs.existsSync(SESSION_FILE)) {
+    console.log("🆕 No sessions file found. Creating new one...");
+    fs.writeFileSync(SESSION_FILE, JSON.stringify({}));
+  }
+
+  const data = fs.readFileSync(SESSION_FILE, "utf-8");
+  try {
+    const parsed = JSON.parse(data);
+    console.log("📂 Loaded sessions:", Object.keys(parsed));
+    return parsed;
+  } catch (err) {
+    console.error("❌ Failed to parse sessions file:", err);
+    return {};
+  }
 }
 
 function saveSessions(sessions) {
   fs.writeFileSync(SESSION_FILE, JSON.stringify(sessions, null, 2));
+  console.log("💾 Saved sessions:", Object.keys(sessions));
 }
 
 const customSessionStorage = {
@@ -22,28 +35,42 @@ const customSessionStorage = {
     const sessions = loadSessions();
     const normalizedShop = normalizeShop(session.shop);
     const sessionId = `offline_${normalizedShop}`;
-  
-    // 🔒 Ensure we’re setting the session ID before serialization
+
+    console.log("📝 Storing session for:", session.shop);
+    console.log("🔐 Session ID will be:", sessionId);
+
     const finalSession = new Session(sessionId, session.shop, session.isOnline);
-    Object.assign(finalSession, session); // Copy all properties
-  
+    Object.assign(finalSession, session);
+
     const serialized = await shopify.session.serializeSession(finalSession);
     sessions[sessionId] = serialized;
     saveSessions(sessions);
     return true;
-  }
-  ,
+  },
 
   async loadSession(id) {
+    console.log("🔍 Loading session with ID:", id);
     const sessions = loadSessions();
     const raw = sessions[id];
-    if (!raw) return undefined;
-    return await shopify.session.deserializeSession(raw);
+    if (!raw) {
+      console.warn("⚠️ No session found for ID:", id);
+      return undefined;
+    }
+
+    try {
+      const deserialized = await shopify.session.deserializeSession(raw);
+      console.log("✅ Session successfully deserialized");
+      return deserialized;
+    } catch (err) {
+      console.error("❌ Failed to deserialize session:", err);
+      return undefined;
+    }
   },
 
   async deleteSession(id) {
     const sessions = loadSessions();
     if (sessions[id]) {
+      console.log("🗑️ Deleting session:", id);
       delete sessions[id];
       saveSessions(sessions);
     }
@@ -61,3 +88,4 @@ const customSessionStorage = {
 };
 
 module.exports = customSessionStorage;
+ 
