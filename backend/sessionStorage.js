@@ -20,10 +20,11 @@ function saveSessions(sessions) {
 const customSessionStorage = {
   async storeSession(session) {
     const sessions = loadSessions();
-    const serialized = await shopify.session.serializeSession(session); // ✅ serialize
+    const serialized = await shopify.session.serializeSession(session);
     sessions[session.id] = serialized;
+  
+    console.log("💾 Saving session:", session.id); // ✅ DEBUG this
     saveSessions(sessions);
-    console.log("💾 Saved session:", session.id);
     return true;
   },
 

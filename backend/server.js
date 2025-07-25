@@ -116,8 +116,11 @@ app.get("/auth/callback", async (req, res) => {
   try {
     const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
     console.log("📦 Received session for:", session.shop);
-
+    console.log("🆔 Session ID:", session.id); // ✅ Add this!
     console.log("💾 Storing session...");
+    if (!session.id.startsWith("offline_")) {
+      session.id = `offline_${session.shop}`;
+    }
     await customSessionStorage.storeSession(session);
     console.log("✅ Session saved!");
 
