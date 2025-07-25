@@ -45,7 +45,7 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify } = require('./shopify');
+const { shopify, customSessionStorage } = require('./shopify');
 const sessionStorage = require('./sessionStorage');
 app.set('trust proxy', 1);
 
@@ -118,7 +118,7 @@ app.get("/auth/callback", async (req, res) => {
     const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
     console.log("✅ Received session:", session);
 
-    await customSessionStorage.storeSession(session); // should use normalized shop
+    await customSessionStorage.storeSession(session);
     console.log("💾 Session stored");
 
     const check = await customSessionStorage.findSessionsByShop(session.shop);
@@ -130,7 +130,6 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   console.log("✅ /api/check-session passed");
@@ -144,7 +143,6 @@ app.get("/api/shop-data", verifySessionToken, async (req, res) => {
     const client = new shopify.clients.Rest({ session });
 
     const response = await client.get({ path: "shop" });
-    console.log("✅ inside /api/shop-data" , session, client, response);
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error("❌ Failed to fetch shop data:", err);
@@ -152,7 +150,6 @@ app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   }
 });
 
-// ✅ Debug route to see sessions
 app.get("/debug/sessions", (req, res) => {
   const { loadSessions } = require("./shopifyStorage");
   res.json(loadSessions());

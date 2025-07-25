@@ -1,3 +1,4 @@
+// --- verifySessionToken.js ---
 const { shopify, customSessionStorage } = require("./shopify");
 
 module.exports = async function verifySessionToken(req, res, next) {

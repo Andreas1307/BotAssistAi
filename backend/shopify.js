@@ -1,9 +1,9 @@
-// shopify.js
+// --- shopify.js ---
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
 require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
+const path = require("path");
+const fs = require("fs");
 
 const SESSIONS_FILE = path.resolve(__dirname, 'sessions.json');
 
