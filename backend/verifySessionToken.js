@@ -1,59 +1,44 @@
-const { shopify, customSessionStorage } = require("./shopify");
-const path = require("path");
-
-function normalizeShop(shop) {
-  return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
-}
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-async function retryFindSession(shop, attempts = 3) {
-  for (let i = 0; i < attempts; i++) {
-    const sessions = await customSessionStorage.findSessionsByShop(shop);
-    if (sessions.length > 0) return sessions;
-    console.log(`⏳ Session not found for ${shop}, retrying (${i + 1}/${attempts})...`);
-    await wait(300);
-  }
-  return [];
-}
+const { shopify } = require('./shopify');
+const customSessionStorage = require('./sessionStorage');
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
-    console.log("🔐 Incoming session check from:", req.headers["x-shopify-shop-domain"]);
-    console.log("📦 Looking in file:", path.resolve(__dirname, "sessions.json"));
+    const authHeader = req.headers.authorization;
 
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const shopHeader = req.headers["x-shopify-shop-domain"];
-
-    if (!token || !shopHeader) {
-      console.warn("❌ Missing token or shop header");
-      return res.status(401).json({ error: "Missing token or shop domain" });
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
 
-    const shopHeaderNormalized = normalizeShop(shopHeader);
-    console.log("🔑 Decoding token...");
+    const token = authHeader.replace('Bearer ', '');
     const payload = await shopify.session.decodeSessionToken(token);
 
-    const tokenShop = normalizeShop(payload.dest);
-    console.log("🔍 Token shop:", tokenShop);
-    console.log("📫 Header shop:", shopHeaderNormalized);
-
-    if (tokenShop !== shopHeaderNormalized) {
-      console.warn("⚠️ Token shop mismatch");
-      return res.status(401).json({ error: "Token and shop mismatch" });
+    if (!payload) {
+      return res.status(401).json({ error: 'Invalid session token payload' });
     }
 
-    const sessions = await retryFindSession(tokenShop);
-    console.log("📦 Found sessions:", sessions.length);
-
-    if (!sessions || sessions.length === 0) {
-      console.warn("⚠️ No session found for shop:", tokenShop);
-      return res.status(401).json({ error: "Session not found or expired" });
+    const shop = payload.dest?.replace(/^https:\/\//, '').toLowerCase();
+    if (!shop) {
+      return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
 
-    req.shopify = { shop: tokenShop, session: sessions[0] };
+    console.log("🔍 Token shop:", shop);
+
+    const sessionId = `offline_${shop}`; // ✅ FIXED: Match your stored session ID
+    const session = await customSessionStorage.loadSession(sessionId);
+
+    if (!session) {
+      console.warn("⚠️ Session not found for shop:", shop);
+      return res.status(401).json({ error: 'Session not found' });
+    }
+
+    req.shopify = {
+      shop,
+      session,
+    };
+
     next();
   } catch (err) {
-    console.error("❌ verifySessionToken error:", err);
-    return res.status(401).json({ error: "Token verification failed" });
+    console.error('❌ Session token validation failed:', err);
+    return res.status(401).json({ error: 'Invalid session token' });
   }
 };
