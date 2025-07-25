@@ -1,10 +1,15 @@
+// verifySessionToken.js
 const { shopify, customSessionStorage } = require("./shopify");
 
+// ✅ Helper: Normalize shop domain
 function normalizeShop(shop) {
   return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
+
+// ✅ Helper: Delay function
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ✅ Helper: Retry finding session (resolves race condition after login)
 async function retryFindSession(shop, attempts = 3) {
   for (let i = 0; i < attempts; i++) {
     const sessions = await customSessionStorage.findSessionsByShop(shop);
@@ -15,7 +20,7 @@ async function retryFindSession(shop, attempts = 3) {
   return [];
 }
 
-
+// ✅ Middleware: Verifies session token
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
@@ -27,7 +32,6 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const shopHeaderNormalized = normalizeShop(shopHeader);
-
     console.log("🔑 Decoding token...");
     const payload = await shopify.session.decodeSessionToken(token);
 
