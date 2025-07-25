@@ -2,9 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const { shopify } = require("./shopify"); 
 const { Session } = require("@shopify/shopify-api");
-
-const SESSION_FILE = path.resolve(__dirname, "sessions.json");
 console.log("Inside session storage")
+const SESSION_FILE = path.resolve(__dirname, "sessions.json");
+
 const normalizeShop = (shop) =>
   shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
