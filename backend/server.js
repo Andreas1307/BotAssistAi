@@ -45,7 +45,7 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, customSessionStorage  } = require('./shopify');
+const { shopify } = require('./shopify');
 const sessionStorage = require('./sessionStorage');
 app.set('trust proxy', 1);
 
@@ -118,10 +118,10 @@ app.get("/auth/callback", async (req, res) => {
     const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
     console.log("✅ Received session:", session);
 
-    await customSessionStorage.storeSession(session);
+    await sessionStorage.storeSession(session);
     console.log("💾 Session stored");
 
-    const check = await customSessionStorage.findSessionsByShop(session.shop.toLowerCase());
+    const check = await sessionStorage.findSessionsByShop(session.shop.toLowerCase());
     if (!check || check.length === 0) {
       console.warn("❗Session did NOT persist before redirect");
     }
