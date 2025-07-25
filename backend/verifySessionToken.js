@@ -1,6 +1,6 @@
 const { shopify } = require('./shopify');
 const customSessionStorage = require('./sessionStorage');
-
+console.log("Inside verify session")
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;

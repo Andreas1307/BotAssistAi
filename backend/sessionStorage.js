@@ -4,7 +4,7 @@ const { shopify } = require("./shopify");
 const { Session } = require("@shopify/shopify-api");
 
 const SESSION_FILE = path.resolve(__dirname, "sessions.json");
-
+console.log("Inside session storage")
 const normalizeShop = (shop) =>
   shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
@@ -22,7 +22,8 @@ const customSessionStorage = {
     const sessions = loadSessions();
     const serialized = await shopify.session.serializeSession(session);
     sessions[session.id] = serialized;
-  
+    console.log("💾 Saving session:", session.id, "for shop:", session.shop);
+
     console.log("💾 Saving session:", session.id); // ✅ DEBUG this
     saveSessions(sessions);
     return true;
