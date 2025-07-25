@@ -22,7 +22,7 @@ const customSessionStorage = {
     const sessions = loadSessions();
     const normalizedShop = normalizeShop(session.shop);
     const sessionId = `offline_${normalizedShop}`;
-    session.id = sessionId;
+    session.id = sessionId; // 💡 Ensure session has correct ID
     const serialized = await shopify.session.serializeSession(session);
     sessions[sessionId] = serialized;
     saveSessions(sessions);

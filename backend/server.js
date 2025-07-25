@@ -118,12 +118,19 @@ app.get("/auth/callback", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+
+    // ✅ Set correct session.id BEFORE saving
+    const normalizedShop = session.shop.toLowerCase().replace(/^https?:\/\//, "");
+    session.id = `offline_${normalizedShop}`;
+
     await customSessionStorage.storeSession(session);
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
+    console.error("Auth callback failed:", err);
     res.status(500).send("Authentication error");
   }
 });
+
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
