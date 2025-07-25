@@ -96,7 +96,6 @@ app.use(session({
 }));
 
 
-// update the code and get the error and fix it again
 
 
 app.get("/auth", async (req, res) => {
@@ -116,22 +115,15 @@ app.get("/auth", async (req, res) => {
 
 app.get("/auth/callback", async (req, res) => {
   try {
-    const session = await shopify.auth.callback({
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    console.log("✅ Received session from Shopify:", session);
+    const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
+    console.log("✅ Received session:", session);
 
     await customSessionStorage.storeSession(session);
+    console.log("💾 Session stored");
 
-    const normalized = session.shop.toLowerCase();
-    console.log("💾 Session stored for:", normalized);
-
-    // ✅ Check if it was really stored
-    const check = await customSessionStorage.findSessionsByShop(normalized);
+    const check = await customSessionStorage.findSessionsByShop(session.shop.toLowerCase());
     if (!check || check.length === 0) {
-      console.warn("❗Session failed to store before redirect");
+      console.warn("❗Session did NOT persist before redirect");
     }
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
@@ -147,12 +139,13 @@ app.get("/api/check-session", verifySessionToken, (req, res) => {
 });
 
 app.get("/api/shop-data", verifySessionToken, async (req, res) => {
+  console.log("✅ inside /api/shop-data");
   try {
     const session = req.shopify.session;
     const client = new shopify.clients.Rest({ session });
 
     const response = await client.get({ path: "shop" });
-
+    console.log("✅ inside /api/shop-data" , session, client, response);
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error("❌ Failed to fetch shop data:", err);

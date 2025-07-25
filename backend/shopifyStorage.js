@@ -1,68 +1,36 @@
-const fs = require("fs");
-const path = require("path");
-
+const fs = require("fs"), path = require("path");
 const SESSIONS_FILE = path.resolve(__dirname, "sessions.json");
 
-function normalizeShop(shop) {
-  return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+const normalize = shop => shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+function load() {
+  if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, JSON.stringify({}));
+  return JSON.parse(fs.readFileSync(SESSIONS_FILE));
 }
 
-function loadSessions() {
-  try {
-    if (!fs.existsSync(SESSIONS_FILE)) {
-      fs.writeFileSync(SESSIONS_FILE, JSON.stringify({}));
-      return {};
-    }
-    const data = fs.readFileSync(SESSIONS_FILE);
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("❌ Error loading sessions file:", err);
-    return {};
-  }
-}
-
-function saveSessions(sessions) {
-  try {
-    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
-  } catch (err) {
-    console.error("❌ Error saving sessions file:", err);
-  }
+function save(all) {
+  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(all, null, 2));
 }
 
 module.exports = {
   storeSession: async (session) => {
-    if (!session || !session.shop || !session.accessToken) return false;
+    if (!session?.shop || !session?.accessToken) {
+      console.warn("⚠️ session missing fields");
+      return false;
+    }
 
-    const sessions = loadSessions();
-    const normalized = normalizeShop(session.shop);
-
-    sessions[normalized] = session;
-    saveSessions(sessions);
-    console.log("💾 Stored session for:", normalized);
+    const all = load();
+    all[normalize(session.shop)] = session;
+    save(all);
+    console.log("💾 Stored session for:", normalize(session.shop));
     return true;
   },
 
   findSessionsByShop: async (shop) => {
-    const sessions = loadSessions();
-    const normalized = normalizeShop(shop);
-    const matched = sessions[normalized] ? [sessions[normalized]] : [];
-
-    console.log("🛠 Normalized (lookup):", normalized);
-    console.log("📂 Current keys:", Object.keys(sessions));
-    return matched;
-  },
-
-  loadSession: async (idOrShop) => {
-    const sessions = loadSessions();
-    return sessions[idOrShop] || null;
-  },
-
-  deleteSession: async (idOrShop) => {
-    const sessions = loadSessions();
-    delete sessions[idOrShop];
-    saveSessions(sessions);
-    return true;
-  },
-
-  loadSessions,
+    const all = load();
+    const normalized = normalize(shop);
+    const found = all[normalized] ? [all[normalized]] : [];
+    console.log("🔍 Looking for:", normalized, "| found:", found.length);
+    return found;
+  }
 };
