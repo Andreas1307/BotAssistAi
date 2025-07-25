@@ -99,6 +99,7 @@ app.use(session({
 
 app.get("/auth", async (req, res) => {
   try {
+    console.log("In /auth")
     const redirectUrl = await shopify.auth.begin({
       shop: req.query.shop,
       callbackPath: "/auth/callback",
@@ -106,6 +107,7 @@ app.get("/auth", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+    console.log("/auth redirect")
     return res.redirect(redirectUrl);
   } catch (e) {
     console.error("❌ Error starting auth:", e);
@@ -115,6 +117,7 @@ app.get("/auth", async (req, res) => {
 
 app.get("/auth/callback", async (req, res) => {
   try {
+    console.log("In /auth/callback")
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -133,17 +136,18 @@ app.get("/auth/callback", async (req, res) => {
   }
 });
 
-
-
 app.get("/api/check-session", verifySessionToken, (req, res) => {
+  console.log("in /api/check-session")
   res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
 });
 
 app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
+    console.log("In /api/shop-data")
     const session = req.shopify.session;
     const client = new shopify.clients.Rest({ session });
     const response = await client.get({ path: "shop" });
+    console.log("/api/shop-data", response)
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
     console.error("❌ Failed to fetch shop data:", err);

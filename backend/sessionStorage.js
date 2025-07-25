@@ -29,8 +29,7 @@ const customSessionStorage = {
     console.log("💾 Saving session:", forcedId, "for shop:", normalizedShop);
     saveSessions(sessions);
     return true;
-  }
-  ,
+  },
 
   async loadSession(id) {
     const sessions = loadSessions();

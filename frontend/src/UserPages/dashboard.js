@@ -134,7 +134,8 @@ const Dashboard = () => {
       try {
         const app = await waitForAppBridge(); // your App Bridge init
         const token = await getSessionToken(app);
-
+console.log("Session token", token)
+console.log("App", app)
         const res = await fetch("https://api.botassistai.com/api/check-session", {
           method: "GET",
           headers: {
