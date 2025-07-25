@@ -15,19 +15,43 @@ function saveSessions(sessions) {
 }
 
 const customSessionStorage = {
-  storeSession: async (session) => {
+  // Required by Shopify API
+  async storeSession(session) {
     const sessions = loadSessions();
-    const normalized = normalizeShop(session.shop);
-    sessions[normalized] = session;
-    console.log("💾 Saving session under:", normalized);
+    sessions[session.id] = session;
     saveSessions(sessions);
+    console.log("💾 Saved session:", session.id);
     return true;
   },
 
-  findSessionsByShop: async (shop) => {
+  async loadSession(id) {
+    const sessions = loadSessions();
+    if (sessions[id]) {
+      console.log("📤 Loaded session:", id);
+      return sessions[id];
+    }
+    console.warn("❌ No session found for id:", id);
+    return undefined;
+  },
+
+  async deleteSession(id) {
+    const sessions = loadSessions();
+    if (sessions[id]) {
+      delete sessions[id];
+      saveSessions(sessions);
+      console.log("🗑️ Deleted session:", id);
+    }
+    return true;
+  },
+
+  // Your custom lookup by shop
+  async findSessionsByShop(shop) {
     const sessions = loadSessions();
     const normalized = normalizeShop(shop);
-    return sessions[normalized] ? [sessions[normalized]] : [];
+    const found = Object.values(sessions).filter(
+      (s) => normalizeShop(s.shop) === normalized
+    );
+    return found;
   },
 };
 
