@@ -53,15 +53,21 @@ const customSessionStorage = {
   async findSessionsByShop(shop) {
     const sessions = loadSessions();
     const normalized = normalizeShop(shop);
-    const found = Object.values(sessions)
-      .map((raw) => shopify.session.deserializeSession(raw)) // deserialize all
-      .filter(async (sPromise) => {
-        const s = await sPromise;
-        return normalizeShop(s.shop) === normalized;
-      });
-
-    return Promise.all(found);
-  },
+  
+    // 1. Deserialize all sessions (waits for all promises)
+    const allSessions = await Promise.all(
+      Object.values(sessions).map((raw) =>
+        shopify.session.deserializeSession(raw)
+      )
+    );
+  
+    // 2. Filter by shop match
+    const matched = allSessions.filter(
+      (s) => normalizeShop(s.shop) === normalized
+    );
+  
+    return matched;
+  },  
 };
 
 module.exports = customSessionStorage;
