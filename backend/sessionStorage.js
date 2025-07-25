@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { shopify } = require("./shopify"); // import to access Session class
+const { shopify } = require("./shopify"); 
 const { Session } = require("@shopify/shopify-api");
 
 const SESSION_FILE = path.resolve(__dirname, "sessions.json");
@@ -20,7 +20,8 @@ function saveSessions(sessions) {
 const customSessionStorage = {
   async storeSession(session) {
     const sessions = loadSessions();
-    sessions[session.id] = session; // Raw session is OK to store
+    const serialized = await shopify.session.serializeSession(session); // ✅ serialize
+    sessions[session.id] = serialized;
     saveSessions(sessions);
     console.log("💾 Saved session:", session.id);
     return true;
@@ -34,9 +35,7 @@ const customSessionStorage = {
       return undefined;
     }
 
-    // 👇 Deserialize properly
-    const session = new Session(raw.id);
-    Object.assign(session, raw);
+    const session = await shopify.session.deserializeSession(raw); // ✅ deserialize
     console.log("📤 Loaded session:", id);
     return session;
   },
@@ -55,13 +54,13 @@ const customSessionStorage = {
     const sessions = loadSessions();
     const normalized = normalizeShop(shop);
     const found = Object.values(sessions)
-      .filter((s) => normalizeShop(s.shop) === normalized)
-      .map((raw) => {
-        const session = new Session(raw.id);
-        Object.assign(session, raw);
-        return session;
+      .map((raw) => shopify.session.deserializeSession(raw)) // deserialize all
+      .filter(async (sPromise) => {
+        const s = await sPromise;
+        return normalizeShop(s.shop) === normalized;
       });
-    return found;
+
+    return Promise.all(found);
   },
 };
 
