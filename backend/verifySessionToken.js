@@ -23,7 +23,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
     console.log("verysessiontoken", shop)
 
-    const sessionId = `${shop}`;
+    const sessionId = `offline_${shop}`;
     console.log("🔍 Looking for session with ID:", sessionId);
 
     const session = await customSessionStorage.loadSession(sessionId);

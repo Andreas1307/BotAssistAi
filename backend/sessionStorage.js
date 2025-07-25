@@ -21,7 +21,10 @@ const customSessionStorage = {
   async storeSession(session) {
     const sessions = loadSessions();
     const normalizedShop = normalizeShop(session.shop);
-    const forcedId = `offline_${normalizedShop}`; // 🔧 Force the ID
+  
+    // ✅ OVERWRITE the session ID so that loadSession can find it later
+    session.id = `offline_${normalizedShop}`;
+    const forcedId = session.id;
   
     const serialized = await shopify.session.serializeSession(session);
     sessions[forcedId] = serialized;
@@ -29,7 +32,8 @@ const customSessionStorage = {
     console.log("💾 Saving session:", forcedId, "for shop:", normalizedShop);
     saveSessions(sessions);
     return true;
-  },
+  }
+  ,
 
   async loadSession(id) {
     const sessions = loadSessions();
