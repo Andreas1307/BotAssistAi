@@ -106,11 +106,13 @@ app.get("/auth", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+    return res.redirect(redirectUrl); // ✅ ADD THIS!
   } catch (e) {
     console.error("❌ Error starting auth:", e);
     res.status(500).send("Auth error");
   }
 });
+
 
 app.get("/auth/callback", async (req, res) => {
   try {
