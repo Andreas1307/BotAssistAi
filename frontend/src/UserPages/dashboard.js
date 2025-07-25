@@ -124,41 +124,36 @@ const Dashboard = () => {
   useEffect(() => {
     const ensureShopifyAuthenticated = async () => {
       if (sessionChecked.current) return;
-      sessionChecked.current = true;
-  
+      sessionChecked.current = true; // ✅ Prevent spam
+
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-      const shop = localStorage.getItem("shop");
+      const shop = localStorage.getItem("shop") || new URLSearchParams(window.location.search).get("shop");
+
       if (!isShopifyUser || !shop) return;
-  
+
       try {
-        const app = await waitForAppBridge();
+        const app = await waitForAppBridge(); // your App Bridge init
         const token = await getSessionToken(app);
-  
-        if (!token) throw new Error("Missing session token");
-  
-        console.log("🔐 Verifying session with token:", token);
-  
-        const res = await fetch(`${API_BASE}/api/check-session`, {
+
+        const res = await fetch("https://api.botassistai.com/api/check-session", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
             "X-Shopify-Shop-Domain": shop,
           },
         });
-  
+
         if (res.status === 401) {
-          console.warn("🛑 Session invalid. Redirecting to /auth");
+          console.warn("🛑 Session invalid, redirecting to auth...");
           window.location.assign(`/auth?shop=${shop}`);
-          return;
+        } else {
+          console.log("✅ Session is valid");
         }
-  
-        console.log("✅ Session valid");
-        sessionStorage.removeItem("alreadyRedirected");
       } catch (err) {
-        console.error("❌ Error verifying session:", err);
+        console.error("❌ Session check failed:", err);
       }
     };
-  
+
     ensureShopifyAuthenticated();
   }, []);
   
