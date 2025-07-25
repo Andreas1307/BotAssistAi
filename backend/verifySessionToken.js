@@ -1,15 +1,11 @@
-// verifySessionToken.js
 const { shopify, customSessionStorage } = require("./shopify");
+const path = require("path");
 
-// ✅ Helper: Normalize shop domain
 function normalizeShop(shop) {
   return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
-// ✅ Helper: Delay function
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// ✅ Helper: Retry finding session (resolves race condition after login)
 async function retryFindSession(shop, attempts = 3) {
   for (let i = 0; i < attempts; i++) {
     const sessions = await customSessionStorage.findSessionsByShop(shop);
@@ -19,12 +15,12 @@ async function retryFindSession(shop, attempts = 3) {
   }
   return [];
 }
-console.log("🔐 Incoming session check from:", req.headers["x-shopify-shop-domain"]);
-console.log("📦 Looking in file:", path.resolve(__dirname, "sessions.json"));
 
-// ✅ Middleware: Verifies session token
 module.exports = async function verifySessionToken(req, res, next) {
   try {
+    console.log("🔐 Incoming session check from:", req.headers["x-shopify-shop-domain"]);
+    console.log("📦 Looking in file:", path.resolve(__dirname, "sessions.json"));
+
     const token = req.headers.authorization?.replace("Bearer ", "");
     const shopHeader = req.headers["x-shopify-shop-domain"];
 
