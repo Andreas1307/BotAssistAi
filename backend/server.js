@@ -118,13 +118,11 @@ app.get("/auth/callback", async (req, res) => {
     const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
     console.log("✅ Received session:", session);
 
-    await sessionStorage.storeSession(session);
+    await customSessionStorage.storeSession(session); // should use normalized shop
     console.log("💾 Session stored");
 
-    const check = await sessionStorage.findSessionsByShop(session.shop.toLowerCase());
-    if (!check || check.length === 0) {
-      console.warn("❗Session did NOT persist before redirect");
-    }
+    const check = await customSessionStorage.findSessionsByShop(session.shop);
+    console.log("🔎 Checking saved sessions:", check.length ? "✅ Found" : "❌ Not found");
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
@@ -132,6 +130,7 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
+
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   console.log("✅ /api/check-session passed");
