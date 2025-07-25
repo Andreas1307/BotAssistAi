@@ -3,6 +3,18 @@ const { shopify, customSessionStorage } = require("./shopify");
 function normalizeShop(shop) {
   return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function retryFindSession(shop, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    const sessions = await customSessionStorage.findSessionsByShop(shop);
+    if (sessions.length > 0) return sessions;
+    console.log(`⏳ Session not found for ${shop}, retrying (${i + 1}/${attempts})...`);
+    await wait(300);
+  }
+  return [];
+}
+
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
