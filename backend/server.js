@@ -116,8 +116,11 @@ app.get("/auth/callback", async (req, res) => {
   try {
     const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
     console.log("📦 Received session for:", session.shop);
+
+    console.log("💾 Storing session...");
     await customSessionStorage.storeSession(session);
-    console.log("✅ Session saved, redirecting...");
+    console.log("✅ Session saved!");
+
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
     console.error("❌ Auth callback error:", err);
