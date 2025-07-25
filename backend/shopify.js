@@ -1,9 +1,8 @@
-// --- shopify.js ---
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
 require('dotenv').config();
-const path = require("path");
-const fs = require("fs");
+const fs = require('fs');
+const path = require('path');
 
 const SESSIONS_FILE = path.resolve(__dirname, 'sessions.json');
 
@@ -24,16 +23,6 @@ const customSessionStorage = {
     const sessions = loadSessions();
     const normalized = normalizeShop(session.shop);
     sessions[normalized] = session;
-    saveSessions(sessions);
-    return true;
-  },
-  loadSession: async (idOrShop) => {
-    const sessions = loadSessions();
-    return sessions[normalizeShop(idOrShop)] || null;
-  },
-  deleteSession: async (idOrShop) => {
-    const sessions = loadSessions();
-    delete sessions[normalizeShop(idOrShop)];
     saveSessions(sessions);
     return true;
   },

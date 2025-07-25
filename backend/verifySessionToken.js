@@ -1,11 +1,9 @@
-// --- verifySessionToken.js ---
 const { shopify, customSessionStorage } = require("./shopify");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const header = req.headers.authorization;
     if (!header?.startsWith("Bearer ")) {
-      console.warn("⚠️ Missing or invalid authorization header");
       return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
 
@@ -13,11 +11,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     const payload = await shopify.session.decodeSessionToken(token);
     const shop = payload.dest?.replace(/^https?:\/\//, "").toLowerCase();
 
-    console.log("🔐 Decoded session for shop:", shop);
-
     const sessions = await customSessionStorage.findSessionsByShop(shop);
-    console.log("📦 Loaded sessions for shop:", sessions.length);
-
     if (!sessions || sessions.length === 0) {
       return res.status(401).json({ error: "Session not found or expired" });
     }
