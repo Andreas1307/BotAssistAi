@@ -1,4 +1,4 @@
-const { customSessionStorage } = require("./shopify");
+const { shopify, customSessionStorage } = require("./shopify");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -10,10 +10,17 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Missing token or shop domain" });
     }
 
-    console.log("🔐 Verifying token for shop:", shop);
+    // 🔐 Decode and verify the token first
+    const payload = await shopify.session.decodeSessionToken(token);
+
+    const tokenShop = payload.dest.replace(/^https?:\/\//, "").toLowerCase();
+
+    if (tokenShop !== shop) {
+      console.warn("⚠️ Token shop mismatch:", tokenShop, shop);
+      return res.status(401).json({ error: "Token and shop mismatch" });
+    }
 
     const sessions = await customSessionStorage.findSessionsByShop(shop);
-    console.log("📦 Found sessions:", sessions.length);
 
     if (!sessions || sessions.length === 0) {
       console.warn("⚠️ No session found for shop:", shop);
