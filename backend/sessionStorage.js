@@ -19,10 +19,10 @@ function saveSessions(sessions) {
 
 const customSessionStorage = {
   async storeSession(session) {
+    console.log("storeSession called with session:", session);
     const sessions = loadSessions();
     const normalizedShop = normalizeShop(session.shop);
   
-    // ✅ OVERWRITE the session ID so that loadSession can find it later
     session.id = `offline_${normalizedShop}`;
     const forcedId = session.id;
   
@@ -31,12 +31,15 @@ const customSessionStorage = {
   
     console.log("💾 Saving session:", forcedId, "for shop:", normalizedShop);
     saveSessions(sessions);
+    console.log("Session saved to sessions.json");
     return true;
   }
+  
   ,
 
   async loadSession(id) {
     const sessions = loadSessions();
+    console.log("loadsession sessions", sessions)
     const raw = sessions[id];
     if (!raw) {
       console.warn("❌ No session found for id:", id);
@@ -44,6 +47,7 @@ const customSessionStorage = {
     }
 
     const session = await shopify.session.deserializeSession(raw); // ✅ deserialize
+    console.log("loadsession session", session)
     console.log("📤 Loaded session:", id);
     return session;
   },
