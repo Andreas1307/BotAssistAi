@@ -123,20 +123,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     const ensureShopifyAuthenticated = async () => {
-      if (sessionChecked.current) {
-        console.log("⚠️ Session check already done, skipping...");
-        return;
-      }
-  
+      if (sessionChecked.current) return;
       sessionChecked.current = true;
   
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
       const shop = localStorage.getItem("shop");
-  
-      if (!isShopifyUser || !shop) {
-        console.log("🚫 Not a Shopify user or missing shop");
-        return;
-      }
+      if (!isShopifyUser || !shop) return;
   
       try {
         const app = await waitForAppBridge();
@@ -145,6 +137,9 @@ const Dashboard = () => {
         if (!token) throw new Error("Missing session token");
   
         console.log("🔐 Verifying session with token:", token);
+  
+        // ⏱️ Wait 500ms to allow session to write
+        await new Promise((res) => setTimeout(res, 500));
   
         const res = await fetch("https://api.botassistai.com/api/check-session", {
           method: "GET",
@@ -174,6 +169,7 @@ const Dashboard = () => {
   
     ensureShopifyAuthenticated();
   }, []);
+  
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);

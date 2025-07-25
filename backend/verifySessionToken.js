@@ -28,7 +28,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: "Token and shop mismatch" });
     }
 
-    const sessions = await customSessionStorage.findSessionsByShop(tokenShop);
+    const sessions = await retryFindSession(tokenShop);
     console.log("📦 Found sessions:", sessions.length);
 
     if (!sessions || sessions.length === 0) {

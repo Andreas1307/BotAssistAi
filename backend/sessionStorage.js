@@ -23,8 +23,9 @@ module.exports = {
     const all = load();
     const key = normalizeShop(session.shop);
     all[key] = session;
-    console.log("💾 Saved session under key:", key);
+    console.log("💾 Saving session under key:", key);
     save(all);
+    console.log("✅ Session saved for shop:", key);
   },
 
   findSessionsByShop: async (shop) => {
@@ -32,7 +33,7 @@ module.exports = {
     const key = normalizeShop(shop);
     console.log("🔍 Looking for session with key:", key);
     return all[key] ? [all[key]] : [];
-  },
+  },  
 
   loadSessions: () => load(),
 };
