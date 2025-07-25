@@ -138,10 +138,7 @@ const Dashboard = () => {
   
         console.log("🔐 Verifying session with token:", token);
   
-        // ⏱️ Wait 500ms to allow session to write
-        await new Promise((res) => setTimeout(res, 500));
-  
-        const res = await fetch("https://api.botassistai.com/api/check-session", {
+        const res = await fetch(`${API_BASE}/api/check-session`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -150,18 +147,13 @@ const Dashboard = () => {
         });
   
         if (res.status === 401) {
-          const redirected = sessionStorage.getItem("alreadyRedirected");
-          if (!redirected) {
-            console.warn("🛑 Session invalid. Redirecting to /auth");
-            sessionStorage.setItem("alreadyRedirected", "true");
-            window.location.assign(`/auth?shop=${shop}`);
-          } else {
-            console.warn("🔁 Already redirected once. Not doing it again.");
-          }
-        } else {
-          console.log("✅ Session valid");
-          sessionStorage.removeItem("alreadyRedirected");
+          console.warn("🛑 Session invalid. Redirecting to /auth");
+          window.location.assign(`/auth?shop=${shop}`);
+          return;
         }
+  
+        console.log("✅ Session valid");
+        sessionStorage.removeItem("alreadyRedirected");
       } catch (err) {
         console.error("❌ Error verifying session:", err);
       }
@@ -170,8 +162,7 @@ const Dashboard = () => {
     ensureShopifyAuthenticated();
   }, []);
   
-  
-  useEffect(() => {
+    useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
     const shop = urlParams.get("shop");

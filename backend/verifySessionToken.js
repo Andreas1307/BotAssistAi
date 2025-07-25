@@ -1,10 +1,9 @@
 const { shopify } = require('./shopify');
 const customSessionStorage = require('./sessionStorage');
-console.log("Inside verify session")
+
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
@@ -21,9 +20,9 @@ module.exports = async function verifySessionToken(req, res, next) {
       return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
 
-    console.log("🔍 Token shop:", shop);
+    const sessionId = `offline_${shop}`;
+    console.log("🔍 Looking for session with ID:", sessionId);
 
-    const sessionId = `offline_${shop}`; // ✅ FIXED: Match your stored session ID
     const session = await customSessionStorage.loadSession(sessionId);
 
     if (!session) {

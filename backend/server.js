@@ -106,30 +106,33 @@ app.get("/auth", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    return res.redirect(redirectUrl); // ✅ ADD THIS!
+    return res.redirect(redirectUrl);
   } catch (e) {
     console.error("❌ Error starting auth:", e);
     res.status(500).send("Auth error");
   }
 });
 
-
 app.get("/auth/callback", async (req, res) => {
   try {
-    const session = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
-    console.log("📦 Received session for:", session.shop);
-    console.log("🆔 Session ID:", session.id); // ✅ Add this!
-    console.log("💾 Storing session...");
-    
-    await customSessionStorage.storeSession(session);
-    console.log("✅ Session saved!");
+    const session = await shopify.auth.callback({
+      rawRequest: req,
+      rawResponse: res,
+    });
 
+    console.log("📦 Received session for:", session.shop);
+    console.log("🆔 Session ID:", session.id);
+
+    await customSessionStorage.storeSession(session);
+
+    console.log("✅ Session saved to file!");
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
     console.error("❌ Auth callback error:", err);
     res.status(500).send("Authentication error");
   }
 });
+
 
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
@@ -147,6 +150,11 @@ app.get("/api/shop-data", verifySessionToken, async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
   }
 });
+app.get("/api/sessions", async (req, res) => {
+  const sessions = require("./sessions.json");
+  res.json(Object.keys(sessions));
+});
+
 
 
 
