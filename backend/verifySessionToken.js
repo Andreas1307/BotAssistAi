@@ -19,6 +19,8 @@ async function retryFindSession(shop, attempts = 3) {
   }
   return [];
 }
+console.log("🔐 Incoming session check from:", req.headers["x-shopify-shop-domain"]);
+console.log("📦 Looking in file:", path.resolve(__dirname, "sessions.json"));
 
 // ✅ Middleware: Verifies session token
 module.exports = async function verifySessionToken(req, res, next) {
