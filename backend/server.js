@@ -99,7 +99,6 @@ app.use(session({
 
 app.get("/auth", async (req, res) => {
   try {
-    console.log("In /auth")
     const redirectUrl = await shopify.auth.begin({
       shop: req.query.shop,
       callbackPath: "/auth/callback",
@@ -107,53 +106,39 @@ app.get("/auth", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    console.log("/auth redirect")
     return res.redirect(redirectUrl);
   } catch (e) {
-    console.error("❌ Error starting auth:", e);
     res.status(500).send("Auth error");
   }
 });
 
 app.get("/auth/callback", async (req, res) => {
   try {
-    console.log("In /auth/callback")
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
     });
-
-    console.log("📦 Received session for:", session.shop);
-    console.log("🆔 Session ID:", session.id);
-
     await customSessionStorage.storeSession(session);
-
-    console.log("✅ Session saved to file!");
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
-    console.error("❌ Auth callback error:", err);
     res.status(500).send("Authentication error");
   }
 });
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
-  console.log("in /api/check-session")
-  res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
+  return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
 });
 
 app.get("/api/shop-data", verifySessionToken, async (req, res) => {
   try {
-    console.log("In /api/shop-data")
-    const session = req.shopify.session;
-    const client = new shopify.clients.Rest({ session });
+    const client = new shopify.clients.Rest({ session: req.shopify.session });
     const response = await client.get({ path: "shop" });
-    console.log("/api/shop-data", response)
     return res.status(200).json({ shopData: response.body.shop });
   } catch (err) {
-    console.error("❌ Failed to fetch shop data:", err);
-    res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 });
+
 app.get("/api/sessions", async (req, res) => {
   const sessions = require("./sessions.json");
   res.json(Object.keys(sessions));
