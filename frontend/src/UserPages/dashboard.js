@@ -144,8 +144,14 @@ const Dashboard = () => {
         });
 
         if (res.status === 401) {
-          console.warn("🛑 Session invalid, redirecting to auth...");
-          window.location.assign(`/auth?shop=${shop}`);
+          const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+          if (!alreadyRedirected) {
+            console.warn("🛑 Session invalid, redirecting to auth...");
+            sessionStorage.setItem("alreadyRedirected", "true");
+            window.location.assign(`/auth?shop=${shop}`);
+          } else {
+            console.warn("⚠️ Already redirected once. Skipping further redirects.");
+          }
         } else {
           console.log("✅ Session is valid");
         }
