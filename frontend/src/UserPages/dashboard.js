@@ -146,7 +146,8 @@ const Dashboard = () => {
   
         console.log("🔐 Verifying session with token:", token);
   
-        const res = await fetch(`${API_BASE}/api/check-session`, {
+        const res = await fetch("https://api.botassistai.com/api/check-session", {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
             "X-Shopify-Shop-Domain": shop,
