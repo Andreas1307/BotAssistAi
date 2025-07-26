@@ -35,7 +35,8 @@ function saveSessions(sessions) {
 
 const customSessionStorage = {
   async storeSession(session) {
-    const sessionId = session.id;
+    const sessionId = session.isOnline ? session.id.replace(`${session.shop}_`, "") : session.id;
+
     console.log("📝 Storing session with ID:", sessionId);
   
     const serialized = session.toObject(); // ← FIXED
