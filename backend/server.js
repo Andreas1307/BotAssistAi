@@ -133,7 +133,7 @@ app.get("/auth/callback", async (req, res) => {
       shop: session.shop,
       state: session.state,
       isOnline: false,
-      scope: session.scope,
+      scope: shopify.config.scopes.join(','),
     });
 
     offlineSession.accessToken = session.accessToken;
