@@ -38,9 +38,11 @@ const customSessionStorage = {
     const sessionId = session.id;
     console.log("📝 Storing session with ID:", sessionId);
   
-    const serialized = await shopify.session.serializeSession(session);
+    const serialized = session.toObject(); // ← FIXED
     console.log("🧾 Serialized session:", serialized);
+  
     if (!serialized) throw new Error("❌ Serialization failed");
+  
     const sessions = loadSessions();
     sessions[sessionId] = serialized;
   
