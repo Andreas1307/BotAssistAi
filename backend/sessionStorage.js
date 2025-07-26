@@ -36,7 +36,8 @@ const customSessionStorage = {
     try {
       const sessions = loadSessions();
       const normalizedShop = normalizeShop(session.shop);
-      const sessionId = `offline_${normalizedShop}`;
+      const sessionId = session.id; 
+
   
       console.log("📝 Storing session for:", session.shop);
       console.log("🔐 Session ID will be:", sessionId);
