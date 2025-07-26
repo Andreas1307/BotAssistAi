@@ -138,7 +138,24 @@ app.get("/auth/callback", async (req, res) => {
       return res.status(500).send("Failed to save session.");
     }
 
-    res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
+    // ✅ App Bridge redirect after OAuth
+    const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
+
+    res.set("Content-Type", "text/html");
+    return res.send(`
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script>
+        const AppBridge = window['app-bridge'];
+        const createApp = AppBridge.default;
+        const actions = AppBridge.actions;
+        const app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${req.query.host}",
+        });
+        const redirect = actions.Redirect.create(app);
+        redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+      </script>
+    `);
   } catch (err) {
     console.error("❌ Auth callback failed:", err);
     if (!res.headersSent) {
