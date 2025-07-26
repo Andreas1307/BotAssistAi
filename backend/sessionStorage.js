@@ -36,24 +36,22 @@ const customSessionStorage = {
   async storeSession(session) {
     try {
       const sessions = loadSessions();
-  
       const shop = normalizeShop(session.shop);
   
       let sub;
-      // Try to decode token to get `sub`
       try {
-        const token = session.accessToken; // Shopify session token
-        const parts = token.split(".");
-        if (parts.length === 3) {
+        const token = session.idToken; // ✅ Correct
+        const parts = token?.split(".");
+        if (parts?.length === 3) {
           const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
           sub = payload.sub;
         }
       } catch (err) {
-        console.warn("⚠️ Could not decode token to extract sub");
+        console.warn("⚠️ Could not decode idToken to extract sub");
       }
   
       if (!sub) {
-        console.error("❌ Failed to extract sub from token");
+        console.error("❌ Failed to extract sub from idToken");
         return false;
       }
   
