@@ -36,22 +36,25 @@ const customSessionStorage = {
   async storeSession(session) {
     try {
       const sessions = loadSessions();
-      const sessionId = session.id;
-
-      if (!session.shop || !sessionId) {
-        console.error("❌ Session is missing required info");
+  
+      const shop = normalizeShop(session.shop);
+      const sub = session.sessionToken?.sub || session.idToken?.sub || session.id || ""; // fallback
+      const sessionId = `${shop}_${sub}`;
+  
+      if (!shop || !sub) {
+        console.error("❌ Session is missing shop or sub");
         return false;
       }
-
-      console.log("📝 Storing session for:", session.shop);
+  
+      console.log("📝 Storing session for:", shop);
       console.log("🔐 Session ID will be:", sessionId);
-
+  
       const serialized = await shopify.session.serializeSession(session);
       if (!serialized) {
         console.error("❌ Failed to serialize session.");
         return false;
       }
-
+  
       sessions[sessionId] = serialized;
       saveSessions(sessions);
       return true;
@@ -59,7 +62,7 @@ const customSessionStorage = {
       console.error("❌ Error in storeSession:", err);
       return false;
     }
-  },
+  }, 
 
   async loadSession(id) {
     console.log("🔍 Loading session with ID:", id);
