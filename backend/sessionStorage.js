@@ -8,7 +8,6 @@ const SESSION_FILE = path.resolve(__dirname, "sessions.json");
 const normalizeShop = (shop) =>
   (shop || "").toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
 
-
 function loadSessions() {
   if (!fs.existsSync(SESSION_FILE)) {
     console.log("🆕 No sessions file found. Creating new one...");
@@ -35,21 +34,22 @@ const customSessionStorage = {
   async storeSession(session) {
     try {
       const sessions = loadSessions();
-      const normalizedShop = normalizeShop(session.shop);
-      
-      // Fix here: Use Shopify's method to get session ID or reconstruct it
-      const sessionId = session.id;
+      const sessionId = session.id; // ✅ Use correct ID format
 
-  
+      if (!session.shop) {
+        console.error("❌ Session is missing shop information");
+        return false;
+      }
+
       console.log("📝 Storing session for:", session.shop);
       console.log("🔐 Session ID will be:", sessionId);
-  
+
       const serialized = await shopify.session.serializeSession(session);
       if (!serialized) {
         console.error("❌ Failed to serialize session. Result is empty.");
         return false;
       }
-  
+
       sessions[sessionId] = serialized;
       saveSessions(sessions);
       console.log("💾 Saved sessions:", Object.keys(sessions));
@@ -100,4 +100,3 @@ const customSessionStorage = {
 };
 
 module.exports = customSessionStorage;
- 
