@@ -38,14 +38,26 @@ const customSessionStorage = {
       const sessions = loadSessions();
   
       const shop = normalizeShop(session.shop);
-      const sub = session.sessionToken?.sub || session.idToken?.sub || session.id || ""; // fallback
-      const sessionId = `${shop}_${sub}`;
   
-      if (!shop || !sub) {
-        console.error("❌ Session is missing shop or sub");
+      let sub;
+      // Try to decode token to get `sub`
+      try {
+        const token = session.accessToken; // Shopify session token
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+          sub = payload.sub;
+        }
+      } catch (err) {
+        console.warn("⚠️ Could not decode token to extract sub");
+      }
+  
+      if (!sub) {
+        console.error("❌ Failed to extract sub from token");
         return false;
       }
   
+      const sessionId = `${shop}_${sub}`;
       console.log("📝 Storing session for:", shop);
       console.log("🔐 Session ID will be:", sessionId);
   
@@ -62,7 +74,8 @@ const customSessionStorage = {
       console.error("❌ Error in storeSession:", err);
       return false;
     }
-  }, 
+  }
+  , 
 
   async loadSession(id) {
     console.log("🔍 Loading session with ID:", id);
