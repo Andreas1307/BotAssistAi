@@ -115,7 +115,7 @@ app.get("/auth", async (req, res) => {
 
 app.get("/auth/callback", async (req, res) => {
   try {
-    const session = await shopify.auth.callback({
+    let session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
     });
@@ -123,15 +123,15 @@ app.get("/auth/callback", async (req, res) => {
     const normalizedShop = session.shop.toLowerCase().replace(/^https?:\/\//, "");
     const sessionId = `offline_${normalizedShop}`;
 
-    console.log("✅ Auth callback success:");
+    console.log("✅ Auth callback success");
     console.log("🔐 Session Shop:", session.shop);
-    console.log("🆔 Session ID:", sessionId);
+    console.log("🆔 Generated Session ID:", sessionId);
 
-    // 🛠️ Add this line — ensure session.id is set manually!
+    // 🧠 THIS LINE MUST COME BEFORE SERIALIZATION:
     session.id = sessionId;
 
     const success = await customSessionStorage.storeSession(session);
-    console.log("💡 storeSession result:", success);
+    console.log("💾 Session saved:", success);
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
@@ -139,7 +139,6 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
