@@ -119,10 +119,10 @@ const Dashboard = () => {
   const API_BASE = "https://api.botassistai.com";
   
   const [shopData, setShopData] = useState(null);
-  
+     const sessionChecked = useRef(false);
   
   useEffect(() => {
-    const sessionChecked = useRef(false);
+ 
   
     const ensureShopifyAuthenticated = async () => {
       if (sessionChecked.current) return;
