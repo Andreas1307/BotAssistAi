@@ -36,22 +36,9 @@ const customSessionStorage = {
   async storeSession(session) {
     try {
       const sessions = loadSessions();
-      const shop = normalizeShop(session.shop);
+      const sessionId = session.id; // ✅ Use Shopify's provided session ID
   
-      // ✅ Extract user ID (sub) from session.id
-      let sub;
-      const parts = session.id.split("_");
-      if (parts.length === 2) {
-        sub = parts[1]; // second part is the user ID
-      }
-  
-      if (!sub) {
-        console.error("❌ Failed to extract sub from session.id");
-        return false;
-      }
-  
-      const sessionId = `${shop}_${sub}`;
-      console.log("📝 Storing session for:", shop);
+      console.log("📝 Storing session for:", session.shop);
       console.log("🔐 Session ID will be:", sessionId);
   
       const serialized = await shopify.session.serializeSession(session);
@@ -67,7 +54,7 @@ const customSessionStorage = {
       console.error("❌ Error in storeSession:", err);
       return false;
     }
-  }
+  }  
   , 
 
   async loadSession(id) {
