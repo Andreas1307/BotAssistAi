@@ -9,7 +9,7 @@ const shopify = shopifyApi({
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   hostName: process.env.HOST.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-  scopes: process.env.SHOPIFY_SCOPES,
+  scopes: process.env.SHOPIFY_SCOPES.split(','),
   sessionStorage: customSessionStorage,
 });
 
