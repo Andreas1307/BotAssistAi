@@ -128,24 +128,13 @@ app.get("/auth/callback", async (req, res) => {
       if (!res.headersSent) {
         return res.status(500).send("Session missing shop info.");
       }
-      return; // prevent further execution
+      return;
     }
 
     console.log("✅ Auth callback success");
     console.log("🔐 Session Shop:", session.shop);
     console.log("🆔 Session ID:", session.id);
 
-    const success = await customSessionStorage.storeSession(session);
-    console.log("💾 Session saved:", success);
-
-    if (!success) {
-      if (!res.headersSent) {
-        return res.status(500).send("Failed to save session.");
-      }
-      return;
-    }
-
-    // ✅ App Bridge redirect after OAuth
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
     if (!res.headersSent) {
@@ -172,7 +161,6 @@ app.get("/auth/callback", async (req, res) => {
     }
   }
 });
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });

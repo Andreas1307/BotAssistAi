@@ -13,4 +13,4 @@ const shopify = shopifyApi({
   sessionStorage: customSessionStorage,
 });
 
-module.exports = { shopify, customSessionStorage };
+module.exports = { shopify };
