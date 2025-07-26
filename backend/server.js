@@ -128,18 +128,8 @@ app.get("/auth/callback", async (req, res) => {
     console.log("🆔 Session ID:", sessionId);
 
     // ✅ Rebuild session as a valid Shopify Session object
-    const offlineSession = new Session({
-      id: sessionId,
-      shop: session.shop,
-      state: session.state,
-      isOnline: false,
-      scope: shopify.config.scopes.join(','),
-    });
+    const success = await customSessionStorage.storeSession(session);
 
-    offlineSession.accessToken = session.accessToken;
-    offlineSession.expires = session.expires || undefined;
-
-    const success = await customSessionStorage.storeSession(offlineSession);
     console.log("💡 storeSession result:", success);
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
