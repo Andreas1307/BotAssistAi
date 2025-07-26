@@ -36,14 +36,17 @@ const customSessionStorage = {
     try {
       const sessions = loadSessions();
       const normalizedShop = normalizeShop(session.shop);
-      const sessionId = session.id; 
-
+      
+      // Fix here: Use Shopify's method to get session ID or reconstruct it
+      const sessionId = await shopify.session.getCurrentId({
+        isOnline: true,
+        rawRequest: null,
+        rawResponse: null,
+        session,
+      }) || session.id;
   
       console.log("📝 Storing session for:", session.shop);
       console.log("🔐 Session ID will be:", sessionId);
-  
-      // Assign correct ID
-      
   
       const serialized = await shopify.session.serializeSession(session);
       if (!serialized) {
@@ -59,8 +62,7 @@ const customSessionStorage = {
       console.error("❌ Error in storeSession:", err);
       return false;
     }
-  }
-  ,
+  },
 
   async loadSession(id) {
     console.log("🔍 Loading session with ID:", id);

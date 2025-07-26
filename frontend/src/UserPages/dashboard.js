@@ -123,8 +123,6 @@ const Dashboard = () => {
      const sessionChecked = useRef(false);
   
   useEffect(() => {
- 
-  
     const ensureShopifyAuthenticated = async () => {
       if (sessionChecked.current) return;
       sessionChecked.current = true; // ✅ Prevent spam
@@ -153,21 +151,20 @@ const Dashboard = () => {
   
         if (res.status === 401) {
           const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
-  
           if (!alreadyRedirected) {
             console.warn("🛑 Session invalid, redirecting to auth...");
             sessionStorage.setItem("alreadyRedirected", "true");
-  
+            console.log("Redirecting to /auth for shop:", shop);
             const redirect = Redirect.create(app);
             redirect.dispatch(
               Redirect.Action.REMOTE,
               `https://api.botassistai.com/auth?shop=${shop}`
             );
-            
           } else {
             console.warn("⚠️ Already redirected once. Skipping further redirects.");
           }
-        } else {
+        }
+         else {
           console.log("✅ Session is valid");
         }
       } catch (err) {
