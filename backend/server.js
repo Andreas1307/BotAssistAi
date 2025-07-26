@@ -123,40 +123,37 @@ app.get("/auth/callback", async (req, res) => {
       isOnline: true,
     });
 
-    // ✅ EXPLICITLY store online session
-    await customSessionStorage.storeSession(session);
-
     if (!session || !session.shop) {
       console.error("❌ Invalid session in callback", { session });
-      if (!res.headersSent) {
-        return res.status(500).send("Session missing shop info.");
-      }
-      return;
+      return res.status(500).send("Session missing shop info.");
     }
 
     console.log("✅ Auth callback success");
     console.log("🔐 Session Shop:", session.shop);
     console.log("🆔 Session ID:", session.id);
 
+    // ✅ Add this
+    console.log("📥 About to store session:", session.id);
+    await customSessionStorage.storeSession(session);
+    console.log("📤 Finished storing session:", session.id);
+
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
-    if (!res.headersSent) {
-      res.set("Content-Type", "text/html");
-      return res.send(`
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script>
-          const AppBridge = window['app-bridge'];
-          const createApp = AppBridge.default;
-          const actions = AppBridge.actions;
-          const app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${req.query.host}",
-          });
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-        </script>
-      `);
-    }
+    res.set("Content-Type", "text/html");
+    return res.send(`
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script>
+        const AppBridge = window['app-bridge'];
+        const createApp = AppBridge.default;
+        const actions = AppBridge.actions;
+        const app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${req.query.host}",
+        });
+        const redirect = actions.Redirect.create(app);
+        redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+      </script>
+    `);
   } catch (err) {
     console.error("❌ Auth callback failed:", err);
     if (!res.headersSent) {
@@ -164,8 +161,6 @@ app.get("/auth/callback", async (req, res) => {
     }
   }
 });
-
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
