@@ -119,49 +119,57 @@ const Dashboard = () => {
   const API_BASE = "https://api.botassistai.com";
   
   const [shopData, setShopData] = useState(null);
-  const sessionChecked = useRef(false);
-
+  
+  
   useEffect(() => {
+    const sessionChecked = useRef(false);
+  
     const ensureShopifyAuthenticated = async () => {
       if (sessionChecked.current) return;
       sessionChecked.current = true; // ✅ Prevent spam
-
+  
       const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
-      const shop = localStorage.getItem("shop") || new URLSearchParams(window.location.search).get("shop");
-
+      const shop =
+        localStorage.getItem("shop") ||
+        new URLSearchParams(window.location.search).get("shop");
+  
       if (!isShopifyUser || !shop) return;
-
+  
       try {
-        const app = await waitForAppBridge();
-const token = await getSessionToken(app);
-
-const res = await fetch("https://api.botassistai.com/api/check-session", {
-  method: "GET",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "X-Shopify-Shop-Domain": shop,
-  },
-});
-
-if (res.status === 401) {
-  const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
-  if (!alreadyRedirected) {
-    console.warn("🛑 Session invalid, redirecting to auth...");
-
-    sessionStorage.setItem("alreadyRedirected", "true");
-
-    const redirect = actions.Redirect.create(app);
-    redirect.dispatch(actions.Redirect.Action.REMOTE, `/auth?shop=${shop}`);
-  } else {
-    console.warn("⚠️ Already redirected once. Skipping further redirects.");
-  }
-}
-
+        const app = await waitForAppBridge(); // your App Bridge init
+        const token = await getSessionToken(app);
+  
+        console.log("Session token", token);
+        console.log("App", app);
+  
+        const res = await fetch(`${API_BASE}/api/check-session`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Shopify-Shop-Domain": shop,
+          },
+        });
+  
+        if (res.status === 401) {
+          const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+  
+          if (!alreadyRedirected) {
+            console.warn("🛑 Session invalid, redirecting to auth...");
+            sessionStorage.setItem("alreadyRedirected", "true");
+  
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, `/auth?shop=${shop}`);
+          } else {
+            console.warn("⚠️ Already redirected once. Skipping further redirects.");
+          }
+        } else {
+          console.log("✅ Session is valid");
+        }
       } catch (err) {
         console.error("❌ Session check failed:", err);
       }
     };
-
+  
     ensureShopifyAuthenticated();
   }, []);
   
