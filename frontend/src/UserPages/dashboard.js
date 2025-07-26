@@ -159,7 +159,11 @@ const Dashboard = () => {
             sessionStorage.setItem("alreadyRedirected", "true");
   
             const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.REMOTE, `/auth?shop=${shop}`);
+            redirect.dispatch(
+              Redirect.Action.REMOTE,
+              `https://api.botassistai.com/auth?shop=${shop}`
+            );
+            
           } else {
             console.warn("⚠️ Already redirected once. Skipping further redirects.");
           }
