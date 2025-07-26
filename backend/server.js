@@ -105,7 +105,7 @@ app.get("/auth", async (req, res) => {
     const redirectUrl = await shopify.auth.begin({
       shop: req.query.shop,
       callbackPath: "/auth/callback",
-      isOnline: false,
+      isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
@@ -120,6 +120,7 @@ app.get("/auth/callback", async (req, res) => {
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
+      isOnline: true
     });
 
     if (!session || !session.shop) {

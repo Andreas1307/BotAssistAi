@@ -5,13 +5,9 @@ const { Session } = require("@shopify/shopify-api");
 
 const SESSION_FILE = path.resolve(__dirname, "sessions.json");
 
-const normalizeShop = (shop) => {
-  if (!shop || typeof shop !== "string") {
-    console.warn("⚠️ normalizeShop received invalid input:", shop);
-    return "";
-  }
-  return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
-};
+const normalizeShop = (shop) =>
+  (shop || "").toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+
 
 function loadSessions() {
   if (!fs.existsSync(SESSION_FILE)) {
@@ -46,7 +42,7 @@ const customSessionStorage = {
       console.log("🔐 Session ID will be:", sessionId);
   
       // Assign correct ID
-      session.id = sessionId;
+      
   
       const serialized = await shopify.session.serializeSession(session);
       if (!serialized) {
