@@ -166,6 +166,7 @@ app.get("/auth/callback", async (req, res) => {
 });
 
 
+
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
 });
