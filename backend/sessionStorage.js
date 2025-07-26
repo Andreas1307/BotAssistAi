@@ -32,21 +32,33 @@ function saveSessions(sessions) {
 
 const customSessionStorage = {
   async storeSession(session) {
-    const sessions = loadSessions();
-    const normalizedShop = normalizeShop(session.shop);
-    const sessionId = `offline_${normalizedShop}`;
+    try {
+      const sessions = loadSessions();
+      const normalizedShop = normalizeShop(session.shop);
+      const sessionId = `offline_${normalizedShop}`;
   
-    console.log("📝 Storing session for:", session.shop);
-    console.log("🔐 Session ID will be:", sessionId);
+      console.log("📝 Storing session for:", session.shop);
+      console.log("🔐 Session ID will be:", sessionId);
   
-    // ✅ Just ensure session has the correct ID
-    session.id = sessionId;
+      // Assign correct ID
+      session.id = sessionId;
   
-    const serialized = await shopify.session.serializeSession(session);
-    sessions[sessionId] = serialized;
-    saveSessions(sessions);
-    return true;
-  },
+      const serialized = await shopify.session.serializeSession(session);
+      if (!serialized) {
+        console.error("❌ Failed to serialize session. Result is empty.");
+        return false;
+      }
+  
+      sessions[sessionId] = serialized;
+      saveSessions(sessions);
+      console.log("💾 Saved sessions:", Object.keys(sessions));
+      return true;
+    } catch (err) {
+      console.error("❌ Error in storeSession:", err);
+      return false;
+    }
+  }
+  ,
 
   async loadSession(id) {
     console.log("🔍 Loading session with ID:", id);

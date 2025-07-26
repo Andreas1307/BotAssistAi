@@ -125,7 +125,9 @@ app.get("/auth/callback", async (req, res) => {
     console.log("🔐 Session Shop:", session.shop);
     console.log("🆔 Session ID:", session.id);
 
-    await customSessionStorage.storeSession(session);
+    const success = await customSessionStorage.storeSession(session);
+console.log("💡 storeSession result:", success);
+
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
@@ -133,6 +135,11 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
+
+
+
+//sa updatez codul
+
 
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
