@@ -38,20 +38,15 @@ const customSessionStorage = {
       const sessions = loadSessions();
       const shop = normalizeShop(session.shop);
   
+      // ✅ Extract user ID (sub) from session.id
       let sub;
-      try {
-        const token = session.idToken; // ✅ Correct
-        const parts = token?.split(".");
-        if (parts?.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
-          sub = payload.sub;
-        }
-      } catch (err) {
-        console.warn("⚠️ Could not decode idToken to extract sub");
+      const parts = session.id.split("_");
+      if (parts.length === 2) {
+        sub = parts[1]; // second part is the user ID
       }
   
       if (!sub) {
-        console.error("❌ Failed to extract sub from idToken");
+        console.error("❌ Failed to extract sub from session.id");
         return false;
       }
   
