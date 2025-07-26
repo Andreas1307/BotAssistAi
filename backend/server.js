@@ -116,67 +116,70 @@ app.get("/auth", async (req, res) => {
 });
 
 app.get("/auth/callback", async (req, res) => {
+  let session;
+
   try {
-    const session = await shopify.auth.callback({
+    session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
       isOnline: true,
     });
+  } catch (err) {
+    console.error("❌ Auth callback failed during token exchange:", err);
+    if (!res.headersSent) {
+      return res.status(500).send("Authentication error during callback.");
+    }
+    return;
+  }
 
-    if (!session || !session.shop) {
-      console.error("❌ Invalid session in callback");
+  if (!session || !session.shop) {
+    console.error("❌ Invalid session in callback", session);
+    if (!res.headersSent) {
       return res.status(500).send("Session missing shop info.");
     }
+    return;
+  }
 
-    const shop = session.shop;
-    const host = req.query.host;
+  const shop = session.shop;
+  const host = req.query.host;
 
-    if (!host) {
-      console.error("❌ Missing 'host' in query parameters");
-      return res.status(400).send("Missing 'host' parameter.");
+  console.log("✅ Auth callback success");
+  console.log("🔐 Session Shop:", shop);
+  console.log("🆔 Session ID:", session.id);
+
+  try {
+    const stored = await customSessionStorage.storeSession(session);
+
+    if (!stored) {
+      console.error("❌ Failed to store session");
+      return res.status(500).send("Failed to store session.");
     }
+  } catch (err) {
+    console.error("❌ Error storing session:", err);
+    return res.status(500).send("Session storage error.");
+  }
 
-    console.log("✅ Auth callback success");
-    console.log("🔐 Session Shop:", shop);
-    console.log("🆔 Session ID:", session.id);
+  // ✅ Final redirect
+  const redirectUrl = `/?shop=${shop}&host=${host}&shopifyUser=true`;
 
-    const success = await customSessionStorage.storeSession(session);
-
-    if (!success) {
-      console.error("❌ Failed to save session");
-      return res.status(500).send("Failed to save session.");
-    }
-
-    // ✅ App Bridge Redirect after OAuth success
-    const redirectUrl = `/?shop=${shop}&host=${host}&shopifyUser=true`;
-
+  try {
     res.set("Content-Type", "text/html");
-    return res.send(`
+    res.status(200).send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
+        <head><title>Redirecting...</title></head>
         <body>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
             (function() {
-              const AppBridge = window['app-bridge'];
-              if (!AppBridge) {
-                console.error("❌ App Bridge not loaded");
-                window.location.href = "${redirectUrl}";
-                return;
-              }
-
-              const createApp = AppBridge.default;
-              const actions = AppBridge.actions;
-
-              const app = createApp({
+              var AppBridge = window['app-bridge'];
+              var createApp = AppBridge.default;
+              var actions = AppBridge.actions;
+              var app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
+                host: "${host}"
               });
-
-              const redirect = actions.Redirect.create(app);
+              var redirect = actions.Redirect.create(app);
               redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
             })();
           </script>
@@ -184,13 +187,12 @@ app.get("/auth/callback", async (req, res) => {
       </html>
     `);
   } catch (err) {
-    console.error("❌ Auth callback failed:", err);
+    console.error("❌ Failed to send redirect HTML:", err);
     if (!res.headersSent) {
-      res.status(500).send("Authentication error");
+      res.status(500).send("Failed to render redirect.");
     }
   }
 });
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
