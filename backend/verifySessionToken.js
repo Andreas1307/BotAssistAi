@@ -26,11 +26,13 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     let sessionId;
     try {
-      sessionId = `${shop}_${payload.sub}`;
+      sessionId = payload.sub; // This is correct for online sessions
+
 
     } catch (err) {
       console.warn("getCurrentId failed, fallback to manual ID");
-      sessionId = `${shop}_${payload.sub}`;
+      sessionId = payload.sub; // This is correct for online sessions
+
     }
 
     console.log("🔍 Looking for session with ID:", sessionId);
