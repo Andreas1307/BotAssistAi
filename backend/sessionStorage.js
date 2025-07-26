@@ -38,7 +38,7 @@ const customSessionStorage = {
       const normalizedShop = normalizeShop(session.shop);
       
       // Fix here: Use Shopify's method to get session ID or reconstruct it
-      const sessionId = `${session.shop}_${session.onlineAccessInfo?.associated_user?.id || session.id.split('_').pop() || session.id}`;
+      const sessionId = session.id;
 
   
       console.log("📝 Storing session for:", session.shop);
