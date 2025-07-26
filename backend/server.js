@@ -127,9 +127,10 @@ app.get("/auth/callback", async (req, res) => {
     console.log("🔐 Session Shop:", session.shop);
     console.log("🆔 Session ID:", sessionId);
 
-    // ✅ Rebuild session as a valid Shopify Session object
-    const success = await customSessionStorage.storeSession(session);
+    // 🛠️ Add this line — ensure session.id is set manually!
+    session.id = sessionId;
 
+    const success = await customSessionStorage.storeSession(session);
     console.log("💡 storeSession result:", success);
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
@@ -138,6 +139,7 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
+
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
@@ -158,7 +160,6 @@ app.get("/api/sessions", async (req, res) => {
   res.json(Object.keys(sessions));
 });
                                    
-
 
 
 
