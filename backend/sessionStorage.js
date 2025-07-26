@@ -4,8 +4,11 @@ const { shopify } = require("./shopify");
 
 const SESSION_FILE = path.resolve(__dirname, "sessions.json");
 
-const normalizeShop = (shop) =>
-  (shop || "").toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+const normalizeShop = (shop) => {
+  if (typeof shop !== "string") return "";
+  return shop.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+};
+
 
 function loadSessions() {
   if (!fs.existsSync(SESSION_FILE)) {

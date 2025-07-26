@@ -120,7 +120,7 @@ app.get("/auth/callback", async (req, res) => {
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
-      isOnline: true
+      isOnline: true,
     });
 
     if (!session || !session.shop) {
@@ -128,34 +128,60 @@ app.get("/auth/callback", async (req, res) => {
       return res.status(500).send("Session missing shop info.");
     }
 
+    const shop = session.shop;
+    const host = req.query.host;
+
+    if (!host) {
+      console.error("❌ Missing 'host' in query parameters");
+      return res.status(400).send("Missing 'host' parameter.");
+    }
+
     console.log("✅ Auth callback success");
-    console.log("🔐 Session Shop:", session.shop);
+    console.log("🔐 Session Shop:", shop);
     console.log("🆔 Session ID:", session.id);
 
     const success = await customSessionStorage.storeSession(session);
-    console.log("💾 Session saved:", success);
 
     if (!success) {
+      console.error("❌ Failed to save session");
       return res.status(500).send("Failed to save session.");
     }
 
-    // ✅ App Bridge redirect after OAuth
-    const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
+    // ✅ App Bridge Redirect after OAuth success
+    const redirectUrl = `/?shop=${shop}&host=${host}&shopifyUser=true`;
 
     res.set("Content-Type", "text/html");
     return res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default;
-        const actions = AppBridge.actions;
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${req.query.host}",
-        });
-        const redirect = actions.Redirect.create(app);
-        redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-      </script>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        </head>
+        <body>
+          <script>
+            (function() {
+              const AppBridge = window['app-bridge'];
+              if (!AppBridge) {
+                console.error("❌ App Bridge not loaded");
+                window.location.href = "${redirectUrl}";
+                return;
+              }
+
+              const createApp = AppBridge.default;
+              const actions = AppBridge.actions;
+
+              const app = createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}",
+              });
+
+              const redirect = actions.Redirect.create(app);
+              redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+            })();
+          </script>
+        </body>
+      </html>
     `);
   } catch (err) {
     console.error("❌ Auth callback failed:", err);
