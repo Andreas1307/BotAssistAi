@@ -36,12 +36,9 @@ function saveSessions(sessions) {
 const customSessionStorage = {
   async storeSession(session) {
     const sessionId = session.isOnline ? session.id.replace(`${session.shop}_`, "") : session.id;
-
     console.log("📝 Storing session with ID:", sessionId);
   
-    const serialized = session.toObject(); // ← FIXED
-    console.log("🧾 Serialized session:", serialized);
-  
+    const serialized = await shopify.session.serializeSession(session); // ✅ FIXED HERE
     if (!serialized) throw new Error("❌ Serialization failed");
   
     const sessions = loadSessions();
@@ -51,7 +48,7 @@ const customSessionStorage = {
     console.log("✅ Session stored to file");
   
     return true;
-  }, 
+  },   
 
   async loadSession(id) {
     console.log("🔍 Loading session with ID:", id);
