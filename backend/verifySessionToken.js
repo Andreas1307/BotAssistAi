@@ -26,11 +26,8 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     let sessionId;
     try {
-      sessionId = await shopify.session.getCurrentId({
-        isOnline: true,
-        rawRequest: req,
-        rawResponse: res,
-      });
+      sessionId = `${shop}_${payload.sub}`;
+
     } catch (err) {
       console.warn("getCurrentId failed, fallback to manual ID");
       sessionId = `${shop}_${payload.sub}`;
