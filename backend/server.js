@@ -123,6 +123,9 @@ app.get("/auth/callback", async (req, res) => {
       isOnline: true,
     });
 
+    // ✅ EXPLICITLY store online session
+    await customSessionStorage.storeSession(session);
+
     if (!session || !session.shop) {
       console.error("❌ Invalid session in callback", { session });
       if (!res.headersSent) {
@@ -161,6 +164,7 @@ app.get("/auth/callback", async (req, res) => {
     }
   }
 });
+
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
