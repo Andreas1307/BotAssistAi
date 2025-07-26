@@ -99,7 +99,9 @@ app.use(session({
 
 
 app.get("/auth", async (req, res) => {
+   console.log("I?N AUTH")
   try {
+   
     const redirectUrl = await shopify.auth.begin({
       shop: req.query.shop,
       callbackPath: "/auth/callback",
@@ -133,8 +135,6 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authentication error");
   }
 });
-
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
