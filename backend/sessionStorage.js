@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const { shopify } = require("./shopify");
-const { Session } = require("@shopify/shopify-api");
 
 const SESSION_FILE = path.resolve(__dirname, "sessions.json");
 
@@ -34,10 +33,10 @@ const customSessionStorage = {
   async storeSession(session) {
     try {
       const sessions = loadSessions();
-      const sessionId = session.id; // ✅ Use correct ID format
+      const sessionId = session.id;
 
-      if (!session.shop) {
-        console.error("❌ Session is missing shop information");
+      if (!session.shop || !sessionId) {
+        console.error("❌ Session is missing required info");
         return false;
       }
 
@@ -46,13 +45,12 @@ const customSessionStorage = {
 
       const serialized = await shopify.session.serializeSession(session);
       if (!serialized) {
-        console.error("❌ Failed to serialize session. Result is empty.");
+        console.error("❌ Failed to serialize session.");
         return false;
       }
 
       sessions[sessionId] = serialized;
       saveSessions(sessions);
-      console.log("💾 Saved sessions:", Object.keys(sessions));
       return true;
     } catch (err) {
       console.error("❌ Error in storeSession:", err);
