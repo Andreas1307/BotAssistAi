@@ -18,32 +18,37 @@ function loadSessions() {
 
   const data = fs.readFileSync(SESSION_FILE, "utf-8");
   try {
-    const parsed = JSON.parse(data);
-    console.log("📂 Loaded sessions:", Object.keys(parsed));
-    return parsed;
+    return JSON.parse(data);
   } catch (err) {
     console.error("❌ Failed to parse sessions file:", err);
     return {};
   }
 }
 
+
 function saveSessions(sessions) {
+  console.log("💾 Saving sessions to:", SESSION_FILE);
+  console.log("📌 Sessions to save:", Object.keys(sessions));
   fs.writeFileSync(SESSION_FILE, JSON.stringify(sessions, null, 2));
   console.log("💾 Saved sessions:", Object.keys(sessions));
 }
 
 const customSessionStorage = {
   async storeSession(session) {
-    const sessions = loadSessions();
-    const sessionId = session.id; // ✅ use native ID
-    const serialized = await shopify.session.serializeSession(session);
+    const sessionId = session.id;
+    console.log("📝 Storing session with ID:", sessionId);
   
+    const serialized = await shopify.session.serializeSession(session);
+    console.log("🧾 Serialized session:", serialized);
+    if (!serialized) throw new Error("❌ Serialization failed");
+    const sessions = loadSessions();
     sessions[sessionId] = serialized;
-    saveSessions(sessions);
+  
+    saveSessions(sessions); // Writes to file
+    console.log("✅ Session stored to file");
+  
     return true;
-  }
-   
-  , 
+  }, 
 
   async loadSession(id) {
     console.log("🔍 Loading session with ID:", id);
