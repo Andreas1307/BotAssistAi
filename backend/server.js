@@ -47,6 +47,7 @@ const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, customSessionStorage } = require('./shopify');
 const sessionStorage = require('./sessionStorage');
+const { Session } = require("@shopify/shopify-api");
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -120,14 +121,26 @@ app.get("/auth/callback", async (req, res) => {
     });
 
     const normalizedShop = session.shop.toLowerCase().replace(/^https?:\/\//, "");
-    session.id = `offline_${normalizedShop}`;
+    const sessionId = `offline_${normalizedShop}`;
+
     console.log("✅ Auth callback success:");
     console.log("🔐 Session Shop:", session.shop);
-    console.log("🆔 Session ID:", session.id);
+    console.log("🆔 Session ID:", sessionId);
 
-    const success = await customSessionStorage.storeSession(session);
-console.log("💡 storeSession result:", success);
+    // ✅ Rebuild session as a valid Shopify Session object
+    const offlineSession = new Session({
+      id: sessionId,
+      shop: session.shop,
+      state: session.state,
+      isOnline: false,
+      scope: session.scope,
+    });
 
+    offlineSession.accessToken = session.accessToken;
+    offlineSession.expires = session.expires || undefined;
+
+    const success = await customSessionStorage.storeSession(offlineSession);
+    console.log("💡 storeSession result:", success);
 
     res.redirect(`/?shop=${session.shop}&shopifyUser=true`);
   } catch (err) {
@@ -135,12 +148,6 @@ console.log("💡 storeSession result:", success);
     res.status(500).send("Authentication error");
   }
 });
-
-
-
-//sa updatez codul
-
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
