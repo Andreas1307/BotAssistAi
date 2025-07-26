@@ -30,6 +30,7 @@ import {
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 import useShopifyInstallRedirect from "../utils/dash-redirect"
+import { Redirect } from "@shopify/app-bridge/actions";
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
