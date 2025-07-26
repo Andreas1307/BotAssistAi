@@ -116,83 +116,63 @@ app.get("/auth", async (req, res) => {
 });
 
 app.get("/auth/callback", async (req, res) => {
-  let session;
-
   try {
-    session = await shopify.auth.callback({
+    const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
       isOnline: true,
     });
-  } catch (err) {
-    console.error("❌ Auth callback failed during token exchange:", err);
-    if (!res.headersSent) {
-      return res.status(500).send("Authentication error during callback.");
+
+    if (!session || !session.shop) {
+      console.error("❌ Invalid session in callback", { session });
+      if (!res.headersSent) {
+        return res.status(500).send("Session missing shop info.");
+      }
+      return; // prevent further execution
     }
-    return;
-  }
 
-  if (!session || !session.shop) {
-    console.error("❌ Invalid session in callback", session);
-    if (!res.headersSent) {
-      return res.status(500).send("Session missing shop info.");
+    console.log("✅ Auth callback success");
+    console.log("🔐 Session Shop:", session.shop);
+    console.log("🆔 Session ID:", session.id);
+
+    const success = await customSessionStorage.storeSession(session);
+    console.log("💾 Session saved:", success);
+
+    if (!success) {
+      if (!res.headersSent) {
+        return res.status(500).send("Failed to save session.");
+      }
+      return;
     }
-    return;
-  }
 
-  const shop = session.shop;
-  const host = req.query.host;
+    // ✅ App Bridge redirect after OAuth
+    const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
-  console.log("✅ Auth callback success");
-  console.log("🔐 Session Shop:", shop);
-  console.log("🆔 Session ID:", session.id);
-
-  try {
-    const stored = await customSessionStorage.storeSession(session);
-
-    if (!stored) {
-      console.error("❌ Failed to store session");
-      return res.status(500).send("Failed to store session.");
+    if (!res.headersSent) {
+      res.set("Content-Type", "text/html");
+      return res.send(`
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script>
+          const AppBridge = window['app-bridge'];
+          const createApp = AppBridge.default;
+          const actions = AppBridge.actions;
+          const app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${req.query.host}",
+          });
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+        </script>
+      `);
     }
   } catch (err) {
-    console.error("❌ Error storing session:", err);
-    return res.status(500).send("Session storage error.");
-  }
-
-  // ✅ Final redirect
-  const redirectUrl = `/?shop=${shop}&host=${host}&shopifyUser=true`;
-
-  try {
-    res.set("Content-Type", "text/html");
-    res.status(200).send(`
-      <!DOCTYPE html>
-      <html>
-        <head><title>Redirecting...</title></head>
-        <body>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script>
-            (function() {
-              var AppBridge = window['app-bridge'];
-              var createApp = AppBridge.default;
-              var actions = AppBridge.actions;
-              var app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}"
-              });
-              var redirect = actions.Redirect.create(app);
-              redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-            })();
-          </script>
-        </body>
-      </html>
-    `);
-  } catch (err) {
-    console.error("❌ Failed to send redirect HTML:", err);
+    console.error("❌ Auth callback failed:", err);
     if (!res.headersSent) {
-      res.status(500).send("Failed to render redirect.");
+      res.status(500).send("Authentication error");
     }
   }
 });
+
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
