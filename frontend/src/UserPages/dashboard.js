@@ -149,7 +149,7 @@ console.log("App", app)
           if (!alreadyRedirected) {
             console.warn("🛑 Session invalid, redirecting to auth...");
             sessionStorage.setItem("alreadyRedirected", "true");
-            window.location.assign(`/auth?shop=${shop}`);
+            window.location.assign(`https://api.botassistai.com/auth?shop=${shop}`);
           } else {
             console.warn("⚠️ Already redirected once. Skipping further redirects.");
           }
