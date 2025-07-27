@@ -124,19 +124,20 @@ app.get("/auth/callback", async (req, res) => {
       isOnline: true,
     });
 
-    if (!session || !session.shop || !session.accessToken) {
-      console.error("❌ Missing data in session:", session);
+    console.log("✅ Session created:", session);
+
+    // ✅ No more incorrect check — directly use session
+    if (!session || !session.id || !session.shop || !session.accessToken) {
+      console.error("❌ Session is missing required data:", session);
       return res.status(400).send("Session missing required data.");
     }
 
-    console.log("✅ Auth callback session OK", session.id);
-
-    // Make sure it's saved using the correct key
-    await require("./sessionStorage").storeCallback(session);
+    // ✅ Store session using correct ID format
+    const { storeCallback } = require("./sessionStorage");
+    await storeCallback(session); // ← Store it here
 
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
     res.set("Content-Type", "text/html");
-
     res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
