@@ -121,21 +121,22 @@ app.get("/auth/callback", async (req, res) => {
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
-      isOnline: true
+      isOnline: true,
     });
 
     if (!session || !session.shop || !session.accessToken) {
       console.error("❌ Missing data in session:", session);
-      return res.status(400).send("Session missing data.");
+      return res.status(400).send("Session missing required data.");
     }
 
     console.log("✅ Auth callback session OK", session.id);
 
-    // Manually persist if not already saved:
+    // Make sure it's saved using the correct key
     await require("./sessionStorage").storeCallback(session);
 
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
     res.set("Content-Type", "text/html");
+
     res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
@@ -152,10 +153,11 @@ app.get("/auth/callback", async (req, res) => {
     `);
   } catch (err) {
     console.error("❌ Callback error:", err);
-    if (!res.headersSent) res.status(500).send("Callback error.");
+    if (!res.headersSent) {
+      res.status(500).send("OAuth callback failed.");
+    }
   }
 });
-
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
