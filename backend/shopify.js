@@ -1,7 +1,6 @@
-const { shopifyApi, LATEST_API_VERSION } = require("@shopify/shopify-api");
-require("@shopify/shopify-api/adapters/node"); // <- don't remove this
+const { shopifyApi, LATEST_API_VERSION, CustomSessionStorage } = require("@shopify/shopify-api");
+require("@shopify/shopify-api/adapters/node");
 
-// ✅ FIX HERE: Destructure the needed callbacks
 const {
   storeCallback,
   loadCallback,
@@ -15,11 +14,11 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/https?:\/\//, ""),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: {
-    storeSession: storeCallback,
-    loadSession: loadCallback,
-    deleteSession: deleteCallback,
-  },
+  sessionStorage: new CustomSessionStorage(
+    storeCallback,
+    loadCallback,
+    deleteCallback
+  ),
 });
 
 module.exports = { shopify };
