@@ -131,9 +131,7 @@ app.get("/auth/callback", async (req, res) => {
 
     console.log("✅ Auth successful:", session);
 
-    // Store session manually if needed (redundant if CustomSessionStorage already does it)
-    const { storeCallback } = require("./sessionStorage");
-    await storeCallback(session);
+    
 
     // Redirect back to frontend inside Shopify iframe
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
