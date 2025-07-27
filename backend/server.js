@@ -122,6 +122,7 @@ app.get("/auth/callback", async (req, res) => {
       rawResponse: res,
       isOnline: true,
     });
+    await shopify.auth.validateAuthCallback(req, res, session);
 
     if (!session || !session.shop) {
       console.error("❌ Invalid session in callback", { session });
