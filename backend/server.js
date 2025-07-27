@@ -99,9 +99,8 @@ app.use(session({
 
 
 app.get("/auth", async (req, res) => {
-   console.log("I?N AUTH")
+  console.log("IN AUTH");
   try {
-   
     const redirectUrl = await shopify.auth.begin({
       shop: req.query.shop,
       callbackPath: "/auth/callback",
@@ -109,11 +108,14 @@ app.get("/auth", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    return res.redirect(redirectUrl);
+
+    // ✅ Only one response
+    res.redirect(redirectUrl);
   } catch (e) {
-    res.status(500).send("Auth error");
+    if (!res.headersSent) res.status(500).send("Auth error");
   }
 });
+
 
 app.get("/auth/callback", async (req, res) => {
   try {
@@ -128,14 +130,11 @@ app.get("/auth/callback", async (req, res) => {
       return res.status(500).send("Session missing shop info.");
     }
 
-    console.log("✅ Auth callback success");
-    console.log("🔐 Session Shop:", session.shop);
-    console.log("🆔 Session ID:", session.id);
-
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
+    // ✅ Respond once, using this HTML
     res.set("Content-Type", "text/html");
-    return res.send(`
+    res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
         const AppBridge = window['app-bridge'];

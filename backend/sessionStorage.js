@@ -1,3 +1,4 @@
+// sessionStorage.js
 const fs = require("fs");
 const path = require("path");
 const { Session } = require("@shopify/shopify-api");
@@ -26,30 +27,24 @@ function saveSessions(sessions) {
 }
 
 const storeCallback = async (session) => {
-  console.log("🔥 Storing session in storeCallback:", session.id);
+  console.log("🔥 Storing session:", session.id);
 
   const sessions = loadSessions();
-
-  // Serialize session correctly
   const sessionToStore = {
     id: session.id,
     shop: session.shop,
     state: session.state,
     isOnline: session.isOnline,
-    accessToken: session.accessToken,
     scope: session.scope,
+    accessToken: session.accessToken,
     expires: session.expires ? session.expires.toISOString() : null,
     onlineAccessInfo: session.onlineAccessInfo || null,
-    // add other needed props if used
   };
 
   sessions[session.id] = sessionToStore;
-
   saveSessions(sessions);
-  console.log("💾 Session stored:", session.id);
   return true;
 };
-
 
 const loadCallback = async (id) => {
   const sessions = loadSessions();
@@ -58,17 +53,14 @@ const loadCallback = async (id) => {
   if (!sessionData) return undefined;
 
   const session = new Session(sessionData.id, sessionData.shop, sessionData.isOnline);
-
-  // Restore session properties
   session.state = sessionData.state;
-  session.accessToken = sessionData.accessToken;
   session.scope = sessionData.scope;
+  session.accessToken = sessionData.accessToken;
   session.expires = sessionData.expires ? new Date(sessionData.expires) : undefined;
-  session.onlineAccessInfo = sessionData.onlineAccessInfo;
+  session.onlineAccessInfo = sessionData.onlineAccessInfo || null;
 
   return session;
 };
-
 
 const deleteCallback = async (id) => {
   const sessions = loadSessions();
@@ -82,5 +74,5 @@ const deleteCallback = async (id) => {
 module.exports = {
   storeCallback,
   loadCallback,
-  deleteCallback
+  deleteCallback,
 };
