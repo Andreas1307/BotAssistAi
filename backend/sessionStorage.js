@@ -27,6 +27,10 @@ function saveSessions(sessions) {
 
 module.exports = {
   storeCallback: async (session) => {
+    if (!session.id || !session.shop) {
+      console.error("Invalid session object, missing id or shop:", session);
+      return false;
+    }
     const sessions = loadSessions();
     sessions[session.id] = {
       id: session.id,
@@ -42,23 +46,35 @@ module.exports = {
     console.log("✅ Stored session:", session.id);
     return true;
   },
+  
 
   loadCallback: async (id) => {
     const sessions = loadSessions();
     const data = sessions[id];
-    if (!data || !data.id || !data.shop) {
-      console.error("Session data invalid or missing for id:", id);
+  
+    if (!data) {
+      console.error("Session not found for id:", id);
       return undefined;
     }
-    const session = new Session(data.id, data.shop, data.isOnline);
+  
+    if (!data.id || !data.shop) {
+      console.error("Stored session missing id or shop:", data);
+      return undefined;
+    }
+  
+    // Create the session with proper constructor parameters
+    const session = new Session(data.id, data.shop, data.isOnline || false);
+  
+    // Assign the rest of the properties
     session.accessToken = data.accessToken;
     session.scope = data.scope;
     session.expires = data.expires ? new Date(data.expires) : null;
     session.state = data.state;
     session.onlineAccessInfo = data.onlineAccessInfo;
+  
     console.log("🔍 Loaded session:", id);
     return session;
-  },
+  },  
   
 
   deleteCallback: async (id) => {
