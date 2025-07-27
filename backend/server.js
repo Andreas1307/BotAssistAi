@@ -130,26 +130,36 @@ app.get("/auth/callback", async (req, res) => {
       return res.status(500).send("Session missing data.");
     }
 
-    // Store session manually if needed
+    // Ensure session gets stored
     const { storeCallback } = require("./sessionStorage");
-    await storeCallback(session); // Make sure this line is present
+    await storeCallback(session);
 
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
     res.set("Content-Type", "text/html");
     res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default;
-        const actions = AppBridge.actions;
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${req.query.host}",
-        });
-        const redirect = actions.Redirect.create(app);
-        redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-      </script>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        </head>
+        <body>
+          <script>
+            const AppBridge = window['app-bridge'];
+            const createApp = AppBridge.default;
+            const actions = AppBridge.actions;
+
+            const app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${req.query.host}",
+              forceRedirect: true,
+            });
+
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+          </script>
+        </body>
+      </html>
     `);
   } catch (err) {
     console.error("❌ Auth callback failed:", err);

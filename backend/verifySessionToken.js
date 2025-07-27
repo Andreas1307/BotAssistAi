@@ -28,7 +28,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     console.log("verysessiontoken shop:", shop);
 
     // Construct session ID with correct format (online session)
-    const sessionId = `online_${shop}_${payload.sub}`;
+    const sessionId = `${shop}_${payload.sub}`; // Shopify already prefixes it if online
+
 
     console.log("🔍 Looking for session with ID:", sessionId);
 
