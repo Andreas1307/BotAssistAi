@@ -1,106 +1,69 @@
+// sessionStorage.js
 const fs = require("fs");
 const path = require("path");
 const { Session } = require("@shopify/shopify-api");
 
 const SESSIONS_FILE = path.join(__dirname, "sessions.json");
 
-function ensureSessionsFile() {
+function ensureFile() {
   if (!fs.existsSync(SESSIONS_FILE)) {
     fs.writeFileSync(SESSIONS_FILE, JSON.stringify({}), "utf8");
   }
 }
 
 function loadSessions() {
+  ensureFile();
   try {
-    ensureSessionsFile();
     const data = fs.readFileSync(SESSIONS_FILE, "utf8");
     return JSON.parse(data);
-  } catch (error) {
-    console.error("❌ Failed to load sessions file:", error);
+  } catch {
     return {};
   }
 }
 
 function saveSessions(sessions) {
-  try {
-    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2), "utf8");
-    console.log("💾 Sessions file updated");
-  } catch (error) {
-    console.error("❌ Failed to save sessions file:", error);
-  }
+  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2), "utf8");
 }
 
-const storeCallback = async (session) => {
-  try {
-    console.log("🔥 Storing session:", session.id);
-
+module.exports = {
+  storeCallback: async (session) => {
     const sessions = loadSessions();
-
-    const sessionToStore = {
+    sessions[session.id] = {
       id: session.id,
       shop: session.shop,
-      state: session.state,
       isOnline: session.isOnline,
-      scope: session.scope,
       accessToken: session.accessToken,
-      expires: session.expires ? session.expires.toISOString() : null,
-      onlineAccessInfo: session.onlineAccessInfo || null,
+      scope: session.scope,
+      expires: session.expires?.toISOString(),
+      state: session.state || null,
+      onlineAccessInfo: session.onlineAccessInfo || null
     };
-
-    sessions[session.id] = sessionToStore;
     saveSessions(sessions);
-    console.log("✅ Session stored:", session.id);
+    console.log("✅ Stored session:", session.id);
     return true;
-  } catch (err) {
-    console.error("❌ Failed to store session:", err);
-    return false;
-  }
-};
+  },
 
-const loadCallback = async (id) => {
-  try {
+  loadCallback: async (id) => {
     const sessions = loadSessions();
-    const sessionData = sessions[id];
-
-    if (!sessionData) {
-      console.warn("⚠️ No session found with ID:", id);
-      return undefined;
-    }
-
-    const session = new Session(sessionData.id, sessionData.shop, sessionData.isOnline);
-    session.state = sessionData.state;
-    session.scope = sessionData.scope;
-    session.accessToken = sessionData.accessToken;
-    session.expires = sessionData.expires ? new Date(sessionData.expires) : undefined;
-    session.onlineAccessInfo = sessionData.onlineAccessInfo || null;
-
-    console.log("✅ Loaded session:", id);
+    const data = sessions[id];
+    if (!data) return undefined;
+    const session = new Session(data.id, data.shop, data.isOnline);
+    session.accessToken = data.accessToken;
+    session.scope = data.scope;
+    session.expires = data.expires ? new Date(data.expires) : null;
+    session.state = data.state;
+    session.onlineAccessInfo = data.onlineAccessInfo;
+    console.log("🔍 Loaded session:", id);
     return session;
-  } catch (err) {
-    console.error("❌ Failed to load session:", err);
-    return undefined;
-  }
-};
+  },
 
-const deleteCallback = async (id) => {
-  try {
+  deleteCallback: async (id) => {
     const sessions = loadSessions();
     if (sessions[id]) {
       delete sessions[id];
       saveSessions(sessions);
       console.log("🗑️ Deleted session:", id);
-    } else {
-      console.warn("⚠️ Tried to delete nonexistent session:", id);
     }
     return true;
-  } catch (err) {
-    console.error("❌ Failed to delete session:", err);
-    return false;
-  }
-};
-
-module.exports = {
-  storeCallback,
-  loadCallback,
-  deleteCallback,
+  },
 };
