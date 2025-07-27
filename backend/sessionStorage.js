@@ -26,13 +26,14 @@ function saveSessions(sessions) {
 }
 
 const storeCallback = async (session) => {
-  console.log("🔥 Storing session in storeCallback:", session.id); // ← ADD THIS
+  console.log("🔥 Storing session in storeCallback:", session.id);  // Add this
   const sessions = loadSessions();
   sessions[session.id] = session;
   saveSessions(sessions);
-  console.log("💾 Session stored:", session.id);
+  console.log("💾 Session stored:", session.id);  // Add this
   return true;
 };
+
 
 const loadCallback = async (id) => {
   const sessions = loadSessions();
