@@ -37,7 +37,7 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     console.log("🔍 Looking for session with ID:", sessionId);
 
-    const session = await customSessionStorage.loadSession(sessionId);
+    const session = await customSessionStorage.loadCallback(sessionId);
 
     console.log("verysessiontoken session:", session);
 
