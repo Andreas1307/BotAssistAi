@@ -122,7 +122,6 @@ app.get("/auth/callback", async (req, res) => {
       rawResponse: res,
       isOnline: true,
     });
-    await shopify.auth.validateAuthCallback(req, res, session);
 
     if (!session || !session.shop) {
       console.error("❌ Invalid session in callback", { session });
@@ -132,11 +131,6 @@ app.get("/auth/callback", async (req, res) => {
     console.log("✅ Auth callback success");
     console.log("🔐 Session Shop:", session.shop);
     console.log("🆔 Session ID:", session.id);
-
-    // ✅ Add this
-    console.log("📥 About to store session:", session.id);
-    
-    console.log("📤 Finished storing session:", session.id);
 
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
