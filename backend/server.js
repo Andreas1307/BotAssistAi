@@ -131,9 +131,9 @@ app.get("/auth/callback", async (req, res) => {
 
     console.log("✅ Auth successful:", session);
 
-    
+    // 🚨 Wait a few ms to ensure storeCallback finishes writing session to file
+    await new Promise(resolve => setTimeout(resolve, 200)); // Give disk I/O time (esp on PM2/Ubuntu)
 
-    // Redirect back to frontend inside Shopify iframe
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
     res.set("Content-Type", "text/html");
