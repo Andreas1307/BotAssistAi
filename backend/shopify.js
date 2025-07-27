@@ -1,16 +1,15 @@
-const { shopifyApi, LATEST_API_VERSION } = require("@shopify/shopify-api");
-require("@shopify/shopify-api/adapters/node");
-require("dotenv").config();
-const customSessionStorage = require("./sessionStorage"); // ✅ Point to the one file only
+const { shopifyApi, LATEST_API_VERSION, LogSeverity } = require("@shopify/shopify-api");
+const customSessionStorage = require("./sessionStorage");
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
+  scopes: process.env.SCOPES.split(","),
+  hostName: process.env.HOST.replace(/https?:\/\//, ""),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  hostName: process.env.HOST.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-  scopes: process.env.SHOPIFY_SCOPES.split(','),
-  sessionStorage: customSessionStorage,
+  sessionStorage: customSessionStorage, // ✅ this must be here
+  logger: { level: LogSeverity.Debug },
 });
 
 module.exports = { shopify };
