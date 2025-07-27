@@ -26,6 +26,7 @@ function saveSessions(sessions) {
 }
 
 const storeCallback = async (session) => {
+  console.log("🔥 Storing session in storeCallback:", session.id); // ← ADD THIS
   const sessions = loadSessions();
   sessions[session.id] = session;
   saveSessions(sessions);
