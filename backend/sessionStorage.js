@@ -62,4 +62,10 @@ module.exports = {
   storeCallback,
   loadCallback,
   deleteCallback,
+
+
+
+  loadSession: loadCallback,
+  storeSession: storeCallback,
+  deleteSession: deleteCallback,
 };
