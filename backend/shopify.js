@@ -1,7 +1,12 @@
 const { shopifyApi, LATEST_API_VERSION } = require("@shopify/shopify-api");
-require("@shopify/shopify-api/adapters/node"); // <- IMPORTANT
+require("@shopify/shopify-api/adapters/node"); // <- don't remove this
 
-const sessionStorage = require("./sessionStorage"); // <- YOUR FILE
+// ✅ FIX HERE: Destructure the needed callbacks
+const {
+  storeCallback,
+  loadCallback,
+  deleteCallback
+} = require("./sessionStorage");
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -16,6 +21,5 @@ const shopify = shopifyApi({
     deleteSession: deleteCallback,
   },
 });
-
 
 module.exports = { shopify };
