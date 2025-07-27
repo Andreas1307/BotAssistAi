@@ -116,7 +116,6 @@ app.get("/auth", async (req, res) => {
   }
 });
 
-
 app.get("/auth/callback", async (req, res) => {
   try {
     const session = await shopify.auth.callback({
@@ -125,15 +124,18 @@ app.get("/auth/callback", async (req, res) => {
       isOnline: true,
     });
 
-    if (!session || !session.shop || !session.id) {
-      console.error("❌ Invalid session in callback", { session });
-      return res.status(500).send("Session missing data.");
+    if (!session || !session.shop || !session.accessToken) {
+      console.error("❌ Invalid session received", session);
+      return res.status(400).send("Session missing data.");
     }
 
-    // Ensure session gets stored
+    console.log("✅ Auth successful:", session);
+
+    // Store session manually if needed (redundant if CustomSessionStorage already does it)
     const { storeCallback } = require("./sessionStorage");
     await storeCallback(session);
 
+    // Redirect back to frontend inside Shopify iframe
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
     res.set("Content-Type", "text/html");
@@ -152,7 +154,7 @@ app.get("/auth/callback", async (req, res) => {
             const app = createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${req.query.host}",
-              forceRedirect: true,
+              forceRedirect: true
             });
 
             const redirect = actions.Redirect.create(app);
@@ -161,10 +163,10 @@ app.get("/auth/callback", async (req, res) => {
         </body>
       </html>
     `);
-  } catch (err) {
-    console.error("❌ Auth callback failed:", err);
+  } catch (e) {
+    console.error("❌ Auth callback error:", e);
     if (!res.headersSent) {
-      res.status(500).send("Authentication error");
+      res.status(500).send("Authentication callback error.");
     }
   }
 });
