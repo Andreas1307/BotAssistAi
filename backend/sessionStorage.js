@@ -62,19 +62,22 @@ module.exports = {
       return undefined;
     }
   
-    // Create the session with proper constructor parameters
-    const session = new Session(data.id, data.shop, data.isOnline || false);
-  
-    // Assign the rest of the properties
-    session.accessToken = data.accessToken;
-    session.scope = data.scope;
-    session.expires = data.expires ? new Date(data.expires) : null;
-    session.state = data.state;
-    session.onlineAccessInfo = data.onlineAccessInfo;
+    // Correct construction of Session object
+    const session = new Session({
+      id: data.id,
+      shop: data.shop,
+      isOnline: data.isOnline || false,
+      state: data.state,
+      scope: data.scope,
+      expires: data.expires ? new Date(data.expires) : null,
+      accessToken: data.accessToken,
+      onlineAccessInfo: data.onlineAccessInfo,
+    });
   
     console.log("🔍 Loaded session:", id);
     return session;
-  },  
+  },
+  
   
 
   deleteCallback: async (id) => {
