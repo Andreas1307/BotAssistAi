@@ -141,7 +141,7 @@ app.get("/auth/callback", async (req, res) => {
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
     res.set("Content-Type", "text/html");
     res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    <script src="https://unpkg.com/@shopify/app-bridge"></script>
       <script>
         const AppBridge = window["app-bridge"].default;
         const actions = window["app-bridge"].actions;
