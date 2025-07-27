@@ -118,11 +118,13 @@ app.get("/auth", async (req, res) => {
 
 app.get("/auth/callback", async (req, res) => {
   try {
-    const session = await shopify.auth.callback({
+    const result = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
       isOnline: true,
     });
+    
+    const session = result.session;
 
     console.log("✅ Session created:", session);
 
