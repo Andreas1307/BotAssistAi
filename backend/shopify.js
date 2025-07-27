@@ -14,11 +14,12 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/https?:\/\//, ""),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: new CustomSessionStorage(
-    storeCallback,
-    loadCallback,
-    deleteCallback
-  ),
+  sessionStorage: {
+    storeSession: storeCallback,
+    loadSession: loadCallback,
+    deleteSession: deleteCallback,
+  },
 });
+
 
 module.exports = { shopify };
