@@ -46,7 +46,7 @@ const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, customSessionStorage } = require('./shopify');
-const sessionStorage = require('./sessionStorage');
+const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 app.set('trust proxy', 1);
 
@@ -116,56 +116,51 @@ app.get("/auth", async (req, res) => {
   }
 });
 
-app.get("/auth/callback", async (req, res) => {
+app.get('/auth/callback', async (req, res) => {
   try {
     const session = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
-      isOnline: true,
+      isOnline: true
     });
 
     if (!session || !session.shop || !session.accessToken) {
-      console.error("❌ Invalid session received", session);
-      return res.status(400).send("Session missing data.");
+      console.error('❌ Invalid session received', session);
+      return res.status(400).send('Session missing data.');
     }
 
-    console.log("✅ Auth successful:", session);
+    console.log('✅ Auth successful:', session.id);
 
-    // 🚨 Wait a few ms to ensure storeCallback finishes writing session to file
-    await new Promise(resolve => setTimeout(resolve, 200)); // Give disk I/O time (esp on PM2/Ubuntu)
+    // 🔐 Persist session before redirect
+    const ok = await storeCallback(session);
+    console.log('💾 storeCallback returned:', ok);
 
-    const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
+    const redirectUrl = `/?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}&shopifyUser=true`;
 
-    res.set("Content-Type", "text/html");
+    res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
+        <head><script src="https://unpkg.com/@shopify/app-bridge@3"></script></head>
         <body>
           <script>
-            const AppBridge = window['app-bridge'];
-            const createApp = AppBridge.default;
-            const actions = AppBridge.actions;
-
-            const app = createApp({
+            const AppBridge = window['app‑bridge'].default;
+            const actions = window['app‑bridge'].actions;
+            const app = AppBridge({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${req.query.host}",
               forceRedirect: true
             });
-
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
           </script>
         </body>
       </html>
     `);
-  } catch (e) {
-    console.error("❌ Auth callback error:", e);
-    if (!res.headersSent) {
-      res.status(500).send("Authentication callback error.");
-    }
+
+  } catch (err) {
+    console.error('❌ Auth callback error:', err);
+    if (!res.headersSent) res.status(500).send('Authentication callback error.');
   }
 });
 
