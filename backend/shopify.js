@@ -1,4 +1,6 @@
 const { shopifyApi, LATEST_API_VERSION, LogSeverity } = require("@shopify/shopify-api");
+require('@shopify/shopify-api/adapters/node');
+
 const customSessionStorage = require("./sessionStorage");
 
 if (!process.env.SHOPIFY_SCOPES) {
