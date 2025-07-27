@@ -1,13 +1,9 @@
 const fs = require("fs");
 const path = require("path");
-const {
-  SessionStorage,
-  Session,
-} = require("@shopify/shopify-api");
+const { Session } = require("@shopify/shopify-api");
 
 const SESSIONS_FILE = path.join(__dirname, "sessions.json");
 
-// Load sessions from file
 function loadSessions() {
   try {
     if (!fs.existsSync(SESSIONS_FILE)) {
@@ -21,7 +17,6 @@ function loadSessions() {
   }
 }
 
-// Save sessions to file
 function saveSessions(sessions) {
   try {
     fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2), "utf8");
@@ -63,10 +58,8 @@ const deleteCallback = async (id) => {
   return true;
 };
 
-const customSessionStorage = new SessionStorage(
+module.exports = {
   storeCallback,
   loadCallback,
-  deleteCallback
-);
-
-module.exports = customSessionStorage;
+  deleteCallback,
+};

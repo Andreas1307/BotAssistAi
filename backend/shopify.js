@@ -1,6 +1,6 @@
-require('@shopify/shopify-api/adapters/node');
+require("@shopify/shopify-api/adapters/node");
 const { shopifyApi, LATEST_API_VERSION } = require("@shopify/shopify-api");
-const customSessionStorage = require("./sessionStorage");
+const sessionStorage = require("./sessionStorage");
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -9,7 +9,7 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/^https?:\/\//, ""),
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: customSessionStorage,
+  sessionStorage,
 });
 
 module.exports = { shopify };
