@@ -26,11 +26,27 @@ function saveSessions(sessions) {
 }
 
 const storeCallback = async (session) => {
-  console.log("🔥 Storing session in storeCallback:", session.id);  // Add this
+  console.log("🔥 Storing session in storeCallback:", session.id);
+
   const sessions = loadSessions();
-  sessions[session.id] = session;
+
+  // Serialize session correctly
+  const sessionToStore = {
+    id: session.id,
+    shop: session.shop,
+    state: session.state,
+    isOnline: session.isOnline,
+    accessToken: session.accessToken,
+    scope: session.scope,
+    expires: session.expires ? session.expires.toISOString() : null,
+    onlineAccessInfo: session.onlineAccessInfo || null,
+    // add other needed props if used
+  };
+
+  sessions[session.id] = sessionToStore;
+
   saveSessions(sessions);
-  console.log("💾 Session stored:", session.id);  // Add this
+  console.log("💾 Session stored:", session.id);
   return true;
 };
 
@@ -41,15 +57,18 @@ const loadCallback = async (id) => {
 
   if (!sessionData) return undefined;
 
-  const session = new Session(
-    sessionData.id,
-    sessionData.shop,
-    sessionData.isOnline
-  );
+  const session = new Session(sessionData.id, sessionData.shop, sessionData.isOnline);
 
-  Object.assign(session, sessionData);
+  // Restore session properties
+  session.state = sessionData.state;
+  session.accessToken = sessionData.accessToken;
+  session.scope = sessionData.scope;
+  session.expires = sessionData.expires ? new Date(sessionData.expires) : undefined;
+  session.onlineAccessInfo = sessionData.onlineAccessInfo;
+
   return session;
 };
+
 
 const deleteCallback = async (id) => {
   const sessions = loadSessions();
