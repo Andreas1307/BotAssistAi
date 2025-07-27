@@ -135,7 +135,7 @@ app.get("/auth/callback", async (req, res) => {
 
     // ✅ Add this
     console.log("📥 About to store session:", session.id);
-    await customSessionStorage.storeCallback(session);
+    
     console.log("📤 Finished storing session:", session.id);
 
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
