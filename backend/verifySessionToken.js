@@ -27,7 +27,8 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     console.log("verysessiontoken shop:", shop);
 
-    const sessionId = `online_${shop}_${payload.sub}`; // ✅ FIXED
+    const sessionId = `${shop}_${payload.sub}`; // ✅ correct
+
 
     console.log("🔍 Looking for session with ID:", sessionId);
 
