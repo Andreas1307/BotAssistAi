@@ -1,4 +1,3 @@
-// sessionStorage.js
 const fs = require("fs");
 const path = require("path");
 const { Session } = require("@shopify/shopify-api");
@@ -30,6 +29,8 @@ const storeCallback = async (session) => {
   console.log("🔥 Storing session:", session.id);
 
   const sessions = loadSessions();
+
+  // Convert expires date to ISO string if present
   const sessionToStore = {
     id: session.id,
     shop: session.shop,
@@ -52,6 +53,7 @@ const loadCallback = async (id) => {
 
   if (!sessionData) return undefined;
 
+  // Rehydrate Session object with correct params
   const session = new Session(sessionData.id, sessionData.shop, sessionData.isOnline);
   session.state = sessionData.state;
   session.scope = sessionData.scope;

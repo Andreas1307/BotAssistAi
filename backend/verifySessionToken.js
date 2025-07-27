@@ -4,6 +4,7 @@ const customSessionStorage = require('./sessionStorage');
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     console.log("In verysessiontoken");
+
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Missing or invalid authorization header' });
@@ -11,6 +12,7 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     const token = authHeader.replace('Bearer ', '');
     const payload = await shopify.session.decodeSessionToken(token);
+
     console.log("verysessiontoken token:", token);
     console.log("verysessiontoken payload:", payload);
 
@@ -22,21 +24,15 @@ module.exports = async function verifySessionToken(req, res, next) {
     if (!shop) {
       return res.status(401).json({ error: 'Invalid token payload (missing shop)' });
     }
+
     console.log("verysessiontoken shop:", shop);
 
-    let sessionId;
-    try {
-      sessionId = `online_${shop}_${payload.sub}`;
-
-
-    } catch (err) {
-      console.warn("getCurrentId failed, fallback to manual ID");
-      sessionId = `online_${shop}_${payload.sub}`;
-
-    }
+    // Construct session ID with correct format (online session)
+    const sessionId = `online_${shop}_${payload.sub}`;
 
     console.log("🔍 Looking for session with ID:", sessionId);
 
+    // Load session using your async storage
     const session = await customSessionStorage.loadCallback(sessionId);
 
     console.log("verysessiontoken session:", session);
@@ -47,7 +43,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     req.shopify = { shop, session };
-    next();
+    return next();
   } catch (err) {
     console.error('❌ Session token validation failed:', err);
     return res.status(401).json({ error: 'Invalid session token' });

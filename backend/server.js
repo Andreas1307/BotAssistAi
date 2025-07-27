@@ -125,14 +125,17 @@ app.get("/auth/callback", async (req, res) => {
       isOnline: true,
     });
 
-    if (!session || !session.shop) {
+    if (!session || !session.shop || !session.id) {
       console.error("❌ Invalid session in callback", { session });
-      return res.status(500).send("Session missing shop info.");
+      return res.status(500).send("Session missing data.");
     }
+
+    // Store session manually if needed
+    const { storeCallback } = require("./sessionStorage");
+    await storeCallback(session); // Make sure this line is present
 
     const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
 
-    // ✅ Respond once, using this HTML
     res.set("Content-Type", "text/html");
     res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
