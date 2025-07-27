@@ -46,7 +46,10 @@ module.exports = {
   loadCallback: async (id) => {
     const sessions = loadSessions();
     const data = sessions[id];
-    if (!data) return undefined;
+    if (!data || !data.id || !data.shop) {
+      console.error("Session data invalid or missing for id:", id);
+      return undefined;
+    }
     const session = new Session(data.id, data.shop, data.isOnline);
     session.accessToken = data.accessToken;
     session.scope = data.scope;
@@ -56,6 +59,7 @@ module.exports = {
     console.log("🔍 Loaded session:", id);
     return session;
   },
+  
 
   deleteCallback: async (id) => {
     const sessions = loadSessions();
