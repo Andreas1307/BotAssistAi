@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {
-  createHashRouter,
+  createBrowserRouter,
   RouterProvider,
-  Navigate,
-} from 'react-router-dom';
+} from "react-router-dom";
 
+import App from './App';
 import Homepage from './pages/homepage';
+import Error from './pages/errorPage';
 import FeaturesPage from './pages/featuresPage';
 import Contact from './pages/contact';
 import About from './pages/about';
@@ -18,58 +19,46 @@ import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
-import ErrorPage from './pages/errorPage';
 
-function initShopifyAppBridge() {
-  const params = new URLSearchParams(window.location.search);
-  const host = params.get('host');
-  const shop = params.get('shop');
-
-  if (!host || !shop) {
-    console.warn('Missing Shopify host or shop params', { host, shop });
-    return;
-  }
+const initShopifyAppBridge = () => {
+  const host = new URLSearchParams(window.location.search).get("host");
+  if (!host) return;
 
   if (window.self !== window.top) {
-    const waitForBridge = () => {
-      const bridge = window['app-bridge'];
-      if (!bridge || !bridge.default) {
-        return setTimeout(waitForBridge, 50);
-      }
+    const AppBridge = window["app-bridge"];
+    if (!AppBridge || !AppBridge.default) return;
 
-      const AppBridge = bridge.default;
-      const app = AppBridge({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host,
-        forceRedirect: true,
-      });
+    const app = AppBridge.default({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
 
-      window.appBridge = app;
-      console.log('✅ Shopify App Bridge initialized:', app);
-    };
-
-    waitForBridge();
+    window.appBridge = app;
   }
-}
+};
 
 initShopifyAppBridge();
 
-const router = createHashRouter([
-  { path: '/', element: <Homepage /> },
-  { path: '/features', element: <FeaturesPage /> },
-  { path: '/contact', element: <Contact /> },
-  { path: '/about', element: <About /> },
-  { path: '/pricing', element: <Pricing /> },
-  { path: '/sign-up', element: <SignUp /> },
-  { path: '/log-in', element: <LogIn /> },
-  { path: '/unsubscribe', element: <UnsubscribePage /> },
-  { path: '/privacy-policy', element: <PrivacyPolicy /> },
-  { path: '/terms', element: <TermsOfService /> },
-  { path: '/:user/dashboard', element: <Dashboard /> },
-  { path: '/:user/upgrade-plan', element: <UpgradeDetails /> },
-  { path: '*', element: <ErrorPage /> },
+
+// 🧭 Define your routes
+const router = createBrowserRouter([
+  { path: "/:user/dashboard", element: <Dashboard /> },
+  { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
+  { path: "/unsubscribe", element: <UnsubscribePage /> },
+  { path: "/", element: <Homepage /> },
+  { path: "/features", element: <FeaturesPage /> },
+  { path: "/contact", element: <Contact /> },
+  { path: "/about", element: <About /> },
+  { path: "pricing", element: <Pricing /> },
+  { path: "/sign-up", element: <SignUp /> },
+  { path: "log-in", element: <LogIn /> },
+  { path: "privacy-policy", element: <PrivacyPolicy /> },
+  { path: "/terms", element: <TermsOfService /> },
+  { path: "*", element: <Error /> }
 ]);
 
+// 📦 Mount the app
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
