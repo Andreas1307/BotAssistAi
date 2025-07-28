@@ -21,20 +21,6 @@ import TermsOfService from './pages/TermsOfService';
 import ErrorPage from './pages/errorPage';
 
 
-const injectShopifyMetaTag = () => {
-  const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
-  if (!existingMeta) {
-    const meta = document.createElement('meta');
-    meta.name = 'shopify-api-key';
-    meta.content = process.env.REACT_APP_SHOPIFY_API_KEY;
-    document.head.appendChild(meta);
-    console.log("✅ Injected shopify-api-key meta tag");
-  }
-};
-injectShopifyMetaTag();
-
-
-
 
 function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
@@ -49,13 +35,17 @@ function initShopifyAppBridge() {
   if (window.self !== window.top) {
     const waitForBridge = () => {
       const bridge = window['app-bridge'];
-      if (!bridge || !bridge.default) {
+      const apiKey =
+        window.__SHOPIFY_API_KEY__ ||
+        document.querySelector('meta[name="shopify-api-key"]')?.content;
+
+      if (!bridge || !bridge.default || !apiKey) {
         return setTimeout(waitForBridge, 50);
       }
 
       const AppBridge = bridge.default;
       const app = AppBridge({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        apiKey,
         host,
         forceRedirect: true,
       });
@@ -69,6 +59,7 @@ function initShopifyAppBridge() {
 }
 
 initShopifyAppBridge();
+
 
 const router = createHashRouter([
   { path: '/', element: <Homepage /> },
