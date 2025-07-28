@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   createHashRouter,
   RouterProvider,
-  Navigate,
 } from 'react-router-dom';
 
 import Homepage from './pages/homepage';
@@ -20,8 +19,19 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ErrorPage from './pages/errorPage';
 
+// 1. Inject the Shopify API key meta tag dynamically using environment variable
+function injectShopifyApiKeyMetaTag() {
+  const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
+  if (!existingMeta) {
+    const meta = document.createElement('meta');
+    meta.name = 'shopify-api-key';
+    meta.content = process.env.REACT_APP_SHOPIFY_API_KEY || '';
+    document.head.appendChild(meta);
+    console.log('✅ Injected shopify-api-key meta tag:', meta.content);
+  }
+}
 
-
+// 2. Initialize Shopify App Bridge safely after meta tag is injected
 function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const host = params.get('host');
@@ -36,7 +46,7 @@ function initShopifyAppBridge() {
     const waitForBridge = () => {
       const bridge = window['app-bridge'];
       const apiKey =
-        window.__SHOPIFY_API_KEY__ ||
+        process.env.REACT_APP_SHOPIFY_API_KEY ||
         document.querySelector('meta[name="shopify-api-key"]')?.content;
 
       if (!bridge || !bridge.default || !apiKey) {
@@ -58,8 +68,9 @@ function initShopifyAppBridge() {
   }
 }
 
+// Inject meta tag first, then initialize App Bridge
+injectShopifyApiKeyMetaTag();
 initShopifyAppBridge();
-
 
 const router = createHashRouter([
   { path: '/', element: <Homepage /> },

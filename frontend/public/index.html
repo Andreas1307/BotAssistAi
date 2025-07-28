@@ -26,14 +26,7 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
   -->
-  <script>
-    window.__SHOPIFY_API_KEY__ = "%REACT_APP_SHOPIFY_API_KEY%"; // React will replace this in build
-    const meta = document.createElement('meta');
-    meta.name = 'shopify-api-key';
-    meta.content = window.__SHOPIFY_API_KEY__;
-    document.head.appendChild(meta);
-  </script>
-  
+
   
   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   
