@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   createHashRouter,
   RouterProvider,
-} from "react-router-dom";
+  Navigate,
+} from 'react-router-dom';
 
 import Homepage from './pages/homepage';
-import Error from './pages/errorPage';
 import FeaturesPage from './pages/featuresPage';
 import Contact from './pages/contact';
 import About from './pages/about';
@@ -18,31 +18,26 @@ import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import ErrorPage from './pages/errorPage';
 
-const initShopifyAppBridge = () => {
-  const query = new URLSearchParams(window.location.search);
-  const host = query.get("host");
-  const shop = query.get("shop");
+function initShopifyAppBridge() {
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get('host');
+  const shop = params.get('shop');
 
   if (!host || !shop) {
-    console.warn("Missing host/shop in query");
-    return;
-  }
-
-  // ✅ Redirect to root with hash router if deep link
-  if (window.location.pathname !== "/" && !window.location.hash) {
-    window.location.replace(`/#/?shop=${shop}&host=${host}`);
+    console.warn('Missing Shopify host or shop params', { host, shop });
     return;
   }
 
   if (window.self !== window.top) {
-    const checkAppBridgeReady = () => {
-      if (!window["app-bridge"] || !window["app-bridge"].default) {
-        return setTimeout(checkAppBridgeReady, 50);
+    const waitForBridge = () => {
+      const bridge = window['app-bridge'];
+      if (!bridge || !bridge.default) {
+        return setTimeout(waitForBridge, 50);
       }
 
-      const AppBridge = window["app-bridge"].default;
-
+      const AppBridge = bridge.default;
       const app = AppBridge({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host,
@@ -50,34 +45,31 @@ const initShopifyAppBridge = () => {
       });
 
       window.appBridge = app;
-      console.log("✅ App Bridge initialized with host:", host);
+      console.log('✅ Shopify App Bridge initialized:', app);
     };
 
-    checkAppBridgeReady();
+    waitForBridge();
   }
-};
+}
 
 initShopifyAppBridge();
 
-
-// ✅ Routes
 const router = createHashRouter([
-  { path: "/:user/dashboard", element: <Dashboard /> },
-  { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
-  { path: "/unsubscribe", element: <UnsubscribePage /> },
-  { path: "/", element: <Homepage /> },
-  { path: "/features", element: <FeaturesPage /> },
-  { path: "/contact", element: <Contact /> },
-  { path: "/about", element: <About /> },
-  { path: "/pricing", element: <Pricing /> },
-  { path: "/sign-up", element: <SignUp /> },
-  { path: "/log-in", element: <LogIn /> },
-  { path: "/privacy-policy", element: <PrivacyPolicy /> },
-  { path: "/terms", element: <TermsOfService /> },
-  { path: "*", element: <Error /> }
+  { path: '/', element: <Homepage /> },
+  { path: '/features', element: <FeaturesPage /> },
+  { path: '/contact', element: <Contact /> },
+  { path: '/about', element: <About /> },
+  { path: '/pricing', element: <Pricing /> },
+  { path: '/sign-up', element: <SignUp /> },
+  { path: '/log-in', element: <LogIn /> },
+  { path: '/unsubscribe', element: <UnsubscribePage /> },
+  { path: '/privacy-policy', element: <PrivacyPolicy /> },
+  { path: '/terms', element: <TermsOfService /> },
+  { path: '/:user/dashboard', element: <Dashboard /> },
+  { path: '/:user/upgrade-plan', element: <UpgradeDetails /> },
+  { path: '*', element: <ErrorPage /> },
 ]);
 
-// ✅ Mount App
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
