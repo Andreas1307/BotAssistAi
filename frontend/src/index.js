@@ -20,6 +20,22 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ErrorPage from './pages/errorPage';
 
++
+const injectShopifyMetaTag = () => {
+  const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
+  if (!existingMeta) {
+    const meta = document.createElement('meta');
+    meta.name = 'shopify-api-key';
+    meta.content = process.env.REACT_APP_SHOPIFY_API_KEY;
+    document.head.appendChild(meta);
+    console.log("✅ Injected shopify-api-key meta tag");
+  }
+};
+injectShopifyMetaTag();
+
+
+
+
 function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const host = params.get('host');
