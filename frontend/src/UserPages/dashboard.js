@@ -285,6 +285,8 @@ const Dashboard = () => {
     
     fetchQueries();
   }, [user]); 
+
+  
   // FETCH USER SATISFACTION
   useEffect(() => {
     if (!user) return;

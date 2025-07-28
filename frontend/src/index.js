@@ -20,30 +20,26 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
-// ✅ Shopify App Bridge INIT, only if embedded
 const initShopifyAppBridge = () => {
   const host = new URLSearchParams(window.location.search).get("host");
   if (!host) return;
 
-  const script = document.createElement("script");
-  script.src = "https://unpkg.com/@shopify/app-bridge@3";
-  script.async = true;
-  script.onload = () => {
-    if (window.self !== window.top) {
-      const AppBridge = window["app-bridge"].default;
-      const app = AppBridge({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host,
-        forceRedirect: true,
-      });
-      window.appBridge = app;
-    }
-  };
-  document.head.appendChild(script);
+  if (window.self !== window.top) {
+    const AppBridge = window["app-bridge"];
+    if (!AppBridge || !AppBridge.default) return;
+
+    const app = AppBridge.default({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
+
+    window.appBridge = app;
+  }
 };
 
-// 🚀 Call App Bridge init
 initShopifyAppBridge();
+
 
 // 🧭 Define your routes
 const router = createBrowserRouter([
