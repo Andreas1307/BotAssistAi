@@ -26,15 +26,19 @@ const initShopifyAppBridge = () => {
 
   if (window.self !== window.top) {
     const AppBridge = window["app-bridge"];
-    if (!AppBridge || !AppBridge.default) return;
+    if (!AppBridge || !AppBridge.createApp) {
+      console.warn("App Bridge not ready yet");
+      return;
+    }
 
-    const app = AppBridge.default({
+    const app = AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
       forceRedirect: true,
     });
 
     window.appBridge = app;
+    console.log("✅ Shopify App Bridge initialized");
   }
 };
 
