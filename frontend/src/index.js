@@ -20,7 +20,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ErrorPage from './pages/errorPage';
 
-+
+
 const injectShopifyMetaTag = () => {
   const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
   if (!existingMeta) {
