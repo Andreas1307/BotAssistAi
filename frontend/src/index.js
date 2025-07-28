@@ -19,18 +19,30 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
-// ✅ App Bridge Initialization
 const initShopifyAppBridge = () => {
-  const host = new URLSearchParams(window.location.search).get("host");
-  if (!host) return;
+  const query = new URLSearchParams(window.location.search);
+  const host = query.get("host");
+  const shop = query.get("shop");
+
+  if (!host || !shop) {
+    console.warn("Missing host/shop in query");
+    return;
+  }
+
+  // ✅ Redirect to root with hash router if deep link
+  if (window.location.pathname !== "/" && !window.location.hash) {
+    window.location.replace(`/#/?shop=${shop}&host=${host}`);
+    return;
+  }
 
   if (window.self !== window.top) {
-    const waitForAppBridge = () => {
+    const checkAppBridgeReady = () => {
       if (!window["app-bridge"] || !window["app-bridge"].default) {
-        return setTimeout(waitForAppBridge, 100);
+        return setTimeout(checkAppBridgeReady, 50);
       }
 
       const AppBridge = window["app-bridge"].default;
+
       const app = AppBridge({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host,
@@ -38,14 +50,15 @@ const initShopifyAppBridge = () => {
       });
 
       window.appBridge = app;
-      console.log("✅ Shopify App Bridge initialized");
+      console.log("✅ App Bridge initialized with host:", host);
     };
 
-    waitForAppBridge();
+    checkAppBridgeReady();
   }
 };
 
 initShopifyAppBridge();
+
 
 // ✅ Routes
 const router = createHashRouter([
