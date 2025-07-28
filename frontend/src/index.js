@@ -19,7 +19,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ErrorPage from './pages/errorPage';
 
-// 1. Inject Shopify API key meta tag dynamically using environment variable
+// Inject the Shopify API key
 function injectShopifyApiKeyMetaTag() {
   const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
   if (!existingMeta) {
@@ -27,28 +27,20 @@ function injectShopifyApiKeyMetaTag() {
     meta.name = 'shopify-api-key';
     meta.content = process.env.REACT_APP_SHOPIFY_API_KEY || '';
     document.head.appendChild(meta);
-    console.log('✅ Injected shopify-api-key meta tag:', meta.content);
   }
 }
 
-// 2. Initialize Shopify App Bridge safely after meta tag is injected
+// Initialize Shopify App Bridge
 function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const host = params.get('host');
-  const shop = params.get('shop');
 
-  if (!host || !shop) {
-    console.warn('Missing Shopify host or shop params', { host, shop });
-    // IMPORTANT: your app will work outside Shopify but without App Bridge
-    return;
-  }
+  if (!host) return;
 
   if (window.self !== window.top) {
     const waitForBridge = () => {
       const bridge = window['app-bridge'];
-      const apiKey =
-        process.env.REACT_APP_SHOPIFY_API_KEY ||
-        document.querySelector('meta[name="shopify-api-key"]')?.content;
+      const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY;
 
       if (!bridge || !bridge.default || !apiKey) {
         return setTimeout(waitForBridge, 50);
@@ -62,19 +54,16 @@ function initShopifyAppBridge() {
       });
 
       window.appBridge = app;
-      console.log('✅ Shopify App Bridge initialized:', app);
     };
 
     waitForBridge();
   }
 }
 
-// Inject meta tag first, then initialize App Bridge
 injectShopifyApiKeyMetaTag();
 initShopifyAppBridge();
 
-// --- Router setup ---
-
+// ✅ Router: Use wildcard match for dashboard and upgrade URLs
 const router = createHashRouter([
   { path: '/', element: <Homepage /> },
   { path: '/features', element: <FeaturesPage /> },
@@ -86,8 +75,11 @@ const router = createHashRouter([
   { path: '/unsubscribe', element: <UnsubscribePage /> },
   { path: '/privacy-policy', element: <PrivacyPolicy /> },
   { path: '/terms', element: <TermsOfService /> },
-  { path: '/:user/dashboard', element: <Dashboard /> },
-  { path: '/:user/upgrade-plan', element: <UpgradeDetails /> },
+
+  // ✅ Match dashboard and upgrade pages under /user/...
+  { path: '/dashboard/*', element: <Dashboard /> },
+  { path: '/upgrade-plan/*', element: <UpgradeDetails /> },
+
   { path: '*', element: <ErrorPage /> },
 ]);
 
