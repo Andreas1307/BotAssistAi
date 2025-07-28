@@ -1,11 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {
-  createBrowserRouter,
+  createHashRouter,
   RouterProvider,
 } from "react-router-dom";
 
-import App from './App';
 import Homepage from './pages/homepage';
 import Error from './pages/errorPage';
 import FeaturesPage from './pages/featuresPage';
@@ -20,40 +19,36 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
+// ✅ App Bridge Initialization
 const initShopifyAppBridge = () => {
   const host = new URLSearchParams(window.location.search).get("host");
   if (!host) return;
 
   if (window.self !== window.top) {
-    // Embedded
-    const checkAppBridgeReady = () => {
+    const waitForAppBridge = () => {
       if (!window["app-bridge"] || !window["app-bridge"].default) {
-        return setTimeout(checkAppBridgeReady, 100);
+        return setTimeout(waitForAppBridge, 100);
       }
 
       const AppBridge = window["app-bridge"].default;
-      const createApp = AppBridge.default || AppBridge;
-
-      const app = createApp({
+      const app = AppBridge({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host,
         forceRedirect: true,
       });
 
       window.appBridge = app;
-      console.log("✅ App Bridge initialized");
+      console.log("✅ Shopify App Bridge initialized");
     };
 
-    checkAppBridgeReady();
+    waitForAppBridge();
   }
 };
 
 initShopifyAppBridge();
 
-
-
-// 🧭 Define your routes
-const router = createBrowserRouter([
+// ✅ Routes
+const router = createHashRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
   { path: "/unsubscribe", element: <UnsubscribePage /> },
@@ -61,15 +56,15 @@ const router = createBrowserRouter([
   { path: "/features", element: <FeaturesPage /> },
   { path: "/contact", element: <Contact /> },
   { path: "/about", element: <About /> },
-  { path: "pricing", element: <Pricing /> },
+  { path: "/pricing", element: <Pricing /> },
   { path: "/sign-up", element: <SignUp /> },
-  { path: "log-in", element: <LogIn /> },
-  { path: "privacy-policy", element: <PrivacyPolicy /> },
+  { path: "/log-in", element: <LogIn /> },
+  { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
   { path: "*", element: <Error /> }
 ]);
 
-// 📦 Mount the app
+// ✅ Mount App
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
