@@ -20,17 +20,22 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
-const initShopifyAppBridge = () => {
+const initShopifyAppBridge = async () => {
   const host = new URLSearchParams(window.location.search).get("host");
   if (!host) return;
 
   if (window.self !== window.top) {
-    const AppBridge = window["app-bridge"];
-    if (!AppBridge || !AppBridge.createApp) {
-      console.warn("App Bridge not ready yet");
-      return;
-    }
+    await new Promise((resolve) => {
+      const interval = setInterval(() => {
+        const AppBridge = window["app-bridge"];
+        if (AppBridge?.createApp) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 50);
+    });
 
+    const AppBridge = window["app-bridge"];
     const app = AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
