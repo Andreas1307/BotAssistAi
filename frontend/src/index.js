@@ -19,7 +19,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ErrorPage from './pages/errorPage';
 
-// 1. Inject the Shopify API key meta tag dynamically using environment variable
+// 1. Inject Shopify API key meta tag dynamically using environment variable
 function injectShopifyApiKeyMetaTag() {
   const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
   if (!existingMeta) {
@@ -39,6 +39,7 @@ function initShopifyAppBridge() {
 
   if (!host || !shop) {
     console.warn('Missing Shopify host or shop params', { host, shop });
+    // IMPORTANT: your app will work outside Shopify but without App Bridge
     return;
   }
 
@@ -71,6 +72,8 @@ function initShopifyAppBridge() {
 // Inject meta tag first, then initialize App Bridge
 injectShopifyApiKeyMetaTag();
 initShopifyAppBridge();
+
+// --- Router setup ---
 
 const router = createHashRouter([
   { path: '/', element: <Homepage /> },
