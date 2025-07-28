@@ -25,20 +25,31 @@ const initShopifyAppBridge = () => {
   if (!host) return;
 
   if (window.self !== window.top) {
-    const AppBridge = window["app-bridge"];
-    if (!AppBridge || !AppBridge.default) return;
+    // Embedded
+    const checkAppBridgeReady = () => {
+      if (!window["app-bridge"] || !window["app-bridge"].default) {
+        return setTimeout(checkAppBridgeReady, 100);
+      }
 
-    const app = AppBridge.default({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
+      const AppBridge = window["app-bridge"].default;
+      const createApp = AppBridge.default || AppBridge;
 
-    window.appBridge = app;
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
+
+      window.appBridge = app;
+      console.log("✅ App Bridge initialized");
+    };
+
+    checkAppBridgeReady();
   }
 };
 
 initShopifyAppBridge();
+
 
 
 // 🧭 Define your routes
