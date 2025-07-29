@@ -19,20 +19,26 @@ import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
-import { loadAppBridge } from "./utils/shopifyAppBridge"
+
+
+const waitForAppBridge = () => {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      if (window["app-bridge"]?.createApp) {
+        clearInterval(interval);
+        resolve(window["app-bridge"]);
+      }
+    }, 50);
+  });
+};
+
 const initShopifyAppBridge = async () => {
   const host = new URLSearchParams(window.location.search).get("host");
   if (!host) return;
 
   if (window.self !== window.top) {
     try {
-      await loadAppBridge();
-      const AppBridge = window["app-bridge"];
-
-      if (!AppBridge?.createApp) {
-        console.warn("App Bridge failed to load");
-        return;
-      }
+      const AppBridge = await waitForAppBridge();
 
       const app = AppBridge.createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -41,14 +47,15 @@ const initShopifyAppBridge = async () => {
       });
 
       window.appBridge = app;
-      console.log("✅ Shopify App Bridge initialized with CDN");
+      console.log("✅ Shopify App Bridge initialized from CDN");
     } catch (err) {
-      console.error("Failed to load App Bridge:", err);
+      console.error("Failed to initialize App Bridge:", err);
     }
   }
 };
 
 initShopifyAppBridge();
+
 
 
 // 🧭 Define your routes
