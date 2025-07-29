@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import { initShopifyAppBridge } from './initShopifyAppBridge';
+import { initShopifyAppBridge } from './utils/initShopifyAppBridge';
 
 import Homepage from './pages/homepage';
 import Error from './pages/errorPage';
