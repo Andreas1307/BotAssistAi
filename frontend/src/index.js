@@ -25,13 +25,18 @@ const initShopifyAppBridge = async () => {
   const params = new URLSearchParams(window.location.search);
   const host = params.get("host");
 
-  if (!host || window.self === window.top) return;
+  const isEmbedded = window.top !== window.self;
+
+  if (!host || !isEmbedded) {
+    console.log("🛑 Skipping App Bridge init (not embedded or missing host)");
+    return;
+  }
 
   const waitForAppBridge = () =>
     new Promise((resolve, reject) => {
       const interval = setInterval(() => {
-        const AppBridge = window.Shopify?.AppBridge ?? window["app-bridge"];
-        if (AppBridge?.createApp) {
+        const AppBridge = window["app-bridge"];
+        if (AppBridge?.createApp || AppBridge?.default) {
           clearInterval(interval);
           resolve(AppBridge);
         }
@@ -41,17 +46,13 @@ const initShopifyAppBridge = async () => {
 
   try {
     const AppBridge = await waitForAppBridge();
-    const app = AppBridge.createApp
-      ? AppBridge.createApp({
-          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host,
-          forceRedirect: true,
-        })
-      : AppBridge.default({
-          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host,
-          forceRedirect: true,
-        });
+    const createAppFn = AppBridge.createApp || AppBridge.default;
+
+    const app = createAppFn({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true, // must be true in production
+    });
 
     window.appBridge = app;
     console.log("✅ Shopify App Bridge initialized");
