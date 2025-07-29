@@ -1,26 +1,21 @@
-// initShopifyAppBridge.js
-
 export async function initShopifyAppBridge() {
     const params = new URLSearchParams(window.location.search);
     const host = params.get("host");
     const shop = params.get("shop");
-    const hmac = params.get("hmac");
   
-    // Check if app is embedded inside Shopify Admin iframe
     const isEmbedded = window.top !== window.self;
   
-    // We need host and shop params and app must be embedded to init App Bridge
-    if (!host || !shop || !isEmbedded) {
-      console.log("🛑 App Bridge init skipped. Not embedded or missing host/shop");
+    // Only init if host & shop & embedded
+    if (!isEmbedded || !host || !shop) {
+      console.log("🛑 Skipping App Bridge init (not embedded or missing shop/host)");
       return null;
     }
   
-    // Wait for the App Bridge script to load
     const waitForAppBridge = () =>
       new Promise((resolve, reject) => {
         const interval = setInterval(() => {
           const AppBridge = window["app-bridge"];
-          if (AppBridge?.createApp || AppBridge?.default) {
+          if (AppBridge?.createApp) {
             clearInterval(interval);
             resolve(AppBridge);
           }
@@ -30,21 +25,16 @@ export async function initShopifyAppBridge() {
   
     try {
       const AppBridge = await waitForAppBridge();
-      const createAppFn = AppBridge.createApp || AppBridge.default;
-  
-      const app = createAppFn({
+      const app = AppBridge.createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host,
-        forceRedirect: true, // required for production embedded apps
+        forceRedirect: false  // Set false to avoid nested redirect loops after OAuth
       });
-  
       window.appBridge = app;
-      console.log("✅ Shopify App Bridge initialized");
-  
-      // Return the app instance for further use if needed
+      console.log("✅ Shopify App Bridge initialized in frontend");
       return app;
     } catch (err) {
-      console.error("🚫 App Bridge init failed:", err);
+      console.error("🚫 Failed to init App Bridge frontend:", err);
       return null;
     }
   }

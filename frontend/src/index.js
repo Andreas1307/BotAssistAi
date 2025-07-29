@@ -35,7 +35,6 @@ const router = createBrowserRouter([
   { path: "*", element: <Error /> }
 ]);
 
-// Initialize Shopify App Bridge BEFORE rendering React app
 initShopifyAppBridge().then(() => {
   const root = ReactDOM.createRoot(document.getElementById('root'));
   root.render(
