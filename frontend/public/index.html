@@ -53,7 +53,7 @@
       if (window.__SHOPIFY__.embedded && shop && host) {
         const script = document.createElement("script");
         script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-        script.async = true;
+        script.async = false; // am pus aici false, sa updatezcodul
         document.head.appendChild(script);
       }
     </script>
