@@ -65,21 +65,26 @@ const allowedOrigins = [
   'https://botassistai.com',
   'https://admin.shopify.com',
   /\.myshopify\.com$/,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (
-      allowedOrigins.includes(origin) ||
-      allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : false)
-    ) {
+    if (!origin) return callback(null, true); // allow no-origin requests (e.g., curl or same-origin SSR)
+    
+    const isAllowed = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`❌ Blocked by CORS: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // ✅ Must be true to send cookies
+  credentials: true,
 }));
 
 app.use(session({
