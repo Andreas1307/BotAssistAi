@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    
+    <script>
+      window.app_bridge_override = { forceRedirect: false };
+    </script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
     <meta charset="utf-8" />
     <link rel="icon" href="img/logo.png" />
@@ -80,9 +83,6 @@
     -->
 
     
-    <script>
-      window.app_bridge_override = { forceRedirect: false };
-    </script>
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+
   </body>
 </html>
