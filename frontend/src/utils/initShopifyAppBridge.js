@@ -1,21 +1,15 @@
 export async function initShopifyAppBridge() {
     const isEmbedded = window.top !== window.self;
-  
-    if (!isEmbedded) {
-      console.log("🛑 Not in embedded context – skipping App Bridge init");
-      return null;
-    }
-  
     const params = new URLSearchParams(window.location.search);
     const host = params.get("host");
     const shop = params.get("shop");
   
-    if (!host || !shop) {
-      console.log("🛑 Missing host/shop in URL – app won't initialize properly");
+    if (!isEmbedded || !host || !shop) {
+      console.log("🛑 Skipping App Bridge init (not embedded or missing host/shop)");
       return null;
     }
   
-    // Wait for App Bridge to load (since we deferred it)
+    // Wait until AppBridge is defined
     await new Promise((resolve) => {
       const interval = setInterval(() => {
         if (window["app-bridge"]?.createApp) {
@@ -33,7 +27,7 @@ export async function initShopifyAppBridge() {
     });
   
     window.appBridge = app;
-    console.log("✅ App Bridge initialized");
+    console.log("✅ Shopify App Bridge initialized");
     return app;
   }
   
