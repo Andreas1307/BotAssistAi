@@ -39,7 +39,23 @@
     <title>BotAssistAI</title>
     
    
+    <script>
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const shop = params.get("shop");
+        const host = params.get("host");
+        const embedded = window.top !== window.self;
     
+        if (embedded && shop && host) {
+          const script = document.createElement("script");
+          script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+          script.async = true;
+          document.head.appendChild(script);
+        } else {
+          console.warn("🚫 Not embedded or missing shop/host — skipping App Bridge script load");
+        }
+      })();
+    </script>
 
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
