@@ -22,47 +22,46 @@ import TermsOfService from './pages/TermsOfService';
 
 
 const initShopifyAppBridge = async () => {
-  const host = new URLSearchParams(window.location.search).get("host");
-  if (!host || window.self === window.top) {
-    // Not embedded or no host param — skip App Bridge
-    return;
-  }
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
 
-  // Wait for App Bridge to load (avoid race condition)
-  const waitForAppBridge = () => {
-    return new Promise((resolve, reject) => {
-      const maxRetries = 100;
-      let attempts = 0;
+  if (!host || window.self === window.top) return;
+
+  const waitForAppBridge = () =>
+    new Promise((resolve, reject) => {
       const interval = setInterval(() => {
-        attempts++;
-        const AppBridge = window["app-bridge"];
+        const AppBridge = window.Shopify?.AppBridge ?? window["app-bridge"];
         if (AppBridge?.createApp) {
           clearInterval(interval);
           resolve(AppBridge);
-        } else if (attempts > maxRetries) {
-          clearInterval(interval);
-          reject(new Error("App Bridge did not load in time"));
         }
       }, 50);
+      setTimeout(() => reject(new Error("App Bridge load timeout")), 5000);
     });
-  };
 
   try {
     const AppBridge = await waitForAppBridge();
-    const app = AppBridge.createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true, // ✅ use true for production — but test with false to avoid dev redirect loop
-    });
+    const app = AppBridge.createApp
+      ? AppBridge.createApp({
+          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+          host,
+          forceRedirect: true,
+        })
+      : AppBridge.default({
+          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+          host,
+          forceRedirect: true,
+        });
 
     window.appBridge = app;
     console.log("✅ Shopify App Bridge initialized");
   } catch (err) {
-    console.error("🚫 Failed to initialize App Bridge:", err);
+    console.error("🚫 App Bridge init failed:", err);
   }
 };
 
 initShopifyAppBridge();
+
 
 
 
