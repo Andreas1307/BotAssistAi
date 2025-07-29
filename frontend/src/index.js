@@ -35,7 +35,8 @@ const router = createBrowserRouter([
   { path: "*", element: <Error /> }
 ]);
 
-initShopifyAppBridge().then(() => {
+// Initialize App Bridge only when needed — but render either way
+initShopifyAppBridge().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <RouterProvider router={router} />
