@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    
+    <script>
+      window.app_bridge_override = { forceRedirect: false };
+    </script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <meta charset="utf-8" />
     <link rel="icon" href="img/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -39,8 +42,13 @@
 
 
     <title>BotAssistAI</title>
-
-   
+    
+    <script>
+      window.appBridgeConfig = {
+        forceRedirect: false
+      };
+    </script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     
 
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -81,11 +89,6 @@
     -->
 
     
-    <script>
-      window.appBridgeConfig = {
-        forceRedirect: false
-      };
-    </script>
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+
   </body>
 </html>

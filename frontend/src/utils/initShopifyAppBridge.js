@@ -4,12 +4,8 @@ export async function initShopifyAppBridge() {
     const host = params.get("host");
     const shop = params.get("shop");
   
-    if (!isEmbedded || !host || !shop) {
-      console.log("🛑 Skipping App Bridge init (not embedded or missing host/shop)");
-      return null;
-    }
+    if (!isEmbedded || !host || !shop) return null;
   
-    // Wait until AppBridge is defined
     await new Promise((resolve) => {
       const interval = setInterval(() => {
         if (window["app-bridge"]?.createApp) {
@@ -25,9 +21,7 @@ export async function initShopifyAppBridge() {
       host,
       forceRedirect: false,
     });
-  
     window.appBridge = app;
-    console.log("✅ Shopify App Bridge initialized");
     return app;
   }
   
