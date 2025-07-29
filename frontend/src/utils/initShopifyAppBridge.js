@@ -5,37 +5,30 @@ export async function initShopifyAppBridge() {
   
     const isEmbedded = window.top !== window.self;
   
-    // Only init if host & shop & embedded
     if (!isEmbedded || !host || !shop) {
-      console.log("🛑 Skipping App Bridge init (not embedded or missing shop/host)");
+      console.log("🛑 Skipping App Bridge frontend init");
       return null;
     }
   
-    const waitForAppBridge = () =>
-      new Promise((resolve, reject) => {
-        const interval = setInterval(() => {
-          const AppBridge = window["app-bridge"];
-          if (AppBridge?.createApp) {
-            clearInterval(interval);
-            resolve(AppBridge);
-          }
-        }, 50);
-        setTimeout(() => reject(new Error("App Bridge load timeout")), 5000);
-      });
+    // Wait until Shopify defined the global
+    await new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (window.shopify || window["app-bridge"]) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 50);
+    });
   
-    try {
-      const AppBridge = await waitForAppBridge();
-      const app = AppBridge.createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host,
-        forceRedirect: false  // Set false to avoid nested redirect loops after OAuth
-      });
-      window.appBridge = app;
-      console.log("✅ Shopify App Bridge initialized in frontend");
-      return app;
-    } catch (err) {
-      console.error("🚫 Failed to init App Bridge frontend:", err);
-      return null;
-    }
+    const AppBridge = window.shopify || window["app-bridge"];
+    const app = AppBridge.createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: false,
+    });
+  
+    window.appBridge = app;
+    console.log("✅ App Bridge initialized frontend");
+    return app;
   }
   
