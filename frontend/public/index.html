@@ -10,7 +10,8 @@
       name="description"
       content="Web site created using create-react-app"
     />
-    <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
+    <meta name="shopify-api-key" content="<%= process.env.REACT_APP_SHOPIFY_API_KEY %>" />
+
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -40,22 +41,23 @@
     
    
     <script>
-      (function () {
-        const params = new URLSearchParams(window.location.search);
-        const shop = params.get("shop");
-        const host = params.get("host");
-        const embedded = window.top !== window.self;
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get("shop");
+      const host = params.get("host");
+      window.__SHOPIFY__ = {
+        shop,
+        host,
+        embedded: window.top !== window.self
+      };
     
-        if (embedded && shop && host) {
-          const script = document.createElement("script");
-          script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-          script.async = true;
-          document.head.appendChild(script);
-        } else {
-          console.warn("🚫 Not embedded or missing shop/host — skipping App Bridge script load");
-        }
-      })();
+      if (window.__SHOPIFY__.embedded && shop && host) {
+        const script = document.createElement("script");
+        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        script.async = true;
+        document.head.appendChild(script);
+      }
     </script>
+    
 
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
