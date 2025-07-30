@@ -720,6 +720,8 @@ const handleReset = async () => {
   }
 }
 
+
+
 const toggleBot = () => {
   const newStatus = !aiBot;
   setAiBot(newStatus);
@@ -731,7 +733,6 @@ if (loading) {
   }
   return (
     <div className="dashboard-container">
-
       <aside className="collap-sidebar">
         <FaBars onClick={() => setCollap(!collap)} className="side-bar"/>
         <div className="sidebar-icons">

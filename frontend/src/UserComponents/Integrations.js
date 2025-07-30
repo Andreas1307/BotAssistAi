@@ -8,6 +8,7 @@ import {
   FaSlidersH,
   FaEyeSlash,
   FaEye,
+  FaClose
 } from "react-icons/fa";
 import "../styling/Integrations.css";
 import directory from '../directory';
@@ -33,16 +34,23 @@ const Integrations = () => {
   const [lastConnected, setLastConnected] = useState(null);
   const [connected, setConnected] = useState(false);
   const [aiBot, setAiBot] = useState(false);
+  const [chatBotConfig, setChatBotConfig] = useState(false)
+  const [colors, setColors] = useState({
+    background: '#f2f2f2',
+    chatbotBackground: '#092032',
+    chatBoxBackground: '#112B3C',
+    chatInputBackground: '#ffffff',
+    chatInputTextColor: '#000000',
+    chatBtn: '#00F5D4',
+    websiteChatBtn: '#00F5D4',
+    websiteQuestion: '#ffffff',
+    needHelpTextColor: '#00F5D4',
+    textColor: '#cccccc',
+    borderColor: '#00F5D4'
+  });
   const shopifyInstalled = useShopifyInstalled();
   let toastId;
 
-
-
-
-
-
-
-  
   const showErrorNotification = () => {
     toast.error("Something went wrong. Please try again.", {
       position: "top-center",
@@ -552,6 +560,129 @@ const Integrations = () => {
 
   return (
     <main className="integrations-page">
+      {chatBotConfig && (
+  <div className="chatbotConfigBigDiv">
+  <div className="chatbotConfigDiv">
+    <div className="chabotConfig">
+      <span onClick={() => setChatBotConfig(false)} className="chatConfig-x"><FaClose /></span>
+      <div className="config">
+        <h2>Customize Your Chatbot</h2>
+        <span>
+          <div>
+<p>Background:</p>
+<input type="color" 
+value={colors.background}
+onChange={(e) => setColors({ ...colors, background: e.target.value })}
+/>
+</div>
+<div>
+<p>Chatbot Background:</p>
+<input type="color" 
+value={colors.chatbotBackground}
+onChange={(e) => setColors({ ...colors, chatbotBackground: e.target.value })}
+/>
+</div>
+<div>
+<p>ChatBox Background:</p>
+<input type="color" 
+value={colors.chatBoxBackground}
+onChange={(e) => setColors({ ...colors, chatBoxBackground: e.target.value })}
+/>
+</div>
+<div>
+<p>Chat Input:</p>
+<input type="color" 
+value={colors.chatInputBackground}
+onChange={(e) => setColors({ ...colors, chatInputBackground: e.target.value })}
+/>
+</div>
+<div>
+<p>Chat Input Color:</p>
+<input type="color" 
+value={colors.chatInputTextColor}
+onChange={(e) => setColors({ ...colors, chatInputTextColor: e.target.value })}
+/>
+</div>
+<div>
+<p>Chat Btn:</p>
+<input type="color" 
+value={colors.chatBtn}
+onChange={(e) => setColors({ ...colors, chatBtn: e.target.value })}
+/>
+</div>
+<div>
+<p>Website Chat Btn:</p>
+<input type="color" 
+value={colors.websiteChatBtn}
+onChange={(e) => setColors({ ...colors, websiteChatBtn: e.target.value })}
+/>
+</div>
+<div>
+<p>Website question:</p>
+<input type="color" 
+value={colors.websiteQuestion}
+onChange={(e) => setColors({ ...colors, websiteQuestion: e.target.value })}
+/>
+</div>
+<div>
+<p>Need Help Text Color:</p>
+<input type="color" 
+value={colors.needHelpTextColor}
+onChange={(e) => setColors({ ...colors, needHelpTextColor: e.target.value })}
+/>
+</div>
+<div>
+<p>Text Color:</p>
+<input type="color" 
+value={colors.textColor}
+onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
+/>
+</div>
+        </span>
+
+      </div>
+
+
+     <div className="chatbot" style={{ backgroundColor: colors.background }}>
+<div className="chatbot-div" style={{ backgroundColor: colors.chatbotBackground }}>
+<img draggable="false" src={`${process.env.PUBLIC_URL}/img/BigLogo.png`} />
+<div className="chat-div" >
+<div className="chat-1" style={{ color: colors.textColor, backgroundColor: colors.chatBoxBackground }}>Hey, cau you help me ?</div>
+<div className="chat-2" style={{ color: colors.textColor, backgroundColor: colors.chatBoxBackground }}>Yes, sure . Let me know about what product</div>
+</div>
+<div className="chat-inputs" style={{ backgroundColor: colors.chatInputBackground }}>
+<input
+  type="text"
+  placeholder="Enter your question"
+  style={{
+    backgroundColor: colors.chatInputBackground,
+    color: colors.chatInputTextColor,
+    borderColor: colors.borderColor
+  }}
+/>
+<button style={{ backgroundColor: colors.chatBtn, color: colors.textColor }}>
+  Send
+</button>
+</div>
+</div>
+<div
+className="div-chatbot"
+style={{
+color: colors.needHelpTextColor,
+borderColor: colors.borderColor
+}}
+>
+<div style={{
+background: colors.websiteQuestion}}><p style={{
+color: colors.needHelpTextColor }}>Need Help?</p></div>
+<span  style={{ backgroundColor: colors.websiteChatBtn }}>💬</span>
+</div>
+<button onClick={() => setChatBotConfig(false)} className="chatbot-config-save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+)}
       <div className="dashboard-widgets">
         <div className="status-panel">
           <h2>System Status</h2>
@@ -641,8 +772,7 @@ const Integrations = () => {
         <input type={show ? "text" : "password"} value={apiKey} readOnly />
       </div>
 
-      {shopifyInstalled && (
-
+      {!shopifyInstalled && (
            <div className="code-snippet">
         <div className="languages">
           <h3>
@@ -659,6 +789,7 @@ const Integrations = () => {
     );
   })}
 </select>
+<button className="configChatBtn" onClick={() => setChatBotConfig(true)}>Configure Chatbot</button>
         </div>
         {codeSnippets.find(snippet => snippet[selectedLanguage])?.proTip && (
   <p className="pro-tip">

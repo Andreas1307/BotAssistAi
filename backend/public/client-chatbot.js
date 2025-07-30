@@ -75,7 +75,6 @@
     `;
     document.head.appendChild(style);
   
-    // Toggle button
     const toggleBtn = document.createElement("button");
     toggleBtn.innerHTML = "💬";
     toggleBtn.title = "Chat with us";
@@ -107,7 +106,6 @@
       bottom: 27px;
       right: 85px;
       font-size: 14.5px;
-      color: #fff;
       z-index: 10000;
       cursor: pointer;
       padding: 0px 16px 0px;

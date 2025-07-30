@@ -40,7 +40,6 @@ const Homepage = () => {
   const navigate = useNavigate();
 
 
-
   const showPopupToRegister = () => {
     setTimeout(() => {
       setShowModal(true)
@@ -115,6 +114,9 @@ const Homepage = () => {
           navigate("/") || null
         ) : (
           <div>
+
+      
+
             <Header />
             <div className="container">
               {showModal && (
