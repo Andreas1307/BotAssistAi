@@ -67,7 +67,8 @@ const allowedOrigins = [
   /\.myshopify\.com$/,
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  "https://shop-ease2.netlify.app"
+  "https://shop-ease2.netlify.app",
+  "http://127.0.0.1:5501"
 ];
 
 app.use(cors({
@@ -78,7 +79,7 @@ app.use(cors({
       o instanceof RegExp ? o.test(origin) : o === origin
     );
 
-    if (isAllowed) {
+    if (isAllowed || true) {
       callback(null, true);
     } else {
       console.warn(`❌ Blocked by CORS: ${origin}`);
