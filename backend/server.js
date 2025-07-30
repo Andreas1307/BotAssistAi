@@ -2805,9 +2805,9 @@ app.post('/register', async (req, res, next) => {
     expiry.setDate(now.getDate() + 30);
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
-      `INSERT INTO users (username, email, password, api_key, subscription_plan, subscribed_at, subscription_expiry) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [username, email, hashedPassword, encryptedKey, 'Pro', now, expiry]
+      `INSERT INTO users (username, email, password, api_key) 
+       VALUES (?, ?, ?, ?)`,
+      [username, email, hashedPassword, encryptedKey]
     );
 
     // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
@@ -2935,9 +2935,9 @@ const expiry = new Date(now);
 expiry.setDate(now.getDate() + 30);
 
 const [result] = await pool.query(
-  `INSERT INTO users (username, email, google_id, api_key, subscription_plan, subscribed_at, subscription_expiry) 
-   VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  [uniqueUsername, googleUser.email, googleUser.sub, encryptedKey, 'Pro', now, expiry]
+  `INSERT INTO users (username, email, google_id, api_key) 
+   VALUES (?, ?, ?, ?)`,
+  [uniqueUsername, googleUser.email, googleUser.sub, encryptedKey]
 );
 
 
