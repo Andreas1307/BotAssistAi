@@ -8,7 +8,7 @@ import {
   FaSlidersH,
   FaEyeSlash,
   FaEye,
-  FaClose
+  FaTimes
 } from "react-icons/fa";
 import "../styling/Integrations.css";
 import directory from '../directory';
@@ -564,7 +564,7 @@ const Integrations = () => {
   <div className="chatbotConfigBigDiv">
   <div className="chatbotConfigDiv">
     <div className="chabotConfig">
-      <span onClick={() => setChatBotConfig(false)} className="chatConfig-x"><FaClose /></span>
+      <span onClick={() => setChatBotConfig(false)} className="chatConfig-x"><FaTimes /></span>
       <div className="config">
         <h2>Customize Your Chatbot</h2>
         <span>
