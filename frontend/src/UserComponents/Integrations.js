@@ -73,28 +73,29 @@ const Integrations = () => {
 
   const codeSnippets = [
     {
-      proTip: "Add this just before the closing </body> tag of your HTML file for best performance. Make sure to replace 'YOUR API KEY HERE' with your actual API key from BotAssistAI.",
+      proTip:
+        "Add this just before the closing </body> tag of your HTML file for best performance. Make sure to replace 'YOUR API KEY HERE' with your actual API key from BotAssistAI.",
       Html: `
       <style>
        :root {
-       /* Change to your preffered colors */
-     --ai-background: #4C90F7; 
-      --ai-button: #F59E0B;
-      --ai-input: #ffffff;
-      --ai-input-font-color: #111827;             
+      --ai-background: ${colors.chatbotBackground}; 
+      --ai-button: ${colors.chatBtn};
+      --ai-input: ${colors.chatInputBackground};
+      --ai-input-font-color: ${colors.chatInputTextColor};             
       --ai-border: #000;                         
-      --ai-website-chat-btn: #4C90F7;              
-      --ai-website-question: #4C90F7;              
-      --font-color: #3b4352;                        
-      --conversation-boxes: #ffffff;
-      --need-help-text: #fff;
+      --ai-website-chat-btn: ${colors.websiteChatBtn};              
+      --ai-website-question: ${colors.websiteQuestion};              
+      --font-color: ${colors.textColor};                        
+      --conversation-boxes: ${colors.chatBoxBackground};
+      --need-help-text: ${colors.needHelpTextColor};
     }
       </style>
        <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR API KEY HERE" defer></script>
     `,
     },
     {
-      proTip: "Add <Chatbot /> to your main layout or App.js to load the chatbot across all pages.",
+      proTip:
+        "Add <Chatbot /> to your main layout or App.js to load the chatbot across all pages.",
       React: `
       import { useEffect } from "react";
     
@@ -104,16 +105,16 @@ const Integrations = () => {
           const style = document.createElement("style");
           style.innerHTML = \`
             :root {
-               --ai-background: #4C90F7; 
-               --ai-button: #F59E0B;
-               --ai-input: #ffffff;
-               --ai-input-font-color: #111827;             
+               --ai-background: ${colors.chatbotBackground}; 
+               --ai-button: ${colors.chatBtn};
+               --ai-input: ${colors.chatInputBackground};
+               --ai-input-font-color: ${colors.chatInputTextColor};             
                --ai-border: #000;                         
-               --ai-website-chat-btn: #4C90F7;              
-               --ai-website-question: #4C90F7;              
-               --font-color: #3b4352;                        
-               --conversation-boxes: #ffffff;
-               --need-help-text: #fff;
+               --ai-website-chat-btn: ${colors.websiteChatBtn};              
+               --ai-website-question: ${colors.websiteQuestion};              
+               --font-color: ${colors.textColor};                        
+               --conversation-boxes: ${colors.chatBoxBackground};
+               --need-help-text: ${colors.needHelpTextColor};
             }
           \`;
           document.head.appendChild(style);
@@ -136,25 +137,26 @@ const Integrations = () => {
       }
     
       export default Chatbot;
-      `
+      `,
     },
     {
-      proTip: "Place this in a layout or root component to load the chatbot globally across your Vue app.",
+      proTip:
+        "Place this in a layout or root component to load the chatbot globally across your Vue app.",
       Vue: `
       mounted() {
         const style = document.createElement("style");
         style.innerHTML = \`
           :root {
-             --ai-background: #4C90F7; 
-             --ai-button: #F59E0B;
-             --ai-input: #ffffff;
-             --ai-input-font-color: #111827;             
-             --ai-border: #000;                         
-             --ai-website-chat-btn: #4C90F7;              
-             --ai-website-question: #4C90F7;              
-             --font-color: #3b4352;                        
-             --conversation-boxes: #ffffff;
-             --need-help-text: #fff;
+          --ai-background: ${colors.chatbotBackground}; 
+          --ai-button: ${colors.chatBtn};
+          --ai-input: ${colors.chatInputBackground};
+          --ai-input-font-color: ${colors.chatInputTextColor};             
+          --ai-border: #000;                         
+          --ai-website-chat-btn: ${colors.websiteChatBtn};              
+          --ai-website-question: ${colors.websiteQuestion};              
+          --font-color: ${colors.textColor};                        
+          --conversation-boxes: ${colors.chatBoxBackground};
+          --need-help-text: ${colors.needHelpTextColor};
           }
         \`;
         document.head.appendChild(style);
@@ -166,11 +168,11 @@ const Integrations = () => {
         script.async = true;
         document.body.appendChild(script);
       }
-      `
-    }
-,         
+      `,
+    },
     {
-      proTip: "Add this to base.html to load the chatbot on all pages. Pass needed variables in the template context.",
+      proTip:
+        "Add this to base.html to load the chatbot on all pages. Pass needed variables in the template context.",
       Python: `
  <!DOCTYPE html>
 <html lang="en">
@@ -181,17 +183,18 @@ const Integrations = () => {
 
     <style>
         :root {
-            --ai-background: {{ ai_background | default("linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%)") }};
-            --ai-button: {{ ai_button | default("linear-gradient(135deg, #2D5FD0 20%, #4F8BFF 60%, #1CA3FF 100%)") }};
-            --ai-input: {{ ai_input | default("#000") }};
-            --ai-input-font-color: {{ ai_input_font_color | default("#fff") }};
-            --ai-border: {{ ai_border | default("#f8f8f8") }};
-            --ai-website-chat-btn: {{ ai_website_chat_btn | default("#000") }};
-            --ai-website-question: {{ ai_website_question | default("linear-gradient(135deg, #1E3A8A 20%, #3A7EFF 60%, #00A9FF 100%)") }};
-            --font-color: {{ font_color | default("#ff0000") }};
-            --conversation-boxes: {{ conversation_boxes | default("blue") }};
-            --need-help-text: #fff;: {{ need_help_text: #fff; | default("white") }};
-        }
+          --ai-background: {{ chatbotBackground | default("#2D5FD0") }};
+          --ai-button: {{ chatBtn | default("#4F8BFF") }};
+          --ai-input: {{ chatInputBackground | default("#000") }};
+          --ai-input-font-color: {{ chatInputTextColor | default("#fff") }};
+          --ai-border: {{ ai_border | default("#000") }};
+          --ai-website-chat-btn: {{ websiteChatBtn | default("#000") }};
+          --ai-website-question: {{ websiteQuestion | default("#3A7EFF") }};
+          --font-color: {{ textColor | default("#ff0000") }};
+          --conversation-boxes: {{ chatBoxBackground | default("blue") }};
+          --need-help-text: {{ needHelpTextColor | default("white") }};
+}
+
     </style>
 
 </head>
@@ -219,48 +222,52 @@ const Integrations = () => {
     `,
     },
     {
-      proTip: "Insert into your layout file (e.g. layout.html or base.jsp) before </body> to load globally.",
+      proTip:
+        "Insert into your layout file (e.g. layout.html or base.jsp) before </body> to load globally.",
       Java: `
       <style>
           :root {
-             --ai-background: #4C90F7; 
-             --ai-button: #F59E0B;
-             --ai-input: #ffffff;
-             --ai-input-font-color: #111827;             
-             --ai-border: #000;                         
-             --ai-website-chat-btn: #4C90F7;              
-             --ai-website-question: #4C90F7;              
-             --font-color: #3b4352;                        
-             --conversation-boxes: #ffffff;
-             --need-help-text: #fff;
+            --ai-background: ${colors.chatbotBackground}; 
+            --ai-button: ${colors.chatBtn};
+            --ai-input: ${colors.chatInputBackground};
+            --ai-input-font-color: ${colors.chatInputTextColor};             
+            --ai-border: #000;                         
+            --ai-website-chat-btn: ${colors.websiteChatBtn};              
+            --ai-website-question: ${colors.websiteQuestion};              
+            --font-color: ${colors.textColor};                        
+            --conversation-boxes: ${colors.chatBoxBackground};
+            --need-help-text: ${colors.needHelpTextColor};
   }
 </style>
 <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
     `,
     },
     {
-      proTip: "Add this in your theme’s footer.php file before the closing </body> tag, or  You can also inject it using a plugin like “Insert Headers and Footers”",
+      proTip:
+        "Add this in your theme’s footer.php file before the closing </body> tag, or  You can also inject it using a plugin like “Insert Headers and Footers”",
       Php: `
       <?php echo '
 <style>
   :root {
-             --ai-background: #4C90F7; 
-             --ai-button: #F59E0B;
-             --ai-input: #ffffff;
-             --ai-input-font-color: #111827;             
-             --ai-border: #000;                         
-             --ai-website-chat-btn: #4C90F7;              
-             --ai-website-question: #4C90F7;              
-             --font-color: #3b4352;                        
-             --conversation-boxes: #ffffff;
-             --need-help-text: #fff;
+      --ai-background: ${colors.chatbotBackground}; 
+      --ai-button: ${colors.chatBtn};
+      --ai-input: ${colors.chatInputBackground};
+      --ai-input-font-color: ${colors.chatInputTextColor};             
+      --ai-border: #000;                         
+      --ai-website-chat-btn: ${colors.websiteChatBtn};              
+      --ai-website-question: ${colors.websiteQuestion};              
+      --font-color: ${colors.textColor};                        
+      --conversation-boxes: ${colors.chatBoxBackground};
+      --need-help-text: ${colors.needHelpTextColor};
   }
 </style>
 <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
 '; ?>
       `,
-    }, {
-      proTip: "Place this in pages/_app.js to load the chatbot globally in your Next.js app.",
+    },
+    {
+      proTip:
+        "Place this in pages/_app.js to load the chatbot globally in your Next.js app.",
       NextJs: `
     import { useEffect } from 'react';
     
@@ -270,16 +277,16 @@ const Integrations = () => {
         const style = document.createElement('style');
         style.innerHTML = \`
           :root {
-             --ai-background: #4C90F7; 
-             --ai-button: #F59E0B;
-             --ai-input: #ffffff;
-             --ai-input-font-color: #111827;             
-             --ai-border: #000;                         
-             --ai-website-chat-btn: #4C90F7;              
-             --ai-website-question: #4C90F7;              
-             --font-color: #3b4352;                        
-             --conversation-boxes: #ffffff;
-             --need-help-text: #fff;
+            --ai-background: ${colors.chatbotBackground}; 
+            --ai-button: ${colors.chatBtn};
+            --ai-input: ${colors.chatInputBackground};
+            --ai-input-font-color: ${colors.chatInputTextColor};             
+            --ai-border: #000;                         
+            --ai-website-chat-btn: ${colors.websiteChatBtn};              
+            --ai-website-question: ${colors.websiteQuestion};              
+            --font-color: ${colors.textColor};                        
+            --conversation-boxes: ${colors.chatBoxBackground};
+            --need-help-text: ${colors.needHelpTextColor};
           }
         \`;
         document.head.appendChild(style);
@@ -303,23 +310,24 @@ const Integrations = () => {
     }
     
     export default MyApp;
-      `
+      `,
     },
     {
-      proTip: "(Online Store 2.0 – via theme.liquid). Add this to layout/theme.liquid right before </body>:",
+      proTip:
+        "(Online Store 2.0 – via theme.liquid). Add this to layout/theme.liquid right before </body>:",
       Shopify: `
      <style>
   :root {
-             --ai-background: #4C90F7; 
-             --ai-button: #F59E0B;
-             --ai-input: #ffffff;
-             --ai-input-font-color: #111827;             
-             --ai-border: #000;                         
-             --ai-website-chat-btn: #4C90F7;              
-             --ai-website-question: #4C90F7;              
-             --font-color: #3b4352;                        
-             --conversation-boxes: #ffffff;
-             --need-help-text: #fff;
+      --ai-background: ${colors.chatbotBackground}; 
+      --ai-button: ${colors.chatBtn};
+      --ai-input: ${colors.chatInputBackground};
+      --ai-input-font-color: ${colors.chatInputTextColor};             
+      --ai-border: #000;                         
+      --ai-website-chat-btn: ${colors.websiteChatBtn};              
+      --ai-website-question: ${colors.websiteQuestion};              
+      --font-color: ${colors.textColor};                        
+      --conversation-boxes: ${colors.chatBoxBackground};
+      --need-help-text: ${colors.needHelpTextColor};
   }
 </style>
 <script src="https://api.botassistai.com/client-chatbot.js" api-key="YOUR_API_KEY_HERE" defer></script>
@@ -779,6 +787,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
             <FaCode className="code-icon" />
             Copy & Embed Code
           </h3>
+          <button className="configChatBtn" onClick={() => setChatBotConfig(true)}>Configure Chatbot</button>
           <select className="inteSelect" onChange={(e) => setSelectedLanguage(e.target.value)} value={selectedLanguage}>
   {codeSnippets.map((snippet, index) => {
     const language = Object.keys(snippet).find(key => key !== "proTip");
@@ -789,7 +798,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
     );
   })}
 </select>
-<button className="configChatBtn" onClick={() => setChatBotConfig(true)}>Configure Chatbot</button>
+
         </div>
         {codeSnippets.find(snippet => snippet[selectedLanguage])?.proTip && (
   <p className="pro-tip">
