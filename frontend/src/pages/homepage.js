@@ -57,13 +57,13 @@ const Homepage = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
     const shop = urlParams.get("shop");
-    const shopifyUser = urlParams.get("shopifyUser");
+    // const shopifyUser = urlParams.get("shopifyUser");
   
     if (host) localStorage.setItem("host", host);
     if (shop) localStorage.setItem("shop", shop);
-    if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
+    // Remove shopifyUser logic since it’s not present in your URL
   
-    if (shop && shopifyUser === "true") {
+    if (shop) {
       console.log("Triggering redirectToInstall with shop:", shop);
       redirectToInstall(shop);
     }
