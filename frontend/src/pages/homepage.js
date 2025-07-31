@@ -52,6 +52,8 @@ const Homepage = () => {
 
 
   useEffect(() => {
+    console.log("Homepage useEffect triggered");
+  
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
     const shop = urlParams.get("shop");
@@ -62,40 +64,50 @@ const Homepage = () => {
     if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
   
     if (shop && shopifyUser === "true") {
-      // 🔁 Trigger install logic once shop & shopifyUser are ready
+      console.log("Triggering redirectToInstall with shop:", shop);
       redirectToInstall(shop);
     }
   }, []);
+  
 
   const redirectToInstall = async (shop) => {
     try {
+      console.log("Checking if already installed...");
       const hasInstalled = localStorage.getItem("shopifyInstalled") === "true";
-      if (hasInstalled) return;
+      if (hasInstalled) {
+        console.log("Already installed. Skipping redirect.");
+        return;
+      }
   
+      console.log("Calling auth-check...");
       const res = await axios.get(`${directory}/auth-check`, {
         withCredentials: true,
       });
   
       const user = res.data.user;
+      console.log("Auth-check user:", user);
       if (!user?.user_id) {
         console.warn("⚠️ No user_id found");
         return;
       }
   
-      await axios.post(`${directory}/shopify/session-attach`, {
-        userId: user.user_id,
-      }, {
-        withCredentials: true,
-      });
+      console.log("Attaching session with userId:", user.user_id);
+      await axios.post(
+        `${directory}/shopify/session-attach`,
+        { userId: user.user_id },
+        { withCredentials: true }
+      );
   
       const installUrl = `https://api.botassistai.com/shopify/install?shop=${shop}`;
-      console.log("🔁 Redirecting to:", installUrl);
+      console.log("Redirecting to:", installUrl);
+  
       localStorage.setItem("shopifyInstalled", "true");
       window.location.href = installUrl;
     } catch (err) {
       console.error("❌ Redirect failed:", err);
     }
   };
+  
     //useShopifyInstallRedirect();
 /*
   const API_BASE = "https://api.botassistai.com";
