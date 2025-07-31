@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import "../styling/homepage.css";
 import Header from "../components/Header";
@@ -18,6 +18,13 @@ import directory from '../directory';
 import axios from "axios";
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
+import { getSessionToken } from "@shopify/app-bridge-utils";
+import useShopifyInstallRedirect from "../utils/dash-redirect"
+import {
+  fetchWithAuth,
+  waitForAppBridge,
+} from "../utils/app-bridge";
+import { Redirect } from "@shopify/app-bridge/actions";
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -38,6 +45,126 @@ const Homepage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+
+
+  
+  useShopifyInstallRedirect();
+
+  const API_BASE = "https://api.botassistai.com";
+  
+  const [shopData, setShopData] = useState(null);
+     const sessionChecked = useRef(false);
+  
+  useEffect(() => {
+    const ensureShopifyAuthenticated = async () => {
+      if (sessionChecked.current) return;
+      sessionChecked.current = true; // ✅ Prevent spam
+  
+      const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+      const shop =
+        localStorage.getItem("shop") ||
+        new URLSearchParams(window.location.search).get("shop");
+  
+      if (!isShopifyUser || !shop) return;
+  
+      try {
+        const app = await waitForAppBridge(); // your App Bridge init
+        const token = await getSessionToken(app);
+  
+        console.log("Session token", token);
+        console.log("App", app);
+  
+        const res = await fetch(`${API_BASE}/api/check-session`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Shopify-Shop-Domain": shop,
+          },
+        });
+  
+        if (res.status === 401) {
+          const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+          if (!alreadyRedirected) {
+            console.warn("🛑 Session invalid, redirecting to auth...");
+            sessionStorage.setItem("alreadyRedirected", "true");
+            console.log("Redirecting to /auth for shop:", shop);
+            const redirect = Redirect.create(app);
+            redirect.dispatch(
+              Redirect.Action.REMOTE,
+              `https://api.botassistai.com/auth?shop=${shop}`
+            );
+          } else {
+            console.warn("⚠️ Already redirected once. Skipping further redirects.");
+          }
+        }
+         else {
+          console.log("✅ Session is valid");
+        }
+      } catch (err) {
+        console.error("❌ Session check failed:", err);
+      }
+    };
+  
+    ensureShopifyAuthenticated();
+  }, []);
+  
+    useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host");
+    const shop = urlParams.get("shop");
+    const shopifyUser = urlParams.get("shopifyUser");
+  
+    if (host) localStorage.setItem("host", host);
+    if (shop) localStorage.setItem("shop", shop);
+    if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
+  }, []);
+  
+  useEffect(() => {
+    const fetchShopData = async () => {
+      const isShopifyUser = localStorage.getItem("shopifyUser") === "true";
+      const alreadyRedirected = sessionStorage.getItem("alreadyRedirected");
+  
+      if (!isShopifyUser || alreadyRedirected === "true") {
+        console.log("⏳ Waiting for session verification to finish");
+        return;
+      }
+  
+      try {
+        const app = await waitForAppBridge();
+        const token = await getSessionToken(app);
+        const shop = localStorage.getItem("shop");
+  
+        if (!token || !shop) return;
+  
+        const res = await fetch(`${API_BASE}/api/shop-data`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-Shopify-Shop-Domain": shop,
+          },
+        });
+  
+        if (res.status === 401) {
+          console.warn("🛑 Unauthorized. Not fetching shop data.");
+          return;
+        }
+  
+        const json = await res.json();
+        setShopData(json.shopData);
+        sessionStorage.removeItem("alreadyRedirected");
+      } catch (err) {
+        console.error("❌ Error fetching shop data:", err);
+      }
+    };
+  
+    fetchShopData();
+  }, []);
+
+
+
+
+
 
 
   const showPopupToRegister = () => {

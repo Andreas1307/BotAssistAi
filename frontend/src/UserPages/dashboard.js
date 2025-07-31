@@ -13,11 +13,8 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "axios";
-import {
-  fetchWithAuth,
-  waitForAppBridge,
-} from "../utils/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
+
+
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
@@ -29,8 +26,7 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
-import useShopifyInstallRedirect from "../utils/dash-redirect"
-import { Redirect } from "@shopify/app-bridge/actions";
+
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
