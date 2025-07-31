@@ -3459,7 +3459,7 @@ app.get("/admin-users-pro" , async (req, res) => {
   const query = `
   SELECT COUNT(*) AS pro_users_count
   FROM users
-  WHERE subscription_type = 'Pro';
+  WHERE subscription_plan = 'Pro';
 
   `;
   const [result] = await pool.query(query);
@@ -3480,7 +3480,7 @@ app.get("/admin-users-free" , async (req, res) => {
   const query = `
   SELECT COUNT(*) AS free_users_count
   FROM users
-  WHERE subscription_type = 'Free';
+  WHERE subscription_plan = 'Free';
   `;
   const [result] = await pool.query(query);
 
@@ -3508,17 +3508,6 @@ app.get("/admin-messages" , async (req, res) => {
     return res.status(500).json({ message: "An error occured getting free accounts"})
   }
 })
-
-
-
-
-
-
-
-
-
-
-
 
 
 
