@@ -3491,7 +3491,7 @@ app.get("/admin-users-free" , async (req, res) => {
   }
 })
 
-app.get("/admin-messages" , async (req, res) => {
+app.post("/admin-messages" , async (req, res) => {
   const { key } = req.params;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {

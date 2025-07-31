@@ -37,7 +37,7 @@ const AdminPage = () => {
     useEffect(() => {
         const fetchUserCount = async () => {
             try {
-                const response = await axios.get(`${directory}/admin-users-count`, { parmas: { key: key }});
+                const response = await axios.get(`${directory}/admin-users-count`, { params: { key: key }});
                 setUsersCount(response.data.totalUsers)
             } catch(e) { 
                 console.log("An error occured fetching dayly conversations", e)
@@ -50,7 +50,7 @@ const AdminPage = () => {
     useEffect(() => {
         const fetchProAccounts = async () => {
             try {
-                const response = await axios.get(`${directory}/admin-users-pro`, { parmas: { key: key }});
+                const response = await axios.get(`${directory}/admin-users-pro`, { params: { key: key }});
                 setProAccounts(response.data.proUsers)
             } catch(e) { 
                 console.log("An error occured fetching pro accounts", e)
@@ -63,7 +63,7 @@ const AdminPage = () => {
     useEffect(() => {
         const fetchFreeAccounts = async () => {
             try {
-                const response = await axios.get(`${directory}/admin-users-free`, { parmas: { key: key }});
+                const response = await axios.get(`${directory}/admin-users-free`, { params: { key: key }});
                 setFreeAccounts(response.data.freeUsers)
             } catch(e) { 
                 console.log("An error occured fetching free accounts", e)
