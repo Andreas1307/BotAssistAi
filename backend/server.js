@@ -3509,6 +3509,18 @@ app.get("/admin-messages" , async (req, res) => {
   }
 })
 
+app.get("/admin-delete-message", async (req, res) => {
+  const { key, id } = req.query;
+  try {
+    if (key !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    await pool.query("DELETE FROM user_messages WHERE id = ?", id)
+  } catch(e) {
+    console.log("BAckend error trrying to delete the message", e)
+    return res.status(500).json({ message: "An error occured trrying to delete the message"})
+  }
+})
 
 
 

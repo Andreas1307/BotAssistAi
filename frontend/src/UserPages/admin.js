@@ -73,9 +73,7 @@ const AdminPage = () => {
         }
         fetchFreeAccounts()
     })
-
-    useEffect(() => {
-        const fetchMessages = async () => {
+const fetchMessages = async () => {
             try {
                 const response = await axios.get(`${directory}/admin-messages`, { params: { key: key } });
                 setMessgaes(response.data.messages)
@@ -84,10 +82,20 @@ const AdminPage = () => {
                 setMessgaes([])
             }
         }
+    useEffect(() => {
         fetchMessages()
     })
 
-    //sa vad daca merge, sa fac design, sa pot sa sterg conversatile pe care le-am vazut
+    const deleteMessage = async (id) => {
+        try {
+            await axios.get(`${directory}/admin-delete-message`, { params: { key: key, id: id}})
+            fetchMessages()
+        } catch(e) {
+            console.log("An error occured deleting the message")
+        }
+    } 
+
+    //sa fac design
 
     return (
         <div className="admin-page">
@@ -117,6 +125,7 @@ const AdminPage = () => {
                     <p><strong>User Id:</strong> {m.user_id}</p>
                     <p><strong>User Email:</strong> {m.user_email}</p>
                     <p><strong>Message:</strong> {m.message}</p>
+                    <button onClick={() => deleteMessage(m.id)}>Delete</button>
                     </div>
                 ))}
             </div>
