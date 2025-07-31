@@ -3408,4 +3408,120 @@ Sitemap: https://www.botassistai.com/sitemap.xml
 });
 
 
+
+// ADMIN STUFF
+
+
+app.get("/admin-daily-conversations", async (req, res) => {
+  const { key } = req.params;
+  try {
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+    const query = `
+    SELECT COUNT(*) AS total_messages
+    FROM chat_messages
+    WHERE timestamp >= CURDATE()
+  `;
+
+  const [result] = await pool.query(query);
+
+  res.json({ totalMessages: result[0]?.total_messages || 0 });
+  } catch (e) {
+    console.log("BAckend error trrying to receive the number of converrsations", e)
+    return res.status(500).json({ message: "An error occured getting daily conv num"})
+  }
+})
+
+app.get("/admin-users-count" , async (req, res) => {
+  const { key } = req.params;
+  try {
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const query = `SELECT COUNT(*) AS total_users FROM users`;
+  const [result] = await pool.query(query);
+
+  res.json({ totalUsers: result[0]?.total_users || 0 });
+  } catch (e) {
+    console.log("BAckend error trrying to receive the users count", e)
+    return res.status(500).json({ message: "An error occured getting daily conv num"})
+  }
+})
+
+app.get("/admin-users-pro" , async (req, res) => {
+  const { key } = req.params;
+  try {
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const query = `
+  SELECT COUNT(*) AS pro_users_count
+  FROM users
+  WHERE subscription_type = 'Pro';
+
+  `;
+  const [result] = await pool.query(query);
+
+  res.json({ proUsers: result[0]?.pro_users_count || 0 });
+  } catch (e) {
+    console.log("BAckend error trrying to receive the users pro accounts", e)
+    return res.status(500).json({ message: "An error occured getting daily conv num"})
+  }
+})
+
+app.get("/admin-users-free" , async (req, res) => {
+  const { key } = req.params;
+  try {
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const query = `
+  SELECT COUNT(*) AS free_users_count
+  FROM users
+  WHERE subscription_type = 'Free';
+  `;
+  const [result] = await pool.query(query);
+
+  res.json({ freeUsers: result[0]?.free_users_count || 0 });
+  } catch (e) {
+    console.log("BAckend error trrying to receive the users free accounts", e)
+    return res.status(500).json({ message: "An error occured getting free accounts"})
+  }
+})
+
+app.get("/admin-messages" , async (req, res) => {
+  const { key } = req.params;
+  try {
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const query = `
+  SELECT * FROM  user_messages
+  `;
+  const [result] = await pool.query(query);
+
+  res.json({ messages: result });
+  } catch (e) {
+    console.log("BAckend error trrying to receive the users free accounts", e)
+    return res.status(500).json({ message: "An error occured getting free accounts"})
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.listen(8090)

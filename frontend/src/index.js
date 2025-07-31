@@ -8,11 +8,11 @@ import Homepage from './pages/homepage';
 import Error from './pages/errorPage';
 import FeaturesPage from './pages/featuresPage';
 import Contact from './pages/contact';
-import About from './pages/about';
-import Pricing from './pages/pricing';
+import About from './pages/about';import Pricing from './pages/pricing';
 import SignUp from './pages/SignUp';
 import LogIn from './pages/LogIn';
 import Dashboard from './UserPages/dashboard';
+import AdminPage from './UserPages/admin';
 import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -32,6 +32,7 @@ const router = createBrowserRouter([
   { path: "/log-in", element: <LogIn /> },
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
+  { path: `/admin/:key`, element: <AdminPage /> },
   { path: "*", element: <Error /> }
 ]);
 
