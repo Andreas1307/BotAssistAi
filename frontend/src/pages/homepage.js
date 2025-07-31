@@ -51,7 +51,7 @@ const Homepage = () => {
   
 
 
-    useEffect(() => {
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
     const shop = urlParams.get("shop");
@@ -60,8 +60,43 @@ const Homepage = () => {
     if (host) localStorage.setItem("host", host);
     if (shop) localStorage.setItem("shop", shop);
     if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
+  
+    if (shop && shopifyUser === "true") {
+      // 🔁 Trigger install logic once shop & shopifyUser are ready
+      redirectToInstall(shop);
+    }
   }, []);
-    useShopifyInstallRedirect();
+
+  const redirectToInstall = async (shop) => {
+    try {
+      const hasInstalled = localStorage.getItem("shopifyInstalled") === "true";
+      if (hasInstalled) return;
+  
+      const res = await axios.get(`${directory}/auth-check`, {
+        withCredentials: true,
+      });
+  
+      const user = res.data.user;
+      if (!user?.user_id) {
+        console.warn("⚠️ No user_id found");
+        return;
+      }
+  
+      await axios.post(`${directory}/shopify/session-attach`, {
+        userId: user.user_id,
+      }, {
+        withCredentials: true,
+      });
+  
+      const installUrl = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+      console.log("🔁 Redirecting to:", installUrl);
+      localStorage.setItem("shopifyInstalled", "true");
+      window.location.href = installUrl;
+    } catch (err) {
+      console.error("❌ Redirect failed:", err);
+    }
+  };
+    //useShopifyInstallRedirect();
 /*
   const API_BASE = "https://api.botassistai.com";
   
