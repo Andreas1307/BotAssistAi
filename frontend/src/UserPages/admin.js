@@ -98,6 +98,7 @@ const fetchMessages = async () => {
     //sa fac design
 
     return (
+        <div className="admin-box">
         <div className="admin-page">
             <div className="admin-boxes">
                 <div className="admin-box">
@@ -129,6 +130,7 @@ const fetchMessages = async () => {
                     </div>
                 ))}
             </div>
+        </div>
         </div>
     )
 }

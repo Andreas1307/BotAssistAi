@@ -1,0 +1,38 @@
+.admin-box {
+    width: 100%;
+    padding: 20px;
+    background-color: #fff;
+}
+.admin-page {
+    width: 100%;
+    border-radius: 20px;
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+.admin-boxes {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.admin-box {
+    border-radius: 20px;
+    padding: 15px 20px;
+    background-color: #fff;
+}
+.admin-messages {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.admin-msg {
+    width: 100%;
+    padding: 15px;
+    background-color: #fff;
+    margin-bottom: 15px;
+    border-radius: 20px;
+}
+.admin-msg button {
+    background-color: red;
+    padding: 10px 20px;
+}
