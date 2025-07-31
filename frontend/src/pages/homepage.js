@@ -50,7 +50,17 @@ const Homepage = () => {
 
   
   useShopifyInstallRedirect();
-
+    useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host");
+    const shop = urlParams.get("shop");
+    const shopifyUser = urlParams.get("shopifyUser");
+  
+    if (host) localStorage.setItem("host", host);
+    if (shop) localStorage.setItem("shop", shop);
+    if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
+  }, []);
+/*
   const API_BASE = "https://api.botassistai.com";
   
   const [shopData, setShopData] = useState(null);
@@ -109,16 +119,6 @@ const Homepage = () => {
     ensureShopifyAuthenticated();
   }, []);
   
-    useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const host = urlParams.get("host");
-    const shop = urlParams.get("shop");
-    const shopifyUser = urlParams.get("shopifyUser");
-  
-    if (host) localStorage.setItem("host", host);
-    if (shop) localStorage.setItem("shop", shop);
-    if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
-  }, []);
   
   useEffect(() => {
     const fetchShopData = async () => {
@@ -161,7 +161,7 @@ const Homepage = () => {
     fetchShopData();
   }, []);
 
-
+*/
 
 
 
