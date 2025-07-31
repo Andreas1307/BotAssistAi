@@ -317,10 +317,7 @@ app.get('/shopify/install', (req, res) => {
       return res.status(400).send('❌ Invalid shop parameter');
     }
 
-    if (!req.session.userId) {
-      req.session.userId = YOUR_LOGGED_IN_USER_ID_HERE;
-    }
-
+    
 
     const state = crypto.randomBytes(16).toString('hex');
     const host = Buffer.from(shopLower, 'utf8').toString('base64');
