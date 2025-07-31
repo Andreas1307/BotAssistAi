@@ -3413,7 +3413,7 @@ Sitemap: https://www.botassistai.com/sitemap.xml
 
 
 app.get("/admin-daily-conversations", async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.query;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: "Forbidden" });
@@ -3435,7 +3435,7 @@ app.get("/admin-daily-conversations", async (req, res) => {
 })
 
 app.get("/admin-users-count" , async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.query;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: "Forbidden" });
@@ -3451,7 +3451,7 @@ app.get("/admin-users-count" , async (req, res) => {
 })
 
 app.get("/admin-users-pro" , async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.query;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: "Forbidden" });
@@ -3472,7 +3472,7 @@ app.get("/admin-users-pro" , async (req, res) => {
 })
 
 app.get("/admin-users-free" , async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.query;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: "Forbidden" });
@@ -3492,7 +3492,7 @@ app.get("/admin-users-free" , async (req, res) => {
 })
 
 app.post("/admin-messages" , async (req, res) => {
-  const { key } = req.params;
+  const { key } = req.body;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: "Forbidden" });
