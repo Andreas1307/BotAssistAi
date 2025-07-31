@@ -49,7 +49,8 @@ const Homepage = () => {
 
 
   
-  useShopifyInstallRedirect();
+
+
     useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const host = urlParams.get("host");
@@ -60,6 +61,7 @@ const Homepage = () => {
     if (shop) localStorage.setItem("shop", shop);
     if (shopifyUser === "true") localStorage.setItem("shopifyUser", "true");
   }, []);
+    useShopifyInstallRedirect();
 /*
   const API_BASE = "https://api.botassistai.com";
   
