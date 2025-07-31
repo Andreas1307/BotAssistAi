@@ -111,6 +111,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
 
+  /*
   useShopifyInstallRedirect();
 
   const API_BASE = "https://api.botassistai.com";
@@ -223,7 +224,7 @@ const Dashboard = () => {
     fetchShopData();
   }, []);
   
-  
+  */
   
   // FETCH MEMBERSHIP
   useEffect(() => {
