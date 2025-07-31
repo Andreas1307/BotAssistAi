@@ -3491,8 +3491,8 @@ app.get("/admin-users-free" , async (req, res) => {
   }
 })
 
-app.post("/admin-messages" , async (req, res) => {
-  const { key } = req.body;
+app.get("/admin-messages" , async (req, res) => {
+  const { key } = req.query;
   try {
   if (key !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: "Forbidden" });

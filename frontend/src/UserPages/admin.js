@@ -77,7 +77,7 @@ const AdminPage = () => {
     useEffect(() => {
         const fetchMessages = async () => {
             try {
-                const response = await axios.post(`${directory}/admin-messages`, { key: key });
+                const response = await axios.get(`${directory}/admin-messages`, { params: { key: key } });
                 setMessgaes(response.data.messages)
             } catch(e) { 
                 console.log("An error occured fetching free accounts", e)
