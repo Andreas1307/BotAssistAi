@@ -11,8 +11,7 @@ const AdminPage = () => {
     const [usersCount, setUsersCount] = useState(0)
     const [proAccounts, setProAccounts] = useState(0);
     const [freeAccounts, setFreeAccounts] = useState(0)
-    const searchParams = new URLSearchParams(window.location.search);
-const key = searchParams.get("key");
+    const { key } = useParams();
 
   
     useEffect(() => {
