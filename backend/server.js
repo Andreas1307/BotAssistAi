@@ -134,7 +134,7 @@ app.get("/auth/callback", async (req, res) => {
     const session = result.session;
 
     if (!session || !session.shop || !session.accessToken) {
-      console.error("❌ Missing session data");
+      console.log("❌ Missing session data");
       return res.status(400).send("Session missing required data.");
     }
 
@@ -480,9 +480,8 @@ app.get('/shopify/callback', async (req, res) => {
 
     const base64Host = host || Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
-    return res.redirect(
-      `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${base64Host}`
-    );
+    return res.redirect(`https://api.botassistai.com/auth?shop=${normalizedShop}`);
+
   } catch (err) {
     console.error("❌ OAuth error:", err.response?.data || err.message);
     res.status(500).send("OAuth failed");
