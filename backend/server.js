@@ -300,6 +300,8 @@ app.get('/shopify/install', (req, res) => {
 
     console.log("✅ [INSTALL] Using state:", state);
     req.session.save(err => {
+      console.log("🔐 Cookies sent:", req.headers.cookie);
+
       if (err) {
         console.error("❌ Failed to save session before redirect", err);
         return res.status(500).send("Internal server error");
@@ -358,6 +360,8 @@ app.get('/shopify/callback', async (req, res) => {
     console.log("📥 Received state:", state);
     console.log("🔍 Full session object:", req.session);
     console.log("🧠 Session keys:", Object.keys(req.session));
+    console.log("📩 Cookies received:", req.headers.cookie);
+
 
     // ✅ Validate input
     if (!shop || !isValidShop(shop)) {
