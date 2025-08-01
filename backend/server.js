@@ -130,37 +130,86 @@ app.get("/auth/callback", async (req, res) => {
       rawResponse: res,
       isOnline: true,
     });
-    
+
     const session = result.session;
 
-    console.log("✅ Session created:", session);
-
-    // ✅ No more incorrect check — directly use session
-    if (!session || !session.id || !session.shop || !session.accessToken) {
-      console.error("❌ Session is missing required data:", session);
+    if (!session || !session.shop || !session.accessToken) {
+      console.error("❌ Missing session data");
       return res.status(400).send("Session missing required data.");
     }
 
-    // ✅ Store session using correct ID format
-    const { storeCallback } = require("./sessionStorage");
-    await storeCallback(session); // ← Store it here
+    const shop = session.shop;
+    const accessToken = session.accessToken;
 
-    const redirectUrl = `/?shop=${session.shop}&host=${req.query.host}&shopifyUser=true`;
-    res.set("Content-Type", "text/html");
-    res.send(`
-    <script src="https://unpkg.com/@shopify/app-bridge"></script>
-      <script>
-        const AppBridge = window["app-bridge"].default;
-        const actions = window["app-bridge"].actions;
-        const app = AppBridge({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${req.query.host}",
-          forceRedirect: true
-        });
-        const redirect = actions.Redirect.create(app);
-        redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-      </script>
-    `);
+    // ✅ Store session
+    const { storeCallback } = require("./sessionStorage");
+    await storeCallback(session);
+
+    // ✅ Fetch shop data from Shopify
+    const client = new shopify.clients.Rest({ session });
+    const response = await client.get({ path: "shop" });
+    const shopData = response.body.shop;
+
+    const email = shopData?.email || `${shop}`;
+    const username = shopData?.name || shop;
+    const domain = shop;
+    const rawKey = uuidv4();
+    const encryptedKey = encryptApiKey(rawKey);
+    const hashedPassword = await bcrypt.hash(uuidv4(), 10); // Generate random password (not used by Shopify users)
+
+    // ✅ Check if user already exists
+    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+
+    let user;
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+      console.log("✅ Existing Shopify user found:", user.username);
+    } else {
+      // ✅ Create user
+      await pool.query(`
+        INSERT INTO users (username, email, password, api_key)
+        VALUES (?, ?, ?, ?)`,
+        [username, email, hashedPassword, encryptedKey]
+      );
+
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+      console.log("✅ New Shopify user created:", user.username);
+    }
+
+    // ✅ Log the user in
+    req.logIn(user, async (err) => {
+      if (err) {
+        console.error("Login error after Shopify auth:", err);
+        return res.status(500).send("Failed to log in after registration.");
+      }
+
+      // ✅ Log install in `shopify_installs` table
+      await pool.query(`
+        INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+        VALUES (?, ?, ?, NOW())
+        ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
+      `, [shop, accessToken, user.user_id]);
+
+      // ✅ Redirect into app
+      const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`;
+
+      res.set("Content-Type", "text/html");
+      res.send(`
+        <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        <script>
+          const AppBridge = window["app-bridge"].default;
+          const actions = window["app-bridge"].actions;
+          const app = AppBridge({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${req.query.host}",
+            forceRedirect: true
+          });
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+        </script>
+      `);
+    });
   } catch (err) {
     console.error("❌ Callback error:", err);
     if (!res.headersSent) {
