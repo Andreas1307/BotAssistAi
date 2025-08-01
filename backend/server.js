@@ -299,6 +299,7 @@ app.get('/shopify/install', (req, res) => {
       `&host=${encodeURIComponent(host)}`;
 
     console.log("✅ [INSTALL] Using state:", state);
+    console.log("Before saving session:", req.session);
     req.session.save(err => {
       console.log("🔐 Cookies sent:", req.headers.cookie);
 
