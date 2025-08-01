@@ -306,8 +306,8 @@ app.get('/shopify/install', (req, res) => {
         console.error("❌ Failed to save session before redirect", err);
         return res.status(500).send("Internal server error");
       }
-
-      return res.redirect(installUrl);
+    
+      return res.redirect(installUrl); 
     });
 
   } catch (err) {
@@ -358,6 +358,7 @@ app.get('/shopify/callback', async (req, res) => {
     console.log("🔐 Stored state:", storedState);
     console.log("📥 Received state:", state);
     console.log("🔍 Full session object:", req.session);
+    console.log("🧠 Session keys:", Object.keys(req.session));
 
     // ✅ Validate input
     if (!shop || !isValidShop(shop)) {
