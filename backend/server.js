@@ -48,6 +48,7 @@ const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, customSessionStorage } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
+const { Webhook } = require('@shopify/shopify-api');
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -629,7 +630,49 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 
 
+async function registerGdprWebhooks(session) {
+  const shop = session.shop;
+  const accessToken = session.accessToken;
 
+  // GDPR webhook endpoints on your app
+  const gdprWebhooks = [
+    {
+      topic: Webhook.Topic.CUSTOMERS_DATA_REQUEST,
+      path: '/shopify/gdpr/customers/data_request',
+    },
+    {
+      topic: Webhook.Topic.CUSTOMERS_REDACT,
+      path: '/shopify/gdpr/customers/redact',
+    },
+    {
+      topic: Webhook.Topic.SHOP_REDACT,
+      path: '/shopify/gdpr/shop/redact',
+    },
+  ];
+
+  for (const webhook of gdprWebhooks) {
+    try {
+      const response = await Webhook.Registry.register({
+        shop,
+        accessToken,
+        path: webhook.path,
+        topic: webhook.topic,
+        webhookHandler: async (topic, shop, body) => {
+          // Optional: log or handle webhook payload here
+          console.log(`Received webhook ${topic} for shop ${shop}`);
+        },
+      });
+
+      if (response.success) {
+        console.log(`✅ Registered webhook: ${webhook.topic} at ${webhook.path}`);
+      } else {
+        console.error(`❌ Failed to register webhook: ${webhook.topic}`, response.result);
+      }
+    } catch (error) {
+      console.error(`❌ Error registering webhook ${webhook.topic}:`, error);
+    }
+  }
+}
 
 
 
@@ -662,6 +705,8 @@ app.get("/auth/callback", async (req, res) => {
     // ✅ Store session
     const { storeCallback } = require("./sessionStorage");
     await storeCallback(session);
+    await registerGdprWebhooks(session);
+
 
     // ✅ Fetch shop data from Shopify
     const client = new shopify.clients.Rest({ session });
@@ -700,6 +745,74 @@ app.get("/auth/callback", async (req, res) => {
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
       console.log("✅ New Shopify user created:", user.username);
+
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL,
+        to: email,
+        subject: "Your Account Password for Our App",
+        html: `
+         <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
+
+<img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
+
+<h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">Hey there!</h1>
+
+<p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
+  Your <strong>account </strong> has been created. Here is your temporary password:  
+  ${rawKey}
+</p>
+
+
+    <h3 style="color: #00F5D4; font-size: 22px;">Please log in and change your password in the settings for security.</h3>
+
+
+
+<p style="margin-top: 35px; font-size: 14px; color: #aaa;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
+
+<div style="margin-top: 25px;">
+    <a href="https://facebook.com/botassistai" style="margin: 0 8px;">
+        <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" alt="Facebook" width="28">
+    </a>
+    <a href="https://instagram.com/botassistai" style="margin: 0 8px;">
+        <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" alt="Instagram" width="28">
+    </a>
+    <a href="https://twitter.com/botassistai" style="margin: 0 8px;">
+        <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" alt="Twitter" width="28">
+    </a>
+    <a href="https://linkedin.com/company/botassistai" style="margin: 0 8px;">
+        <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" alt="LinkedIn" width="28">
+    </a>
+</div>
+
+<p style="font-size: 12px; color: #666; margin-top: 20px;">
+  You received this email because you have an account with us. 
+  <a href="https://botassistai.com/unsubscribe" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
+</p>
+</div>
+
+
+        `,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          return console.error('❌ Error sending password email:', error);
+        }
+        console.log('✅ Password email sent:', info.response);
+      });
+
+
+
     }
     
 
@@ -1024,7 +1137,7 @@ cron.schedule("0 0 * * *", async () => {
 
   <p style="font-size: 12px; color: #666; margin-top: 20px;">
     You received this email because you have an account with us. 
-    <a href="https://botassistai.com/unsubscribe?email=user@example.com" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
+    <a href="https://botassistai.com/unsubscribe" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
   </p>
 </div>
 
