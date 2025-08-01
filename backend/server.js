@@ -107,20 +107,22 @@ app.use(session({
 app.get("/auth", async (req, res) => {
   console.log("IN AUTH");
   try {
+    const shop = req.query.shop || req.session.validated_shop;
+
     const redirectUrl = await shopify.auth.begin({
-      shop: req.query.shop,
+      shop,
       callbackPath: "/auth/callback",
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
 
-    // ✅ Only one response
     res.redirect(redirectUrl);
   } catch (e) {
     if (!res.headersSent) res.status(500).send("Auth error");
   }
 });
+
 
 
 
@@ -144,7 +146,7 @@ app.get("/api/sessions", async (req, res) => {
 });
                                    
 
-
+// sa fac asta , sa iau informatia de pe gpt CSRF
 
 
 
@@ -330,33 +332,33 @@ async function registerWebhooks(shop, accessToken) {
   }
 }
 
-
 app.get('/shopify/callback', async (req, res) => {
-  const { shop, code, state } = req.query;
-  const storedState = req.session.shopify_state;
-  const host = req.query.host || req.session.shopify_host;
-  
-
-  console.log("🔐 Stored state:", storedState);
-  console.log("📥 Received state:", state);
-
-  if (!isValidShop(shop)) {
-    return res.status(400).send('❌ Invalid shop domain');
-  }
-
-  if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
-    console.error("❌ HMAC verification failed");
-    return res.status(400).send("Invalid request signature");
-  }
-
-  if (state !== storedState) {
-    console.error("❌ CSRF state mismatch");
-    return res.status(400).send("Invalid state");
-  }
-
-  const normalizedShop = shop.toLowerCase();
-
   try {
+    const { shop, code, state } = req.query;
+    const storedState = req.session.shopify_state;
+    const host = req.query.host || req.session.shopify_host;
+
+    console.log("🔐 Stored state:", storedState);
+    console.log("📥 Received state:", state);
+
+    // ✅ Validate input
+    if (!shop || !isValidShop(shop)) {
+      return res.status(400).send('❌ Invalid shop domain');
+    }
+
+    if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
+      console.error("❌ HMAC verification failed");
+      return res.status(400).send("Invalid request signature");
+    }
+
+    if (!state || state !== storedState) {
+      console.error("❌ CSRF state mismatch");
+      return res.status(400).send("Invalid state");
+    }
+
+    const normalizedShop = shop.toLowerCase();
+
+    // ✅ Exchange code for access token
     const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -364,35 +366,39 @@ app.get('/shopify/callback', async (req, res) => {
     });
 
     const accessToken = tokenRes.data.access_token;
+    if (!accessToken) {
+      console.error("❌ Missing access token in response");
+      return res.status(400).send("Missing access token");
+    }
 
-    // ✅ Store in shopify_installs table
+    // ✅ Store install
     await pool.query(`
       INSERT INTO shopify_installs (shop, access_token, installed_at)
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE access_token = ?, installed_at = NOW()
     `, [normalizedShop, accessToken, accessToken]);
 
-    // ✅ Attach to current logged-in user
-   
-
-    // ✅ Register Webhooks and ScriptTags
+    // ✅ Optional Webhook / ScriptTag logic
     await registerScriptTag(normalizedShop, accessToken);
     await registerWebhooks(normalizedShop, accessToken);
 
     console.log(`✅ App installed for ${normalizedShop}`);
 
-    // Optional: clear state from session
+    // ✅ Clear session state for security
     req.session.shopify_state = null;
+    req.session.shopify_host = null;
 
     const base64Host = host || Buffer.from(normalizedShop, 'utf-8').toString('base64');
 
-    return res.redirect(`https://api.botassistai.com/auth?shop=${normalizedShop}`);
+    // ✅ Redirect to your own `/auth` handler (which uses Shopify API lib)
+    return res.redirect(`https://api.botassistai.com/auth?shop=${normalizedShop}&host=${base64Host}`);
 
   } catch (err) {
     console.error("❌ OAuth error:", err.response?.data || err.message);
-    res.status(500).send("OAuth failed");
+    if (!res.headersSent) res.status(500).send("OAuth failed");
   }
 });
+
 
 
 
