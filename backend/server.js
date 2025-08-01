@@ -292,7 +292,15 @@ app.get('/shopify/install', (req, res) => {
   
 
     console.log("✅ [INSTALL] Generated state:", state);
-    return res.redirect(installUrl);
+    req.session.save(err => {
+      if (err) {
+        console.error("❌ Failed to save session before redirect", err);
+        return res.status(500).send("Internal server error");
+      }
+
+      return res.redirect(installUrl);
+    });
+
   } catch (err) {
     console.error("❌ /shopify/install failed:", err);
     return res.status(500).send("Internal server error");
