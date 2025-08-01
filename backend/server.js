@@ -48,7 +48,7 @@ const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, customSessionStorage } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
-const { Webhook } = shopify;
+const { Webhook } = require('@shopify/shopify-api');
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -670,8 +670,6 @@ async function registerGdprWebhooks(session) {
     }
   }
 }
-
-
 
 
 
