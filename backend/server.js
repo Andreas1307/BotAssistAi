@@ -290,6 +290,7 @@ app.get('/shopify/install', (req, res) => {
 
     req.session.shopify_state = state;
     req.session.shopify_host = host;
+    req.session.test = "session_active";
 
     const installUrl =
     `https://${shopLower}/admin/oauth/authorize` +
