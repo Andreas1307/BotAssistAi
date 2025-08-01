@@ -682,18 +682,26 @@ app.get("/auth/callback", async (req, res) => {
     if (existingUser.length > 0) {
       user = existingUser[0];
       console.log("✅ Existing Shopify user found:", user.username);
-    } else {
-      // ✅ Create user
+    
+      // Update shopify fields on existing user
       await pool.query(`
-        INSERT INTO users (username, email, password, api_key)
-        VALUES (?, ?, ?, ?)`,
-        [username, email, hashedPassword, encryptedKey]
-      );
-
+        UPDATE users
+        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+        WHERE user_id = ?
+      `, [shop, accessToken, user.user_id]);
+    
+    } else {
+      // Create user with Shopify fields
+      await pool.query(`
+        INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
+      `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
+    
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
       console.log("✅ New Shopify user created:", user.username);
     }
+    
 
     // ✅ Log the user in
     req.logIn(user, async (err) => {
