@@ -45,9 +45,9 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, customSessionStorage } = require('./shopify');
+const { shopify, Webhook, customSessionStorage } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
-const { Session, Webhook } = require("@shopify/shopify-api");
+const { Session } = require("@shopify/shopify-api");
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -600,9 +600,9 @@ async function registerGdprWebhooks(session) {
   const { shop, accessToken } = session;
 
   const gdprWebhooks = [
-    { topic: 'customers/data_request', path: '/shopify/gdpr/customers/data_request' },
-    { topic: 'customers/redact', path: '/shopify/gdpr/customers/redact' },
-    { topic: 'shop/redact', path: '/shopify/gdpr/shop/redact' },
+    { topic: "customers/data_request", path: "/shopify/gdpr/customers/data_request" },
+    { topic: "customers/redact", path: "/shopify/gdpr/customers/redact" },
+    { topic: "shop/redact", path: "/shopify/gdpr/shop/redact" },
   ];
 
   for (const webhook of gdprWebhooks) {
@@ -627,7 +627,6 @@ async function registerGdprWebhooks(session) {
     }
   }
 }
-
 
 
 
