@@ -596,8 +596,8 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 
 
-async function registerGdprWebhooks(session) {
-  const { shop, accessToken } = session;
+async function registerGdprWebhooks(session, shop) {
+  const { accessToken } = session;
 
   const gdprWebhooks = [
     { topic: "CUSTOMERS_DATA_REQUEST", path: "/shopify/gdpr/customers/data_request" },
@@ -657,7 +657,7 @@ app.get("/auth/callback", async (req, res) => {
     // ✅ Store session
     const { storeCallback } = require("./sessionStorage");
     await storeCallback(session);
-    await registerGdprWebhooks(session);
+    await registerGdprWebhooks(session, shop);
 
 
     // ✅ Fetch shop data from Shopify
