@@ -101,7 +101,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  store: sessionStore, // ✅ use persistent store
+  store: sessionStore, 
   proxy: true,
   cookie: {
     httpOnly: true,
@@ -300,15 +300,17 @@ app.get('/shopify/install', (req, res) => {
 
     console.log("✅ [INSTALL] Using state:", state);
     console.log("Before saving session:", req.session);    
-    req.session.save(err => {
-      console.log("🔐 Cookies sent:", req.headers.cookie);
-
-      if (err) {
-        console.error("❌ Failed to save session before redirect", err);
-        return res.status(500).send("Internal server error");
-      }
-
-      return res.redirect(installUrl);
+    req.session.reload((reloadErr) => {
+      if (reloadErr) console.error("Reload error:", reloadErr);
+      else console.log("Session reloaded successfully");
+    
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).send("Internal server error");
+        }
+        return res.redirect(installUrl);
+      });
     });
 
   } catch (err) {
