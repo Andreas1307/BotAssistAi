@@ -282,9 +282,8 @@ app.get('/shopify/install', (req, res) => {
       return res.status(400).send('❌ Invalid shop parameter');
     }
 
-    
-
-    const state = crypto.randomBytes(16).toString('hex');
+    // ✅ Only generate state if not already present in session
+    const state = req.session.shopify_state || crypto.randomBytes(16).toString('hex');
     const host = Buffer.from(shopLower, 'utf8').toString('base64');
 
     req.session.shopify_state = state;
@@ -292,22 +291,21 @@ app.get('/shopify/install', (req, res) => {
     req.session.test = "session_active";
 
     const installUrl =
-    `https://${shopLower}/admin/oauth/authorize` +
-    `?client_id=${process.env.SHOPIFY_API_KEY}` +
-    `&scope=${process.env.SHOPIFY_SCOPES}` +
-    `&state=${state}` +
-    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-    `&host=${encodeURIComponent(host)}`;
-  
+      `https://${shopLower}/admin/oauth/authorize` +
+      `?client_id=${process.env.SHOPIFY_API_KEY}` +
+      `&scope=${process.env.SHOPIFY_SCOPES}` +
+      `&state=${state}` +
+      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+      `&host=${encodeURIComponent(host)}`;
 
-    console.log("✅ [INSTALL] Generated state:", state);
+    console.log("✅ [INSTALL] Using state:", state);
     req.session.save(err => {
       if (err) {
         console.error("❌ Failed to save session before redirect", err);
         return res.status(500).send("Internal server error");
       }
-    
-      return res.redirect(installUrl); 
+
+      return res.redirect(installUrl);
     });
 
   } catch (err) {
@@ -315,6 +313,7 @@ app.get('/shopify/install', (req, res) => {
     return res.status(500).send("Internal server error");
   }
 });
+
 
 
 async function registerWebhooks(shop, accessToken) {
