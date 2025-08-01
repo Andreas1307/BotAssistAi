@@ -326,12 +326,13 @@ app.get('/shopify/install', (req, res) => {
     req.session.shopify_host = host;
 
     const installUrl =
-      `https://${shopLower}/admin/oauth/authorize` +
-      `?client_id=${process.env.SHOPIFY_API_KEY}` +
-      `&scope=${process.env.SHOPIFY_SCOPES}` +
-      `&state=${state}` +
-      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-      `&host=${encodeURIComponent(host)}`;
+    `https://${shopLower}/admin/oauth/authorize` +
+    `?client_id=${process.env.SHOPIFY_API_KEY}` +
+    `&scope=${process.env.SHOPIFY_SCOPES}` +
+    `&state=${state}` +
+    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+    `&host=${encodeURIComponent(host)}`;
+  
 
     console.log("✅ [INSTALL] Generated state:", state);
     return res.redirect(installUrl);
@@ -379,7 +380,7 @@ app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state } = req.query;
   const storedState = req.session.shopify_state;
   const host = req.query.host || req.session.shopify_host;
-  const userId = req.session.userId;
+  
 
   console.log("🔐 Stored state:", storedState);
   console.log("📥 Received state:", state);
@@ -418,20 +419,7 @@ app.get('/shopify/callback', async (req, res) => {
     `, [normalizedShop, accessToken, accessToken]);
 
     // ✅ Attach to current logged-in user
-    if (userId) {
-      await pool.query(`
-        UPDATE users
-        SET 
-          shopify_shop_domain = ?, 
-          shopify_access_token = ?, 
-          shopify_installed_at = NOW()
-        WHERE user_id = ?
-      `, [normalizedShop, accessToken, userId]);
-
-      console.log(`✅ Shopify data saved for user ID ${userId}`);
-    } else {
-      console.warn("⚠️ No userId in session – data not saved to user");
-    }
+   
 
     // ✅ Register Webhooks and ScriptTags
     await registerScriptTag(normalizedShop, accessToken);
