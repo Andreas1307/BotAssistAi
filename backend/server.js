@@ -299,7 +299,7 @@ app.get('/shopify/install', (req, res) => {
       `&host=${encodeURIComponent(host)}`;
 
     console.log("✅ [INSTALL] Using state:", state);
-    console.log("Before saving session:", req.session);
+    console.log("Before saving session:", req.session);    
     req.session.save(err => {
       console.log("🔐 Cookies sent:", req.headers.cookie);
 
@@ -317,6 +317,15 @@ app.get('/shopify/install', (req, res) => {
   }
 });
 
+app.get('/clear-cookies', (req, res) => {
+  res.clearCookie('connect.sid', {
+    domain: '.botassistai.com',
+    path: '/',
+    secure: true,
+    sameSite: 'none',
+  });
+  res.send('Old session cookies cleared');
+});
 
 
 async function registerWebhooks(shop, accessToken) {
