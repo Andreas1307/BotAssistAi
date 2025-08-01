@@ -273,6 +273,22 @@ function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
 }
 
+
+
+app.use((req, res, next) => {
+  const cookies = req.headers.cookie?.split(';').map(c => c.trim()) || [];
+  const sidCookies = cookies.filter(c => c.startsWith('connect.sid='));
+  if (sidCookies.length > 1) {
+    console.warn("⚠️ Multiple connect.sid cookies detected, trimming to the latest");
+    const trimmed = sidCookies[sidCookies.length - 1];
+    req.headers.cookie = cookies
+      .filter(c => !c.startsWith('connect.sid='))
+      .concat(trimmed)
+      .join('; ');
+  }
+  next();
+});
+ 
 app.get('/shopify/install', (req, res) => {
   try {
     const { shop } = req.query;
@@ -281,6 +297,7 @@ app.get('/shopify/install', (req, res) => {
     if (!shopLower || !isValidShop(shopLower)) {
       return res.status(400).send('❌ Invalid shop parameter');
     }
+    console.log("🔑 Session ID in use:", req.sessionID);
 
     // ✅ Only generate state if not already present in session
     const state = req.session.shopify_state || crypto.randomBytes(16).toString('hex');
@@ -300,10 +317,6 @@ app.get('/shopify/install', (req, res) => {
 
     console.log("✅ [INSTALL] Using state:", state);
     console.log("Before saving session:", req.session);    
-    req.session.reload((reloadErr) => {
-      if (reloadErr) console.error("Reload error:", reloadErr);
-      else console.log("Session reloaded successfully");
-    
       req.session.save((err) => {
         if (err) {
           console.error("Session save error:", err);
@@ -311,7 +324,6 @@ app.get('/shopify/install', (req, res) => {
         }
         return res.redirect(installUrl);
       });
-    });
 
   } catch (err) {
     console.error("❌ /shopify/install failed:", err);
@@ -373,6 +385,7 @@ app.get('/shopify/callback', async (req, res) => {
     console.log("🔍 Full session object:", req.session);
     console.log("🧠 Session keys:", Object.keys(req.session));
     console.log("📩 Cookies received:", req.headers.cookie);
+    console.log("🔑 Session ID in use:", req.sessionID);
 
 
     // ✅ Validate input
