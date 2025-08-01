@@ -105,9 +105,9 @@ app.use(session({
   proxy: true,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',        // ✅ required for sameSite='none'
-    sameSite: 'none',    // ✅ needed for cross-site OAuth flow
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    secure: true,      
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
