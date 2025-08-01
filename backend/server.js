@@ -48,7 +48,7 @@ const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, customSessionStorage } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
-const { Webhook } = require('@shopify/shopify-api');
+const { Webhook } = shopify;
 app.set('trust proxy', 1);
 
 app.use(cookieParser());
@@ -626,7 +626,6 @@ return rows[0]
 }
 
 initialisePassport(passport, getUserByEmail, getUserById)
-
 
 
 
