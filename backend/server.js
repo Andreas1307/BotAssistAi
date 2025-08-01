@@ -108,7 +108,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: '.botassistai.com' 
+    domain: 'api.botassistai.com' 
   }
 }));
 
@@ -333,7 +333,7 @@ app.get('/shopify/install', (req, res) => {
 
 app.get('/clear-cookies', (req, res) => {
   res.clearCookie('connect.sid', {
-    domain: '.botassistai.com',
+    domain: 'api.botassistai.com',
     path: '/',
     secure: true,
     sameSite: 'none',
