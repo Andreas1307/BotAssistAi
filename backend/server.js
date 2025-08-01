@@ -107,7 +107,8 @@ app.use(session({
     httpOnly: true,
     secure: true,      
     sameSite: 'none',
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 24 * 60 * 60 * 1000,
+    domain: '.botassistai.com' 
   }
 }));
 
@@ -153,9 +154,7 @@ app.get("/api/sessions", async (req, res) => {
   const sessions = require("./sessions.json");
   res.json(Object.keys(sessions));
 });
-                                   
-
-// sa fac asta , sa iau informatia de pe gpt CSRF
+                                  
 
 
 
