@@ -600,9 +600,9 @@ async function registerGdprWebhooks(session, shop) {
   const { accessToken } = session;
 
   const gdprWebhooks = [
-    { topic: "CUSTOMERS_DATA_REQUEST", path: "/shopify/gdpr/customers/data_request" },
-    { topic: "CUSTOMERS_REDACT", path: "/shopify/gdpr/customers/redact" },
-    { topic: "SHOP_REDACT", path: "/shopify/gdpr/shop/redact" },
+    { topic: "customers/data_request", path: "/shopify/gdpr/customers/data_request" },
+    { topic: "customers/redact", path: "/shopify/gdpr/customers/redact" },
+    { topic: "shop/redact", path: "/shopify/gdpr/shop/redact" },
   ];
 
   for (const webhook of gdprWebhooks) {
@@ -615,7 +615,6 @@ async function registerGdprWebhooks(session, shop) {
           console.log(`✅ Received webhook ${_topic} for shop ${_shop}`);
         },
       });
-      
 
       if (response.success) {
         console.log(`✅ Registered webhook: ${webhook.topic} at ${webhook.path}`);
@@ -626,6 +625,7 @@ async function registerGdprWebhooks(session, shop) {
       console.error(`❌ Error registering webhook ${webhook.topic}:`, error);
     }
   }
+
 }
 
 
