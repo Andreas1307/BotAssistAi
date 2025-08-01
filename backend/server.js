@@ -608,14 +608,14 @@ async function registerGdprWebhooks(session, shop) {
   for (const webhook of gdprWebhooks) {
     try {
       const response = await shopify.webhooks.register({
-        shop,
-        accessToken,
+        session,
         path: webhook.path,
         topic: webhook.topic,
         webhookHandler: async (_topic, _shop, _body) => {
           console.log(`✅ Received webhook ${_topic} for shop ${_shop}`);
         },
       });
+      
 
       if (response.success) {
         console.log(`✅ Registered webhook: ${webhook.topic} at ${webhook.path}`);
