@@ -1,4 +1,3 @@
-// shopify.js
 const { shopifyApi, LATEST_API_VERSION } = require("@shopify/shopify-api");
 require("@shopify/shopify-api/adapters/node");
 const { storeCallback, loadCallback, deleteCallback } = require("./sessionStorage");
