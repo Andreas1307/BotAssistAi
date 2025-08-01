@@ -123,100 +123,7 @@ app.get("/auth", async (req, res) => {
   }
 });
 
-app.get("/auth/callback", async (req, res) => {
-  try {
-    const result = await shopify.auth.callback({
-      rawRequest: req,
-      rawResponse: res,
-      isOnline: true,
-    });
 
-    const session = result.session;
-
-    if (!session || !session.shop || !session.accessToken) {
-      console.log("❌ Missing session data");
-      return res.status(400).send("Session missing required data.");
-    }
-
-    const shop = session.shop;
-    const accessToken = session.accessToken;
-
-    // ✅ Store session
-    const { storeCallback } = require("./sessionStorage");
-    await storeCallback(session);
-
-    // ✅ Fetch shop data from Shopify
-    const client = new shopify.clients.Rest({ session });
-    const response = await client.get({ path: "shop" });
-    const shopData = response.body.shop;
-
-    const email = shopData?.email || `${shop}`;
-    const username = shopData?.name || shop;
-    const domain = shop;
-    const rawKey = uuidv4();
-    const encryptedKey = encryptApiKey(rawKey);
-    const hashedPassword = await bcrypt.hash(uuidv4(), 10); // Generate random password (not used by Shopify users)
-
-    // ✅ Check if user already exists
-    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-
-    let user;
-    if (existingUser.length > 0) {
-      user = existingUser[0];
-      console.log("✅ Existing Shopify user found:", user.username);
-    } else {
-      // ✅ Create user
-      await pool.query(`
-        INSERT INTO users (username, email, password, api_key)
-        VALUES (?, ?, ?, ?)`,
-        [username, email, hashedPassword, encryptedKey]
-      );
-
-      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-      user = newUserResult[0];
-      console.log("✅ New Shopify user created:", user.username);
-    }
-
-    // ✅ Log the user in
-    req.logIn(user, async (err) => {
-      if (err) {
-        console.error("Login error after Shopify auth:", err);
-        return res.status(500).send("Failed to log in after registration.");
-      }
-
-      // ✅ Log install in `shopify_installs` table
-      await pool.query(`
-        INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-        VALUES (?, ?, ?, NOW())
-        ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
-      `, [shop, accessToken, user.user_id]);
-
-      // ✅ Redirect into app
-      const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`;
-
-      res.set("Content-Type", "text/html");
-      res.send(`
-        <script src="https://unpkg.com/@shopify/app-bridge"></script>
-        <script>
-          const AppBridge = window["app-bridge"].default;
-          const actions = window["app-bridge"].actions;
-          const app = AppBridge({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${req.query.host}",
-            forceRedirect: true
-          });
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-        </script>
-      `);
-    });
-  } catch (err) {
-    console.error("❌ Callback error:", err);
-    if (!res.headersSent) {
-      res.status(500).send("OAuth callback failed.");
-    }
-  }
-});
 
 app.get("/api/check-session", verifySessionToken, (req, res) => {
   return res.status(200).json({ message: "Session is valid", shop: req.shopify.shop });
@@ -734,6 +641,100 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.get("/auth/callback", async (req, res) => {
+  try {
+    const result = await shopify.auth.callback({
+      rawRequest: req,
+      rawResponse: res,
+      isOnline: true,
+    });
+
+    const session = result.session;
+
+    if (!session || !session.shop || !session.accessToken) {
+      console.log("❌ Missing session data");
+      return res.status(400).send("Session missing required data.");
+    }
+
+    const shop = session.shop;
+    const accessToken = session.accessToken;
+
+    // ✅ Store session
+    const { storeCallback } = require("./sessionStorage");
+    await storeCallback(session);
+
+    // ✅ Fetch shop data from Shopify
+    const client = new shopify.clients.Rest({ session });
+    const response = await client.get({ path: "shop" });
+    const shopData = response.body.shop;
+
+    const email = shopData?.email || `${shop}`;
+    const username = shopData?.name || shop;
+    const domain = shop;
+    const rawKey = uuidv4();
+    const encryptedKey = encryptApiKey(rawKey);
+    const hashedPassword = await bcrypt.hash(uuidv4(), 10); // Generate random password (not used by Shopify users)
+
+    // ✅ Check if user already exists
+    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+
+    let user;
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+      console.log("✅ Existing Shopify user found:", user.username);
+    } else {
+      // ✅ Create user
+      await pool.query(`
+        INSERT INTO users (username, email, password, api_key)
+        VALUES (?, ?, ?, ?)`,
+        [username, email, hashedPassword, encryptedKey]
+      );
+
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+      console.log("✅ New Shopify user created:", user.username);
+    }
+
+    // ✅ Log the user in
+    req.logIn(user, async (err) => {
+      if (err) {
+        console.error("Login error after Shopify auth:", err);
+        return res.status(500).send("Failed to log in after registration.");
+      }
+
+      // ✅ Log install in `shopify_installs` table
+      await pool.query(`
+        INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+        VALUES (?, ?, ?, NOW())
+        ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
+      `, [shop, accessToken, user.user_id]);
+
+      // ✅ Redirect into app
+      const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`;
+
+      res.set("Content-Type", "text/html");
+      res.send(`
+        <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        <script>
+          const AppBridge = window["app-bridge"].default;
+          const actions = window["app-bridge"].actions;
+          const app = AppBridge({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${req.query.host}",
+            forceRedirect: true
+          });
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
+        </script>
+      `);
+    });
+  } catch (err) {
+    console.error("❌ Callback error:", err);
+    if (!res.headersSent) {
+      res.status(500).send("OAuth callback failed.");
+    }
+  }
+});
 
 app.post('/shopify/session-attach', (req, res) => {
   console.log("📦 Received body in session-attach:", req.body);
