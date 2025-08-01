@@ -533,39 +533,7 @@ app.get('/chatbot-loader.js', async (req, res) => {
   }
 });
 
-app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
-    console.warn("🔐 Invalid HMAC on data_request");
-    return res.status(401).send('Invalid HMAC');
-  }
 
-  const parsed = JSON.parse(req.body.toString('utf8'));
-  console.log("📦 GDPR: Customer Data Request", parsed);
-
-  res.sendStatus(200);
-});
-
-app.post('/shopify/gdpr/customers/redact', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
-    return res.status(401).send('Invalid HMAC');
-  }
-
-  const parsed = JSON.parse(req.body.toString('utf8'));
-  console.log("🗑️ GDPR: Customer Redact Request", parsed);
-
-  res.sendStatus(200);
-});
-
-app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }), (req, res) => {
-  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
-    return res.status(401).send('Invalid HMAC');
-  }
-
-  const parsed = JSON.parse(req.body.toString('utf8'));
-  console.log("🏪 GDPR: Shop Redact Request", parsed);
-
-  res.sendStatus(200);
-});
 
 function verifyWebhookRaw(req, secret) {
   const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
@@ -839,6 +807,41 @@ app.get("/auth/callback", async (req, res) => {
       res.status(500).send("OAuth callback failed.");
     }
   }
+});
+
+
+app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
+    console.warn("🔐 Invalid HMAC on data_request");
+    return res.status(401).send('Invalid HMAC');
+  }
+
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("📦 GDPR: Customer Data Request", parsed);
+
+  res.sendStatus(200);
+});
+
+app.post('/shopify/gdpr/customers/redact', express.raw({ type: 'application/json' }), (req, res) => {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
+    return res.status(401).send('Invalid HMAC');
+  }
+
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("🗑️ GDPR: Customer Redact Request", parsed);
+
+  res.sendStatus(200);
+});
+
+app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }), (req, res) => {
+  if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
+    return res.status(401).send('Invalid HMAC');
+  }
+
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("🏪 GDPR: Shop Redact Request", parsed);
+
+  res.sendStatus(200);
 });
 
 app.post('/shopify/session-attach', (req, res) => {
