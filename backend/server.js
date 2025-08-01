@@ -297,7 +297,6 @@ app.get('/shopify/install', (req, res) => {
     if (!shopLower || !isValidShop(shopLower)) {
       return res.status(400).send('❌ Invalid shop parameter');
     }
-    console.log("🔑 Session ID in use:", req.sessionID);
 
     // ✅ Only generate state if not already present in session
     const state = req.session.shopify_state || crypto.randomBytes(16).toString('hex');
@@ -314,9 +313,7 @@ app.get('/shopify/install', (req, res) => {
       `&state=${state}` +
       `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
       `&host=${encodeURIComponent(host)}`;
-
-    console.log("✅ [INSTALL] Using state:", state);
-    console.log("Before saving session:", req.session);    
+   
       req.session.save((err) => {
         if (err) {
           console.error("Session save error:", err);
@@ -385,12 +382,12 @@ app.get('/shopify/callback', async (req, res) => {
     const storedState = req.session.shopify_state;
     const host = req.query.host || req.session.shopify_host;
 
-    console.log("🔐 Stored state:", storedState);
-    console.log("📥 Received state:", state);
-    console.log("🔍 Full session object:", req.session);
-    console.log("🧠 Session keys:", Object.keys(req.session));
-    console.log("📩 Cookies received:", req.headers.cookie);
-    console.log("🔑 Session ID in use:", req.sessionID);
+  //  console.log("🔐 Stored state:", storedState);
+  //  console.log("📥 Received state:", state);
+   // console.log("🔍 Full session object:", req.session);
+   // console.log("🧠 Session keys:", Object.keys(req.session));
+   // console.log("📩 Cookies received:", req.headers.cookie);
+   // console.log("🔑 Session ID in use:", req.sessionID);
 
 
     // ✅ Validate input
