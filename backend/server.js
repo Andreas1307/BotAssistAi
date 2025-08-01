@@ -332,13 +332,18 @@ app.get('/shopify/install', (req, res) => {
 });
 
 app.get('/clear-cookies', (req, res) => {
-  res.clearCookie('connect.sid', {
-    domain: 'api.botassistai.com',
+  const options = {
     path: '/',
     secure: true,
     sameSite: 'none',
-  });
-  res.send('Old session cookies cleared');
+  };
+
+  // Clear variants that may exist
+  res.clearCookie('connect.sid', { ...options, domain: 'api.botassistai.com' });
+  res.clearCookie('connect.sid', { ...options, domain: '.botassistai.com' });
+  res.clearCookie('connect.sid', { ...options }); // no domain
+
+  res.send('✅ All session cookies cleared');
 });
 
 
