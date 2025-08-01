@@ -433,7 +433,6 @@ app.get('/shopify/callback', async (req, res) => {
 
   console.log("🔐 Stored state:", storedState);
   console.log("📥 Received state:", state);
-  console.log("🧑 Session userId:", userId);
 
   if (!isValidShop(shop)) {
     return res.status(400).send('❌ Invalid shop domain');
