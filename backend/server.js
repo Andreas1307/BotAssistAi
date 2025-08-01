@@ -92,7 +92,7 @@ app.use(cors({
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   proxy: true,
   cookie: {
     httpOnly: true,
@@ -348,6 +348,7 @@ app.get('/shopify/callback', async (req, res) => {
 
     console.log("🔐 Stored state:", storedState);
     console.log("📥 Received state:", state);
+    console.log("🔍 Full session object:", req.session);
 
     // ✅ Validate input
     if (!shop || !isValidShop(shop)) {
