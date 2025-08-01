@@ -45,7 +45,7 @@ const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
 const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, Webhook, customSessionStorage } = require('./shopify');
+const { shopify, Webhook } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 app.set('trust proxy', 1);
