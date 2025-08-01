@@ -630,31 +630,21 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 
 async function registerGdprWebhooks(session) {
-  const shop = session.shop;
-  const accessToken = session.accessToken;
+  const { shop, accessToken } = session;
 
   const gdprWebhooks = [
-    {
-      topic: 'customers/data_request',
-      path: '/shopify/gdpr/customers/data_request',
-    },
-    {
-      topic: 'customers/redact',
-      path: '/shopify/gdpr/customers/redact',
-    },
-    {
-      topic: 'shop/redact',
-      path: '/shopify/gdpr/shop/redact',
-    },
+    { topic: 'customers/data_request', path: '/shopify/gdpr/customers/data_request' },
+    { topic: 'customers/redact', path: '/shopify/gdpr/customers/redact' },
+    { topic: 'shop/redact', path: '/shopify/gdpr/shop/redact' },
   ];
 
   for (const webhook of gdprWebhooks) {
     try {
-      const response = await Webhook.Registry.register({
+      const response = await shopify.webhooks.Registry.register({
         shop,
         accessToken,
-        path: webhook.path,
         topic: webhook.topic,
+        path: webhook.path,
         webhookHandler: async (topic, shop, body) => {
           console.log(`Received webhook ${topic} for shop ${shop}`);
         },
@@ -670,7 +660,6 @@ async function registerGdprWebhooks(session) {
     }
   }
 }
-
 
 
 app.use(express.json());
