@@ -48,8 +48,16 @@ const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, Webhook } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
-app.set('trust proxy', 1);
+const MySQLStore = require('express-mysql-session')(session);
 
+const sessionStore = new MySQLStore({
+  host: process.env.DATABASE_HOST,
+  user: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE
+});
+
+app.set('trust proxy', 1);
 app.use(cookieParser());
 
 
@@ -93,12 +101,13 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: sessionStore, // ✅ use persistent store
   proxy: true,
   cookie: {
     httpOnly: true,
-    secure: true,          
-    sameSite: 'none',   
-    maxAge: 24 * 60 * 60 * 1000,
+    secure: true,        // ✅ required for sameSite='none'
+    sameSite: 'none',    // ✅ needed for cross-site OAuth flow
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
 }));
 
