@@ -795,11 +795,10 @@ app.get("/auth/callback", async (req, res) => {
     const email = shopData?.email || `${shop}`;
     const username = shopData?.name || shop;
     const domain = shop;
-    const rawKey = uuidv4();
+    const rawKey = Math.random().toString(36).slice(-8);
     const encryptedKey = encryptApiKey(rawKey);
-    const hashedPassword = await bcrypt.hash(uuidv4(), 10); // Generate random password (not used by Shopify users)
+    const hashedPassword = await bcrypt.hash(rawKey, 10); 
 
-    // ✅ Check if user already exists
     const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
 
     let user;
@@ -807,7 +806,6 @@ app.get("/auth/callback", async (req, res) => {
       user = existingUser[0];
       console.log("✅ Existing Shopify user found:", user.username);
     
-      // Update shopify fields on existing user
       await pool.query(`
         UPDATE users
         SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
