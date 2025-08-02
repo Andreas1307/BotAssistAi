@@ -48,6 +48,7 @@ const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, Webhook } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
+const { Webhook, DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
 
 const sessionStore = new MySQLStore({
@@ -830,19 +831,22 @@ app.get("/auth/callback", async (req, res) => {
 
 
     try {
-      const response = await shopify.webhooks.register({
-        session,
-        topic: "APP_UNINSTALLED",
+      const response = await Webhook.Registry.register({
+        shop: session.shop,
+        accessToken: session.accessToken,
         path: "/shopify/uninstall",
+        topic: "APP_UNINSTALLED",
+        webhookHandler: async (topic, shop, body) => {
+          console.log("🔔 Webhook APP_UNINSTALLED received in registry:", shop);
+        },
         deliveryMethod: DeliveryMethod.Http,
       });
-      
+    
       if (response.success) {
-        console.log("✅ APP_UNINSTALLED webhook registered manually");
+        console.log("✅ APP_UNINSTALLED webhook registered");
       } else {
         console.error("❌ Webhook registration failed:", response.result);
       }
-      
     } catch (err) {
       console.error("❌ Exception during webhook registration:", err);
     }
