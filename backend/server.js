@@ -906,6 +906,8 @@ app.get("/auth/callback", async (req, res) => {
       },
       type: "json",
     });
+  
+    console.log("✅ Uninstall webhook registered:", responseUninstall?.body);
 
 
 
