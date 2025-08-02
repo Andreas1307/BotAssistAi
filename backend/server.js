@@ -889,25 +889,8 @@ app.get("/auth/callback", async (req, res) => {
         console.log('✅ Password email sent:', info.response);
       });
 
-const responseUninstall = await client.post({
-    path: "webhooks",
-    data: {
-      webhook: {
-        topic: "APP_UNINSTALLED",
-        address: `${process.env.HOST}/shopify/uninstall`,
-        format: "json",
-      },
-    },
-    type: "json",
-  });
-
-  console.log("✅ Uninstall webhook registered:", responseUninstall?.body);
-
     }
-   
-
-
-     
+  
 
 
 
