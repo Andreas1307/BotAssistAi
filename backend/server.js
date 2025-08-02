@@ -521,7 +521,80 @@ app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async 
   const shop = req.headers['x-shopify-shop-domain'];
   console.log("🔌 App uninstalled:", shop, parsed);
 
-  // ... your uninstall logic here
+
+  const [[user]] = await pool.query(
+    'SELECT * FROM users WHERE shopify_shop_domain = ?',
+    [shop]
+  );
+
+  if (!user) {
+    console.warn(`⚠️ No user found for shop ${shop}`);
+    return res.status(404).send('User not found');
+  }
+
+  const email = user.email;
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Your Account Password for Our App",
+    html: `
+   <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
+
+<img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
+
+<h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">Hey there!</h1>
+
+<p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
+We're sorry to see you go. <strong>Your store has uninstalled the BotAssistAI app.</strong><br />
+If this was a mistake or you'd like to come back, you can reinstall anytime from the Shopify App Store.
+</p>
+
+<h3 style="color: #00F5D4; font-size: 22px;">We'll be here if you return.</h3>
+
+<p style="margin-top: 35px; font-size: 14px; color: #aaa;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
+
+<div style="margin-top: 25px;">
+<a href="https://facebook.com/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" alt="Facebook" width="28">
+</a>
+<a href="https://instagram.com/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" alt="Instagram" width="28">
+</a>
+<a href="https://twitter.com/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" alt="Twitter" width="28">
+</a>
+<a href="https://linkedin.com/company/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" alt="LinkedIn" width="28">
+</a>
+</div>
+
+<p style="font-size: 12px; color: #666; margin-top: 20px;">
+You received this email because you had an account with us. 
+<a href="https://botassistai.com/unsubscribe" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
+</p>
+</div>
+
+
+    `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.error('❌ Error sending password email:', error);
+    }
+    console.log('✅ Password email sent:', info.response);
+  });
 
   res.sendStatus(200);
 });
@@ -775,7 +848,8 @@ app.get("/auth/callback", async (req, res) => {
 
 <p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
   Your <strong>account </strong> has been created. Here is your temporary password:  
-  ${rawKey}
+  <br />
+  <strong>${rawKey}</strong>
 </p>
 
 

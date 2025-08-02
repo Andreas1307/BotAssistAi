@@ -72,22 +72,23 @@ const Homepage = () => {
 
   const redirectToInstall = async (shop) => {
     try {
-      const hasInstalled = localStorage.getItem("shopifyInstalled") === "true";
-      if (hasInstalled) {
-        console.log("Already installed. Skipping redirect.");
+      const lastInstalledShop = localStorage.getItem("shopifyInstalledShop");
+      if (lastInstalledShop === shop) {
+        console.log("Already installed for this shop. Skipping redirect.");
         return;
       }
   
-      // 🚨 SKIPPING AUTH-CHECK AND SESSION ATTACH FOR NOW
       const installUrl = `https://api.botassistai.com/shopify/install?shop=${shop}`;
       console.log("Redirecting directly to:", installUrl);
   
-      localStorage.setItem("shopifyInstalled", "true");
+      // Update localStorage before redirecting
+      localStorage.setItem("shopifyInstalledShop", shop);
       window.location.href = installUrl;
     } catch (err) {
       console.error("❌ Redirect failed:", err);
     }
   };
+  
   
   
     //useShopifyInstallRedirect();
