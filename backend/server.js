@@ -892,14 +892,25 @@ app.get("/auth/callback", async (req, res) => {
 
 
     }
-    const success = await shopify.webhooks.register({
-      path: "/shopify/uninstall",
-      topic: "APP_UNINSTALLED",
-      accessToken: session.accessToken,
-      shop: session.shop,
+   
+
+
+    const responseUninstall = await client.post({
+      path: "webhooks",
+      data: {
+        webhook: {
+          topic: "APP_UNINSTALLED",
+          address: `${process.env.HOST}/shopify/uninstall`,
+          format: "json",
+        },
+      },
+      type: "json",
     });
-    
-    console.log("📦 Uninstall webhook registration:", success ? "✅ Success" : "❌ Failed");
+
+
+
+
+
     // ✅ Log the user in
     req.logIn(user, async (err) => {
       if (err) {
