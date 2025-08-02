@@ -512,24 +512,26 @@ app.post('/api/link-shop-to-user', async (req, res) => {
   }
 });
 
-app.post('/shopify/uninstall', express.raw({ type: 'application/json' }), async (req, res) => {
-  const hmacHeader = req.headers['x-shopify-hmac-sha256'];
+app.post("/shopify/uninstall", async (req, res) => {
+  try {
+    const crypto = require("crypto");
+    const hmacHeader = req.headers["x-shopify-hmac-sha256"];
+    const rawBody = req.body;
 
-  const crypto = require('crypto');
-  const generatedHash = crypto
-    .createHmac('sha256', process.env.SHOPIFY_API_SECRET)
-    .update(req.body, 'utf8')
-    .digest('base64');
+    const hash = crypto
+      .createHmac("sha256", process.env.SHOPIFY_API_SECRET)
+      .update(rawBody, "utf8")
+      .digest("base64");
 
-  if (generatedHash !== hmacHeader) {
-    console.warn('❌ Invalid HMAC for APP_UNINSTALLED webhook');
-    return res.status(401).send('Invalid HMAC');
-  }
+    if (hmacHeader !== hash) {
+      console.warn("❌ Invalid webhook signature");
+      return res.status(401).send("Invalid signature");
+    }
 
-  const shop = req.headers['x-shopify-shop-domain'];
-  const parsed = JSON.parse(req.body.toString('utf8'));
+    const shop = req.headers["x-shopify-shop-domain"];
+    const payload = JSON.parse(rawBody.toString());
 
-  console.log("🔌 App uninstalled:", shop, parsed);
+    console.log("🔌 App uninstalled:", shop);
 
 
 
@@ -608,6 +610,10 @@ You received this email because you had an account with us.
   });
 
   res.sendStatus(200);
+} catch (err) {
+  console.error("❌ Error handling APP_UNINSTALLED webhook:", err);
+  res.status(500).send("Internal error");
+}
 });
 
 app.get('/chatbot-loader.js', async (req, res) => {
@@ -823,33 +829,25 @@ app.get("/auth/callback", async (req, res) => {
 
 
 
-   try {
-    const registration = await shopify.webhooks.register({
-      session,
-      path: "/shopify/uninstall",
-      topic: "APP_UNINSTALLED",
-      webhookHandler: async (topic, shop, body) => {
-        console.log("🔌 App uninstalled via webhookHandler:", shop);
-      },
-    });
+    try {
+      const registration = await shopify.webhooks.register({
+        session,
+        topic: "APP_UNINSTALLED",
+        path: "/shopify/uninstall",
+        webhookHandler: async (topic, shop, body) => {
+          console.log("🔌 App uninstalled via handler:", shop);
+        },
+      });
     
-    if (!registration.success) {
-      console.error("❌ Failed to register APP_UNINSTALLED webhook", registration.result);
-    } else {
-      console.log("✅ APP_UNINSTALLED webhook registered");
+      if (registration.success) {
+        console.log("✅ APP_UNINSTALLED webhook registered");
+      } else {
+        console.error("❌ Webhook registration failed:", registration.result);
+      }
+    } catch (err) {
+      console.error("❌ Exception during webhook registration:", err);
     }
-} catch (err) {
-  if (
-    err instanceof SyntaxError &&
-    err.message.includes("Unexpected end of JSON input")
-  ) {
-    console.warn("⚠️ Webhook created but response body was empty (204 No Content)");
-  } else {
-    console.error("❌ Failed to register webhook:", err);
-    throw err;
-  }
-}
-
+    
 
 
 
