@@ -48,7 +48,7 @@ const fetchWebhooks = require('./fetchWebhooks');
 const { shopify, Webhook } = require('./shopify');
 const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
-const { Webhook, DeliveryMethod } = require("@shopify/shopify-api");
+const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
 
 const sessionStore = new MySQLStore({
