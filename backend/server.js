@@ -830,20 +830,16 @@ app.get("/auth/callback", async (req, res) => {
 
 
     try {
-      const registration = await shopify.webhooks.register({
-        session,
-        topic: "APP_UNINSTALLED",
-        path: "/shopify/uninstall",
-        webhookHandler: async (topic, shop, body) => {
-          console.log("🔌 App uninstalled via handler:", shop);
-        },
-      });
-    
-      if (registration.success) {
-        console.log("✅ APP_UNINSTALLED webhook registered");
+      const registration = await shopify.webhooks.register({ session });
+
+      console.log("🔎 Webhook registration result:", registration);
+      
+      if (registration?.APP_UNINSTALLED?.success) {
+        console.log("✅ APP_UNINSTALLED webhook registered successfully");
       } else {
-        console.error("❌ Webhook registration failed:", registration.result);
+        console.error("❌ Webhook registration failed:", registration?.APP_UNINSTALLED);
       }
+      
     } catch (err) {
       console.error("❌ Exception during webhook registration:", err);
     }

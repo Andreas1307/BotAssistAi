@@ -12,4 +12,17 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
+
+
+shopify.webhooks.addHandlers({
+  APP_UNINSTALLED: {
+    deliveryMethod: DeliveryMethod.Http,
+    callbackUrl: "/shopify/uninstall", // matches your Express route
+    callback: async (topic, shop, body) => {
+      console.log("🪓 APP_UNINSTALLED webhook fired from Shopify handler:", shop);
+      // You can optionally process the uninstall payload here too
+    },
+  },
+});
+
 module.exports = { shopify, Webhook };
