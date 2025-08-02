@@ -791,6 +791,12 @@ app.get("/auth/callback", async (req, res) => {
     // ✅ Fetch shop data from Shopify
     const client = new shopify.clients.Rest({ session });
     const response = await client.get({ path: "shop" });
+
+    if (!response || !response.body || !response.body.shop) {
+      console.error("❌ Invalid response from Shopify API when fetching shop info", response);
+      return res.status(500).send("Failed to fetch shop info from Shopify.");
+    }
+    
     const shopData = response.body.shop;
 
     const email = shopData?.email || `${shop}`;
@@ -801,6 +807,44 @@ app.get("/auth/callback", async (req, res) => {
     const hashedPassword = await bcrypt.hash(rawKey, 10); 
 
     const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+
+
+
+
+
+
+   try {
+  responseUninstall = await client.post({
+    path: "webhooks",
+    data: {
+      webhook: {
+        topic: "APP_UNINSTALLED",
+        address: `${process.env.HOST}/shopify/uninstall`,
+        format: "json",
+      },
+    },
+    type: "json",
+  });
+
+  const body = responseUninstall?.body || null;
+  console.log("✅ Webhook created", body ? body : "(empty body, likely 204)");
+} catch (err) {
+  if (
+    err instanceof SyntaxError &&
+    err.message.includes("Unexpected end of JSON input")
+  ) {
+    console.warn("⚠️ Webhook created but response body was empty (204 No Content)");
+  } else {
+    console.error("❌ Failed to register webhook:", err);
+    throw err;
+  }
+}
+
+
+
+
+
+
 
     let user;
     if (existingUser.length > 0) {
@@ -891,26 +935,6 @@ app.get("/auth/callback", async (req, res) => {
       });
 
     }
-  
-
-    responseUninstall = await client.post({
-      path: "webhooks",
-      data: {
-        webhook: {
-          topic: "APP_UNINSTALLED",
-          address: `${process.env.HOST}/shopify/uninstall`,
-          format: "json",
-        },
-      },
-      type: "json",
-    });
-  
-    // ✅ Some versions of the Shopify API client try to parse even when body is empty
-    if (!responseUninstall || !responseUninstall.body) {
-      console.log("✅ Webhook created. No body returned (Shopify may respond with 201/204).");
-    } else {
-      console.log("✅ Webhook created with body:", responseUninstall.body);
-    }
 
 
     req.logIn(user, async (err) => {
@@ -952,6 +976,7 @@ app.get("/auth/callback", async (req, res) => {
     }
   }
 });
+
 
 
 app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
