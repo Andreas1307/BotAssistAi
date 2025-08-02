@@ -764,6 +764,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/auth/callback", async (req, res) => {
+  let responseUninstall;
   try {
     const result = await shopify.auth.callback({
       rawRequest: req,
@@ -892,11 +893,26 @@ app.get("/auth/callback", async (req, res) => {
     }
   
 
+    responseUninstall = await client.post({
+      path: "webhooks",
+      data: {
+        webhook: {
+          topic: "APP_UNINSTALLED",
+          address: `${process.env.HOST}/shopify/uninstall`,
+          format: "json",
+        },
+      },
+      type: "json",
+    });
+  
+    // ✅ Some versions of the Shopify API client try to parse even when body is empty
+    if (!responseUninstall || !responseUninstall.body) {
+      console.log("✅ Webhook created. No body returned (Shopify may respond with 201/204).");
+    } else {
+      console.log("✅ Webhook created with body:", responseUninstall.body);
+    }
 
 
-
-
-    // ✅ Log the user in
     req.logIn(user, async (err) => {
       if (err) {
         console.error("Login error after Shopify auth:", err);
