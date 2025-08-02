@@ -830,7 +830,7 @@ app.get("/auth/callback", async (req, res) => {
 
 
     try {
-      const registration = await shopify.webhooks.register({ session });
+      const registration = await shopify.webhooks.registerHandlers({ session });
 
       console.log("🔎 Webhook registration result:", registration);
       
