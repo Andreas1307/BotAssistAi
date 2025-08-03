@@ -727,9 +727,6 @@ const toggleBot = () => {
 };
 
 
-
-console.log("Conv History", convHistory)
-
 if (loading) {
     return <h2>Loading...</h2>
   }
@@ -1001,23 +998,29 @@ if (loading) {
   </span>
 ) : (
   <div className="conversation-detail">
-    {convHistory.length > 0 ? (
-      <>
+  {convHistory.length > 0 ? (
+    <>
+      <ul className="chat-list">
         {convHistory.slice(0, visibleCount).map((chat, key) => (
-          <li key={key}>
-            <h3>{chat.sender_type}</h3>: {chat.message_text}
+          <li
+            key={key}
+            className={chat.sender_type === "bot" ? "bot-message" : "user-message"}
+          >
+            <strong>{chat.sender_type === "bot" ? "Bot" : "You"}:</strong> {chat.message_text}
           </li>
         ))}
-        {visibleCount < convHistory.length && (
-          <button className="load-btn" onClick={() => setVisibleCount(prev => prev + 10)}>
-            Load more
-          </button>
-        )}
-      </>
-    ) : (
-      <h2>No conversation history</h2>
-    )}
-  </div>
+      </ul>
+      {visibleCount < convHistory.length && (
+        <button className="load-btn" onClick={() => setVisibleCount(prev => prev + 10)}>
+          Load more
+        </button>
+      )}
+    </>
+  ) : (
+    <h2>No conversation history</h2>
+  )}
+</div>
+
 )}
 
   

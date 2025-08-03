@@ -1016,7 +1016,6 @@ app.post('/shopify/session-attach', (req, res) => {
 app.post("/paypal/webhook", async (req, res) => {
   const { orderID, userId } = req.body;
 
-  console.log("Received webhook request:", req.body);  // Debugging incoming request
 
   if (!orderID || !userId) {
     console.log("Error: Missing orderID or userId");  // Debugging missing orderID or userId
@@ -1038,10 +1037,7 @@ app.post("/paypal/webhook", async (req, res) => {
     });
 
     const accessToken = auth.data.access_token;
-    console.log("Received PayPal access token:", accessToken);  // Debugging access token
 
-    // Step 2: Get order details
-    console.log("Step 2: Fetching order details from PayPal...");
 
     const orderDetails = await axios.get(
       `https://api-m.paypal.com/v2/checkout/orders/${orderID}`,
@@ -1061,16 +1057,16 @@ app.post("/paypal/webhook", async (req, res) => {
       return res.status(400).json({ error: "Payment not completed" });
     }
 
+    
     // Optional: Validate paid amount
     const amount = order.purchase_units?.[0]?.amount?.value;
     console.log("Paid amount from PayPal:", amount);  // Debugging paid amount
-    if (amount !== "20.00") {
+    if (amount !== "0.00") {
       console.log("Error: Incorrect payment amount");  // Debugging incorrect amount
       return res.status(400).json({ error: "Incorrect payment amount" });
     }
 
     const customId = order.purchase_units?.[0]?.custom_id;
-    console.log("Custom ID from PayPal:", customId);  // Debugging custom ID
     if (String(customId) !== String(userId)) {
       console.log("Error: User ID mismatch in PayPal order");  // Debugging user ID mismatch
       return res.status(400).json({ error: "User ID mismatch in PayPal order" });
