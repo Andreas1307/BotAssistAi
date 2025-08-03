@@ -65,7 +65,7 @@ const Dashboard = () => {
   const [bookingIntegration, setBookingIntegration] = useState(false)
   const { shopifyInstalled, loadinging } = useShopifyInstalled();
 
-
+console.log("shopifyInstalled", shopifyInstalled)
 
 
 
@@ -737,7 +737,6 @@ const toggleBot = () => {
 if (loading) {
     return <h2>Loading...</h2>
   }
-  if (loadinging) return null;
   return (
     <div className="dashboard-container">
       <aside className="collap-sidebar">
