@@ -10,19 +10,6 @@ const shopify = shopifyApi({
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
-
-  webhooks: {
-    deliveryMethod: DeliveryMethod.Http,
-    handlers: {
-      APP_UNINSTALLED: {
-        path: "/shopify/uninstall",
-        webhookHandler: async (_topic, shop, body) => {
-          console.log("🔔 Webhook APP_UNINSTALLED fired for", shop);
-        }
-      }
-    }
-  }
-  
 });
 
 

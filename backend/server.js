@@ -831,12 +831,18 @@ app.get("/auth/callback", async (req, res) => {
 
 
     try {
-      const response = await shopify.webhooks.register({
-        session,
-        topic: "APP_UNINSTALLED",
+      const response = await Webhook.Registry.register({
+        shop: session.shop,
+        accessToken: session.accessToken,
         path: "/shopify/uninstall",
+        topic: "APP_UNINSTALLED",
         deliveryMethod: DeliveryMethod.Http,
+        webhookHandler: async (_topic, shop, body) => {
+          console.log("🔔 Webhook APP_UNINSTALLED triggered for", shop);
+          // Clean up if needed
+        },
       });
+      
       
     
       if (response.success) {
