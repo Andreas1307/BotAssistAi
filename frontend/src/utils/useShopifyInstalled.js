@@ -5,11 +5,12 @@ export function useShopifyInstalled() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const host = params.get("host");
+    const shopifyUser = params.get("shopifyUser");
 
-    if (host) {
+    if (shopifyUser === "true") {
       setShopifyInstalled(true);
     }
   }, []);
+
   return shopifyInstalled;
 }

@@ -754,7 +754,7 @@ if (loading) {
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
     // Conditionally include Bookings
-    ...(shopifyInstalled
+    ...(!shopifyInstalled
       ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
       : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
@@ -1178,7 +1178,7 @@ if (loading) {
 
 
 
-{shopifyInstalled && (
+{!shopifyInstalled && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">
