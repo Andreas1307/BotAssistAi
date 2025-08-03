@@ -606,7 +606,6 @@ const fetchConvHistory = async (loadAllChats = false) => {
 };
   useEffect(() => {
     fetchConvHistory();
-    console.log("Conv History", convHistory)
   }, [user]);
 
   // LOADING
@@ -726,6 +725,10 @@ const toggleBot = () => {
   setAiBot(newStatus);
   setBotStatus(newStatus)
 };
+
+
+
+console.log("Conv History", convHistory)
 
 if (loading) {
     return <h2>Loading...</h2>
