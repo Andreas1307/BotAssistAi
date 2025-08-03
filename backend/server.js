@@ -514,7 +514,7 @@ app.post('/api/link-shop-to-user', async (req, res) => {
   }
 });
 
-app.post("/shopify/uninstall", async (req, res) => {
+app.post("/shopify/uninstall", bodyParser.raw({ type: "application/json" }), async (req, res) => {
   try {
     const crypto = require("crypto");
     const hmacHeader = req.headers["x-shopify-hmac-sha256"];
