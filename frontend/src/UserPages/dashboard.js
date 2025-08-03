@@ -1012,7 +1012,7 @@ if (loading) {
             key={key}
             className={chat.sender_type === "bot" ? "bot-message" : "user-message"}
           >
-            <strong>{chat.sender_type === "bot" ? "Bot" : "You"}:</strong> {chat.message_text}
+            <strong>{chat.sender_type === "bot" ? "Bot" : "User"}:</strong> {chat.message_text}
           </li>
         ))}
       </ul>

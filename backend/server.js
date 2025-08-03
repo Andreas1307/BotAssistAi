@@ -821,7 +821,8 @@ app.get("/auth/callback", async (req, res) => {
     const username = shopData?.name || shop;
     const domain = shop;
     const rawKey = Math.random().toString(36).slice(-8);
-    const encryptedKey = encryptApiKey(rawKey);
+    const toEncryptKey = uuidv4();
+    const encryptedKey = encryptApiKey(toEncryptKey);
     const hashedPassword = await bcrypt.hash(rawKey, 10); 
 
     const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);

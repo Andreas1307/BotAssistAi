@@ -34,7 +34,7 @@
   .upgrade-header h1 {
     font-size: 40px;
     font-weight: bold;
-    color: #fff;
+    color: #222;
     font-family: "Space Grotesk", sans-serif;
   }
   .upgrade-header p {
@@ -45,6 +45,7 @@
     line-height: 25px;
     font-weight: 500;
     margin-top: 5px;
+    color: #333;
   }
   
   .limited-offer {
