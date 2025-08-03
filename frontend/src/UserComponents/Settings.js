@@ -255,7 +255,7 @@ const SettingsPage = () => {
         {/* Save & Reset Buttons */}
         <div className="button-group">
           <button className="save-btn" onClick={() => saveData()}>
-            Save Settings
+            Save Password
           </button>
           <button className="reset-btn" onClick={handleResetSettings}>
             Reset Settings
