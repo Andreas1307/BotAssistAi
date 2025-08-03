@@ -50,6 +50,8 @@ const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
+const { register } = require("@shopify/shopify-api/webhooks");
+
 
 const sessionStore = new MySQLStore({
   host: process.env.DATABASE_HOST,
@@ -831,7 +833,7 @@ app.get("/auth/callback", async (req, res) => {
 
 
     try {
-      const response = await Webhook.Registry.register({
+      const response = await register({
         shop: session.shop,
         accessToken: session.accessToken,
         path: "/shopify/uninstall",
@@ -839,9 +841,10 @@ app.get("/auth/callback", async (req, res) => {
         deliveryMethod: DeliveryMethod.Http,
         webhookHandler: async (_topic, shop, body) => {
           console.log("🔔 Webhook APP_UNINSTALLED triggered for", shop);
-          // Clean up if needed
+          // 🧹 Optional: clean up sessions or user data
         },
       });
+      
       
       
     
