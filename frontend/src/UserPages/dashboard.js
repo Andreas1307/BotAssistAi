@@ -582,7 +582,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
 
     if (loadAllChats) {
       setConvHistory(res.data.message);
-      console.log("Conv History", convHistory)
+
       setLoadAll(true);
       setHasMore(false); // No more to load after viewing all
     } else {
@@ -606,6 +606,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
 };
   useEffect(() => {
     fetchConvHistory();
+    console.log("Conv History", convHistory)
   }, [user]);
 
   // LOADING
