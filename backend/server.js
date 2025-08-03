@@ -827,34 +827,6 @@ app.get("/auth/callback", async (req, res) => {
     const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
 
 
-
-
-    const restClient = new shopify.clients.Rest({ session });
-
-    try {
-      const webhookResponse = await restClient.post({
-        path: "webhooks",
-        data: {
-          webhook: {
-            topic: "APP_UNINSTALLED",
-            address: "https://api.botassistai.com/shopify/uninstall",
-            format: "json"
-          },
-        },
-        type: "json",
-      });
-    
-      console.log("✅ Webhook registered manually:", webhookResponse?.body);
-    } catch (err) {
-      console.error("❌ Manual webhook registration failed!", err);
-    }
-    
-
-
-
-
-
-
     let user;
     if (existingUser.length > 0) {
       user = existingUser[0];
