@@ -14,4 +14,4 @@ const shopify = shopifyApi({
 
 
 
-module.exports = { shopify, Webhook };
+module.exports = { shopify };
