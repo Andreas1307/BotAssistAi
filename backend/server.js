@@ -832,41 +832,22 @@ app.get("/auth/callback", async (req, res) => {
     const restClient = new shopify.clients.Rest({ session });
 
     try {
-      const webhookResponse = await shopify.webhooks.register({
-        shop,
-        accessToken,
-        path: "/shopify/uninstall",
-        topic: "APP_UNINSTALLED",
-        deliveryMethod: DeliveryMethod.Http,
-        webhookHandler: async (topic, shop, body) => {
-          console.log(`🔔 Received webhook: ${topic} from ${shop}`);
+      const webhookResponse = await restClient.post({
+        path: "webhooks",
+        data: {
+          webhook: {
+            topic: "APP_UNINSTALLED",
+            address: "https://api.botassistai.com/shopify/uninstall",
+            format: "json"
+          },
         },
+        type: "json",
       });
     
-      console.log("✅ Webhook registered manually:");
+      console.log("✅ Webhook registered manually:", webhookResponse?.body);
     } catch (err) {
-      console.error("❌ Manual webhook registration failed!");
-    
-      if (err.response) {
-        const { statusCode, headers, body } = err.response;
-        console.error("Status:", statusCode);
-        console.error("Headers:", headers);
-        
-        if (headers["content-type"]?.includes("application/json")) {
-          try {
-            console.error("Body:", JSON.stringify(body, null, 2));
-          } catch {
-            console.error("Raw Body:", body);
-          }
-        } else {
-          console.error("Non-JSON Body:", body?.toString?.() || body);
-        }
-    
-      } else {
-        console.error("No response object on error:", err);
-      }
+      console.error("❌ Manual webhook registration failed!", err);
     }
-    
     
 
 
