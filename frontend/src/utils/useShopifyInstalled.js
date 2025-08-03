@@ -5,12 +5,17 @@ export function useShopifyInstalled() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // First try URL param
     const params = new URLSearchParams(window.location.search);
-    const shopifyUser = params.get("shopifyUser");
+    const fromURL = params.get("shopifyUser");
 
-    if (shopifyUser === "true") {
+    // Then fallback to localStorage
+    const fromStorage = localStorage.getItem("shopifyUser");
+
+    if (fromURL === "true" || fromStorage === "true") {
       setShopifyInstalled(true);
     }
+
     setLoading(false);
   }, []);
 

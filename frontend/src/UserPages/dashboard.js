@@ -65,7 +65,6 @@ const Dashboard = () => {
   const [bookingIntegration, setBookingIntegration] = useState(false)
   const { shopifyInstalled, loadinging } = useShopifyInstalled();
 
-console.log("shopifyInstalled", shopifyInstalled)
 
 
 
