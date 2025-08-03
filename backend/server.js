@@ -833,27 +833,32 @@ app.get("/auth/callback", async (req, res) => {
 
     try {
       const webhookResponse = await restClient.post({
-        path: 'webhooks',
+        path: "webhooks",
         data: {
           webhook: {
-            topic: 'app/uninstalled',
-            address: `https://api.botassistai.com/shopify/uninstall`,
-            format: 'json',
+            topic: "APP_UNINSTALLED",
+            address: "https://api.botassistai.com/shopify/uninstall",
+            format: "json",
           },
         },
-        type: 'json',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        type: "json",
       });
+      
     
       console.log("✅ Webhook registered manually:", webhookResponse.body);
     } catch (err) {
       console.error("❌ Manual webhook registration failed!");
       if (err.response) {
+        let responseBody = "";
+        try {
+          responseBody = JSON.stringify(err.response.body, null, 2);
+        } catch (jsonErr) {
+          responseBody = err.response.body;
+        }
+    
         console.error("Status:", err.response.statusCode);
-        console.error("Body:", err.response.body);
         console.error("Headers:", err.response.headers);
+        console.error("Body:", responseBody);
       } else {
         console.error(err);
       }
