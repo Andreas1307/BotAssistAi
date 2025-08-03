@@ -73,6 +73,7 @@
     border-radius: 10px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     font-weight: 600;
     font-family: "Space Grotesk", sans-serif;
@@ -90,7 +91,7 @@
   }
   .price {
     margin-bottom: 16px;
-    font-size: 39px;
+    font-size: 37px;
     color: #fff;
     font-weight: 700;
     margin: 5px 0;
