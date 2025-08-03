@@ -63,7 +63,9 @@ const Dashboard = () => {
   const [lastConv, setLastConv] = useState([]);
   const [integration, setIntegration] = useState(false)
   const [bookingIntegration, setBookingIntegration] = useState(false)
-  const shopifyInstalled = useShopifyInstalled();
+  const { shopifyInstalled, loadinging } = useShopifyInstalled();
+
+  if (loadinging) return null;
   let toastId;
   const showNotification = (m) => {
     if (!toast.isActive(toastId)) {
