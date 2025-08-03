@@ -832,19 +832,18 @@ app.get("/auth/callback", async (req, res) => {
     const restClient = new shopify.clients.Rest({ session });
 
     try {
-      const webhookResponse = await restClient.post({
-        path: "webhooks",
-        data: {
-          webhook: {
-            topic: "APP_UNINSTALLED",
-            address: "https://api.botassistai.com/shopify/uninstall",
-            format: "json",
-          },
+      const webhookResponse = await shopify.webhooks.register({
+        shop,
+        accessToken,
+        path: "/shopify/uninstall",
+        topic: "APP_UNINSTALLED",
+        deliveryMethod: DeliveryMethod.Http,
+        webhookHandler: async (topic, shop, body) => {
+          console.log(`🔔 Received webhook: ${topic} from ${shop}`);
         },
-        type: "json",
       });
     
-      console.log("✅ Webhook registered manually:", webhookResponse.body);
+      console.log("✅ Webhook registered manually:");
     } catch (err) {
       console.error("❌ Manual webhook registration failed!");
     
