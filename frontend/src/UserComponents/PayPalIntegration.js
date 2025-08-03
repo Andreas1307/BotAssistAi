@@ -98,7 +98,7 @@ const PayPalIntegration = () => {
                 purchase_units: [
                   {
                     amount: {
-                      value: "0.00",
+                      value: "20.00",
                     },
                     custom_id: `${user.user_id}`, 
                   }, 
@@ -122,7 +122,7 @@ const PayPalIntegration = () => {
                 showNotification("Payment sucessful!")
                 if (window.fbq) {
                   window.fbq('track', 'Purchase', {
-                    value: 0.00,
+                    value: 20.00,
                     currency: 'USD'
                   });
                 }
