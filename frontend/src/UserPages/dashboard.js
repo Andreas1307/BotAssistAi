@@ -746,32 +746,30 @@ if (loading) {
   <FaArrowLeft onClick={() => setCollap(false)} className="arrow-left" />
   <h2 className="logo-dash"> BotAssistAI</h2>
 
+
   <ul className="nav-list">
   {[
     { name: "Dashboard", icon: <FaHome />, hash: "#dash" },
     { name: "Analytics", icon: <FaChartLine />, hash: "#analytics" },
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
-    // Show Bookings only if NOT Shopify installed
-    !shopifyInstalled && {
-      name: "Bookings",
-      icon: <FaCalendarCheck />,
-      hash: "#bookings",
-    },
+    // Conditionally include Bookings
+    ...(shopifyInstalled
+      ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
+      : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
     { name: "Settings", icon: <FaCogs />, hash: "#settings" },
-  ]
-    .filter(Boolean) // remove falsy (i.e., Bookings if hidden)
-    .map((item) => (
-      <a
-        href={item.hash}
-        key={item.hash}
-        className={`nav-item ${window.location.hash === item.hash ? "active" : ""}`}
-      >
-        <span className="nav-icon">{item.icon}</span> {item.name}
-      </a>
-    ))}
+  ].map((item) => (
+    <a
+      href={item.hash}
+      key={item.hash}
+      className={`nav-item ${window.location.hash === item.hash ? "active" : ""}`}
+    >
+      <span className="nav-icon">{item.icon}</span> <a href={item.hash}>{item.name}</a>
+    </a>
+  ))}
 </ul>
+
 
 
   {!membership && <Link to={`/${user?.username}/upgrade-plan`}><button className="upgrade-btn">Upgrade Plan</button></Link>}
@@ -1177,7 +1175,7 @@ if (loading) {
     </div>
   </div>
 )}
-{!shopifyInstalled && (
+{shopifyInstalled && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">
