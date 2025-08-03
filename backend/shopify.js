@@ -1,4 +1,4 @@
-const { shopifyApi, LATEST_API_VERSION, Webhook, DeliveryMethod } = require("@shopify/shopify-api");
+const { shopifyApi, LATEST_API_VERSION, DeliveryMethod } = require("@shopify/shopify-api");
 require("@shopify/shopify-api/adapters/node");
 const { storeCallback, loadCallback, deleteCallback } = require("./sessionStorage");
 
