@@ -13,5 +13,4 @@ const shopify = shopifyApi({
 });
 
 
-
 module.exports = { shopify };
