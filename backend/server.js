@@ -843,26 +843,31 @@ app.get("/auth/callback", async (req, res) => {
         },
         type: "json",
       });
-      
     
       console.log("✅ Webhook registered manually:", webhookResponse.body);
     } catch (err) {
       console.error("❌ Manual webhook registration failed!");
+    
       if (err.response) {
-        let responseBody = "";
-        try {
-          responseBody = JSON.stringify(err.response.body, null, 2);
-        } catch (jsonErr) {
-          responseBody = err.response.body;
+        const { statusCode, headers, body } = err.response;
+        console.error("Status:", statusCode);
+        console.error("Headers:", headers);
+        
+        if (headers["content-type"]?.includes("application/json")) {
+          try {
+            console.error("Body:", JSON.stringify(body, null, 2));
+          } catch {
+            console.error("Raw Body:", body);
+          }
+        } else {
+          console.error("Non-JSON Body:", body?.toString?.() || body);
         }
     
-        console.error("Status:", err.response.statusCode);
-        console.error("Headers:", err.response.headers);
-        console.error("Body:", responseBody);
       } else {
-        console.error(err);
+        console.error("No response object on error:", err);
       }
     }
+    
     
 
 
