@@ -829,7 +829,6 @@ app.get("/auth/callback", async (req, res) => {
 
 
 
-
     const restClient = new shopify.clients.Rest({ session });
 
     try {
@@ -843,12 +842,23 @@ app.get("/auth/callback", async (req, res) => {
           },
         },
         type: 'json',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
     
       console.log("✅ Webhook registered manually:", webhookResponse.body);
     } catch (err) {
-      console.error("❌ Manual webhook registration failed:", err.response?.body || err);
+      console.error("❌ Manual webhook registration failed!");
+      if (err.response) {
+        console.error("Status:", err.response.statusCode);
+        console.error("Body:", err.response.body);
+        console.error("Headers:", err.response.headers);
+      } else {
+        console.error(err);
+      }
     }
+    
 
 
 
