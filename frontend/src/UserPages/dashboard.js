@@ -65,7 +65,11 @@ const Dashboard = () => {
   const [bookingIntegration, setBookingIntegration] = useState(false)
   const { shopifyInstalled, loadinging } = useShopifyInstalled();
 
-  if (loadinging) return null;
+
+
+
+
+
   let toastId;
   const showNotification = (m) => {
     if (!toast.isActive(toastId)) {
@@ -733,6 +737,7 @@ const toggleBot = () => {
 if (loading) {
     return <h2>Loading...</h2>
   }
+  if (loadinging) return null;
   return (
     <div className="dashboard-container">
       <aside className="collap-sidebar">
