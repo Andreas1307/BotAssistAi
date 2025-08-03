@@ -1175,6 +1175,9 @@ if (loading) {
     </div>
   </div>
 )}
+
+
+
 {shopifyInstalled && (
 
   <main className="dashboard-bookings" id="bookings">
