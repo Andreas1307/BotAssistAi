@@ -77,15 +77,19 @@ const AdminPage = () => {
         }
         fetchFreeAccounts()
     })
-const fetchMessages = async () => {
-            try {
-                const response = await axios.get(`${directory}/admin-messages`, { params: { key: key } });
-                setMessgaes(response.data.messages)
-            } catch(e) { 
-                console.log("An error occured fetching free accounts", e)
-                setMessgaes([])
-            }
+    const fetchMessages = async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-messages`, {
+            params: { key: key }
+          });
+          console.log("Fetched messages:", response.data);
+          setMessgaes(response.data.messages);
+        } catch (e) {
+          console.log("An error occurred fetching messages", e);
+          setMessgaes([]);
         }
+      };
+      
     useEffect(() => {
         fetchMessages()
     })
@@ -150,8 +154,22 @@ const fetchMessages = async () => {
                 <form onSubmit={handleMemChange}> 
                 <input type="text" placeholder="Enter Merchants Id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} required />
                 <input type="text" placeholder="Enter Merchants Email" value={membershipEmail} onChange={(e) => setMembershipEmail(e.target.value)} required/>
-                <button type="button" onClick={() => setMembershipType("Pro")}>Pro</button>
-                <button type="button" onClick={() => setMembershipType("Free")}>Default</button>
+                <div className="button-group">
+  <button
+    type="button"
+    className={membershipType === "Pro" ? "selected" : ""}
+    onClick={() => setMembershipType("Pro")}
+  >
+    Pro
+  </button>
+  <button
+    type="button"
+    className={membershipType === "Free" ? "selected" : ""}
+    onClick={() => setMembershipType("Free")}
+  >
+    Default
+  </button>
+</div>
 
                 <button type="submit">Save</button>
                 </form>
