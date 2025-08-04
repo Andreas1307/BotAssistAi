@@ -99,7 +99,7 @@ const fetchMessages = async () => {
         }
     } 
 
-    const handleMemChange = async () => {
+    const handleMemChange = async (e) => {
         e.preventDefault()
         if(membershipType === "") {
             return alert("You didnt select any Membership Type")
