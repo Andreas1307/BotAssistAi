@@ -27,7 +27,7 @@
     border-radius: 15px;
     padding: 15px 20px;
     background-color: #fff;
-    max-width: 24%;
+    max-width: auto;
 }
 .admin-box h2 {
     font-size: 25px;
