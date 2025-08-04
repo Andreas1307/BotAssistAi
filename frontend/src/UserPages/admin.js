@@ -149,7 +149,7 @@ const fetchMessages = async () => {
                 <form onSubmit={handleMemChange}> 
                 <input type="text" placeholder="Enter Merchants Id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} required />
                 <input type="text" placeholder="Enter Merchants Email" value={membershipEmail} onChange={(e) => setMembershipEmail(e.target.value)} required/>
-                <button onClick={() => membershipType("Pro")}>Pro</button> <button onClick={() => membershipType("Free")}>Default</button>
+                <button type="button" onClick={() => membershipType("Pro")}>Pro</button> <button type="button" onClick={() => membershipType("Free")}>Default</button>
                 <button type="submit">Save</button>
                 </form>
                 {error}
