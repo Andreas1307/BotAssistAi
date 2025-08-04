@@ -32,6 +32,7 @@
 .admin-box h2 {
     font-size: 25px;
     font-family: "Space Grotesk", sans-serif;
+    color: #00F5D4;
 }
 .admin-box p {
     font-weight: 500;
@@ -50,6 +51,7 @@
     margin-bottom: 10px;
     font-size: 28px;
     font-family: "Space Grotesk", sans-serif;
+    color: #00F5D4;
 }
 .admin-msg {
     width: 100%;
@@ -94,6 +96,7 @@
     font-size: 25px;
     margin-bottom: 13px;
     font-family: "Space Grotesk", sans-serif;
+    color: #00F5D4;
 }
 .admin-membership input {
     background-color: #f2f2f2;

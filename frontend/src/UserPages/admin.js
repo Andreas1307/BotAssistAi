@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import "../styling/admin.css";
 import directory from '../directory';
@@ -18,73 +18,21 @@ const AdminPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
 const [totalMessages, setTotalMessages] = useState(0);
 const messagesPerPage = 20;
-
-    const { key } = useParams();
-
-  
+const { key } = useParams();
     useEffect(() => {
       if (!key) {
         alert("Missing admin key.");
         return;
       }
     }
-    )
-const fetchDaylyConversations = async () => {
-            try {
-                const response = await axios.get(`${directory}/admin-daily-conversations` , {params: {key: key}})
-                   setDailyConversations(response.data.totalMessages)
-            } catch (e) {
-                console.log("An error occured fetching dayly conversations", e)
-                setDailyConversations(0)
-            }
-        }
-    useEffect(() => {
-        fetchDaylyConversations()
-    })
-const fetchUserCount = async () => {
-            try {
-                const response = await axios.get(`${directory}/admin-users-count`, { params: { key: key }});
-                setUsersCount(response.data.totalUsers)
-            } catch(e) { 
-                console.log("An error occured fetching dayly conversations", e)
-                setUsersCount(0)
-            }
-        }
-    useEffect(() => { 
-        fetchUserCount()
-    })
- const fetchProAccounts = async () => {
-            try {
-                const response = await axios.get(`${directory}/admin-users-pro`, { params: { key: key }});
-                setProAccounts(response.data.proUsers)
-            } catch(e) { 
-                console.log("An error occured fetching pro accounts", e)
-                setProAccounts(0)
-            }
-        }
-    useEffect(() => {
-        fetchProAccounts()
-    })
-const fetchFreeAccounts = async () => {
-            try {
-                const response = await axios.get(`${directory}/admin-users-free`, { params: { key: key }});
-                setFreeAccounts(response.data.freeUsers)
-            } catch(e) { 
-                console.log("An error occured fetching free accounts", e)
-                setFreeAccounts(0)
-            }
-        }
-    useEffect(() => {
-        fetchFreeAccounts()
-    })
-    const fetchMessages = async () => {
+    ) 
+
+  
+   
+    const fetchMessages = useCallback(async () => {
         try {
           const response = await axios.get(`${directory}/admin-messages`, {
-            params: {
-              key: key,
-              page: currentPage,
-              limit: messagesPerPage,
-            },
+            params: { key: key, page: currentPage, limit: messagesPerPage },
           });
           setMessgaes(response.data.messages);
           setTotalMessages(response.data.total);
@@ -92,13 +40,56 @@ const fetchFreeAccounts = async () => {
           console.log("An error occurred fetching messages", e);
           setMessgaes([]);
         }
-      };
+      }, [key, currentPage]);
+      
+      const fetchDaylyConversations = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-daily-conversations`, { params: { key } });
+          setDailyConversations(response.data.totalMessages);
+        } catch (e) {
+          console.log("Error fetching daily conversations", e);
+          setDailyConversations(0);
+        }
+      }, [key]);
+      
+      const fetchUserCount = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-users-count`, { params: { key } });
+          setUsersCount(response.data.totalUsers);
+        } catch (e) {
+          console.log("Error fetching user count", e);
+          setUsersCount(0);
+        }
+      }, [key]);
+      
+      const fetchProAccounts = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-users-pro`, { params: { key } });
+          setProAccounts(response.data.proUsers);
+        } catch (e) {
+          console.log("Error fetching pro accounts", e);
+          setProAccounts(0);
+        }
+      }, [key]);
+      
+      const fetchFreeAccounts = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-users-free`, { params: { key } });
+          setFreeAccounts(response.data.freeUsers);
+        } catch (e) {
+          console.log("Error fetching free accounts", e);
+          setFreeAccounts(0);
+        }
+      }, [key]);
       
       
-      useEffect(() => {
-        fetchMessages();
-      }, [currentPage]);
+    
       
+
+
+
+
+
     const deleteMessage = async (id) => {
         try {
             await axios.get(`${directory}/admin-delete-message`, { params: { key: key, id: id}})
@@ -121,6 +112,26 @@ const fetchFreeAccounts = async () => {
             setError("An error occured changing the user membership")
         }
     }
+
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+          fetchMessages();
+          fetchDaylyConversations();
+          fetchUserCount();
+          fetchProAccounts();
+          fetchFreeAccounts();
+        }, 10000); // every 10 seconds
+      
+        return () => clearInterval(interval); // cleanup
+      }, [
+        fetchMessages,
+        fetchDaylyConversations,
+        fetchUserCount,
+        fetchProAccounts,
+        fetchFreeAccounts,
+      ]);
+      
 
     return (
         <div className="admin-box">
