@@ -3778,23 +3778,31 @@ app.get("/admin-users-free" , async (req, res) => {
   }
 })
 
-app.get("/admin-messages" , async (req, res) => {
-  const { key } = req.query;
-  try {
-  if (key !== process.env.ADMIN_SECRET_KEY) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-  const query = `
-  SELECT * FROM  user_messages
-  `;
-  const [result] = await pool.query(query);
+app.get("/admin-messages", async (req, res) => {
+  const { key, page = 1, limit = 20 } = req.query;
 
-  res.json({ messages: result });
+  try {
+    if (key !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    const [result] = await pool.query(
+      `SELECT * FROM user_messages ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [parseInt(limit), offset]
+    );
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) as total FROM user_messages`
+    );
+
+    res.json({ messages: result, total });
   } catch (e) {
-    console.log("BAckend error trrying to receive the users free accounts", e)
-    return res.status(500).json({ message: "An error occured getting free accounts"})
+    console.log("Backend error retrieving messages:", e);
+    return res.status(500).json({ message: "An error occurred fetching messages" });
   }
-})
+});
 
 app.get("/admin-delete-message", async (req, res) => {
   const { key, id } = req.query;

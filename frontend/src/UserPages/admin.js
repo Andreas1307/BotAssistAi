@@ -15,6 +15,10 @@ const AdminPage = () => {
     const [membershipEmail, setMembershipEmail] = useState("")
     const [membershipType, setMembershipType] = useState("");
     const [error, setError] = useState("")
+    const [currentPage, setCurrentPage] = useState(1);
+const [totalMessages, setTotalMessages] = useState(0);
+const messagesPerPage = 20;
+
     const { key } = useParams();
 
   
@@ -25,9 +29,7 @@ const AdminPage = () => {
       }
     }
     )
-
-    useEffect(() => {
-        const fetchDaylyConversations = async () => {
+const fetchDaylyConversations = async () => {
             try {
                 const response = await axios.get(`${directory}/admin-daily-conversations` , {params: {key: key}})
                    setDailyConversations(response.data.totalMessages)
@@ -36,11 +38,10 @@ const AdminPage = () => {
                 setDailyConversations(0)
             }
         }
+    useEffect(() => {
         fetchDaylyConversations()
     })
-
-    useEffect(() => {
-        const fetchUserCount = async () => {
+const fetchUserCount = async () => {
             try {
                 const response = await axios.get(`${directory}/admin-users-count`, { params: { key: key }});
                 setUsersCount(response.data.totalUsers)
@@ -49,11 +50,10 @@ const AdminPage = () => {
                 setUsersCount(0)
             }
         }
+    useEffect(() => { 
         fetchUserCount()
     })
-
-    useEffect(() => {
-        const fetchProAccounts = async () => {
+ const fetchProAccounts = async () => {
             try {
                 const response = await axios.get(`${directory}/admin-users-pro`, { params: { key: key }});
                 setProAccounts(response.data.proUsers)
@@ -62,11 +62,10 @@ const AdminPage = () => {
                 setProAccounts(0)
             }
         }
+    useEffect(() => {
         fetchProAccounts()
     })
-
-    useEffect(() => {
-        const fetchFreeAccounts = async () => {
+const fetchFreeAccounts = async () => {
             try {
                 const response = await axios.get(`${directory}/admin-users-free`, { params: { key: key }});
                 setFreeAccounts(response.data.freeUsers)
@@ -75,24 +74,31 @@ const AdminPage = () => {
                 setFreeAccounts(0)
             }
         }
+    useEffect(() => {
         fetchFreeAccounts()
     })
     const fetchMessages = async () => {
         try {
           const response = await axios.get(`${directory}/admin-messages`, {
-            params: { key: key }
+            params: {
+              key: key,
+              page: currentPage,
+              limit: messagesPerPage,
+            },
           });
           setMessgaes(response.data.messages);
+          setTotalMessages(response.data.total);
         } catch (e) {
           console.log("An error occurred fetching messages", e);
           setMessgaes([]);
         }
       };
       
-    useEffect(() => {
-        fetchMessages()
-    })
-
+      
+      useEffect(() => {
+        fetchMessages();
+      }, [currentPage]);
+      
     const deleteMessage = async (id) => {
         try {
             await axios.get(`${directory}/admin-delete-message`, { params: { key: key, id: id}})
@@ -179,6 +185,28 @@ const AdminPage = () => {
                     <button onClick={() => deleteMessage(m.id)}>Delete</button>
                     </div>
                 ))}
+                <div className="pagination-buttons">
+  <button
+    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+    disabled={currentPage === 1}
+  >
+    Previous
+  </button>
+
+  <span>Page {currentPage}</span>
+
+  <button
+    onClick={() =>
+      setCurrentPage((prev) =>
+        prev < Math.ceil(totalMessages / messagesPerPage) ? prev + 1 : prev
+      )
+    }
+    disabled={currentPage >= Math.ceil(totalMessages / messagesPerPage)}
+  >
+    Next
+  </button>
+</div>
+
             </div>
 </div>
 

@@ -66,6 +66,18 @@
     margin-top: 7px;
     font-size: 15.5px;
 }
+.pagination-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .pagination-buttons button {
+    padding: 6px 12px;
+  }
+  
 .admin-membership {
     border-radius: 20px;
     padding: 15px 20px;
