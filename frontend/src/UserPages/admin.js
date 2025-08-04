@@ -119,7 +119,8 @@ const AdminPage = () => {
     return (
         <div className="admin-box">
         <div className="admin-page">
-            <div className="admin-boxes">
+            <div className="fHalf">
+                 <div className="admin-boxes">
                 <div className="admin-box">
                 <h2>Daily Conversations</h2>
                 <p>{dailyConversations}</p>
@@ -137,18 +138,7 @@ const AdminPage = () => {
                 <p>{freeAccounts}</p>
             </div>
             </div>
-            <div className="admin-messages">
-                <h2>Messages</h2>
-                {messages.map((m, key) => (
-                    <div className="admin-msg" key={key}>
-                    <p><strong>Message id:</strong> {m.id}</p>
-                    <p><strong>User Id:</strong> {m.user_id}</p>
-                    <p><strong>User Email:</strong> {m.user_email}</p>
-                    <p><strong>Message:</strong> {m.message}</p>
-                    <button onClick={() => deleteMessage(m.id)}>Delete</button>
-                    </div>
-                ))}
-            </div>
+           
              <div className="admin-membership">
                 <h2>Change Membership</h2>
                 <form onSubmit={handleMemChange}> 
@@ -175,6 +165,25 @@ const AdminPage = () => {
                 </form>
                 {error}
              </div>
+            </div>
+           
+<div className="sHalf">
+     <div className="admin-messages">
+                <h2>Messages</h2>
+                {messages.map((m, key) => (
+                    <div className="admin-msg" key={key}>
+                    <p><strong>Message id:</strong> {m.id}</p>
+                    <p><strong>User Id:</strong> {m.user_id}</p>
+                    <p><strong>User Email:</strong> {m.user_email}</p>
+                    <p><strong>Message:</strong> {m.message}</p>
+                    <button onClick={() => deleteMessage(m.id)}>Delete</button>
+                    </div>
+                ))}
+            </div>
+</div>
+
+
+
         </div>
         </div>
     )

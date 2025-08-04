@@ -1,5 +1,5 @@
 .admin-box {
-    width: 100%;
+    width: 100vw;
     padding: 20px;
     background-color: #fff;
 }
@@ -8,6 +8,13 @@
     border-radius: 20px;
     background-color: #f2f2f2;
     padding: 20px;
+    display: flex;
+}
+.fHalf {
+    min-width: 600px;
+}
+.sHalf {
+    min-width: 800px;
 }
 .admin-boxes {
     width: 100%;
@@ -34,6 +41,7 @@
     flex-direction: column;
     background-color: #fff;
     padding: 12px;
+    margin-top: 15px;
 }
 .admin-messages h2 {
     margin-bottom: 10px;
@@ -60,6 +68,7 @@
     border-radius: 20px;
     padding: 15px 20px;
     background-color: #fff;
+    margin-top: 15px;
 }
 .admin-membership h2 {
     margin-bottom: 8px;
@@ -88,6 +97,7 @@
     border-radius: 15px;
     margin-bottom: 7px;
     font-size: 15.5px;
+    width: 200px;
 }
 .saveMem {
     background-color: green;
@@ -96,6 +106,6 @@
     color: #fff;
     font-weight: 500;
     border-radius: 15px;
-    margin-bottom: 7px;
+    margin-top: 7px;
     font-size: 15.5px;
 }
