@@ -3809,6 +3809,25 @@ app.get("/admin-delete-message", async (req, res) => {
   }
 })
 
+app.get("/change-membership", async (req, res) => {
+  const { id, email, membershipType} = req.query
+  try {
+    if(membershipType === "Pro") {
+      const now = new Date();
+      const expiry = new Date(now);
+      expiry.setDate(now.getDate() + 30);
+      await pool.query("Update table users set subscription_plan = ? and subscription_expiry = ? where user_id = ? and email = ?", [membershipType, expiry, id, email])
+      return res.status(200).json({ message: "User sucessfully set to pro"})
+    } else {
+      await pool.query("Update table users set subscription_plan = ? and subscription_expiry = ? where user_id = ? and email = ?", [membershipType, null, id, email])
+      return res.status(200).json({ message: "User sucessfully set to free"})
+    }
+  } catch(e) {
+    console.log("An error occured changing the user membership", e)
+    return res.status(500).json({ message: "An error occured changing the user membership"})
+  }
+})
+
 
 
 

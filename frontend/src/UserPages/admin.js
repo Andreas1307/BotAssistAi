@@ -11,6 +11,10 @@ const AdminPage = () => {
     const [usersCount, setUsersCount] = useState(0)
     const [proAccounts, setProAccounts] = useState(0);
     const [freeAccounts, setFreeAccounts] = useState(0)
+    const [membershipId, setMembershipId] = useState("")
+    const [membershipEmail, setMembershipEmail] = useState("")
+    const [membershipType, setMembershipType] = useState("")
+    const [error, setError] = useState("")
     const { key } = useParams();
 
   
@@ -95,7 +99,18 @@ const fetchMessages = async () => {
         }
     } 
 
-    //sa fac design
+    const handleMemChange = async () => {
+        if(membershipType === "") {
+            return alert("You didnt select any Membership Type")
+        }
+        try {
+            const response = await axios.get(`${directory}/change-membership`, { params: { id: membershipId, email: membershipEmail, membershipType }})
+            setError(response.data.message)
+        } catch(e) {
+            console.log("An error occured changing the user membership", e)
+            setError("An error occured changing the user membership")
+        }
+    }
 
     return (
         <div className="admin-box">
@@ -130,6 +145,15 @@ const fetchMessages = async () => {
                     </div>
                 ))}
             </div>
+             <div className="admin-membership">
+                <form onSubmit={handleMemChange}> 
+                <input type="text" placeholder="Enter Merchants Id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} required />
+                <input type="text" placeholder="Enter Merchants Email" value={membershipEmail} onChange={(e) => setMembershipEmail(e.target.value)} required/>
+                <button onChange={() => membershipType("Pro")}>Pro</button> <button onChange={() => membershipType("Free")}>Default</button>
+                <button type="submit">Save</button>
+                </form>
+                {error}
+             </div>
         </div>
         </div>
     )
