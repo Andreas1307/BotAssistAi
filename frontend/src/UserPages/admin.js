@@ -13,7 +13,7 @@ const AdminPage = () => {
     const [freeAccounts, setFreeAccounts] = useState(0)
     const [membershipId, setMembershipId] = useState("")
     const [membershipEmail, setMembershipEmail] = useState("")
-    const [membershipType, setMembershipType] = useState("")
+    const [membershipType, setMembershipType] = useState("");
     const [error, setError] = useState("")
     const { key } = useParams();
 
@@ -150,7 +150,9 @@ const fetchMessages = async () => {
                 <form onSubmit={handleMemChange}> 
                 <input type="text" placeholder="Enter Merchants Id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} required />
                 <input type="text" placeholder="Enter Merchants Email" value={membershipEmail} onChange={(e) => setMembershipEmail(e.target.value)} required/>
-                <button type="button" onClick={() => membershipType("Pro")}>Pro</button> <button type="button" onClick={() => membershipType("Free")}>Default</button>
+                <button type="button" onClick={() => setMembershipType("Pro")}>Pro</button>
+                <button type="button" onClick={() => setMembershipType("Free")}>Default</button>
+
                 <button type="submit">Save</button>
                 </form>
                 {error}
