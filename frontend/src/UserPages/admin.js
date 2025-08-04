@@ -150,6 +150,7 @@ const AdminPage = () => {
                 ))}
             </div>
              <div className="admin-membership">
+                <h2>Change Membership</h2>
                 <form onSubmit={handleMemChange}> 
                 <input type="text" placeholder="Enter Merchants Id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} required />
                 <input type="text" placeholder="Enter Merchants Email" value={membershipEmail} onChange={(e) => setMembershipEmail(e.target.value)} required/>
@@ -170,7 +171,7 @@ const AdminPage = () => {
   </button>
 </div>
 
-                <button type="submit">Save</button>
+                <button className="saveMem" type="submit">Save</button>
                 </form>
                 {error}
              </div>
