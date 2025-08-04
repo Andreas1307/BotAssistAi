@@ -82,7 +82,6 @@ const AdminPage = () => {
           const response = await axios.get(`${directory}/admin-messages`, {
             params: { key: key }
           });
-          console.log("Fetched messages:", response.data);
           setMessgaes(response.data.messages);
         } catch (e) {
           console.log("An error occurred fetching messages", e);
