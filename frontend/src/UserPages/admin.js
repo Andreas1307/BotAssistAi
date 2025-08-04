@@ -17,6 +17,7 @@ const AdminPage = () => {
     const [error, setError] = useState("")
     const [currentPage, setCurrentPage] = useState(1);
 const [totalMessages, setTotalMessages] = useState(0);
+const [expiryDate, setExpiryDate] = useState("")
 const messagesPerPage = 20;
 const { key } = useParams();
     useEffect(() => {
@@ -104,8 +105,20 @@ const { key } = useParams();
         if(membershipType === "") {
             return alert("You didnt select any Membership Type")
         }
+
+        if (membershipType === "Pro" && !expiryDate) {
+            return alert("Please select an expiry date for Pro membership");
+          }
+
         try {
-            const response = await axios.get(`${directory}/change-membership`, { params: { id: membershipId, email: membershipEmail, membershipType }})
+              const response = await axios.get(`${directory}/change-membership`, {
+      params: {
+        id: membershipId,
+        email: membershipEmail,
+        membershipType,
+        expiryDate: membershipType === "Pro" ? expiryDate : null,
+      },
+    });
             setError(response.data.message)
         } catch(e) {
             console.log("An error occured changing the user membership", e)
@@ -177,7 +190,14 @@ const { key } = useParams();
     Default
   </button>
 </div>
-
+{membershipType === "Pro" && (
+    <input
+      type="date"
+      value={expiryDate}
+      onChange={(e) => setExpiryDate(e.target.value)}
+      required
+    />
+  )} 
                 <button className="saveMem" type="submit">Save</button>
                 </form>
                 {error}
