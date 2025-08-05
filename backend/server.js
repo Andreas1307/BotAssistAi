@@ -3931,6 +3931,23 @@ app.get("/delete-suggestion", async (req, res) => {
   }
 })
 
+// Route: /download-newsletter-emails
+app.get("/download-newsletter-emails", async (req, res) => {
+  try {
+    const [results] = await pool.query("SELECT email FROM newsletter");
+
+    const csv = results.map(row => row.email).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=newsletter_emails.csv");
+    res.send(csv);
+  } catch (e) {
+    console.error("Error exporting newsletter emails:", e);
+    res.status(500).send("Internal server error");
+  }
+});
+
+
 app.get("/admin-latest-users", async (req, res) => {
   const { key } = req.query;
   try {

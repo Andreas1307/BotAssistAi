@@ -204,9 +204,13 @@ const AdminPage = () => {
       }
     }
 
-    useEffect(() => {
-      console.log("saASDSADSADA", suggestions)
-    }, [suggestions])
+    const getEmails = async () => {
+      try {
+        await axios.get(`${directory}/download-newsletter-emails`)
+      } catch(e) {
+        console.log("Error occured fetching the newsletter emails", e)
+      }
+    }
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -314,6 +318,12 @@ const AdminPage = () => {
                 </div>
               ))}
              </div>
+
+             <div className="adminNewsletter">
+<h2>Newsletter</h2>
+             <button onClick={() => getEmails()}>Get Emails</button>
+             </div>
+             
             </div>
            
 <div className="sHalf">
