@@ -6,6 +6,61 @@
   position: relative;
   background-color: #f2f2f2;
 }
+.shopify-welcomeDiv {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+}
+.shopify-welcome {
+  padding: 20px 25px;
+  background-color: #f2f2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .3s ease;
+}
+.shopify-welcome:hover {
+  scale: 1.01;
+} 
+.shopify-welcome h1 {
+  font-size: 28px;
+  font-family: "Space Grotesk", sans-serif;
+  color: #222;
+}
+.shopify-welcome p {
+  font-size: 17.5px;
+  font-family: "Space Grotesk", sans-serif;
+  color: #222;
+  margin-top: 7px;
+}
+.shopify-welcome button {
+  padding: 12px 27px;
+  background-color: #00f5d4;
+  border-radius: 15px;
+  color: #fff;
+  cursor: pointer;
+  border: 0;
+  font-size: 16.5px;
+  margin-top: 10px;
+  transition: .3s ease;
+}
+.shopify-welcome button:hover {
+  scale: 1.01
+}
+.shopify-prompt {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  color: #fff;
+  font-size: 23px;
+  cursor: pointer;
+}
 .modalNotification {
   position: fixed;
   max-width: 910px;

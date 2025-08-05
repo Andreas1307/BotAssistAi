@@ -774,6 +774,26 @@ async function registerGdprWebhooks(session, shop) {
 
 }
 
+app.get('/check-shopify-store', async (req, res) => {
+  const { shop } = req.query;
+
+  if (!shop) {
+    return res.status(400).json({ installed: false });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM users WHERE shopify_shop_domain = ?",
+      [shop.toLowerCase()]
+    );
+
+    const isInstalled = rows.length > 0;
+    res.json({ installed: isInstalled });
+  } catch (err) {
+    console.error("❌ Error checking install status:", err);
+    res.status(500).json({ installed: false });
+  }
+});
 
 
 app.use(express.json());

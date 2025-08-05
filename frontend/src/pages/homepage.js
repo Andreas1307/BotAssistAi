@@ -28,6 +28,10 @@ import { Redirect } from "@shopify/app-bridge/actions";
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
+  const [shop, setShop] = useState(null);
+  const [installed, setInstalled] = useState(false);
+
+
   useEffect(() => {
     const newStars = [];
     for (let i = 0; i < 200; i++) {
@@ -52,37 +56,29 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    console.log("Homepage useEffect triggered");
-  
-    const urlParams = new URLSearchParams(window.location.search);
-    const host = urlParams.get("host");
-    const shop = urlParams.get("shop");
-    // const shopifyUser = urlParams.get("shopifyUser");
-  
-    if (host) localStorage.setItem("host", host);
-    if (shop) localStorage.setItem("shop", shop);
-    // Remove shopifyUser logic since it’s not present in your URL
-  
-    if (shop) {
-      console.log("Triggering redirectToInstall with shop:", shop);
-      redirectToInstall(shop);
+    const checkShop = async () => {
+      try {
+     const urlParams = new URLSearchParams(window.location.search);
+    const shopParam = urlParams.get("shop");
+    if (!shopParam) {
+      console.error("❌ No shop parameter in URL.");
+      return;
     }
+    setShop(shopParam);
+    const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop: shopParam}})
+    setInstalled(res.data.installed);
+  } catch (e) {
+    console.log("An error occured checking the store", e)
+  }
+  }
+  checkShop()
   }, []);
   
 
   const redirectToInstall = async (shop) => {
     try {
-      const lastInstalledShop = localStorage.getItem("shopifyInstalledShop");
-      if (lastInstalledShop === shop) {
-        console.log("Already installed for this shop. Skipping redirect.");
-        return;
-      }
-  
+      if (!shop) return;
       const installUrl = `https://api.botassistai.com/shopify/install?shop=${shop}`;
-      console.log("Redirecting directly to:", installUrl);
-  
-      // Update localStorage before redirecting
-      localStorage.setItem("shopifyInstalledShop", shop);
       window.location.href = installUrl;
     } catch (err) {
       console.error("❌ Redirect failed:", err);
@@ -277,6 +273,17 @@ const Homepage = () => {
       
 
             <Header />
+            {!installed && (
+              <div className="shopify-welcomeDiv">
+                <span onClick={() => setInstalled(true)} className="shopify-prompt"><FaTimes /></span>
+              <div className="shopify-welcome">
+                <span className="shopify-prompt"><FaTimes /></span>
+                <h1>Welcome to BotAssistAI</h1>
+        <p>Click the button below to install the app on your store.</p>
+        <button onClick={() => redirectToInstall(shop)}>Install App</button>
+                </div>
+                </div>
+            )}
             <div className="container">
               {showModal && (
                 <div className="modalNotification">
