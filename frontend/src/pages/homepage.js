@@ -60,13 +60,16 @@ const Homepage = () => {
       try {
      const urlParams = new URLSearchParams(window.location.search);
     const shopParam = urlParams.get("shop");
+    console.log("shopParam", shopParam)
     if (!shopParam) {
       console.error("❌ No shop parameter in URL.");
       return;
     }
     setShop(shopParam);
+    console.log("shop", shop)
     const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop: shopParam}})
     setInstalled(res.data.installed);
+    console.log("installed", installed)
   } catch (e) {
     console.log("An error occured checking the store", e)
   }
