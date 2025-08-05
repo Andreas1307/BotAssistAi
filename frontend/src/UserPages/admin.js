@@ -26,6 +26,7 @@ const AdminPage = () => {
     const [findInput, setFindInput] = useState("")
     const [expiryDate, setExpiryDate] = useState("")
     const [findData, setFindData] = useState([])
+    const [suggestions, setSuggestions] = useState([])
     const messagesPerPage = 20;
     const { key } = useParams();
 
@@ -127,6 +128,15 @@ const AdminPage = () => {
           console.log("An error occured fetching the total num of conversations", e)
         }
        }, [key])
+
+       const fetchSuggestions = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-suggestions`)
+          setSuggestions(response.data.suggestions)
+        } catch(e) {
+          console.log("Error occured trying to fetch suggetsions", e)
+        }
+       })
       
       
   
@@ -185,6 +195,18 @@ const AdminPage = () => {
         }
     }
 
+    const deleteSuggestion = async (id) => {
+      try {
+        await axios.get(`${directory}/delete-suggestion`, {params: {id}})
+        fetchSuggestions()
+      } catch (e) {
+        console.log("Error occured while trying to delete suggestion", e)
+      }
+    }
+
+    useEffect(() => {
+      console.log("saASDSADSADA", suggestions)
+    }, [suggestions])
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -196,7 +218,8 @@ const AdminPage = () => {
           fetchLatestUsers();
           fetchshopifyUsers();
           fetchUnresolvedQueries();
-          fetchTotalConvs()
+          fetchTotalConvs();
+          fetchSuggestions()
         }, 10000);
       
         return () => clearInterval(interval);
@@ -210,6 +233,7 @@ const AdminPage = () => {
         fetchshopifyUsers,
         fetchUnresolvedQueries,
         fetchTotalConvs,
+        fetchSuggestions,
       ]);
       
 
@@ -280,6 +304,15 @@ const AdminPage = () => {
                 <button className="saveMem" type="submit">Save</button>
                 </form>
                 {error}
+             </div>
+             <div className="admin-suggestions">
+              <h2>Suggestions</h2>
+              {suggestions.map((s, key) => (
+                <div className="a-suggestion" key={key}>
+                  <p><strong>Message:</strong> {s.message}</p>
+                  <button onClick={() => deleteSuggestion(s.id)}>Delete</button>
+                </div>
+              ))}
              </div>
             </div>
            

@@ -3910,6 +3910,26 @@ app.get("/admin-convs", async (req, res) => {
   }
 })
 
+app.get("/admin-suggestions", async (req, res) => {
+  try{
+    const [response] = await pool.query("SELECT * FROM suggestions")
+    return res.status(200).json({ suggestions: response})
+  } catch(e) {
+    console.log("Error occured trying to fetch suggetsions", e)
+    return res.status(500).json({ suggestions: []})
+  }
+})
+
+app.get("/delete-suggestion", async (req, res) => {
+  const { id } = req.query
+  try{
+    await pool.query("DELETE FROM suggestions WHERE id = ?", [id]);
+    res.status(200)
+  } catch (e) {
+    console.log("Error occured while trying to delete suggestion", e)
+    return res.status(500)
+  }
+})
 
 app.get("/admin-latest-users", async (req, res) => {
   const { key } = req.query;

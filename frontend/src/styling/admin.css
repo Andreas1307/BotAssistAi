@@ -224,3 +224,32 @@
     cursor: pointer;
     margin-bottom: 15px;
 }
+.admin-suggestions {
+    border-radius: 20px;
+    padding: 15px 20px;
+    background-color: #fff;
+    margin-top: 15px;
+    width: 100%;
+}
+.a-suggestion {
+    width: 100%;
+    background-color: #f2f2f2;
+    padding: 15px 10px;
+    border-radius: 15px;
+}
+.a-suggestion p {
+    font-weight: 500;
+    font-size: 16.5px;
+}
+.a-suggestion button {
+    background-color: red;
+    padding: 10px 20px;
+    border: none;
+    color: #fff;
+    font-weight: 500;
+    border-radius: 15px;
+    margin-top: 9px;
+    font-size: 15.5px;
+    width: 120px;
+    cursor: pointer;
+}
