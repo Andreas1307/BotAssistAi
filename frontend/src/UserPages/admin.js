@@ -19,8 +19,8 @@ const AdminPage = () => {
     const [latestUsers, setLatestUsers] = useState([])
     const [totalMessages, setTotalMessages] = useState(0);
     const [selectedOption, setSelectedOption] = useState("");
-    const [selectedMeasure, setSelectedMeasure] = useEffect("")
-    const [findInput, setFindInput] = useEffect("")
+    const [selectedMeasure, setSelectedMeasure] = useState("")
+    const [findInput, setFindInput] = useState("")
     const [expiryDate, setExpiryDate] = useState("")
     const [findData, setFindData] = useState([])
     const messagesPerPage = 20;
