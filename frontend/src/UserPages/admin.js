@@ -17,10 +17,16 @@ const AdminPage = () => {
     const [error, setError] = useState("")
     const [currentPage, setCurrentPage] = useState(1);
     const [latestUsers, setLatestUsers] = useState([])
-const [totalMessages, setTotalMessages] = useState(0);
-const [expiryDate, setExpiryDate] = useState("")
-const messagesPerPage = 20;
-const { key } = useParams();
+    const [totalMessages, setTotalMessages] = useState(0);
+    const [selectedOption, setSelectedOption] = useState("");
+    const [selectedMeasure, setSelectedMeasure] = useEffect("")
+    const [findInput, setFindInput] = useEffect("")
+    const [expiryDate, setExpiryDate] = useState("")
+    const [findData, setFindData] = useState([])
+    const messagesPerPage = 20;
+    const { key } = useParams();
+
+
     useEffect(() => {
       if (!key) {
         alert("Missing admin key.");
@@ -29,7 +35,6 @@ const { key } = useParams();
     }
     ) 
 
-  
    
     const fetchMessages = useCallback(async () => {
         try {
@@ -101,6 +106,24 @@ const { key } = useParams();
 
 
 
+      const findDataFunc = async (e) => {
+        e.preventDefault()
+        try{
+            if(selectedOption === "" || selectedOption === "-- Select an Option --") {
+                alert("Select an option")
+            }
+            if(selectedMeasure === "" || selectedMeasure === "-- Select an Option --") {
+                alert("Select an option")
+            }
+            if (findInput === "") {
+                alert("Enter a user Id")
+            }
+            const response = await axios.get(`${directory}/find-admin-data`, { params: { id: findInput, selectedOption, selectedMeasure}})
+            setFindData(response.data.data)
+        } catch (e) {
+            console.log("An error occured while trying to receive all the data", e)
+        }
+      }
 
     const deleteMessage = async (id) => {
         try {
@@ -226,6 +249,50 @@ const { key } = useParams();
                 <p><strong>Username:</strong>{m.username}</p>
                 <p><strong>Email:</strong>{m.email}</p>
                 <p><strong>Created At:</strong> {new Date(m.created_at).toLocaleString()}</p>
+            </div>
+        ))}
+    </div>
+
+    <div className="findUsers">
+        <form onSubmit={findDataFunc} className="findInputs"> 
+            <input 
+            placeholder="Enter User's Id"
+            value={findInput}
+            onChange={(e) => setFindInput(e.target.value)}
+            />
+            <select value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
+            <option value="">-- Select an Option --</option>
+            <option value="allowed_domains">allowed_domains</option>
+            <option value="appointments">appointments </option>
+            <option value="chat_messages">chat_messages</option>
+            <option value="customer_feedback">customer_feedback</option>
+            <option value="error_logs">error_logs</option>
+            <option value="faq">faq</option>
+            <option value="services">services</option>
+            <option value="shopify_installs">shopify_installs</option>
+            <option value="staff">staff</option>
+            <option value="user_messages">user_messages</option>
+            <option value="users">users</option>
+            <option value="working_hours ">working_hours</option>
+            </select>
+            <select value={selectedMeasure} onChange={(e) => setSelectedMeasure(e.target.value)}>
+                <option value="">-- Select an Option --</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="30">30</option>
+                <option value="35">35</option>
+                <option value="40">40</option>
+                <option value="All">All</option>
+
+            </select>
+            <button type="submit">Find</button>
+        </form>
+        {findData.map((e, key) => (
+            <div className="findData" key={key}>
+
             </div>
         ))}
     </div>

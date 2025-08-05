@@ -3859,6 +3859,46 @@ app.get("/admin-latest-users", async (req, res) => {
     return res.status(500).json({ error: "An error occured fetching the latest users"})
   }
 })
+app.get("/find-admin-data", async (req, res) => {
+  const { id, selectedOption, selectedMeasure } = req.query;
+
+  try {
+    if (!selectedOption) {
+      return res.status(400).json({ msg: "No table selected" });
+    }
+
+    // Validate selectedOption to avoid SQL injection
+    const allowedTables = [
+      "allowed_domains", "appointments", "chat_messages", "customer_feedback",
+      "error_logs", "faq", "services", "shopify_installs", "staff",
+      "user_messages", "users", "working_hours"
+    ];
+
+    if (!allowedTables.includes(selectedOption)) {
+      return res.status(400).json({ msg: "Invalid table selected" });
+    }
+
+    let query = `SELECT * FROM ${selectedOption}`;
+    const queryParams = [];
+
+    if (id && id.trim() !== "") {
+      query += ` WHERE user_id = ?`;
+      queryParams.push(id);
+    }
+
+    if (selectedMeasure && selectedMeasure !== "All") {
+      query += ` LIMIT ?`;
+      queryParams.push(Number(selectedMeasure));
+    }
+
+    const [results] = await pool.query(query, queryParams);
+    return res.status(200).json({ data: results });
+
+  } catch (e) {
+    console.log("An error occurred while trying to retrieve data", e);
+    return res.status(500).json({ msg: "An error occurred while trying to retrieve data" });
+  }
+});
 
 
 app.listen(8090)
