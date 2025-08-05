@@ -66,10 +66,8 @@ const Homepage = () => {
       return;
     }
     setShop(shopParam);
-    console.log("shop", shop)
     const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop: shopParam}})
     setInstalled(res.data.installed);
-    console.log("installed", installed)
   } catch (e) {
     console.log("An error occured checking the store", e)
   }
@@ -194,7 +192,13 @@ const Homepage = () => {
 
 */
 
+useEffect(() => {
+  console.log("✅ shop updated:", shop);
+}, [shop]);
 
+useEffect(() => {
+  console.log("✅ installed updated:", installed);
+}, [installed]);
 
 
 
