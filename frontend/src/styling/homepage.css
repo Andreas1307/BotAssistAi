@@ -34,7 +34,7 @@
   scale: 1.01;
 } 
 .shopify-welcome h1 {
-  font-size: 34px;
+  font-size: 36px;
   font-family: "Space Grotesk", sans-serif;
   color: #222;
 }
@@ -52,9 +52,9 @@
   color: #fff;
   cursor: pointer;
   border: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
-  margin-top: 7px;
+  margin-top: 9px;
   transition: .3s ease;
 }
 .shopify-welcome button:hover {
@@ -66,7 +66,7 @@
   top: 15px;
   right: 15px;
   color: #fff;
-  font-size: 23px;
+  font-size: 24.5px;
   cursor: pointer;
 }
 .modalNotification {
@@ -976,6 +976,18 @@
 }
 .divs-wrapper .wrapp2 .cta {
   font-size: 16px;
+}
+.shopify-welcome {
+  width: 100%;
+}
+.shopify-welcome h1 {
+  font-size: 32px;
+}
+.shopify-welcome p {
+  font-size: 16.5px;
+}
+.shopify-welcome button {
+  font-size: 17px;
 }
 }
 @media(max-width: 475px) {

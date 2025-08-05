@@ -290,7 +290,6 @@ useEffect(() => {
             <FaTimes />
           </span>
           <div className="shopify-welcome">
-            <span className="shopify-prompt"><FaTimes /></span>
             <h1>Welcome to BotAssistAI</h1>
             <p>Click the button below to install the app on your store.</p>
             <button onClick={() => redirectToInstall(shop)}>Install App</button>
