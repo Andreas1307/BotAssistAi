@@ -219,14 +219,14 @@ const { key } = useParams();
 <div className="sHalf">
     <div className="latest-users">
         <h2>Latest Users</h2>
-        {latestUsers.map((m, id) => {
+        {latestUsers.map((m, id) => (
             <div className="latestUser" key={id}>
                 <p><strong>ID:</strong>{m.user_id}</p>
                 <p><strong>Username:</strong>{m.username}</p>
                 <p><strong>Email:</strong>{m.email}</p>
                 <p><strong>Created At:</strong>{m.created_ad}</p>
             </div>
-        })}
+        ))}
     </div>
      <div className="admin-messages">
                 <h2>Messages</h2>
