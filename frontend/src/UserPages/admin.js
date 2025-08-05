@@ -11,6 +11,7 @@ const AdminPage = () => {
     const [usersCount, setUsersCount] = useState(0)
     const [proAccounts, setProAccounts] = useState(0);
     const [freeAccounts, setFreeAccounts] = useState(0)
+    const [shopifyAccounts, setShopifyAccounts] = useState(0)
     const [membershipId, setMembershipId] = useState("")
     const [membershipEmail, setMembershipEmail] = useState("")
     const [membershipType, setMembershipType] = useState("");
@@ -97,14 +98,20 @@ const AdminPage = () => {
             console.log("An error occured fetching the latest users")
         }
       }, [key])
+
+      const fetchshopifyUsers = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/get-shopify-users-count`)
+          setShopifyAccounts(response.data.count)
+        } catch (e) {
+          console.log("An error occured while trying to get the shopify users count", e);
+        }
+      }, [key])
       
     
      
       
-      
-
-
-
+  
 
       const findDataFunc = async (e) => {
         e.preventDefault()
@@ -169,9 +176,10 @@ const AdminPage = () => {
           fetchProAccounts();
           fetchFreeAccounts();
           fetchLatestUsers();
-        }, 10000); // every 10 seconds
+          fetchshopifyUsers();
+        }, 10000);
       
-        return () => clearInterval(interval); // cleanup
+        return () => clearInterval(interval);
       }, [
         fetchMessages,
         fetchDaylyConversations,
@@ -179,6 +187,7 @@ const AdminPage = () => {
         fetchProAccounts,
         fetchFreeAccounts,
         fetchLatestUsers,
+        fetchshopifyUsers,
       ]);
       
 
@@ -202,6 +211,10 @@ const AdminPage = () => {
             <div className="admin-box">
                 <h2>Free Accounts</h2>
                 <p>{freeAccounts}</p>
+            </div>
+            <div className="admin-box">
+                <h2>Shopify Accounts</h2>
+                <p>{shopifyAccounts}</p>
             </div>
             </div>
            

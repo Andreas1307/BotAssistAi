@@ -3866,6 +3866,22 @@ app.get("/change-membership", async (req, res) => {
   }
 });
 
+app.get("/get-shopify-users-count", async (req, res) => {
+  try{
+    const query = `
+    SELECT COUNT(*) AS shopify_users
+    FROM users
+    WHERE shopify_shop_domain IS NOT NULL;
+    `;
+    const [result] = await pool.query(query);
+  
+    res.json({ count: result[0]?.shopify_users || 0 });
+  } catch(e) {
+    console.log("An error occured while trying to get the shopify users count", e);
+    return res.status(500).json({ count: 0})
+  }
+})
+
 app.get("/admin-latest-users", async (req, res) => {
   const { key } = req.query;
   try {
