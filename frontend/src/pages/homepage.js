@@ -9,7 +9,7 @@ import {
   faCoins,
 } from "@fortawesome/free-solid-svg-icons";
 import { FaTimesCircle, FaClock, FaDollarSign, FaRobot, FaBolt, FaChartLine, FaGlobe, FaUsers, FaCogs, FaQq } from "react-icons/fa";
-import { FaStopCircle, FaStar, FaFire, FaTwitter, FaLinkedinIn, FaInstagram, FaChartBar, FaShieldAlt, FaUserPlus } from "react-icons/fa";
+import { FaTimes, FaStar, FaFire, FaTwitter, FaLinkedinIn, FaInstagram, FaChartBar, FaShieldAlt, FaUserPlus } from "react-icons/fa";
 import Newsletter from "../components/newsletter";
 import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
