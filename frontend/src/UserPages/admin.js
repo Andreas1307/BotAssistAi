@@ -254,6 +254,7 @@ const AdminPage = () => {
     </div>
 
     <div className="findUsers">
+      <h2>Find About Users</h2>
         <form onSubmit={findDataFunc} className="findInputs"> 
             <input 
             placeholder="Enter User's Id"
@@ -261,7 +262,7 @@ const AdminPage = () => {
             onChange={(e) => setFindInput(e.target.value)}
             />
             <select value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
-            <option value="">-- Select an Option --</option>
+            <option value="">-- Select a Table --</option>
             <option value="allowed_domains">allowed_domains</option>
             <option value="appointments">appointments </option>
             <option value="chat_messages">chat_messages</option>
@@ -276,7 +277,7 @@ const AdminPage = () => {
             <option value="working_hours ">working_hours</option>
             </select>
             <select value={selectedMeasure} onChange={(e) => setSelectedMeasure(e.target.value)}>
-                <option value="">-- Select an Option --</option>
+                <option value="">-- Select quantity --</option>
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="15">15</option>
