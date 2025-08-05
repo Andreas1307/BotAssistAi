@@ -94,7 +94,10 @@ const { key } = useParams();
       }, [key])
       
     
-    
+      useEffect(() => {
+        console.log("LATEST USERS UPDATED", latestUsers);
+      }, [latestUsers]);
+      
       
 
 
