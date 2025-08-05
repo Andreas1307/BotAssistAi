@@ -193,13 +193,6 @@ const Homepage = () => {
 
 */
 
-useEffect(() => {
-  console.log("✅ shop updated:", shop);
-}, [shop]);
-
-useEffect(() => {
-  console.log("✅ installed updated:", installed);
-}, [installed]);
 
 
 

@@ -119,7 +119,7 @@ const AdminPage = () => {
                 alert("Enter a user Id")
             }
             const response = await axios.get(`${directory}/find-admin-data`, { params: { id: findInput, selectedOption, selectedMeasure}})
-            setFindData(response.data.data)
+            setFindData(Array.isArray(response.data.data) ? response.data.data : []);
         } catch (e) {
             console.log("An error occured while trying to receive all the data", e)
         }
