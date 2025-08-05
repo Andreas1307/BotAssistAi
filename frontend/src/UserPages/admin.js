@@ -94,9 +94,7 @@ const { key } = useParams();
       }, [key])
       
     
-      useEffect(() => {
-        console.log("LATEST USERS UPDATED", latestUsers);
-      }, [latestUsers]);
+     
       
       
 
@@ -227,7 +225,7 @@ const { key } = useParams();
                 <p><strong>ID:</strong>{m.user_id}</p>
                 <p><strong>Username:</strong>{m.username}</p>
                 <p><strong>Email:</strong>{m.email}</p>
-                <p><strong>Created At:</strong>{m.created_ad}</p>
+                <p><strong>Created At:</strong> {new Date(m.created_at).toLocaleString()}</p>
             </div>
         ))}
     </div>
