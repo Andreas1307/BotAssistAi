@@ -12,6 +12,7 @@ const AdminPage = () => {
     const [proAccounts, setProAccounts] = useState(0);
     const [freeAccounts, setFreeAccounts] = useState(0)
     const [shopifyAccounts, setShopifyAccounts] = useState(0)
+    const [unresolvedQueries, setUnresolvedQueries] = useState(0)
     const [membershipId, setMembershipId] = useState("")
     const [membershipEmail, setMembershipEmail] = useState("")
     const [membershipType, setMembershipType] = useState("");
@@ -107,9 +108,16 @@ const AdminPage = () => {
           console.log("An error occured while trying to get the shopify users count", e);
         }
       }, [key])
+
+      const fetchUnresolvedQueries = useCallback(async () => {
+        try{
+          const response = await axios.get(`${directory}/admin-unresolved-queries`)
+          setUnresolvedQueries(response.data.count)
+        } catch (e) {
+          console.log("An error occured fetching the resolved queries", e)
+        }
+      }, [key])
       
-    
-     
       
   
 
@@ -177,6 +185,7 @@ const AdminPage = () => {
           fetchFreeAccounts();
           fetchLatestUsers();
           fetchshopifyUsers();
+          fetchUnresolvedQueries();
         }, 10000);
       
         return () => clearInterval(interval);
@@ -188,6 +197,7 @@ const AdminPage = () => {
         fetchFreeAccounts,
         fetchLatestUsers,
         fetchshopifyUsers,
+        fetchUnresolvedQueries,
       ]);
       
 
@@ -215,6 +225,10 @@ const AdminPage = () => {
             <div className="admin-box">
                 <h2>Shopify Accounts</h2>
                 <p>{shopifyAccounts}</p>
+            </div>
+            <div className="admin-box">
+                <h2>Unresolved Queries</h2>
+                <p>{unresolvedQueries}</p>
             </div>
             </div>
            
