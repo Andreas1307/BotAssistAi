@@ -29,7 +29,7 @@ const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
   const [shop, setShop] = useState(null);
-  const [installed, setInstalled] = useState(false);
+  const [installed, setInstalled] = useState(null);
 
 
   useEffect(() => {
