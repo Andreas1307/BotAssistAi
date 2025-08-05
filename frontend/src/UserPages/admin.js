@@ -321,7 +321,10 @@ const AdminPage = () => {
 
              <div className="adminNewsletter">
 <h2>Newsletter</h2>
-             <button onClick={() => getEmails()}>Get Emails</button>
+<button onClick={() => window.open(`${directory}/download-newsletter-emails`, '_blank')}>
+  Get Emails
+</button>
+
              </div>
              
             </div>
