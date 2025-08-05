@@ -3846,7 +3846,19 @@ app.get("/change-membership", async (req, res) => {
   }
 });
 
-
+app.get("/admin-latest-users", async (req, res) => {
+  const { key } = req.query;
+  try {
+    if (key !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const [response] = await pool.query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5");
+    return res.status(200).json({ users: response})
+  } catch(e) {
+    console.log("An error occured fetching the latest users", e)
+    return res.status(500).json({ error: "An error occured fetching the latest users"})
+  }
+})
 
 
 app.listen(8090)

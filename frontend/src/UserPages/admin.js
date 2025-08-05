@@ -16,6 +16,7 @@ const AdminPage = () => {
     const [membershipType, setMembershipType] = useState("");
     const [error, setError] = useState("")
     const [currentPage, setCurrentPage] = useState(1);
+    const [latestUsers, setLatestUsers] = useState([])
 const [totalMessages, setTotalMessages] = useState(0);
 const [expiryDate, setExpiryDate] = useState("")
 const messagesPerPage = 20;
@@ -82,7 +83,15 @@ const { key } = useParams();
           setFreeAccounts(0);
         }
       }, [key]);
-      
+      const fetchLatestUsers = useCallback(async () => {
+        try {
+            const response = await axios.get(`${directory}/admin-latest-users`, { params: { key }})
+            setLatestUsers(response.data.users)
+            console.log("LATEST USERS", latestUsers)
+        } catch (e) {
+            console.log("An error occured fetching the latest users")
+        }
+      }, [key])
       
     
       
@@ -134,6 +143,7 @@ const { key } = useParams();
           fetchUserCount();
           fetchProAccounts();
           fetchFreeAccounts();
+          fetchLatestUsers();
         }, 10000); // every 10 seconds
       
         return () => clearInterval(interval); // cleanup
@@ -143,6 +153,7 @@ const { key } = useParams();
         fetchUserCount,
         fetchProAccounts,
         fetchFreeAccounts,
+        fetchLatestUsers,
       ]);
       
 
@@ -205,6 +216,10 @@ const { key } = useParams();
             </div>
            
 <div className="sHalf">
+    <div className="latest-users">
+        <h2>Latest Users</h2>
+
+    </div>
      <div className="admin-messages">
                 <h2>Messages</h2>
                 {messages.map((m, key) => (
