@@ -297,9 +297,6 @@ useEffect(() => {
           </div>
         </div>
       )}
-
-
-
             <div className="container">
               {showModal && (
                 <div className="modalNotification">
