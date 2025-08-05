@@ -13,6 +13,7 @@ const AdminPage = () => {
     const [freeAccounts, setFreeAccounts] = useState(0)
     const [shopifyAccounts, setShopifyAccounts] = useState(0)
     const [unresolvedQueries, setUnresolvedQueries] = useState(0)
+    const [totalConvs, setTotalConvs] = useState(0)
     const [membershipId, setMembershipId] = useState("")
     const [membershipEmail, setMembershipEmail] = useState("")
     const [membershipType, setMembershipType] = useState("");
@@ -117,6 +118,15 @@ const AdminPage = () => {
           console.log("An error occured fetching the resolved queries", e)
         }
       }, [key])
+
+      const fetchTotalConvs = useCallback(async () => {
+        try {
+          const response = await axios.get(`${directory}/admin-convs`)
+          setTotalConvs(response.data.count)
+        } catch (e) {
+          console.log("An error occured fetching the total num of conversations", e)
+        }
+       }, [key])
       
       
   
@@ -186,6 +196,7 @@ const AdminPage = () => {
           fetchLatestUsers();
           fetchshopifyUsers();
           fetchUnresolvedQueries();
+          fetchTotalConvs()
         }, 10000);
       
         return () => clearInterval(interval);
@@ -198,6 +209,7 @@ const AdminPage = () => {
         fetchLatestUsers,
         fetchshopifyUsers,
         fetchUnresolvedQueries,
+        fetchTotalConvs,
       ]);
       
 
@@ -225,6 +237,10 @@ const AdminPage = () => {
             <div className="admin-box">
                 <h2>Shopify Accounts</h2>
                 <p>{shopifyAccounts}</p>
+            </div>
+            <div className="admin-box">
+                <h2>Total Convs</h2>
+                <p>{totalConvs}</p>
             </div>
             <div className="admin-box">
                 <h2>Unresolved Queries</h2>

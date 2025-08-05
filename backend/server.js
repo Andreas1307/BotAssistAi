@@ -3896,6 +3896,20 @@ app.get("/admin-unresolved-queries", async (req, res) => {
   }
 })
 
+app.get("/admin-convs", async (req, res) => {
+  try {
+    const query = `
+    SELECT COUNT(*) AS count FROM chat_messages
+    `
+    const [result] = await pool.query(query);
+  
+    res.json({ count: result[0]?.count || 0 });
+  } catch(e) {
+    console.log("An error occured fetching the total num of conversations", e)
+    return res.status(500).json({ count: 0})
+  }
+})
+
 
 app.get("/admin-latest-users", async (req, res) => {
   const { key } = req.query;
