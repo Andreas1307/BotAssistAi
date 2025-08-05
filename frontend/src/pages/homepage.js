@@ -252,7 +252,10 @@ useEffect(() => {
     return null;
   }
 
-
+  if (shop && installed === null) {
+    return <div>Checking install status...</div>; // or a spinner
+  }
+  
 
   return (
     <>
@@ -280,7 +283,7 @@ useEffect(() => {
       
 
             <Header />
-            {!installed && (
+            {shop && installed === false && (
               <div className="shopify-welcomeDiv">
                 <span onClick={() => setInstalled(true)} className="shopify-prompt"><FaTimes /></span>
               <div className="shopify-welcome">
