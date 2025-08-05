@@ -83,17 +83,20 @@ const { key } = useParams();
           setFreeAccounts(0);
         }
       }, [key]);
+
       const fetchLatestUsers = useCallback(async () => {
         try {
             const response = await axios.get(`${directory}/admin-latest-users`, { params: { key }})
             setLatestUsers(response.data.users)
-            console.log("LATEST USERS", latestUsers)
         } catch (e) {
             console.log("An error occured fetching the latest users")
         }
       }, [key])
       
     
+      useEffect(() => {
+        console.log("LATEST USERS UPDATED", latestUsers);
+      }, [latestUsers]);
       
 
 
