@@ -57,33 +57,34 @@ const Homepage = () => {
 
   useEffect(() => {
     const checkShop = async () => {
-      try {
-     const urlParams = new URLSearchParams(window.location.search);
-    const shopParam = urlParams.get("shop");
-    console.log("shopParam", shopParam)
-    if (!shopParam) {
-      console.error("❌ No shop parameter in URL.");
-      return;
-    }
-    setShop(shopParam);
-    const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop: shopParam}})
-    setInstalled(res.data.installed);
-  } catch (e) {
-    console.log("An error occured checking the store", e)
-  }
-  }
-  checkShop()
-  }, []);
-  
+      const urlParams = new URLSearchParams(window.location.search);
+      const shopParam = urlParams.get("shop");
+      console.log("🔍 shopParam:", shopParam);
 
-  const redirectToInstall = async (shop) => {
-    try {
-      if (!shop) return;
-      const installUrl = `https://api.botassistai.com/shopify/install?shop=${shop}`;
-      window.location.href = installUrl;
-    } catch (err) {
-      console.error("❌ Redirect failed:", err);
-    }
+      if (!shopParam) {
+        console.warn("❌ No shop param, skipping Shopify logic.");
+        return;
+      }
+
+      setShop(shopParam); // Will trigger re-render
+      try {
+        const res = await axios.get(`https://api.botassistai.com/check-shopify-store`, {
+          params: { shop: shopParam },
+        });
+        console.log("✅ Backend says installed:", res.data.installed);
+        setInstalled(res.data.installed);
+      } catch (e) {
+        console.error("❌ Error checking install status:", e);
+        setInstalled(false); // fallback if backend call fails
+      }
+    };
+
+    checkShop();
+  }, []);
+
+  const redirectToInstall = (shop) => {
+    if (!shop) return;
+    window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
   };
   
   
@@ -284,16 +285,21 @@ useEffect(() => {
 
             <Header />
             {shop && installed === false && (
-              <div className="shopify-welcomeDiv">
-                <span onClick={() => setInstalled(true)} className="shopify-prompt"><FaTimes /></span>
-              <div className="shopify-welcome">
-                <span className="shopify-prompt"><FaTimes /></span>
-                <h1>Welcome to BotAssistAI</h1>
-        <p>Click the button below to install the app on your store.</p>
-        <button onClick={() => redirectToInstall(shop)}>Install App</button>
-                </div>
-                </div>
-            )}
+        <div className="shopify-welcomeDiv">
+          <span onClick={() => setInstalled(true)} className="shopify-prompt">
+            <FaTimes />
+          </span>
+          <div className="shopify-welcome">
+            <span className="shopify-prompt"><FaTimes /></span>
+            <h1>Welcome to BotAssistAI</h1>
+            <p>Click the button below to install the app on your store.</p>
+            <button onClick={() => redirectToInstall(shop)}>Install App</button>
+          </div>
+        </div>
+      )}
+
+
+
             <div className="container">
               {showModal && (
                 <div className="modalNotification">
