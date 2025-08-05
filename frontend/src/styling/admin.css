@@ -140,3 +140,28 @@
     width: 100%;
     cursor: pointer;
 }
+.latest-users {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    padding: 12px 16px;
+    border-radius: 15px;
+}
+.latest-users h2 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    font-family: "Space Grotesk", sans-serif;
+    color: #00F5D4;
+}
+.latestUser {
+    width: 100%;
+    padding: 15px;
+    background-color: #f2f2f2;
+    margin-bottom: 15px;
+    border-radius: 20px;
+}
+.latestUser p {
+    font-size: 17.5px;
+    margin-bottom: 3.5px;
+}
