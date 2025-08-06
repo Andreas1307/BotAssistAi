@@ -633,6 +633,9 @@ app.get('/chatbot-loader.js', async (req, res) => {
       'SELECT api_key FROM users WHERE shopify_shop_domain = ?',
       [shop]
     ); 
+
+    const [rows2] = await pool.query("SELECT * FROM shopify_customization WHERE shop = ?", [shop])
+    const shopifyCustom = rows2[0] || {}
     if (!rows.length) return res.status(404).send('Shop not found');
 
     let userApiKey;
@@ -649,16 +652,16 @@ app.get('/chatbot-loader.js', async (req, res) => {
       const style = document.createElement('style');
       style.innerHTML = \`
         :root {
-          --ai-background: #4C90F7; 
-          --ai-button: #F59E0B;
-          --ai-input: #ffffff;
-          --ai-input-font-color: #111827;             
-          --ai-border: #000;                         
-          --ai-website-chat-btn: #4C90F7;              
-          --ai-website-question: #4C90F7;              
-          --font-color: #3b4352;                        
-          --conversation-boxes: #ffffff;
-          --need-help-text: #fff;
+          --ai-background: ${shopifyCustom.chatbotBackground || '#092032'}; 
+          --ai-button: ${shopifyCustom.chatBtn || '#00F5D4'};
+          --ai-input: ${shopifyCustom.chatInputBackground || '#ffffff'};
+          --ai-input-font-color: ${shopifyCustom.chatInputTextColor || '#000000'};             
+          --ai-border: ${shopifyCustom.borderColor || '#00F5D4'};                         
+          --ai-website-chat-btn: ${shopifyCustom.websiteChatBtn || '#00F5D4'};              
+          --ai-website-question: ${shopifyCustom.websiteQuestion || '#ffffff'};              
+          --font-color: ${shopifyCustom.textColor || '#cccccc'};                        
+          --conversation-boxes: ${shopifyCustom.chatBoxBackground || '#112B3C'};
+          --need-help-text: ${shopifyCustom.needHelpTextColor || '#00F5D4'};
         }
       \`;
       document.head.appendChild(style);
@@ -668,8 +671,6 @@ app.get('/chatbot-loader.js', async (req, res) => {
       inlineScript.setAttribute("type", "text/javascript");
       inlineScript.setAttribute("api-key", "${userApiKey}");
       inlineScript.src = "https://api.botassistai.com/client-chatbot.js";
-    
-      // Append directly to body so document.currentScript works inside that script
       document.body.appendChild(inlineScript);
     `);
   } catch (err) {
