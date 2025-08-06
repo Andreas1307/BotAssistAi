@@ -851,7 +851,7 @@
 }
 @media(max-width: 850px) {
   .shopify-welcomeDiv {
-    padding-top: 60px;
+    padding-top: 80px;
     overflow-y: auto;
   }
 }
@@ -875,6 +875,12 @@
 @media(max-width: 730px) {
   .hero {
     width: 590px;
+  }
+}
+@media(max-width: 630px) {
+  .shopify-welcomeDiv {
+    padding-top: 120px;
+    overflow-y: auto;
   }
 }
 @media(max-width: 600px) {
