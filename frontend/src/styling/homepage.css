@@ -851,6 +851,7 @@
 }
 @media(max-width: 850px) {
   .shopify-welcomeDiv {
+    padding-top: 40px;
     overflow-y: auto;
   }
 }
