@@ -313,6 +313,7 @@ const AdminPage = () => {
                 {error}
              </div>
              <div className="getUserId">
+              <h2>User Info</h2>
               <input type="text"
               placeholder="Enter Email"
               value={email}
@@ -330,6 +331,8 @@ const AdminPage = () => {
                   <p><strong>Api Bot:</strong>{e.apiBot}</p>
                   <p><strong>Last Connected:</strong>{e.last_connected}</p>
                   <p><strong>Bookings:</strong>{e.booking}</p>
+                  <p><strong>Subscribed At:</strong>{e.subscribed_at}</p>
+                  <p><strong>Subscription Expiry:</strong>{e.subscription_expiry}</p>
                   </div>
               ))}
              </div>
