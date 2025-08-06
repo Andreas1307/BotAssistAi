@@ -780,7 +780,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
         <input type={show ? "text" : "password"} value={apiKey} readOnly />
       </div>
 
-      {!shopifyInstalled && (
+     
            <div className="code-snippet">
         <div className="languages">
           <h3>
@@ -810,7 +810,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
           <FaCopy /> {copied ? "Copied!" : "Copy Code"}
         </button>
       </div>
-      )}
+      
    
 
       <div>
