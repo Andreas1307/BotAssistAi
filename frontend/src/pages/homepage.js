@@ -94,9 +94,14 @@ const Homepage = () => {
     checkShop();
   }, []);
 
-  const redirectToInstall = (shop) => {
+  const redirectToInstall = async (shop) => {
     if (!shop) return;
-    window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+    try {
+      console.log("SHOP", shop)
+    } catch (e) {
+      console.log("An error occured while trying to send the chatbot config", e)
+    }
+   // window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
   };
   
   
