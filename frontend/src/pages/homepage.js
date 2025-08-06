@@ -510,7 +510,7 @@ const Homepage = () => {
                             <p
                               style={{
                                 color: colors.needHelpTextColor,
-                                marginTop: "1px"
+                                marginTop: "1.3px"
                               }}
                             >
                               Need Help?
