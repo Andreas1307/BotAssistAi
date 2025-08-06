@@ -146,8 +146,6 @@ const AdminPage = () => {
        })
 
        useEffect(() => {
-        if (!user) return;
-      
         const fetchSatisfaction = async () => {
           try {
             const response = await axios.get(`${directory}/satisfaction-admin`);
@@ -180,7 +178,6 @@ const AdminPage = () => {
             }
           } catch (e) {
             console.log("Error with fetching user satisfaction", e);
-            showErrorNotification()
           }
         };
       
