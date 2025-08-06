@@ -301,7 +301,7 @@ const Homepage = () => {
                   </p>
                   <div className="chatbotConfigDiv">
                     <div className="chabotConfig">
-                      <div className="config">
+                      <div className="config homepage">
                         <h2>Customize Your Chatbot</h2>
                         <span>
                           <div>
@@ -470,7 +470,7 @@ const Homepage = () => {
                             </div>
                           </div>
                           <div
-                            className="chat-inputs"
+                            className="chat-inputs homepage"
                             style={{
                               backgroundColor: colors.chatInputBackground,
                             }}
