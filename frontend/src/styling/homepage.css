@@ -883,6 +883,24 @@
     overflow-y: auto;
   }
 }
+@media(max-width: 610px) {
+  .shopify-welcomeDiv {
+    padding-top: 160px;
+    overflow-y: auto;
+  }
+}
+@media(max-width: 570px) {
+  .shopify-welcomeDiv {
+    padding-top: 180px;
+    overflow-y: auto;
+  }
+}
+@media(max-width: 520px) {
+  .shopify-welcomeDiv {
+    padding-top: 200px;
+    overflow-y: auto;
+  }
+}
 @media(max-width: 600px) {
   .hero {
     width: 530px;
