@@ -301,12 +301,6 @@ const Homepage = () => {
                   </p>
                   <div className="chatbotConfigDiv">
                     <div className="chabotConfig">
-                      <span
-                        onClick={() => setChatBotConfig(false)}
-                        className="chatConfig-x"
-                      >
-                        <FaTimes />
-                      </span>
                       <div className="config">
                         <h2>Customize Your Chatbot</h2>
                         <span>
@@ -526,12 +520,6 @@ const Homepage = () => {
                             💬
                           </span>
                         </div>
-                        <button
-                          onClick={() => setChatBotConfig(false)}
-                          className="chatbot-config-save"
-                        >
-                          Save
-                        </button>
                       </div>
                     </div>
                   </div>
