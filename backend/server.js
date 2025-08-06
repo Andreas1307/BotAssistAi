@@ -3931,7 +3931,6 @@ app.get("/delete-suggestion", async (req, res) => {
   }
 })
 
-// Route: /download-newsletter-emails
 app.get("/download-newsletter-emails", async (req, res) => {
   try {
     const [results] = await pool.query("SELECT email FROM newsletter");
@@ -3946,6 +3945,7 @@ app.get("/download-newsletter-emails", async (req, res) => {
     res.status(500).send("Internal server error");
   }
 });
+
 app.get("/download-users-emails", async (req, res) => {
   try {
     const [results] = await pool.query("SELECT email FROM users");
@@ -3975,6 +3975,7 @@ app.get("/download-users-emails-pro", async (req, res) => {
     res.status(500).send("Internal server error");
   }
 });
+
 app.get("/download-users-emails-free", async (req, res) => {
   try {
     const [results] = await pool.query("SELECT email FROM users WHERE subscription_plan = ?", ['Free']);
@@ -3989,6 +3990,7 @@ app.get("/download-users-emails-free", async (req, res) => {
     res.status(500).send("Internal server error");
   }
 });
+
 app.get("/admin-user-id", async (req, res) => {
   const {email} = req.query;
   try {
@@ -3999,7 +4001,6 @@ app.get("/admin-user-id", async (req, res) => {
     return res.status(500).json({ id: []})
   }
 })
-
 
 app.get("/admin-latest-users", async (req, res) => {
   const { key } = req.query;
@@ -4015,7 +4016,16 @@ app.get("/admin-latest-users", async (req, res) => {
   }
 })
 
-
+app.get("/satisfaction-admin", async (req, res) => {
+  
+  try {
+    const [response] = await pool.query("SELECT * FROM customer_feedback");
+    return res.status(200).json({ message: response})
+  } catch (e) {
+    console.log("Error occured with getting user satisfaction from the database");
+    return res.status(500).json({ message: "Error"})
+  }
+  })
 
 
  

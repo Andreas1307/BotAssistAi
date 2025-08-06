@@ -28,6 +28,11 @@ const AdminPage = () => {
     const [findData, setFindData] = useState([])
     const [suggestions, setSuggestions] = useState([])
     const [userId, setUserId] = useState([])
+    const [satisfaction, setSatisfaction] = useState([])
+    const [satisfactionScore, setSatisfactionScore] = useState(0)
+    const [positive, setPositive] = useState(0)
+    const [neutral, setNeutral] = useState(0)
+    const [negative, setNegative] = useState(0)
     const [email, setEmail] = useState("")
     const messagesPerPage = 20;
     const { key } = useParams();
@@ -139,6 +144,51 @@ const AdminPage = () => {
           console.log("Error occured trying to fetch suggetsions", e)
         }
        })
+
+       useEffect(() => {
+        if (!user) return;
+      
+        const fetchSatisfaction = async () => {
+          try {
+            const response = await axios.get(`${directory}/satisfaction-admin`);
+      
+            const satisfactionData = response.data.message;
+            setSatisfaction(satisfactionData);
+      
+            if (satisfactionData.length > 0) {
+              const totalScore = satisfactionData.reduce((sum, item) => sum + (item.rating || 0), 0);
+              const maxPossibleScore = satisfactionData.length * 5;
+              const percentage = (totalScore / maxPossibleScore) * 100;
+              setSatisfactionScore(percentage.toFixed(1));
+      
+              let positiveCount = 0, negativeCount = 0, neutralCount = 0;
+              satisfactionData.forEach((sen) => {
+                if (sen.rating > 3) positiveCount++;
+                else if (sen.rating < 3) negativeCount++;
+                else neutralCount++;
+              });
+      
+              const total = satisfactionData.length;
+              setPositive(((positiveCount / total) * 100).toFixed(1));
+              setNegative(((negativeCount / total) * 100).toFixed(1));
+              setNeutral(((neutralCount / total) * 100).toFixed(1));
+            } else {
+              setSatisfactionScore("0.00");
+              setPositive(0);
+              setNegative(0);
+              setNeutral(0);
+            }
+          } catch (e) {
+            console.log("Error with fetching user satisfaction", e);
+            showErrorNotification()
+          }
+        };
+      
+        fetchSatisfaction(); 
+        const interval = setInterval(fetchSatisfaction, 5000); // Auto-refresh every 5 seconds
+      
+        return () => clearInterval(interval); // Cleanup interval on unmount
+      }, [user]);
       
       
   
@@ -277,6 +327,10 @@ const AdminPage = () => {
                 <h2>Unresolved Queries</h2>
                 <p>{unresolvedQueries}</p>
             </div>
+            <div className="admin-box">
+                <h2>Satisfaction Score</h2>
+                <p>{satisfactionScore}</p>
+            </div>
             </div>
            
              <div className="admin-membership">
@@ -348,18 +402,18 @@ const AdminPage = () => {
 
              <div className="adminNewsletter">
 <h2>Newsletter</h2>
-<button onClick={() => window.open(`${directory}/download-newsletter-emails`, '_blank')}>
+<button style={{ background: "yellow"}}  onClick={() => window.open(`${directory}/download-newsletter-emails`, '_blank')}>
   Get Emails
 </button>
 
 <h2 style={{ marginTop: "8px"}}>Users Emails</h2>
-<button onClick={() => window.open(`${directory}/download-users-emails`, '_blank')}>Get Users Emails</button>
+<button style={{ background: "blue"}} onClick={() => window.open(`${directory}/download-users-emails`, '_blank')}>Get Users Emails</button>
 
 <h2 style={{ marginTop: "8px"}}>Users Emails Free</h2>
-<button onClick={() => window.open(`${directory}/download-users-emails-free`, '_blank')}>Get Users Emails Free</button>
+<button style={{ background: "pink"}}  onClick={() => window.open(`${directory}/download-users-emails-free`, '_blank')}>Get Users Emails Free</button>
 
 <h2 style={{ marginTop: "8px"}}>Users Emails Pro</h2>
-<button onClick={() => window.open(`${directory}/download-users-emails-pro`, '_blank')}>Get Users Emails Pro</button>
+<button style={{ background: "orange"}}  onClick={() => window.open(`${directory}/download-users-emails-pro`, '_blank')}>Get Users Emails Pro</button>
              </div>
              
             </div>
