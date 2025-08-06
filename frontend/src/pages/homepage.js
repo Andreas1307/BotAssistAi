@@ -478,6 +478,7 @@ const Homepage = () => {
                             <input
                               type="text"
                               placeholder="Enter your question"
+                              readOnly
                               style={{
                                 backgroundColor: colors.chatInputBackground,
                                 color: colors.chatInputTextColor,
@@ -509,7 +510,7 @@ const Homepage = () => {
                             <p
                               style={{
                                 color: colors.needHelpTextColor,
-                                marginTop: 0
+                                marginTop: "1px"
                               }}
                             >
                               Need Help?
