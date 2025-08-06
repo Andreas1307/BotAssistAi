@@ -30,7 +30,19 @@ const Homepage = () => {
   const [showModal, setShowModal] = useState(false)
   const [shop, setShop] = useState(null);
   const [installed, setInstalled] = useState(null);
-
+  const [colors, setColors] = useState({
+    background: '#f2f2f2',
+    chatbotBackground: '#092032',
+    chatBoxBackground: '#112B3C',
+    chatInputBackground: '#ffffff',
+    chatInputTextColor: '#000000',
+    chatBtn: '#00F5D4',
+    websiteChatBtn: '#00F5D4',
+    websiteQuestion: '#ffffff',
+    needHelpTextColor: '#00F5D4',
+    textColor: '#cccccc',
+    borderColor: '#00F5D4'
+  });
 
   useEffect(() => {
     const newStars = [];
@@ -273,41 +285,287 @@ const Homepage = () => {
           navigate("/") || null
         ) : (
           <div>
-
-      
-
             <Header />
             {shop && installed === false && (
-        <div className="shopify-welcomeDiv">
-          <span onClick={() => setInstalled(true)} className="shopify-prompt">
-            <FaTimes />
-          </span>
-          <div className="shopify-welcome">
-            <h1>Welcome to BotAssistAI</h1>
-            <p>Click the button below to install the app on your store.</p>
-            <button onClick={() => redirectToInstall(shop)}>Install App</button>
-          </div>
-        </div>
-      )}
-            <div className="container">
-              {showModal && (
-                <div className="modalNotification">
-                  <p>👋 Welcome! To continue installing <span>BotAssistAI</span> on your Shopify store, please register or log in first.</p>
+              <div className="shopify-welcomeDiv">
+                <span
+                  onClick={() => setInstalled(true)}
+                  className="shopify-prompt"
+                >
+                  <FaTimes />
+                </span>
+                <div className="shopify-welcome">
+                  <h1>Welcome to BotAssistAI</h1>
+                  <p>
+                    Click the button below to install the app on your store.
+                  </p>
+                  <div className="chatbotConfigDiv">
+                    <div className="chabotConfig">
+                      <span
+                        onClick={() => setChatBotConfig(false)}
+                        className="chatConfig-x"
+                      >
+                        <FaTimes />
+                      </span>
+                      <div className="config">
+                        <h2>Customize Your Chatbot</h2>
+                        <span>
+                          <div>
+                            <p>Background:</p>
+                            <input
+                              type="color"
+                              value={colors.background}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  background: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Chatbot Background:</p>
+                            <input
+                              type="color"
+                              value={colors.chatbotBackground}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  chatbotBackground: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>ChatBox Background:</p>
+                            <input
+                              type="color"
+                              value={colors.chatBoxBackground}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  chatBoxBackground: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Chat Input:</p>
+                            <input
+                              type="color"
+                              value={colors.chatInputBackground}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  chatInputBackground: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Chat Input Color:</p>
+                            <input
+                              type="color"
+                              value={colors.chatInputTextColor}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  chatInputTextColor: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Chat Btn:</p>
+                            <input
+                              type="color"
+                              value={colors.chatBtn}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  chatBtn: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Website Chat Btn:</p>
+                            <input
+                              type="color"
+                              value={colors.websiteChatBtn}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  websiteChatBtn: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Website question:</p>
+                            <input
+                              type="color"
+                              value={colors.websiteQuestion}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  websiteQuestion: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Need Help Text Color:</p>
+                            <input
+                              type="color"
+                              value={colors.needHelpTextColor}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  needHelpTextColor: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <p>Text Color:</p>
+                            <input
+                              type="color"
+                              value={colors.textColor}
+                              onChange={(e) =>
+                                setColors({
+                                  ...colors,
+                                  textColor: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </span>
+                      </div>
+
+                      <div
+                        className="chatbot"
+                        style={{ backgroundColor: colors.background }}
+                      >
+                        <div
+                          className="chatbot-div"
+                          style={{ backgroundColor: colors.chatbotBackground }}
+                        >
+                          <img
+                            draggable="false"
+                            src={`${process.env.PUBLIC_URL}/img/BigLogo.png`}
+                          />
+                          <div className="chat-div">
+                            <div
+                              className="chat-1"
+                              style={{
+                                color: colors.textColor,
+                                backgroundColor: colors.chatBoxBackground,
+                              }}
+                            >
+                              Hey, can you help me ?
+                            </div>
+                            <div
+                              className="chat-2"
+                              style={{
+                                color: colors.textColor,
+                                backgroundColor: colors.chatBoxBackground,
+                              }}
+                            >
+                              Yes, sure . Let me know about what product
+                            </div>
+                          </div>
+                          <div
+                            className="chat-inputs"
+                            style={{
+                              backgroundColor: colors.chatInputBackground,
+                            }}
+                          >
+                            <input
+                              type="text"
+                              placeholder="Enter your question"
+                              style={{
+                                backgroundColor: colors.chatInputBackground,
+                                color: colors.chatInputTextColor,
+                                borderColor: colors.borderColor,
+                              }}
+                            />
+                            <button
+                              style={{
+                                backgroundColor: colors.chatBtn,
+                                color: colors.textColor,
+                              }}
+                            >
+                              Send
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className="div-chatbot"
+                          style={{
+                            color: colors.needHelpTextColor,
+                            borderColor: colors.borderColor,
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: colors.websiteQuestion,
+                            }}
+                          >
+                            <p
+                              style={{
+                                color: colors.needHelpTextColor,
+                              }}
+                            >
+                              Need Help?
+                            </p>
+                          </div>
+                          <span
+                            style={{ backgroundColor: colors.websiteChatBtn }}
+                          >
+                            💬
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setChatBotConfig(false)}
+                          className="chatbot-config-save"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => redirectToInstall(shop)}>
+                    Install App
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
+            <div className="container">
               <section className="hero">
                 <div className="hero-text">
-                  <h1>The <span>24/7 AI</span> Support</h1>
-                  <h2>Install, train, & automate 1000s of customer replies — all on autopilot.</h2>
+                  <h1>
+                    The <span>24/7 AI</span> Support
+                  </h1>
+                  <h2>
+                    Install, train, & automate 1000s of customer replies — all
+                    on autopilot.
+                  </h2>
                   <p>
-                  Turn missed questions into sales with an AI chatbot that replies instantly, 24/7. Easy setup in just 30 seconds, no technical skills required. Boost customer engagement and never miss a sale again.
+                    Turn missed questions into sales with an AI chatbot that
+                    replies instantly, 24/7. Easy setup in just 30 seconds, no
+                    technical skills required. Boost customer engagement and
+                    never miss a sale again.
                   </p>
                   <Link to={"/sign-up"}>
-                    <button style={{background: "#00f5d4", color: "#fff"}} className="hero-btn">
+                    <button
+                      style={{ background: "#00f5d4", color: "#fff" }}
+                      className="hero-btn"
+                    >
                       Try It Free – No Credit Card
-                    </button>     
-                    </Link>
-                    <a target="_blank" href={"https://shop-ease2.netlify.app/"}>
+                    </button>
+                  </Link>
+                  <a target="_blank" href={"https://shop-ease2.netlify.app/"}>
                     <button className="hero-btn aaaa">See Demo</button>
                   </a>
                   <div className="icon-hero">
@@ -316,71 +574,71 @@ const Homepage = () => {
                       <FaStar />
                       <FaStar />
                       <FaStar />
-                      <FaStar className="hero-icon"/>
+                      <FaStar className="hero-icon" />
                       5.0 reviews
                     </div>
                     <div>
-                      <FaUsers className="hero-icon"/>
+                      <FaUsers className="hero-icon" />
                       100+ customers
                     </div>
                     <div>
-                      <FaFire className="hero-icon"/> Founded 2025
+                      <FaFire className="hero-icon" /> Founded 2025
                     </div>
                   </div>
                   <div className="hero-logos">
-                  <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/shopify.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/nextJs.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/php.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/java.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/reactLogo.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/vue.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/python.png`}
-                  alt="Benefit Image from Ai"
-                />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/shopify.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/nextJs.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/php.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/java.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/reactLogo.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/vue.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      className="first-hero"
+                      src={`${process.env.PUBLIC_URL}/img/python.png`}
+                      alt="Benefit Image from Ai"
+                    />
                   </div>
                 </div>
                 <div className="hero-proof">
-                <img
-                className="first-hero"
-                  src={`${process.env.PUBLIC_URL}/img/chat3.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <span>
-                <img
-                  src={`${process.env.PUBLIC_URL}/img/chat2.png`}
-                  alt="Benefit Image from Ai"
-                />
-                <img
-                  src={`${process.env.PUBLIC_URL}/img/chat1.png`}
-                  alt="Benefit Image from Ai"
-                />
-                </span>
+                  <img
+                    className="first-hero"
+                    src={`${process.env.PUBLIC_URL}/img/chat3.png`}
+                    alt="Benefit Image from Ai"
+                  />
+                  <span>
+                    <img
+                      src={`${process.env.PUBLIC_URL}/img/chat2.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                    <img
+                      src={`${process.env.PUBLIC_URL}/img/chat1.png`}
+                      alt="Benefit Image from Ai"
+                    />
+                  </span>
                 </div>
               </section>
 
@@ -412,7 +670,6 @@ const Homepage = () => {
                 </div>
               </section>
 
-
               <section className="use-cases">
                 <div className="outside-wrapp">
                   <h2>Who Can Benefit from BotAssistAI?</h2>
@@ -423,7 +680,7 @@ const Homepage = () => {
                       fontSize: "16.8px",
                       color: "#444",
                       lineHeight: "25px",
-                      fontWeight: 500
+                      fontWeight: 500,
                     }}
                   >
                     Whether you're running an online store, managing patient
@@ -472,8 +729,6 @@ const Homepage = () => {
               </section>
 
               <HowItWorks />
-
-           
 
               <section className="comparison">
                 <h2>How We Compare</h2>

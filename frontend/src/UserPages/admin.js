@@ -326,7 +326,7 @@ const AdminPage = () => {
             </div>
             <div className="admin-box">
                 <h2>Satisfaction Score</h2>
-                <p>{satisfactionScore}</p>
+                <p>{satisfactionScore}%</p>
             </div>
             </div>
            
@@ -399,7 +399,7 @@ const AdminPage = () => {
 
              <div className="adminNewsletter">
 <h2>Newsletter</h2>
-<button style={{ background: "yellow"}}  onClick={() => window.open(`${directory}/download-newsletter-emails`, '_blank')}>
+<button style={{ background: "gold"}}  onClick={() => window.open(`${directory}/download-newsletter-emails`, '_blank')}>
   Get Emails
 </button>
 
@@ -407,7 +407,7 @@ const AdminPage = () => {
 <button style={{ background: "blue"}} onClick={() => window.open(`${directory}/download-users-emails`, '_blank')}>Get Users Emails</button>
 
 <h2 style={{ marginTop: "8px"}}>Users Emails Free</h2>
-<button style={{ background: "pink"}}  onClick={() => window.open(`${directory}/download-users-emails-free`, '_blank')}>Get Users Emails Free</button>
+<button style={{ background: "purple"}}  onClick={() => window.open(`${directory}/download-users-emails-free`, '_blank')}>Get Users Emails Free</button>
 
 <h2 style={{ marginTop: "8px"}}>Users Emails Pro</h2>
 <button style={{ background: "orange"}}  onClick={() => window.open(`${directory}/download-users-emails-pro`, '_blank')}>Get Users Emails Pro</button>
