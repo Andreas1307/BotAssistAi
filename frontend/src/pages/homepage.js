@@ -97,11 +97,17 @@ const Homepage = () => {
   const redirectToInstall = async (shop) => {
     if (!shop) return;
     try {
-      console.log("SHOP", shop)
+      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
+        shop,
+        colors,
+      });
+      if (response.data.data === true) {
+        window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+      }
     } catch (e) {
       console.log("An error occured while trying to send the chatbot config", e)
     }
-   // window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+   
   };
   
   

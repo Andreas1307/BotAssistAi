@@ -4027,6 +4027,63 @@ app.get("/satisfaction-admin", async (req, res) => {
   }
   })
 
+  app.post("/chatbot-config-shopify", async (req, res) => {
+    const { shop, colors } = req.body;
+  try {
+    const {
+      background,
+      chatbotBackground,
+      chatBoxBackground,
+      chatInputBackground,
+      chatInputTextColor,
+      chatBtn,
+      websiteChatBtn,
+      websiteQuestion,
+      needHelpTextColor,
+      textColor,
+      borderColor
+    } = colors;
+
+    const query = `
+      INSERT INTO shopify_customization 
+        (shop, background, chatbotBackground, chatBoxBackground, chatInputBackground, chatInputTextColor, chatBtn, websiteChatBtn, 
+         websiteQuestion, needHelpTextColor, textColor, borderColor) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        background = VALUES(background),
+        chatbotBackground = VALUES(chatbotBackground),
+        chatBoxBackground = VALUES(chatBoxBackground),
+        chatInputBackground = VALUES(chatInputBackground),
+        chatInputTextColor = VALUES(chatInputTextColor),
+        chatBtn = VALUES(chatBtn),
+        websiteChatBtn = VALUES(websiteChatBtn),
+        websiteQuestion = VALUES(websiteQuestion),
+        needHelpTextColor = VALUES(needHelpTextColor),
+        textColor = VALUES(textColor),
+        borderColor = VALUES(borderColor)
+    `;
+
+    await pool.query(query, [
+      shop,
+      background,
+      chatbotBackground,
+      chatBoxBackground,
+      chatInputBackground,
+      chatInputTextColor,
+      chatBtn,
+      websiteChatBtn,
+      websiteQuestion,
+      needHelpTextColor,
+      textColor,
+      borderColor
+    ]);
+
+    return res.status(200).json({data: true})
+  } catch(e) {
+    console.log("An error occured while trying to send the chatbot config", e)
+    return res.status(500).json({data: false})
+  }
+})
 
  
 
