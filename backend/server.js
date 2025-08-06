@@ -3961,6 +3961,34 @@ app.get("/download-users-emails", async (req, res) => {
   }
 });
 
+app.get("/download-users-emails-pro", async (req, res) => {
+  try {
+    const [results] = await pool.query("SELECT email FROM users WHERE subscription_plan = ?", ['Pro']);
+
+    const csv = results.map(row => row.email).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=users_emails_pro.csv");
+    res.send(csv);
+  } catch (e) {
+    console.error("Error exporting users emails:", e);
+    res.status(500).send("Internal server error");
+  }
+});
+app.get("/download-users-emails-free", async (req, res) => {
+  try {
+    const [results] = await pool.query("SELECT email FROM users WHERE subscription_plan = ?", ['Free']);
+
+    const csv = results.map(row => row.email).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=users_emails_free.csv");
+    res.send(csv);
+  } catch (e) {
+    console.error("Error exporting users emails:", e);
+    res.status(500).send("Internal server error");
+  }
+});
 app.get("/admin-user-id", async (req, res) => {
   const {email} = req.query;
   try {

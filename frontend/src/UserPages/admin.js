@@ -352,8 +352,14 @@ const AdminPage = () => {
   Get Emails
 </button>
 
-<h2>Users Emails</h2>
+<h2 style={{ marginTop: "8px"}}>Users Emails</h2>
 <button onClick={() => window.open(`${directory}/download-users-emails`, '_blank')}>Get Users Emails</button>
+
+<h2 style={{ marginTop: "8px"}}>Users Emails Free</h2>
+<button onClick={() => window.open(`${directory}/download-users-emails-free`, '_blank')}>Get Users Emails Free</button>
+
+<h2 style={{ marginTop: "8px"}}>Users Emails Pro</h2>
+<button onClick={() => window.open(`${directory}/download-users-emails-pro`, '_blank')}>Get Users Emails Pro</button>
              </div>
              
             </div>
