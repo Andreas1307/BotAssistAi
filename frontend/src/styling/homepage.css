@@ -33,8 +33,11 @@
 .chat-inputs.homepage {
   max-height: 42px;
 }
+.chat-inputs.homepage button {
+  margin-top: -4px;
+}
 .config.homepage h2 {
-  font-size: 34px;
+  font-size: 31px;
 }
 .shopify-welcome:hover {
   scale: 1.01;
