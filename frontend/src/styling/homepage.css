@@ -34,7 +34,7 @@
   max-height: 42px;
 }
 .chat-inputs.homepage button {
-  margin-top: -1.5px;
+  margin-top: -1.2px;
 }
 .config.homepage h2 {
   font-size: 29px;
@@ -847,6 +847,11 @@
   }
   .cta-section p {
     text-align: center;
+  }
+}
+@media(max-width: 850px) {
+  .shopify-welcomeDiv {
+    overflow-y: auto;
   }
 }
 @media(max-width: 600px) {
