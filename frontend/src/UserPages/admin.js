@@ -352,6 +352,8 @@ const AdminPage = () => {
   Get Emails
 </button>
 
+<h2>Users Emails</h2>
+<button onClick={() => window.open(`${directory}/download-users-emails`, '_blank')}>Get Users Emails</button>
              </div>
              
             </div>
