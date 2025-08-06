@@ -27,6 +27,8 @@ const AdminPage = () => {
     const [expiryDate, setExpiryDate] = useState("")
     const [findData, setFindData] = useState([])
     const [suggestions, setSuggestions] = useState([])
+    const [userId, setUserId] = useState([])
+    const [email, setEmail] = useState("")
     const messagesPerPage = 20;
     const { key } = useParams();
 
@@ -204,11 +206,12 @@ const AdminPage = () => {
       }
     }
 
-    const getEmails = async () => {
+    const getUserId = async () => {
       try {
-        await axios.get(`${directory}/download-newsletter-emails`)
+        const response = await axios.get(`${directory}/admin-user-id`, { params: { email }})
+        setUserId(response.data.id)
       } catch(e) {
-        console.log("Error occured fetching the newsletter emails", e)
+        console.log("Error occured fetching the userId", e)
       }
     }
 
@@ -308,6 +311,27 @@ const AdminPage = () => {
                 <button className="saveMem" type="submit">Save</button>
                 </form>
                 {error}
+             </div>
+             <div className="getUserId">
+              <input type="text"
+              placeholder="Enter Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              />
+              <button onClick={() => getUserId()}>Find</button>
+              {userId.map((e, key) => (
+                <div key={key}>
+                  <p><strong>User Id:</strong>{e.user_id}</p>
+                  <p><strong>Username:</strong>{e.username}</p>
+                  <p><strong>Email:</strong>{e.email}</p>
+                  <p><strong>Created Account:</strong>{e.created_at}</p>
+                  <p><strong>Plan:</strong>{e.subscription_plan}</p>
+                  <p><strong>Last Login:</strong>{e.last_login}</p>
+                  <p><strong>Api Bot:</strong>{e.apiBot}</p>
+                  <p><strong>Last Connected:</strong>{e.last_connected}</p>
+                  <p><strong>Bookings:</strong>{e.booking}</p>
+                  </div>
+              ))}
              </div>
              <div className="admin-suggestions">
               <h2>Suggestions</h2>

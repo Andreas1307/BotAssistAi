@@ -3947,6 +3947,17 @@ app.get("/download-newsletter-emails", async (req, res) => {
   }
 });
 
+app.get("/admin-user-id", async (req, res) => {
+  const {email} = req.query;
+  try {
+    const [response] = await pool.query("SELECT * FROM users WHERE email = ?", [email])
+    return res.status(200).json({ id: response[0]})
+  } catch(e) {
+    console.log("Error occured fetching the userId", e)
+    return res.status(500).json({ id: []})
+  }
+})
+
 
 app.get("/admin-latest-users", async (req, res) => {
   const { key } = req.query;
