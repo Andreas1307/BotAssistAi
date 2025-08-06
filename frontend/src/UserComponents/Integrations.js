@@ -13,7 +13,7 @@ import {
 import "../styling/Integrations.css";
 import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import axios from "axios";
 import { authenticatedFetch } from "../utils/app-bridge";
 import { useShopifyInstalled } from "../utils/useShopifyInstalled";
@@ -35,6 +35,8 @@ const Integrations = () => {
   const [connected, setConnected] = useState(false);
   const [aiBot, setAiBot] = useState(false);
   const [chatBotConfig, setChatBotConfig] = useState(false)
+  const [shopifyUser, setShopifyUser] = useState(false)
+  const [shopifyDomain, setShopifyDomain] = useState("")
   const [colors, setColors] = useState({
     background: '#f2f2f2',
     chatbotBackground: '#092032',
@@ -48,7 +50,6 @@ const Integrations = () => {
     textColor: '#cccccc',
     borderColor: '#00F5D4'
   });
-  const shopifyInstalled = useShopifyInstalled();
   let toastId;
 
   const showErrorNotification = () => {
@@ -369,6 +370,36 @@ const Integrations = () => {
     getApiKey();
   }, [user]);
 
+  useEffect(() => {
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
+        setShopifyUser(response.data.data)
+        setShopifyDomain(response.data.domain)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+  }, [user])
+
+
+
+  const redirectToInstall = async (shop) => {
+    try {
+      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
+        shop,
+        colors,
+      });
+      if (response.data.data === true) {
+        setChatBotConfig(false)
+      }
+    } catch (e) {
+      console.log("An error occured while trying to send the chatbot config", e)
+    }
+  };
+  
+
   const handleCopyApiKey = () => {
     navigator.clipboard.writeText(apiKey).then(() => {
       setCopiedApi(true);
@@ -685,7 +716,14 @@ background: colors.websiteQuestion}}><p style={{
 color: colors.needHelpTextColor }}>Need Help?</p></div>
 <span  style={{ backgroundColor: colors.websiteChatBtn }}>💬</span>
 </div>
-<button onClick={() => setChatBotConfig(false)} className="chatbot-config-save">Save</button>
+<button onClick={() => {
+  if(shopifyUser) {
+    redirectToInstall(shopifyDomain)
+    setChatBotConfig(false)
+  } else {
+    setChatBotConfig(false)
+  }
+}} className="chatbot-config-save">Save</button>
       </div>
     </div>
   </div>

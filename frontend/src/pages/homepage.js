@@ -316,19 +316,6 @@ const Homepage = () => {
                         <h2>Customize Your Chatbot</h2>
                         <span>
                           <div>
-                            <p>Background:</p>
-                            <input
-                              type="color"
-                              value={colors.background}
-                              onChange={(e) =>
-                                setColors({
-                                  ...colors,
-                                  background: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                          <div>
                             <p>Chatbot Background:</p>
                             <input
                               type="color"

@@ -4086,6 +4086,24 @@ app.get("/satisfaction-admin", async (req, res) => {
   }
 })
 
+app.get("/check-shopify-user", async (req, res) => {
+  const { id } = req.query;
+  try {
+    const [rows] = await pool.query(
+      "SELECT shopify_shop_domain FROM users WHERE user_id = ?", 
+      [id]
+    );
+    
+    if (rows.length && rows[0].shopify_shop_domain) {
+      return res.json({ data: true, domain: rows[0].shopify_shop_domain });
+    } else {
+      return res.json({ data: false, domain: "" });
+    }    
+  } catch(e) {
+    console.log("An error occured checking the shopify user", e)
+    return res.status(500).json({ data: false, domain: ""})
+  }
+})
  
 
 app.listen(8090)
