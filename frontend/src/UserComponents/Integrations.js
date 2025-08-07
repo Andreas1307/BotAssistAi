@@ -374,7 +374,9 @@ const Integrations = () => {
     if(!shopifyDomain) return
     try {
       const response = await axios.get(`${directory}/get-shopify-styles`, { params: { shop: shopifyDomain }})
+      console.log("COLORS", response.data.data)
       setColors(response.data.data)
+      console.log("COLORS2", colors)
     } catch(e) {
       console.log("Error occured while trying to fetch the shopify styles", e)
     }
