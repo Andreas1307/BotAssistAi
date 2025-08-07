@@ -230,18 +230,7 @@ const Dashboard = () => {
   
   */
 
-  useEffect(() => {
-    const fetchShopifyUser = async () => {
-      if (!user || !user.user_id) return;
-      try {
-        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-  }, [user])
+ 
   
   // FETCH MEMBERSHIP
   useEffect(() => {
