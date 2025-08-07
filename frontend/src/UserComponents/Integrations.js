@@ -370,17 +370,6 @@ const Integrations = () => {
     getApiKey();
   }, [user]);
 
-  const getShopifyStyles = async () => {
-    if(!shopifyDomain) return
-    try {
-      const response = await axios.get(`${directory}/get-shopify-styles`, { params: { shop: shopifyDomain }})
-      console.log("COLORS", response.data.data)
-      setColors(response.data.data)
-      console.log("COLORS2", colors)
-    } catch(e) {
-      console.log("Error occured while trying to fetch the shopify styles", e)
-    }
-  } 
 
   useEffect(() => {
     const fetchShopifyUser = async () => {
@@ -397,6 +386,22 @@ const Integrations = () => {
     } 
     fetchShopifyUser()
   }, [user])
+
+  useEffect(() => {
+    const getShopifyStyles = async () => {
+      if (!shopifyDomain) return;
+      try {
+        const response = await axios.get(`${directory}/get-shopify-styles`, {
+          params: { shop: shopifyDomain }
+        });
+        console.log("COLORS", response.data.data);
+        setColors(response.data.data);
+      } catch (e) {
+        console.log("Error occurred while trying to fetch the Shopify styles", e);
+      }
+    };
+    getShopifyStyles();
+  }, [shopifyDomain]);
 
 
 
