@@ -4104,6 +4104,22 @@ app.get("/check-shopify-user", async (req, res) => {
     return res.status(500).json({ data: false, domain: ""})
   }
 })
- 
+
+
+app.get("/get-shopify-styles", async (req, res) => {
+  const { shop } = req.query;
+  try {
+    const [response] = await pool.query("SELECT * FROM shopify_customization WHERE shop = ?", [shop])
+
+    if (!response.length) {
+      return res.status(404).json({ error: "No customization found for this shop." });
+    }
+    
+    return res.status(200).json({ data: response[0]})
+  } catch(e) {
+    console.log("Error occured while trying to fetch the shopify styles", e)
+    return res.status(500)
+  }
+})
 
 app.listen(8090)

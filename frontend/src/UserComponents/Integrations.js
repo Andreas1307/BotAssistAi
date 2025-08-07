@@ -370,12 +370,23 @@ const Integrations = () => {
     getApiKey();
   }, [user]);
 
+  const getShopifyStyles = async () => {
+    if(!shopifyDomain) return
+    try {
+      const response = await axios.get(`${directory}/get-shopify-styles`, { params: { shop: shopifyDomain }})
+      setColors(response.data.data)
+    } catch(e) {
+      console.log("Error occured while trying to fetch the shopify styles", e)
+    }
+  } 
+
   useEffect(() => {
     const fetchShopifyUser = async () => {
       try {
         const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
         setShopifyDomain(response.data.domain)
+        getShopifyStyles()
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
       }
