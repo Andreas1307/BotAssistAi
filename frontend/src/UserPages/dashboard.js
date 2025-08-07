@@ -290,10 +290,10 @@ const Dashboard = () => {
   }, [user]); 
 
   useEffect(() => {
-    const fetchShopifyUser = async () => {
-      
-      try {
+    
         if (!user || !user.user_id) return;
+    const fetchShopifyUser = async () => {
+      try {
         const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
       } catch(e) {
@@ -302,6 +302,10 @@ const Dashboard = () => {
     } 
     fetchShopifyUser()
   }, [user])
+
+
+
+
   // FETCH USER SATISFACTION
   useEffect(() => {
     if (!user) return;
