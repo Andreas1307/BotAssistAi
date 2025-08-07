@@ -382,7 +382,9 @@ const Integrations = () => {
 
   useEffect(() => {
     const fetchShopifyUser = async () => {
+      if (!user || !user.user_id) return;
       try {
+        console.log("USERID", user.user_id)
         const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
         setShopifyDomain(response.data.domain)
