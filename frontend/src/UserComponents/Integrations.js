@@ -840,7 +840,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
         <div className="languages">
           <h3>
             <FaCode className="code-icon" />
-            Copy & Embed Code
+            {shopifyUser ? "Chatbot Customization" : "Copy & Embed Code"}
           </h3>
           <button
   className="configChatBtn"
@@ -854,6 +854,8 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 >
   Configure Chatbot
 </button>
+{!shopifyUser && (
+
 
           <select className="inteSelect" onChange={(e) => setSelectedLanguage(e.target.value)} value={selectedLanguage}>
   {codeSnippets.map((snippet, index) => {
@@ -876,6 +878,10 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
         <button className="copy-btn" onClick={handleCopy}>
           <FaCopy /> {copied ? "Copied!" : "Copy Code"}
         </button>
+
+
+)}
+
       </div>
       
    
