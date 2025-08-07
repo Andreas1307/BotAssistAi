@@ -854,9 +854,9 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 >
   Configure Chatbot
 </button>
+
 {!shopifyUser && (
-
-
+  <>   
           <select className="inteSelect" onChange={(e) => setSelectedLanguage(e.target.value)} value={selectedLanguage}>
   {codeSnippets.map((snippet, index) => {
     const language = Object.keys(snippet).find(key => key !== "proTip");
@@ -867,8 +867,13 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
     );
   })}
 </select>
-
+  </>
+      )}
         </div>
+      
+
+    {!shopifyUser && (
+  <>    
         {codeSnippets.find(snippet => snippet[selectedLanguage])?.proTip && (
   <p className="pro-tip">
     💡 {codeSnippets.find(snippet => snippet[selectedLanguage])?.proTip}
@@ -879,7 +884,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
           <FaCopy /> {copied ? "Copied!" : "Copy Code"}
         </button>
 
-
+</>
 )}
 
       </div>
