@@ -375,7 +375,6 @@ const Integrations = () => {
     const fetchShopifyUser = async () => {
       if (!user || !user.user_id) return;
       try {
-        console.log("USERID", user.user_id)
         const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
         setShopifyDomain(response.data.domain)
@@ -393,7 +392,6 @@ const Integrations = () => {
         const response = await axios.get(`${directory}/get-shopify-styles`, {
           params: { shop: shopifyDomain }
         });
-        console.log("COLORS", response.data.data);
         setColors(response.data.data);
       } catch (e) {
         console.log("Error occurred while trying to fetch the Shopify styles", e);
