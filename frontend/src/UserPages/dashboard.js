@@ -13,7 +13,6 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "axios";
-import { useShopifyInstalled } from "../utils/useShopifyInstalled";
 
 
 import { Link, useNavigate } from "react-router-dom";
@@ -63,8 +62,7 @@ const Dashboard = () => {
   const [lastConv, setLastConv] = useState([]);
   const [integration, setIntegration] = useState(false)
   const [bookingIntegration, setBookingIntegration] = useState(false)
-  const { shopifyInstalled, loadinging } = useShopifyInstalled();
-
+  const [shopifyUser, setShopifyUser] = useState(false)
 
 
 
@@ -231,6 +229,19 @@ const Dashboard = () => {
   }, []);
   
   */
+
+  useEffect(() => {
+    const fetchShopifyUser = async () => {
+      if (!user || !user.user_id) return;
+      try {
+        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+  }, [user])
   
   // FETCH MEMBERSHIP
   useEffect(() => {
@@ -759,7 +770,7 @@ if (loading) {
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
     // Conditionally include Bookings
-    ...(!shopifyInstalled
+    ...(!shopifyUser
       ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
       : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
@@ -1183,7 +1194,7 @@ if (loading) {
 
 
 
-{!shopifyInstalled && (
+{!shopifyUser && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">
