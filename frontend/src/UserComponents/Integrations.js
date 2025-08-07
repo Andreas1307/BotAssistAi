@@ -844,7 +844,19 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
             <FaCode className="code-icon" />
             Copy & Embed Code
           </h3>
-          <button className="configChatBtn" onClick={() => setChatBotConfig(true)}>Configure Chatbot</button>
+          <button
+  className="configChatBtn"
+  onClick={() => {
+    if (window.top !== window.self) {
+      alert("This action is not available inside the Shopify admin. Please open the app in a new tab.");
+    } else {
+      setChatBotConfig(true);
+    }
+  }}
+>
+  Configure Chatbot
+</button>
+
           <select className="inteSelect" onChange={(e) => setSelectedLanguage(e.target.value)} value={selectedLanguage}>
   {codeSnippets.map((snippet, index) => {
     const language = Object.keys(snippet).find(key => key !== "proTip");
