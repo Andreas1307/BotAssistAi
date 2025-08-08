@@ -185,7 +185,7 @@ const AdminPage = () => {
         const interval = setInterval(fetchSatisfaction, 5000); // Auto-refresh every 5 seconds
       
         return () => clearInterval(interval); // Cleanup interval on unmount
-      }, []);
+      }, [key]);
       
       
   
@@ -276,7 +276,7 @@ const AdminPage = () => {
           fetchSuggestions()
         }, 1000);
     console.log("cvxvgdfgdf"
-      
+
     )
         return () => clearInterval(interval);
       }, [
