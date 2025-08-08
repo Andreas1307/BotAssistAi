@@ -274,7 +274,7 @@ const AdminPage = () => {
           fetchUnresolvedQueries();
           fetchTotalConvs();
           fetchSuggestions()
-        }, 10000);
+        }, 1000);
       
         return () => clearInterval(interval);
       }, [
