@@ -275,9 +275,7 @@ const AdminPage = () => {
           fetchTotalConvs();
           fetchSuggestions()
         }, 1000);
-    console.log("cvxvgdfgdf"
 
-    )
         return () => clearInterval(interval);
       }, [
         fetchMessages,
