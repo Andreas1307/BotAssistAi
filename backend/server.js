@@ -292,28 +292,46 @@ app.use((req, res, next) => {
   next();
 });
 
-const oauthStateStore = new Map();
+//const oauthStateStore = new Map();
 
  
 app.get('/shopify/install', (req, res) => {
-  const { shop } = req.query;
-  if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid shop');
+  try {
+    const { shop } = req.query;
+    const shopLower = shop?.toLowerCase();
 
-  const state = crypto.randomBytes(16).toString('hex');
-  oauthStateStore.set(shop, state);
+    if (!shopLower || !isValidShop(shopLower)) {
+      return res.status(400).send('❌ Invalid shop parameter');
+    }
 
-  const host = Buffer.from(shop, 'utf8').toString('base64');
+    // ✅ Only generate state if not already present in session
+    const state = req.session.shopify_state || crypto.randomBytes(16).toString('hex');
+    const host = Buffer.from(shopLower, 'utf8').toString('base64');
 
-  const installUrl =
-    `https://${shop.toLowerCase()}/admin/oauth/authorize` +
-    `?client_id=${process.env.SHOPIFY_API_KEY}` +
-    `&scope=${process.env.SHOPIFY_SCOPES}` +
-    `&state=${state}` +
-    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-    `&host=${encodeURIComponent(host)}`;
+    req.session.shopify_state = state;
+    req.session.shopify_host = host;
+    req.session.test = "session_active";
 
-  // Return URL in JSON instead of redirecting
-  res.json({ installUrl });
+    const installUrl =
+      `https://${shopLower}/admin/oauth/authorize` +
+      `?client_id=${process.env.SHOPIFY_API_KEY}` +
+      `&scope=${process.env.SHOPIFY_SCOPES}` +
+      `&state=${state}` +
+      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+      `&host=${encodeURIComponent(host)}`;
+   
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).send("Internal server error");
+        }
+        return res.redirect(installUrl);
+      });
+
+  } catch (err) {
+    console.error("❌ /shopify/install failed:", err);
+    return res.status(500).send("Internal server error");
+  }
 });
 
 
