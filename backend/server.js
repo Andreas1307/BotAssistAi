@@ -900,22 +900,26 @@ app.get("/shopify/callback", async (req, res) => {
       `, [normalizedShop, accessToken, user.user_id]);
 
       // ✅ Immediately redirect into embedded app
-      const redirectUrl = `/?shop=${normalizedShop}&host=${host}&shopifyUser=true`;
-      res.set("Content-Type", "text/html");
-      res.send(`
-        <script src="https://unpkg.com/@shopify/app-bridge"></script>
-        <script>
-          const AppBridge = window["app-bridge"].default;
-          const actions = window["app-bridge"].actions;
-          const app = AppBridge({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, "${redirectUrl}");
-        </script>
-      `);
+      const embeddedUrl = `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`;
+
+res.set("Content-Type", "text/html");
+res.send(`
+  <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+  <script>
+    const AppBridge = window["app-bridge"].default;
+    const actions = window["app-bridge"].actions;
+
+    const app = AppBridge({
+      apiKey: "${process.env.SHOPIFY_API_KEY}",
+      host: "${host}",
+      forceRedirect: true
+    });
+
+    const redirect = actions.Redirect.create(app);
+    redirect.dispatch(actions.Redirect.Action.REMOTE, "${embeddedUrl}");
+  </script>
+`);
+
     });
 
   } catch (err) {
