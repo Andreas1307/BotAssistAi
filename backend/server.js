@@ -303,7 +303,6 @@ app.get('/shopify/install', (req, res) => {
     const state = crypto.randomBytes(16).toString('hex');
     req.session.shopify_state = state;
 
-    // Redirect URL Shopify expects on install (no host param here!)
     const installUrl =
       `https://${shopLower}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
@@ -316,15 +315,13 @@ app.get('/shopify/install', (req, res) => {
         console.error('Session save error:', err);
         return res.status(500).send('Internal server error');
       }
-      // Redirect **directly** to Shopify OAuth URL — no intermediary URLs!
-      return res.redirect(installUrl);
+      return res.redirect(installUrl);  // Redirect *directly* to Shopify OAuth URL here
     });
   } catch (err) {
     console.error('❌ /shopify/install failed:', err);
     return res.status(500).send('Internal server error');
   }
 });
-
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
