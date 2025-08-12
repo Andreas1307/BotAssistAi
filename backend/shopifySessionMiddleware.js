@@ -3,14 +3,10 @@ const jwksClient = require('jwks-rsa');
 
 function shopifySessionMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    return next();
-  }
+  if (!authHeader?.startsWith('Bearer ')) return next();
 
   const token = authHeader.replace('Bearer ', '');
 
-  // Decode without verifying just to read the `iss`
   let decodedHeader;
   try {
     decodedHeader = jwt.decode(token, { complete: true });
@@ -23,7 +19,10 @@ function shopifySessionMiddleware(req, res, next) {
   }
 
   const issuer = decodedHeader.payload.iss; // e.g. "https://mystore.myshopify.com/admin"
-  const jwksUri = issuer.replace('/admin', '/.well-known/jwks.json');
+  const shopOrigin = issuer.replace('/admin', '');
+  const jwksUri = `${shopOrigin}/.well-known/jwks.json`;
+
+  console.log("🔑 JWKS URI:", jwksUri);
 
   const client = jwksClient({ jwksUri });
 
