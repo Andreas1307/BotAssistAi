@@ -293,35 +293,23 @@ app.use((req, res, next) => {
 });
  
 app.get('/shopify/install', (req, res) => {
-  try {
-    const { shop } = req.query;
-    if (!shop || !isValidShop(shop.toLowerCase())) {
-      return res.status(400).send('❌ Invalid shop parameter');
-    }
-
-    const shopLower = shop.toLowerCase();
-    const state = crypto.randomBytes(16).toString('hex');
-    req.session.shopify_state = state;
-
-    const installUrl =
-      `https://${shopLower}/admin/oauth/authorize` +
-      `?client_id=${process.env.SHOPIFY_API_KEY}` +
-      `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
-      `&state=${state}` +
-      `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
-
-    req.session.save((err) => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.status(500).send('Internal server error');
-      }
-      return res.redirect(installUrl);  // Redirect *directly* to Shopify OAuth URL here
-    });
-  } catch (err) {
-    console.error('❌ /shopify/install failed:', err);
-    return res.status(500).send('Internal server error');
+  const { shop } = req.query;
+  if (!shop || !isValidShop(shop)) {
+    return res.status(400).send('Invalid shop parameter');
   }
+
+  const state = crypto.randomBytes(16).toString('hex');
+  req.session.shopify_state = state; // keep for callback validation
+
+  const installUrl = `https://${shop}/admin/oauth/authorize` +
+    `?client_id=${process.env.SHOPIFY_API_KEY}` +
+    `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
+    `&state=${state}` +
+    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
+
+  return res.redirect(installUrl); // immediate 302 to Shopify
 });
+
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
@@ -893,23 +881,8 @@ app.get("/shopify/callback", async (req, res) => {
 
       const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
 
-      res.set('Content-Type', 'text/html');
-      res.send(`
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script>
-          const AppBridge = window["app-bridge"].default;
-          const actions = window["app-bridge"].actions;
-      
-          const app = AppBridge({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-      
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, "${embeddedUrl}");
-        </script>
-      `);
+      // Instead of sending HTML + JS, do this:
+      return res.redirect(embeddedUrl);
     });
 
   } catch (err) {
