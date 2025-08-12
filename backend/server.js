@@ -907,7 +907,8 @@ res.send(`
       });
 
       const redirect = actions.Redirect.create(app);
-      redirect.dispatch(actions.Redirect.Action.REMOTE, "/?shop=" + shop + "&host=" + host);
+      redirect.dispatch(actions.Redirect.Action.REMOTE, "https://${shop}/admin/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}");
+
     } else {
       document.body.innerHTML = "<h3>Missing shop or host parameter.</h3>";
     }
