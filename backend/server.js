@@ -50,7 +50,6 @@ const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
-const conditionalVerifySessionToken = require('./conditionalVerifySessionToken');
 
 
 const sessionStore = new MySQLStore({
@@ -291,9 +290,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-//const oauthStateStore = new Map();
-
  
 app.get('/shopify/install', (req, res) => {
   try {
@@ -333,7 +329,6 @@ app.get('/shopify/install', (req, res) => {
     return res.status(500).send("Internal server error");
   }
 });
-
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
@@ -738,10 +733,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    const storedState = oauthStateStore.get(shop);
+    const storedState = req.session.shopify_state;
 
     // ✅ Basic validation
     if (!shop || !isValidShop(shop)) {
@@ -894,6 +890,7 @@ app.get("/shopify/callback", async (req, res) => {
         return res.status(500).send("❌ Failed to log in after registration.");
       }
 
+      // ✅ Store install with user_id
       await pool.query(`
         INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
         VALUES (?, ?, ?, NOW())
@@ -901,8 +898,7 @@ app.get("/shopify/callback", async (req, res) => {
       `, [normalizedShop, accessToken, user.user_id]);
 
       // ✅ Immediately redirect into embedded app
-      const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`
-
+      const redirectUrl = `/?shop=${normalizedShop}&host=${host}&shopifyUser=true`;
       res.set("Content-Type", "text/html");
       res.send(`
         <script src="https://unpkg.com/@shopify/app-bridge"></script>
