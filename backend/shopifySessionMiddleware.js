@@ -18,13 +18,18 @@ function shopifySessionMiddleware(req, res, next) {
     return res.status(401).send('Missing issuer in token');
   }
 
-  const issuer = decodedHeader.payload.iss; // e.g. "https://mystore.myshopify.com/admin"
+  const issuer = decodedHeader.payload.iss; // e.g. https://mystore.myshopify.com/admin
   const shopOrigin = issuer.replace('/admin', '');
   const jwksUri = `${shopOrigin}/.well-known/jwks.json`;
 
   console.log("🔑 JWKS URI:", jwksUri);
 
-  const client = jwksClient({ jwksUri });
+  const client = jwksClient({
+    jwksUri,
+    requestHeaders: {
+      'User-Agent': 'Shopify App/1.0 (+https://yourappurl.com)', // Set your app URL here
+    },
+  });
 
   function getKey(header, callback) {
     client.getSigningKey(header.kid, (err, key) => {
