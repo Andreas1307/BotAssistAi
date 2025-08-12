@@ -882,22 +882,40 @@ app.get("/shopify/callback", async (req, res) => {
       const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
 
       res.set('Content-Type', 'text/html');
-      res.send(`
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script>
-          const AppBridge = window["app-bridge"].default;
-          const actions = window["app-bridge"].actions;
-      
-          const app = AppBridge({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-      
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, "${embeddedUrl}");
-        </script>
-      `);
+res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+</head>
+<body>
+  <p>Redirecting to your app…</p>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const host = urlParams.get("host");
+    const shop = urlParams.get("shop");
+
+    if (host && shop) {
+      const AppBridge = window["app-bridge"].default;
+      const actions = window["app-bridge"].actions;
+
+      const app = AppBridge({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: host,
+        forceRedirect: true
+      });
+
+      const redirect = actions.Redirect.create(app);
+      redirect.dispatch(actions.Redirect.Action.REMOTE, "/?shop=" + shop + "&host=" + host);
+    } else {
+      document.body.innerHTML = "<h3>Missing shop or host parameter.</h3>";
+    }
+  </script>
+</body>
+</html>
+`);
+
     });
 
   } catch (err) {
