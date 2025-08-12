@@ -25,8 +25,6 @@ import {
   waitForAppBridge,
 } from "../utils/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
-
-
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -65,8 +63,9 @@ const Homepage = () => {
   const navigate = useNavigate();
 
 
-/*
+
   
+
 
   useEffect(() => {
     const checkShop = async () => {
@@ -98,25 +97,23 @@ const Homepage = () => {
   const redirectToInstall = async (shop) => {
     if (!shop) return;
     try {
-      const response = await axios.post(`${directory}/chatbot-config-shopify`, { shop, colors });
+      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
+        shop,
+        colors,
+      });
       if (response.data.data === true) {
-        // Fetch install URL from backend
-        const installRes = await axios.get(`https://api.botassistai.com/shopify/install?shop=${shop}`);
-        if (installRes.data.installUrl) {
-          window.location.href = installRes.data.installUrl;
-        } else {
-          console.error("No install URL returned");
-        }
+        window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
       }
     } catch (e) {
-      console.log("Error sending chatbot config or installing", e);
+      console.log("An error occured while trying to send the chatbot config", e)
     }
+   
   };
   
   
   
     //useShopifyInstallRedirect();
-
+/*
   const API_BASE = "https://api.botassistai.com";
   
   const [shopData, setShopData] = useState(null);
@@ -526,7 +523,7 @@ const Homepage = () => {
                       </div>
                     </div>
                   </div>
-                  <button >
+                  <button onClick={() => redirectToInstall(shop)}>
                     Install App
                   </button>
                 </div>
