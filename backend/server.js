@@ -715,7 +715,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(conditionalVerifySessionToken);
 
 
 app.get("/shopify/callback", async (req, res) => {
