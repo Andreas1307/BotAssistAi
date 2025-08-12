@@ -114,7 +114,20 @@ const Dashboard = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {   
+    if (!user) return;
 
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+
+  }, [])
   /*
   useShopifyInstallRedirect();
 
@@ -289,20 +302,7 @@ const Dashboard = () => {
     fetchQueries();
   }, [user]); 
 
-  useEffect(() => {   
-    if (!user) return;
 
-    const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-
-  }, [])
 
 
 
