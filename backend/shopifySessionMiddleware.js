@@ -2,8 +2,9 @@ const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
 const client = jwksClient({
-  jwksUri: 'https://shopify.com/admin/oauth/jwks', // ✅ correct JWKS
-});
+    jwksUri: 'https://shopify.dev/api/jwt/jwks', // correct Shopify JWKS endpoint
+  });
+  
 
 function getKey(header, callback) {
   client.getSigningKey(header.kid, (err, key) => {
