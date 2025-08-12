@@ -1,6 +1,7 @@
 // shopifyFetch.js
 import { getSessionToken } from '@shopify/app-bridge-utils';
 import createApp from '@shopify/app-bridge';
+import axios from "axios";
 
 const appBridgeApp = createApp({
   apiKey: process.env.SHOPIFY_API_KEY,

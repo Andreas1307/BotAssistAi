@@ -361,11 +361,9 @@ const Integrations = () => {
             params: { userId: user?.user_id }
           });
           setUser(res.data.user);
-        setRenew(res.data.showRenewalModal)
         } else {
         const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
         setUser(res.data.user);
-        setRenew(res.data.showRenewalModal)
         }
       } catch (error) {
         setUser(null);
