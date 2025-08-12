@@ -114,6 +114,7 @@ app.use(session({
     domain: 'api.botassistai.com' 
   }
 }));
+app.use(shopifySessionMiddleware);
 
 
 
@@ -713,7 +714,6 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(shopifySessionMiddleware);
 
 
 app.get("/shopify/callback", async (req, res) => {
