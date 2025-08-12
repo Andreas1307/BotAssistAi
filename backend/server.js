@@ -881,8 +881,23 @@ app.get("/shopify/callback", async (req, res) => {
 
       const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
 
-      // Instead of sending HTML + JS, do this:
-      return res.redirect(embeddedUrl);
+      res.set('Content-Type', 'text/html');
+      res.send(`
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script>
+          const AppBridge = window["app-bridge"].default;
+          const actions = window["app-bridge"].actions;
+      
+          const app = AppBridge({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+            forceRedirect: true
+          });
+      
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "${embeddedUrl}");
+        </script>
+      `);
     });
 
   } catch (err) {
