@@ -1,13 +1,10 @@
-// shopifySessionMiddleware.js
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
-// Shopify JWKS (public key endpoint)
 const client = jwksClient({
-  jwksUri: 'https://shopify.dev/api/jwt/jwks',
+  jwksUri: 'https://shopify.com/admin/oauth/jwks', // ✅ correct JWKS
 });
 
-// Helper to get the public key
 function getKey(header, callback) {
   client.getSigningKey(header.kid, (err, key) => {
     if (err) return callback(err);
@@ -18,7 +15,6 @@ function getKey(header, callback) {
 function shopifySessionMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  // If no Authorization header → not a Shopify iframe request
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next();
   }
@@ -30,7 +26,7 @@ function shopifySessionMiddleware(req, res, next) {
     getKey,
     {
       audience: process.env.SHOPIFY_API_KEY,
-      issuer: 'https://shopify.app',
+      issuer: 'https://shopify.com',
       algorithms: ['RS256'],
     },
     (err, decoded) => {
@@ -38,8 +34,7 @@ function shopifySessionMiddleware(req, res, next) {
         console.error('❌ Invalid Shopify session token:', err);
         return res.status(401).send('Unauthorized Shopify request');
       }
-
-      req.shopifySession = decoded; // decoded token payload
+      req.shopifySession = decoded;
       next();
     }
   );
