@@ -296,33 +296,33 @@ app.use((req, res, next) => {
 app.get('/shopify/install', (req, res) => {
   try {
     const { shop } = req.query;
-    const shopLower = shop?.toLowerCase();
-
-    if (!shopLower || !isValidShop(shopLower)) {
+    if (!shop || !isValidShop(shop.toLowerCase())) {
       return res.status(400).send('❌ Invalid shop parameter');
     }
 
+    const shopLower = shop.toLowerCase();
     const state = crypto.randomBytes(16).toString('hex');
     req.session.shopify_state = state;
 
+    // Redirect URL Shopify expects on install (no host param here!)
     const installUrl =
       `https://${shopLower}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
-      `&scope=${process.env.SHOPIFY_SCOPES}` +
+      `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
       `&state=${state}` +
       `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
 
     req.session.save((err) => {
       if (err) {
-        console.error("Session save error:", err);
-        return res.status(500).send("Internal server error");
+        console.error('Session save error:', err);
+        return res.status(500).send('Internal server error');
       }
+      // Redirect **directly** to Shopify OAuth URL — no intermediary URLs!
       return res.redirect(installUrl);
     });
-
   } catch (err) {
-    console.error("❌ /shopify/install failed:", err);
-    return res.status(500).send("Internal server error");
+    console.error('❌ /shopify/install failed:', err);
+    return res.status(500).send('Internal server error');
   }
 });
 
@@ -894,27 +894,25 @@ app.get("/shopify/callback", async (req, res) => {
         ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
       `, [normalizedShop, accessToken, user.user_id]);
 
-      // ✅ Immediately redirect into embedded app
-      const embeddedUrl = `https://admin.shopify.com/store/${normalizedShop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${normalizedShop}&host=${host}`;
+      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
 
-res.set("Content-Type", "text/html");
-res.send(`
-  <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-  <script>
-    const AppBridge = window["app-bridge"].default;
-    const actions = window["app-bridge"].actions;
-
-    const app = AppBridge({
-      apiKey: "${process.env.SHOPIFY_API_KEY}",
-      host: "${host}",
-      forceRedirect: true
-    });
-
-    const redirect = actions.Redirect.create(app);
-    redirect.dispatch(actions.Redirect.Action.REMOTE, "${embeddedUrl}");
-  </script>
-`);
-
+      res.set('Content-Type', 'text/html');
+      res.send(`
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script>
+          const AppBridge = window["app-bridge"].default;
+          const actions = window["app-bridge"].actions;
+      
+          const app = AppBridge({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+            forceRedirect: true
+          });
+      
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "${embeddedUrl}");
+        </script>
+      `);
     });
 
   } catch (err) {
