@@ -98,17 +98,19 @@ const Homepage = () => {
   const redirectToInstall = async (shop) => {
     if (!shop) return;
     try {
-      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
-        shop,
-        colors,
-      });
+      const response = await axios.post(`${directory}/chatbot-config-shopify`, { shop, colors });
       if (response.data.data === true) {
-        window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+        // Fetch install URL from backend
+        const installRes = await axios.get(`https://api.botassistai.com/shopify/install?shop=${shop}`);
+        if (installRes.data.installUrl) {
+          window.location.href = installRes.data.installUrl;
+        } else {
+          console.error("No install URL returned");
+        }
       }
     } catch (e) {
-      console.log("An error occured while trying to send the chatbot config", e)
+      console.log("Error sending chatbot config or installing", e);
     }
-   
   };
   
   

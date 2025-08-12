@@ -305,14 +305,14 @@ app.get('/shopify/install', (req, res) => {
   const host = Buffer.from(shop, 'utf8').toString('base64');
 
   const installUrl =
-      `https://${shop.toLowerCase()}/admin/oauth/authorize` +
-      `?client_id=${process.env.SHOPIFY_API_KEY}` +
-      `&scope=${process.env.SHOPIFY_SCOPES}` +
-      `&state=${state}` +
-      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-      `&host=${encodeURIComponent(host)}`;
+    `https://${shop.toLowerCase()}/admin/oauth/authorize` +
+    `?client_id=${process.env.SHOPIFY_API_KEY}` +
+    `&scope=${process.env.SHOPIFY_SCOPES}` +
+    `&state=${state}` +
+    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+    `&host=${encodeURIComponent(host)}`;
 
-  // Instead of redirect, send installUrl to frontend
+  // Return URL in JSON instead of redirecting
   res.json({ installUrl });
 });
 
