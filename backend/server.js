@@ -872,7 +872,6 @@ app.get("/shopify/callback", async (req, res) => {
         return res.status(500).send("❌ Failed to log in after registration.");
       }
 
-      // ✅ Store install with user_id
       await pool.query(`
         INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
         VALUES (?, ?, ?, NOW())
@@ -883,29 +882,27 @@ app.get("/shopify/callback", async (req, res) => {
 
       res.set('Content-Type', 'text/html');
       res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>App Installed</title>
-        <style>
-          body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-        </style>
-      </head>
-      <body>
-        <h2>✅ App installed successfully!</h2>
-        <p>You’ll be redirected to your app in a moment...</p>
-        <script>
-          setTimeout(() => {
-            const host = "${host}";
-            const shop = "${shop}";
-            window.location.href = "https://${shop}/admin/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=" + shop + "&host=" + host;
-          }, 1500); // wait 1.5s so Shopify review check can see the page
-        </script>
-      </body>
-      </html>
-      `);  
-
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>App Installed</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+          </style>
+        </head>
+        <body>
+          <h2>✅ App installed successfully</h2>
+          <p>Redirecting to your app...</p>
+          <script>
+            setTimeout(() => {
+              window.location.href = "${embeddedUrl}";
+            }, 1200);
+          </script>
+        </body>
+        </html>
+      `);
+      
     });
 
   } catch (err) {
