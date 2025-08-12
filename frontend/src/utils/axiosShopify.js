@@ -5,12 +5,13 @@ import { getSessionToken } from "@shopify/app-bridge-utils";
 let app = null;
 
 function getAppInstance() {
+    
   if (app) return app;
 
   const urlParams = new URLSearchParams(window.location.search);
   const shop = urlParams.get("shop");
   const host = urlParams.get("host");
-
+  alert("hello hello", shop, host)
   if (shop && host) {
     app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
