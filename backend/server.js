@@ -303,16 +303,19 @@ app.get('/shopify/install', (req, res) => {
   oauthStateStore.set(shop, state);
 
   const host = Buffer.from(shop, 'utf8').toString('base64');
+
   const installUrl =
-      `https://${shopLower}/admin/oauth/authorize` +
+      `https://${shop.toLowerCase()}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
       `&scope=${process.env.SHOPIFY_SCOPES}` +
       `&state=${state}` +
       `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
       `&host=${encodeURIComponent(host)}`;
 
-  res.redirect(installUrl);
+  // Instead of redirect, send installUrl to frontend
+  res.json({ installUrl });
 });
+
 
 app.get('/clear-cookies', (req, res) => {
   const options = {

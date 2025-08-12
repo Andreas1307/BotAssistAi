@@ -18,7 +18,7 @@ const host = getAppBridgeHost();
 let appBridgeApp = null;
 if (host) {
   appBridgeApp = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,  // use REACT_APP_ prefix for env vars in React
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,  
     host,
   });
 } else {
