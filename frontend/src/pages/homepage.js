@@ -81,7 +81,7 @@ const Homepage = () => {
 
       setShop(shopParam); // Will trigger re-render
       try {
-        const res = await axios.get(`https://api.botassistai.com/check-shopify-store`, {
+        const res = await axios.get(`https://api.botdsfdsassistai.com/check-shopify-store`, {
           params: { shop: shopParam },
         });
         console.log("✅ Backend says installed:", res.data.installed);
