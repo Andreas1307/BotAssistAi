@@ -4,20 +4,33 @@ import { getSessionToken } from "@shopify/app-bridge-utils";
 
 let app = null;
 
-function getAppInstance() {
-    
-  if (app) return app;
-
+function isEmbeddedApp() {
+  // Shopify embedded apps run inside an iframe inside Shopify Admin.
+  // Check if window is inside iframe AND if URL has shop & host params
   const urlParams = new URLSearchParams(window.location.search);
   const shop = urlParams.get("shop");
   const host = urlParams.get("host");
-  alert("hello hello", shop, host)
-  if (shop && host) {
-    app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-    });
+  
+  const inIframe = window.self !== window.top;
+  
+  return inIframe && shop && host;
+}
+
+function getAppInstance() {
+  if (app) return app;
+
+  if (!isEmbeddedApp()) {
+    // Not in embedded Shopify app context, do not create App Bridge instance
+    return null;
   }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const host = urlParams.get("host");
+
+  app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+  });
   return app;
 }
 
@@ -33,7 +46,6 @@ instance.interceptors.request.use(async (config) => {
       const token = await getSessionToken(app);
       config.headers.Authorization = `Bearer ${token}`;
 
-      // Optional header for backend
       const urlParams = new URLSearchParams(window.location.search);
       const shop = urlParams.get("shop");
       if (shop) {
@@ -47,4 +59,3 @@ instance.interceptors.request.use(async (config) => {
 });
 
 export default instance;
- 
