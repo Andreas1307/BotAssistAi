@@ -65,7 +65,7 @@ const Homepage = () => {
   const navigate = useNavigate();
 
 
-
+/*
   
 
   useEffect(() => {
@@ -116,7 +116,7 @@ const Homepage = () => {
   
   
     //useShopifyInstallRedirect();
-/*
+
   const API_BASE = "https://api.botassistai.com";
   
   const [shopData, setShopData] = useState(null);
