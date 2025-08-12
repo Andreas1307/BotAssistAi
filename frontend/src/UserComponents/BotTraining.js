@@ -5,7 +5,6 @@ import "../styling/BotTraining.css"
 import axios from 'axios';
 import directory from '../directory';
 import { ToastContainer, toast } from 'react-toastify';
-import { shopifyAxios } from "../utils/shopifyFetch";
 
 const SupportBotCustomization = () => {
   const [responseTone, setResponseTone] = useState('');
@@ -26,21 +25,6 @@ const SupportBotCustomization = () => {
     fine_tuning_data: "",
     phoneNum: ""
   });
-  const [shopifyUser, setShopifyUser] = useState(false)
-  useEffect(() => {   
-    if (!user) return;
-
-    const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-
-  }, [])
 
 
   const showNotification = (m) => {
@@ -77,17 +61,8 @@ const SupportBotCustomization = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        if (shopifyUser) {
-          const res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/auth-check`
-          });
-          setUser(res.data.user);
-        } else {
-          const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
         setUser(res.data.user);
-        }
-        
       } catch (error) {
         setUser(null);
         showErrorNotification()
@@ -103,20 +78,12 @@ const SupportBotCustomization = () => {
   
     const fetchUserData = async () => {
       try {
-        let response;
-        if (shopifyUser) {
-          response = shopifyAxios({
-            method: 'post',
-            url: `${directory}/user-training`,
-            data: { username: user.username }
-          });
-        } else {
-         response = await axios.post(
+        const response = await axios.post(
           `${directory}/user-training`,
           { username: user.username },
           { withCredentials: true }
         );
-      }
+
         const data = response.data.config || {};
   
         const mappedConfig = {
@@ -150,18 +117,9 @@ const SupportBotCustomization = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        let response;
-        if(shopifyUser) {
-          response = shopifyAxios({
-            method: 'get',
-            url: `${directory}/get-membership`,
-            params: { userId: user?.user_id }
-          });
-        } else {
-         response = await axios.get(`${directory}/get-membership`, {
+        const response = await axios.get(`${directory}/get-membership`, {
           params: { userId: user?.user_id}
         })
-      }
         if(response.data.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
@@ -202,20 +160,10 @@ const setFieldValue = (field, value) => {
     formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
-      if (shopifyUser) {
-        const response = await shopifyAxios({
-          method: 'post',
-          url: `${directory}/update-config`,
-          data: formData,
-          headers: { 'Content-Type': 'multipart/form-data' },  // explicitly add header to be safe
-        });
-      } else {
-        const response = await axios.post(`${directory}/update-config`, formData, {
-          headers: { "Content-Type": "multipart/form-data" }, // Ensure correct content type
-          withCredentials: true,
-        });
-      }
-     
+      const response = await axios.post(`${directory}/update-config`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }, // Ensure correct content type
+        withCredentials: true,
+      });
       showNotification("Settings updated successfully!");
     } catch (e) {
       showErrorNotification("Something went wrong with saving settings.")
@@ -238,25 +186,10 @@ const setFieldValue = (field, value) => {
     formData.append("file", file);
   
     try {
-      let response;
-
-      if (shopifyUser) {
-        // Shopify embedded: POST file upload with session token header
-        response = await shopifyAxios({
-          method: 'post',
-          url: `${directory}/upload-file`,
-          data: formData, // <-- POST body is formData
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        // Non-Shopify: POST file upload
-        response = await axios.post(`${directory}/upload-file`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
-        });
-      }
-  
-      
+      const response = await axios.post(`${directory}/upload-file`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      });
   
       setUploadStatus("File uploaded successfully!");
     } catch (error) {

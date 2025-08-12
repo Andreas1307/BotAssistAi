@@ -6,7 +6,6 @@ import axios from "axios";
 import directory from '../directory';
 import { Link } from "react-router-dom"
 import { ToastContainer, toast } from 'react-toastify';
-import { shopifyAxios } from "../utils/shopifyFetch";
 
 const AnalyticsPage = () => {
   const chartRefs = useRef([]);
@@ -49,38 +48,12 @@ const AnalyticsPage = () => {
       },
     });
   };
-
-  const [shopifyUser, setShopifyUser] = useState(false)
-  useEffect(() => {   
-    if (!user) return;
-
-    const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-
-  }, [])
-
   
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        if (shopifyUser ){
-          const res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/auth-check`,
-            params: { userId: user?.user_id }
-          });
-          setUser(res.data.user);
-        } else {
         const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
         setUser(res.data.user);
-        }
       } catch (error) {
         setUser(null);
         showErrorNotification()
@@ -91,58 +64,36 @@ const AnalyticsPage = () => {
     fetchUser();
   }, []);
 
+  // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
-      if (!user) return;
-      try {
-        if (shopifyUser) {
-          const response = await shopifyAxios({
-            method: 'get',
-            url: `${directory}/get-membership`,
-            params: { userId: user?.user_id },
-          });
-          if (response.data.message.subscription_plan === "Pro") {
-            setMembership(true);
-          } else {
-            setMembership(false);
-          }
+      if (!user) return
+      try{
+        const response = await axios.get(`${directory}/get-membership`, {
+          params: { userId: user?.user_id}
+        })
+        if(response.data.message.subscription_plan === "Pro") {
+          setMembership(true)
         } else {
-          const response = await axios.get(`${directory}/get-membership`, {
-            params: { userId: user?.user_id },
-          });
-          if (response.data.message.subscription_plan === "Pro") {
-            setMembership(true);
-          } else {
-            setMembership(false);
-          }
+          setMembership(false)
         }
-      } catch (e) {
-        console.log("Error occurred with retrieving the membership status", e);
-        showErrorNotification();
+      } catch(e) {
+        console.log("Error occured with retreiveing the membership status",e)
+        //NOTIFY HERE
       }
-    };
-    fetchMembership();
-  }, [user]);
+    }
+    fetchMembership()
+  }, [user])
 
   //FETCH DAILY COUNT
   useEffect(() => {
     const fetchDaily = async () => {
       if(!user) return
       try {
-        if(shopifyUser) {
-          const res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/daily-messages`,
-            params: { userId: user?.user_id }
-          });
-          setDailyCount(res.data.dailyMessages)
-        } else {
-          const res = await axios.get(`${directory}/daily-messages`, {
-            params: { userId: user?.user_id}
-          }, { withCredentials: true})
-          setDailyCount(res.data.dailyMessages)
-        }
-       
+        const res = await axios.get(`${directory}/daily-messages`, {
+          params: { userId: user?.user_id}
+        }, { withCredentials: true})
+        setDailyCount(res.data.dailyMessages)
       } catch(e) {
         console.log("An error occured fetching daily conversations num", e)
         //NOTIFY HERE
@@ -155,20 +106,10 @@ const AnalyticsPage = () => {
     const fetchYesterday = async () => {
       if(!user) return
       try {
-        if (shopifyUser) {
-          const res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/yesterday-messages`,
-            params: { userId: user?.user_id }
-          });
-          setYestCount(res.data.yesterdayMessages)
-        } else {
-          const res = await axios.get(`${directory}/yesterday-messages`, {
-            params: { userId: user?.user_id}
-          })
-          setYestCount(res.data.yesterdayMessages)
-        }
-        
+        const res = await axios.get(`${directory}/yesterday-messages`, {
+          params: { userId: user?.user_id}
+        })
+        setYestCount(res.data.yesterdayMessages)
       } catch(e) {
         console.log("❌ Error fetching yesterday's messages:", e);
         showErrorNotification()
@@ -181,19 +122,10 @@ const AnalyticsPage = () => {
     const fetchResTime = async () => {
       if(!user) return
       try {
-        if (shopifyUser) {
-          const res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/resTime-graph`,
-            params: { userId: user?.user_id }
-          });
-          setResData(res.data.message.slice(-5))
-        } else {
         const res = await axios.get(`${directory}/resTime-graph`, { 
           params: {userId: user?.user_id}
         }, { withCredentials: true})
         setResData(res.data.message.slice(-5))
-      }
       } catch(e) {
         console.log("An error has occured with retreiving the response time for chart", e)
         showErrorNotification()
@@ -209,16 +141,7 @@ const AnalyticsPage = () => {
   
     const fetchLastWeekData = async () => {
       try {
-        let res;
-        if (shopifyUser) {
-          res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/chat-stats/last-7-days/${user.user_id}`
-          });
-        } else {
-          res = await axios.get(`${directory}/chat-stats/last-7-days/${user.user_id}`);
-        }
-        
+        const res = await axios.get(`${directory}/chat-stats/last-7-days/${user.user_id}`);
         const rawData = res.data.data;
   
         const counts = {};
@@ -263,15 +186,8 @@ const AnalyticsPage = () => {
   
     const fetchChatData = async () => {
       try {
-        let res;
-        if(shopifyUser) {
-          res = shopifyAxios({
-            method: 'get',
-            url: `${directory}/chat-history/${user.user_id}`
-          });
-        } else {
-         res = await axios.get(`${directory}/chat-history/${user.user_id}`);
-        }
+        const res = await axios.get(`${directory}/chat-history/${user.user_id}`);
+  
         if (res.data.messages) {
           const timeRanges = new Array(6).fill(0);
   
