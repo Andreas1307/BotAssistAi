@@ -302,35 +302,30 @@ app.get('/shopify/install', (req, res) => {
       return res.status(400).send('❌ Invalid shop parameter');
     }
 
-    // ✅ Only generate state if not already present in session
-    const state = req.session.shopify_state || crypto.randomBytes(16).toString('hex');
-    const host = Buffer.from(shopLower, 'utf8').toString('base64');
-
+    const state = crypto.randomBytes(16).toString('hex');
     req.session.shopify_state = state;
-    req.session.shopify_host = host;
-    req.session.test = "session_active";
 
     const installUrl =
       `https://${shopLower}/admin/oauth/authorize` +
       `?client_id=${process.env.SHOPIFY_API_KEY}` +
       `&scope=${process.env.SHOPIFY_SCOPES}` +
       `&state=${state}` +
-      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-      `&host=${encodeURIComponent(host)}`;
-   
-      req.session.save((err) => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.status(500).send("Internal server error");
-        }
-        return res.redirect(installUrl);
-      });
+      `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).send("Internal server error");
+      }
+      return res.redirect(installUrl);
+    });
 
   } catch (err) {
     console.error("❌ /shopify/install failed:", err);
     return res.status(500).send("Internal server error");
   }
 });
+
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
