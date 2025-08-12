@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Line, Doughnut, Bar } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import "../styling/AnalyticsPage.css";
-import axios from "axios";
+import axios from "../utils/axiosShopify.js"
 import directory from '../directory';
 import { Link } from "react-router-dom"
 import { ToastContainer, toast } from 'react-toastify';
@@ -52,7 +52,7 @@ const AnalyticsPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        const res = await axios.get(`/auth-check`, { withCredentials: true });
         setUser(res.data.user);
       } catch (error) {
         setUser(null);
@@ -69,7 +69,7 @@ const AnalyticsPage = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`${directory}/get-membership`, {
+        const response = await axios.get(`/get-membership`, {
           params: { userId: user?.user_id}
         })
         if(response.data.message.subscription_plan === "Pro") {
@@ -90,7 +90,7 @@ const AnalyticsPage = () => {
     const fetchDaily = async () => {
       if(!user) return
       try {
-        const res = await axios.get(`${directory}/daily-messages`, {
+        const res = await axios.get(`/daily-messages`, {
           params: { userId: user?.user_id}
         }, { withCredentials: true})
         setDailyCount(res.data.dailyMessages)
@@ -106,7 +106,7 @@ const AnalyticsPage = () => {
     const fetchYesterday = async () => {
       if(!user) return
       try {
-        const res = await axios.get(`${directory}/yesterday-messages`, {
+        const res = await axios.get(`/yesterday-messages`, {
           params: { userId: user?.user_id}
         })
         setYestCount(res.data.yesterdayMessages)
@@ -122,7 +122,7 @@ const AnalyticsPage = () => {
     const fetchResTime = async () => {
       if(!user) return
       try {
-        const res = await axios.get(`${directory}/resTime-graph`, { 
+        const res = await axios.get(`/resTime-graph`, { 
           params: {userId: user?.user_id}
         }, { withCredentials: true})
         setResData(res.data.message.slice(-5))
@@ -141,7 +141,7 @@ const AnalyticsPage = () => {
   
     const fetchLastWeekData = async () => {
       try {
-        const res = await axios.get(`${directory}/chat-stats/last-7-days/${user.user_id}`);
+        const res = await axios.get(`/chat-stats/last-7-days/${user.user_id}`);
         const rawData = res.data.data;
   
         const counts = {};
@@ -186,7 +186,7 @@ const AnalyticsPage = () => {
   
     const fetchChatData = async () => {
       try {
-        const res = await axios.get(`${directory}/chat-history/${user.user_id}`);
+        const res = await axios.get(`/chat-history/${user.user_id}`);
   
         if (res.data.messages) {
           const timeRanges = new Array(6).fill(0);

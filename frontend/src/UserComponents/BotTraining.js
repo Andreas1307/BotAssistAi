@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { IoSettingsOutline } from "react-icons/io5"
 import { Link } from "react-router-dom"
 import "../styling/BotTraining.css"
-import axios from 'axios';
+import axios from "../utils/axiosShopify.js"
 import directory from '../directory';
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -61,7 +61,7 @@ const SupportBotCustomization = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        const res = await axios.get(`/auth-check`, { withCredentials: true });
         setUser(res.data.user);
       } catch (error) {
         setUser(null);
@@ -79,7 +79,7 @@ const SupportBotCustomization = () => {
     const fetchUserData = async () => {
       try {
         const response = await axios.post(
-          `${directory}/user-training`,
+          `/user-training`,
           { username: user.username },
           { withCredentials: true }
         );
@@ -117,7 +117,7 @@ const SupportBotCustomization = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`${directory}/get-membership`, {
+        const response = await axios.get(`/get-membership`, {
           params: { userId: user?.user_id}
         })
         if(response.data.message.subscription_plan === "Pro") {
@@ -160,7 +160,7 @@ const setFieldValue = (field, value) => {
     formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
-      const response = await axios.post(`${directory}/update-config`, formData, {
+      const response = await axios.post(`/update-config`, formData, {
         headers: { "Content-Type": "multipart/form-data" }, // Ensure correct content type
         withCredentials: true,
       });
@@ -186,7 +186,7 @@ const setFieldValue = (field, value) => {
     formData.append("file", file);
   
     try {
-      const response = await axios.post(`${directory}/upload-file`, formData, {
+      const response = await axios.post(`/upload-file`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });

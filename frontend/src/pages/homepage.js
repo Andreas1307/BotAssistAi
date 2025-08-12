@@ -15,10 +15,10 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
-import axios from "axios";
+import axios from "../utils/axiosShopify.js"
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
-import { getSessionToken } from "@shopify/app-bridge-utils";
+import { getSessionToken, createApp } from "@shopify/app-bridge-utils";
 import useShopifyInstallRedirect from "../utils/dash-redirect"
 import {
   fetchWithAuth,
@@ -80,7 +80,7 @@ const Homepage = () => {
 
       setShop(shopParam); // Will trigger re-render
       try {
-        const res = await axios.get(`https://api.botassistai.com/check-shopify-store`, {
+        const res = await axios.get(`/check-shopify-store`, {
           params: { shop: shopParam },
         });
         console.log("✅ Backend says installed:", res.data.installed);
@@ -97,7 +97,7 @@ const Homepage = () => {
   const redirectToInstall = async (shop) => {
     if (!shop) return;
     try {
-      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
+      const response = await axios.post(`/chatbot-config-shopify`, {
         shop,
         colors,
       });
@@ -239,7 +239,7 @@ const Homepage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        const res = await axios.get(`/auth-check`, { withCredentials: true });
         setUser(res.data.user);
       } catch (error) {
         setUser(null);

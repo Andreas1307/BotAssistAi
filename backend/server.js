@@ -51,7 +51,7 @@ const { Session } = require("@shopify/shopify-api");
 const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
 
-
+const shopifySessionMiddleware = require('./shopifySessionMiddleware');
 const sessionStore = new MySQLStore({
   host: process.env.DATABASE_HOST,
   user: process.env.DATABASE_USER,
@@ -59,6 +59,8 @@ const sessionStore = new MySQLStore({
   database: process.env.DATABASE
 });
 
+
+app.use(shopifySessionMiddleware);
 app.set('trust proxy', 1);
 app.use(cookieParser());
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaCog } from "react-icons/fa";
 import "../styling/Settings.css";
 import { FaKey } from "react-icons/fa";
-import axios from "axios";
+import axios from "../utils/axiosShopify.js"
 import directory from '../directory';
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
@@ -84,7 +84,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, {
+        const res = await axios.get(`/auth-check`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -113,7 +113,7 @@ const SettingsPage = () => {
   const saveData = async () => {
     try {
       const response = await axios.post(
-        `${directory}/change-password`,
+        `/change-password`,
         { oldPassword, newPassword, userId: user.user_id },
         { withCredentials: true }
       );
@@ -128,7 +128,7 @@ const SettingsPage = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${directory}/logout`, {}, { withCredentials: true });
+      await axios.post(`/logout`, {}, { withCredentials: true });
       navigate("/");
     } catch (error) {
       console.log("Logout failed", error);
@@ -139,7 +139,7 @@ const SettingsPage = () => {
     const checkGoogle = async () => {
       if (!user) return;
       try {
-        const res = await axios.get(`${directory}/check-google_id`, {
+        const res = await axios.get(`/check-google_id`, {
           params: { userId: user.user_id },
           withCredentials: true, // ✅ Ensures cookies/auth headers are included
         });

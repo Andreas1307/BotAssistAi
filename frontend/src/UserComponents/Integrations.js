@@ -14,7 +14,7 @@ import "../styling/Integrations.css";
 import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow, set } from "date-fns";
-import axios from "axios";
+import axios from "../utils/axiosShopify.js"
 import { authenticatedFetch } from "../utils/app-bridge";
 import { useShopifyInstalled } from "../utils/useShopifyInstalled";
 const Integrations = () => {
@@ -339,7 +339,7 @@ const Integrations = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, {
+        const res = await axios.get(`/auth-check`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -358,7 +358,7 @@ const Integrations = () => {
       if (!user) return;
       try {
         const userId = user?.user_id;
-        const res = await axios.get(`${directory}/get-api`, {
+        const res = await axios.get(`/get-api`, {
           params: { userId },
         });
         setApiKey(res.data.key);
@@ -375,7 +375,7 @@ const Integrations = () => {
     const fetchShopifyUser = async () => {
       if (!user || !user.user_id) return;
       try {
-        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
         setShopifyDomain(response.data.domain)
       } catch(e) {
@@ -389,7 +389,7 @@ const Integrations = () => {
     const getShopifyStyles = async () => {
       if (!shopifyDomain) return;
       try {
-        const response = await axios.get(`${directory}/get-shopify-styles`, {
+        const response = await axios.get(`/get-shopify-styles`, {
           params: { shop: shopifyDomain }
         });
         setColors(response.data.data);
@@ -404,7 +404,7 @@ const Integrations = () => {
 
   const redirectToInstall = async (shop) => {
     try {
-      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
+      const response = await axios.post(`/chatbot-config-shopify`, {
         shop,
         colors,
       });
@@ -440,7 +440,7 @@ const Integrations = () => {
     const fetchBotStatus = async () => {
       const userId = user.user_id;
       try {
-        const res = await axios.get(`${directory}/get-bot-status`, {
+        const res = await axios.get(`/get-bot-status`, {
           params: { userId },
         });
         const botEnabled = !!res.data.bool; // Ensure boolean
@@ -458,7 +458,7 @@ const Integrations = () => {
     if (!user) return;
     const userId = user.user_id;
     try {
-      await axios.get(`${directory}/set-bot-status`, {
+      await axios.get(`/set-bot-status`, {
         params: { userId, aiBot: status ? 1 : 0 }, // convert to  1/0 for DB
       });
     } catch (e) {
@@ -474,7 +474,7 @@ const Integrations = () => {
       }
       const userId = user.user_id;
       try {
-        const res = await axios.get(`${directory}/get-api`, {
+        const res = await axios.get(`/get-api`, {
           params: { userId },
         });
         setApiKey(res.data.key);
@@ -573,7 +573,7 @@ const Integrations = () => {
     }
     const userId = user.user_id;
     try {
-      await axios.get(`${directory}/reset-bot`, {
+      await axios.get(`/reset-bot`, {
         params: { userId },
       });
       setTimeout(() => {
@@ -591,7 +591,7 @@ const Integrations = () => {
 
     const checkConnected = async () => {
       try {
-        const res = await axios.get(`${directory}/get-connected`, {
+        const res = await axios.get(`/get-connected`, {
           params: { userId: user.user_id },
         });
 

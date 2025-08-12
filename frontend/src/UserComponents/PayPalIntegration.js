@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import axios from "axios";
+import axios from "../utils/axiosShopify.js"
 import directory from "../directory";
 import { ToastContainer, toast } from "react-toastify";
 
@@ -50,7 +50,7 @@ const PayPalIntegration = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`${directory}/auth-check`, {
+        const response = await axios.get(`/auth-check`, {
           withCredentials: true,
         });
         setUser(response.data.user);
@@ -110,7 +110,7 @@ const PayPalIntegration = () => {
 
               try {
                 await axios.post(
-                  `${directory}/paypal/webhook`,
+                  `/paypal/webhook`,
                   {
                     userId: user.user_id,
                     orderID: data.orderID,
