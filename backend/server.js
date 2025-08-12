@@ -882,7 +882,7 @@ app.get("/shopify/callback", async (req, res) => {
       `, [normalizedShop, accessToken, user.user_id]);
 
       // ✅ Immediately redirect into embedded app
-      const redirectUrl = `/auth?shop=${normalizedShop}&host=${host}`;
+      const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`
 
       res.set("Content-Type", "text/html");
       res.send(`
