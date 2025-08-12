@@ -12,7 +12,7 @@ import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
-import axios from "axios";
+import axios from "../utils/axiosShopify.js"
 
 
 import { Link, useNavigate } from "react-router-dom";
@@ -237,7 +237,7 @@ const Dashboard = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`${directory}/get-membership`, {
+        const response = await axios.get(`/get-membership`, {
           params: { userId: user?.user_id}
         })
         if(response.data.message.subscription_plan === "Pro") {
@@ -256,7 +256,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        const res = await axios.get(`/auth-check`, { withCredentials: true });
         setUser(res.data.user);
         setRenew(res.data.showRenewalModal)
       } catch (error) {
@@ -275,7 +275,7 @@ const Dashboard = () => {
         return;
       }
       try {
-        const response = await axios.get(`${directory}/get-queries`, {
+        const response = await axios.get(`/get-queries`, {
           params: { userId: user.user_id }
         });
         setUnresolvedQueries(response.data.unresolvedQueries.length);
@@ -294,7 +294,7 @@ const Dashboard = () => {
 
     const fetchShopifyUser = async () => {
       try {
-        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
@@ -313,7 +313,7 @@ const Dashboard = () => {
   
     const fetchSatisfaction = async () => {
       try {
-        const response = await axios.get(`${directory}/satisfaction`, {
+        const response = await axios.get(`/satisfaction`, {
           params: { userId: user.user_id }
         });
   
@@ -362,7 +362,7 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await axios.get(`${directory}/chat-history/${userId}`)
+        const response = await axios.get(`/chat-history/${userId}`)
         
         const messages = response.data.messages;
         if (!messages || messages.length === 0) return;
@@ -406,7 +406,7 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await axios.get(`${directory}/daily-messages` , {
+        const response = await axios.get(`/daily-messages` , {
           params: { userId }
         })
         setDailyCount(response.data.dailyMessages);    
@@ -425,7 +425,7 @@ useEffect(() => {
   const fetchBotStatus = async () => {
     const userId = user.user_id;
     try {
-      const res = await axios.get(`${directory}/get-bot-status`, {
+      const res = await axios.get(`/get-bot-status`, {
         params: { userId }
       });
       const botEnabled = !!res.data.bool; // Ensure boolean
@@ -444,7 +444,7 @@ useEffect(() => {
   const fetchAllFaq = async () => {
     if(!user) return
     try {
-      const res = await axios.get(`${directory}/fetch-all-faq`, {
+      const res = await axios.get(`/fetch-all-faq`, {
         params: { userId: user.user_id}
       })
       const data = res.data.faq;
@@ -486,7 +486,7 @@ useEffect(() => {
 
   const checkConnected = async () => {
     try {
-      const res = await axios.get(`${directory}/get-connected`, {
+      const res = await axios.get(`/get-connected`, {
         params: { userId: user.user_id },
       });
 
@@ -514,7 +514,7 @@ const setBotStatus = async (status) => {
   if (!user) return;
   const userId = user.user_id;
   try {
-    await axios.get(`${directory}/set-bot-status`, {
+    await axios.get(`/set-bot-status`, {
       params: { userId, aiBot: status ? 1 : 0 }, // convert to 1/0 for DB
     });
   } catch (e) {
@@ -525,7 +525,7 @@ const setBotStatus = async (status) => {
 
 const handleLogout = async () => {
   try {
-    await axios.post(`${directory}/logout`, {}, { withCredentials: true });
+    await axios.post(`/logout`, {}, { withCredentials: true });
     navigate("/");
   } catch (error) {
     console.log("Logout failed", error);
@@ -598,7 +598,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
   if (!user || (!hasMore && !loadAllChats)) return;
 
   try {
-    const res = await axios.get(`${directory}/conv-history`, {
+    const res = await axios.get(`/conv-history`, {
       params: { userId: user.user_id, page: loadAllChats ? undefined : page, limit: 20, all: loadAllChats }
     });
 
@@ -646,7 +646,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
     e.preventDefault()
     if(!user) return
     try {
-      const res = await axios.post(`${directory}/send-question`, {
+      const res = await axios.post(`/send-question`, {
         userId: user?.user_id,
         email: user?.email,
         msg: userQuery
@@ -729,7 +729,7 @@ const handleReset = async () => {
   }
   const userId = user.user_id
   try {
-    await axios.get(`${directory}/reset-bot`, { 
+    await axios.get(`/reset-bot`, { 
       params: { userId }
     })
     setTimeout(() => {
