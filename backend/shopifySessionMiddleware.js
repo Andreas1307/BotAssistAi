@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
+// ✅ Correct JWKS endpoint for Shopify
 const client = jwksClient({
-    jwksUri: 'https://shopify.dev/api/jwt/jwks', // correct Shopify JWKS endpoint
-  });
-  
+  jwksUri: 'https://shopify.com/.well-known/jwks.json',
+});
 
 function getKey(header, callback) {
   client.getSigningKey(header.kid, (err, key) => {
@@ -32,7 +32,7 @@ function shopifySessionMiddleware(req, res, next) {
     },
     (err, decoded) => {
       if (err) {
-        console.error('❌ Invalid Shopify session token:', err);
+        console.error('❌ Invalid Shopify session token:', err.message);
         return res.status(401).send('Unauthorized Shopify request');
       }
       req.shopifySession = decoded;
