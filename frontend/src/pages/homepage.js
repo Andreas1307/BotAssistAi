@@ -25,6 +25,9 @@ import {
   waitForAppBridge,
 } from "../utils/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
+
+import createApp from '@shopify/app-bridge';
+
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -65,7 +68,22 @@ const Homepage = () => {
 
 
   
-
+  const app = createApp({
+    apiKey: process.env.SHOPIFY_API_KEY,
+    host: new URLSearchParams(window.location.search).get("host"),
+    forceRedirect: true
+  });
+  
+  async function fetchWithAuth(url, options = {}) {
+    const token = await getSessionToken(app);
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
 
   useEffect(() => {
     const checkShop = async () => {

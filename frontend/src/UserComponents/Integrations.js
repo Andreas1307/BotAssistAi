@@ -17,6 +17,7 @@ import { formatDistanceToNow, set } from "date-fns";
 import axios from "axios";
 import { authenticatedFetch } from "../utils/app-bridge";
 import { useShopifyInstalled } from "../utils/useShopifyInstalled";
+import { shopifyAxios } from "../utils/shopifyFetch";
 const Integrations = () => {
   const [bgColor, setBgColor] = useState("#007bff");
   const [position, setPosition] = useState("bottom-right");
@@ -51,6 +52,20 @@ const Integrations = () => {
     borderColor: '#00F5D4'
   });
   let toastId;
+  useEffect(() => {   
+    if (!user) return;
+
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+
+  }, [])
 
   const showErrorNotification = () => {
     toast.error("Something went wrong. Please try again.", {
@@ -339,13 +354,22 @@ const Integrations = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, {
-          withCredentials: true,
-        });
+        if (shopifyUser ){
+          const res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/auth-check`,
+            params: { userId: user?.user_id }
+          });
+          setUser(res.data.user);
+        setRenew(res.data.showRenewalModal)
+        } else {
+        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
         setUser(res.data.user);
+        setRenew(res.data.showRenewalModal)
+        }
       } catch (error) {
         setUser(null);
-        showErrorNotification();
+        showErrorNotification()
       } finally {
         setLoading(false);
       }
@@ -358,10 +382,19 @@ const Integrations = () => {
       if (!user) return;
       try {
         const userId = user?.user_id;
+        if(shopifyDomain){
+          const res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-api`,
+            params: { userId }
+          });
+          setApiKey(res.data.key);
+        } else {
         const res = await axios.get(`${directory}/get-api`, {
           params: { userId },
         });
         setApiKey(res.data.key);
+      }
       } catch (e) {
         console.log("Error fetching api", e);
         showErrorNotification();
@@ -371,28 +404,25 @@ const Integrations = () => {
   }, [user]);
 
 
-  useEffect(() => {
-    const fetchShopifyUser = async () => {
-      if (!user || !user.user_id) return;
-      try {
-        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
-        setShopifyUser(response.data.data)
-        setShopifyDomain(response.data.domain)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-  }, [user])
+ 
 
   useEffect(() => {
     const getShopifyStyles = async () => {
       if (!shopifyDomain) return;
       try {
-        const response = await axios.get(`${directory}/get-shopify-styles`, {
-          params: { shop: shopifyDomain }
-        });
-        setColors(response.data.data);
+        if(shopifyDomain) {
+          const response = shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-shopify-styles`,
+            params: { shop: shopifyDomain }
+          });
+          setColors(response.data.data);
+        } else {
+          const response = await axios.get(`${directory}/get-shopify-styles`, {
+            params: { shop: shopifyDomain }
+          });
+          setColors(response.data.data);
+        }
       } catch (e) {
         console.log("Error occurred while trying to fetch the Shopify styles", e);
       }
@@ -404,13 +434,25 @@ const Integrations = () => {
 
   const redirectToInstall = async (shop) => {
     try {
-      const response = await axios.post(`${directory}/chatbot-config-shopify`, {
-        shop,
-        colors,
-      });
+      if(shopifyDomain) {
+          const response = shopifyAxios({
+            method: 'get',
+            url: `${directory}/chatbot-config-shopify`,
+            params: { shop, colors }
+          });
       if (response.data.data === true) {
         setChatBotConfig(false)
       }
+      } else {
+        const response = await axios.post(`${directory}/chatbot-config-shopify`, {
+          shop,
+          colors,
+        });
+        if (response.data.data === true) {
+          setChatBotConfig(false)
+        }
+      }
+    
     } catch (e) {
       console.log("An error occured while trying to send the chatbot config", e)
     }
@@ -440,11 +482,22 @@ const Integrations = () => {
     const fetchBotStatus = async () => {
       const userId = user.user_id;
       try {
-        const res = await axios.get(`${directory}/get-bot-status`, {
-          params: { userId },
-        });
-        const botEnabled = !!res.data.bool; // Ensure boolean
-        setAiBot(botEnabled);
+        if(shopifyDomain) {
+          const res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-bot-status`,
+            params: { userId }
+          });
+          const botEnabled = !!res.data.bool; // Ensure boolean
+          setAiBot(botEnabled);
+        } else {
+          const res = await axios.get(`${directory}/get-bot-status`, {
+            params: { userId },
+          });
+          const botEnabled = !!res.data.bool; // Ensure boolean
+          setAiBot(botEnabled);
+        }
+       
       } catch (e) {
         console.log("Error getting the status of bot", e);
         showErrorNotification();
@@ -458,9 +511,18 @@ const Integrations = () => {
     if (!user) return;
     const userId = user.user_id;
     try {
-      await axios.get(`${directory}/set-bot-status`, {
+      if(shopifyDomain) {
+        shopifyAxios({
+          method: 'get',
+          url: `${directory}/set-bot-status`,
+          params: { userId, aiBot: status ? 1 : 0 }
+        });
+      } else {
+        await axios.get(`${directory}/set-bot-status`, {
         params: { userId, aiBot: status ? 1 : 0 }, // convert to  1/0 for DB
       });
+      }
+     
     } catch (e) {
       console.log("Error occurred with setting bot on or off", e);
       showErrorNotification();
@@ -474,10 +536,20 @@ const Integrations = () => {
       }
       const userId = user.user_id;
       try {
-        const res = await axios.get(`${directory}/get-api`, {
-          params: { userId },
-        });
-        setApiKey(res.data.key);
+        if(shopifyDomain) {
+          const res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-api`,
+            params: { userId }
+          });
+          setApiKey(res.data.key);
+        } else {
+          const res = await axios.get(`${directory}/get-api`, {
+            params: { userId },
+          });
+          setApiKey(res.data.key);
+        }
+        
       } catch (e) {
         console.log("Error fetching api", e);
         showErrorNotification();
@@ -573,9 +645,18 @@ const Integrations = () => {
     }
     const userId = user.user_id;
     try {
-      await axios.get(`${directory}/reset-bot`, {
-        params: { userId },
-      });
+      if(shopifyDomain) {
+        shopifyAxios({
+          method: 'get',
+          url: `${directory}/reset-bot`,
+          params: { userId }
+        });
+      } else {
+        await axios.get(`${directory}/reset-bot`, {
+          params: { userId },
+        });
+      }
+     
       setTimeout(() => {
         showNotification("Note , your bot will not work unless you train it");
       }, 1500);
@@ -591,9 +672,19 @@ const Integrations = () => {
 
     const checkConnected = async () => {
       try {
-        const res = await axios.get(`${directory}/get-connected`, {
+        let res;
+        if(shopifyDomain) {
+          res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-connected`,
+            params: { userId: user?.user_id }
+          });
+        } else {
+           res = await axios.get(`${directory}/get-connected`, {
           params: { userId: user.user_id },
         });
+        }
+        
 
         if (res.data.connected) {
           setConnected(true);

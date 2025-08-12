@@ -50,6 +50,7 @@ const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
+const conditionalVerifySessionToken = require('./conditionalVerifySessionToken');
 
 
 const sessionStore = new MySQLStore({
@@ -290,44 +291,26 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+const oauthStateStore = new Map();
+
  
 app.get('/shopify/install', (req, res) => {
-  try {
-    const { shop } = req.query;
-    const shopLower = shop?.toLowerCase();
+  const { shop } = req.query;
+  if (!shop || !isValidShop(shop)) return res.status(400).send('Invalid shop');
 
-    if (!shopLower || !isValidShop(shopLower)) {
-      return res.status(400).send('❌ Invalid shop parameter');
-    }
+  const state = crypto.randomBytes(16).toString('hex');
+  oauthStateStore.set(shop, state);
 
-    // ✅ Only generate state if not already present in session
-    const state = req.session.shopify_state || crypto.randomBytes(16).toString('hex');
-    const host = Buffer.from(shopLower, 'utf8').toString('base64');
+  const host = Buffer.from(shop, 'utf8').toString('base64');
+  const installUrl = `https://${shop}/admin/oauth/authorize` +
+    `?client_id=${process.env.SHOPIFY_API_KEY}` +
+    `&scope=${process.env.SHOPIFY_SCOPES}` +
+    `&state=${state}` +
+    `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
+    `&host=${encodeURIComponent(host)}`;
 
-    req.session.shopify_state = state;
-    req.session.shopify_host = host;
-    req.session.test = "session_active";
-
-    const installUrl =
-      `https://${shopLower}/admin/oauth/authorize` +
-      `?client_id=${process.env.SHOPIFY_API_KEY}` +
-      `&scope=${process.env.SHOPIFY_SCOPES}` +
-      `&state=${state}` +
-      `&redirect_uri=${process.env.SHOPIFY_REDIRECT_URI}` +
-      `&host=${encodeURIComponent(host)}`;
-   
-      req.session.save((err) => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.status(500).send("Internal server error");
-        }
-        return res.redirect(installUrl);
-      });
-
-  } catch (err) {
-    console.error("❌ /shopify/install failed:", err);
-    return res.status(500).send("Internal server error");
-  }
+  res.redirect(installUrl);
 });
 
 app.get('/clear-cookies', (req, res) => {
@@ -731,7 +714,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
-
+app.use(conditionalVerifySessionToken);
 
 
 app.get("/shopify/callback", async (req, res) => {
@@ -749,6 +732,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!state || state !== storedState) {
       return res.status(400).send("❌ Invalid state");
     }
+    oauthStateStore.delete(shop);
 
     const normalizedShop = shop.toLowerCase();
 
@@ -898,7 +882,8 @@ app.get("/shopify/callback", async (req, res) => {
       `, [normalizedShop, accessToken, user.user_id]);
 
       // ✅ Immediately redirect into embedded app
-      const redirectUrl = `/?shop=${normalizedShop}&host=${host}&shopifyUser=true`;
+      const redirectUrl = `/auth?shop=${normalizedShop}&host=${host}`;
+
       res.set("Content-Type", "text/html");
       res.send(`
         <script src="https://unpkg.com/@shopify/app-bridge"></script>
@@ -927,7 +912,7 @@ app.get("/shopify/callback", async (req, res) => {
 
 
 
-
+// asta nu mai este folosita
 app.get("/auth/callback", async (req, res) => {
   try {
     const result = await shopify.auth.callback({

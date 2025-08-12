@@ -6,6 +6,7 @@ import axios from "axios";
 import directory from '../directory';
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
+import { shopifyAxios } from "../utils/shopifyFetch";
 const LogoutConfirmToast = ({ closeToast, onConfirm, reason = "Are you sure you want to log out?" }) => (
   <div>
     <p>⚠️ {reason}</p> {/* Fallback to default message */}
@@ -80,16 +81,42 @@ const SettingsPage = () => {
     setPaymentType("Credit Card");
     alert("Settings have been reset!");
   };
+  const [shopifyUser, setShopifyUser] = useState(false)
+  useEffect(() => {   
+    if (!user) return;
+
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`${directory}/check-shopify-user`, {params: { id: user.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+
+  }, [])
+
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, {
-          withCredentials: true,
-        });
+        if (shopifyUser ){
+          const res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/auth-check`,
+            params: { userId: user?.user_id }
+          });
+          setUser(res.data.user);
+        setRenew(res.data.showRenewalModal)
+        } else {
+        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
         setUser(res.data.user);
+        setRenew(res.data.showRenewalModal)
+        }
       } catch (error) {
         setUser(null);
+        showErrorNotification()
       } finally {
         setLoading(false);
       }
@@ -112,11 +139,21 @@ const SettingsPage = () => {
 
   const saveData = async () => {
     try {
-      const response = await axios.post(
-        `${directory}/change-password`,
-        { oldPassword, newPassword, userId: user.user_id },
-        { withCredentials: true }
-      );
+      if (shopifyUser) {
+        const response = shopifyAxios({
+          method: 'post',
+          url: `${directory}/change-password`,
+          data: { oldPassword, newPassword, userId: user.user_id },
+          withCredentials: true
+        });
+      } else {
+        const response = await axios.post(
+          `${directory}/change-password`,
+          { oldPassword, newPassword, userId: user.user_id },
+          { withCredentials: true }
+        );
+      }
+      
       //Notify here
       setNewPassword("");
       setOldPassword("");
@@ -128,7 +165,16 @@ const SettingsPage = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${directory}/logout`, {}, { withCredentials: true });
+      if (shopifyUser) {
+        shopifyAxios({
+          method: 'post',
+          url: `${directory}/logout`,
+          withCredentials: true 
+        });
+      } else {
+        await axios.post(`${directory}/logout`, {}, { withCredentials: true });
+      }
+      
       navigate("/");
     } catch (error) {
       console.log("Logout failed", error);
@@ -139,10 +185,20 @@ const SettingsPage = () => {
     const checkGoogle = async () => {
       if (!user) return;
       try {
-        const res = await axios.get(`${directory}/check-google_id`, {
+        let res;
+        if (shopifyUser) {
+          res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/check-google_id`,
+            params: { userId: user?.user_id },
+            withCredentials: true
+          });
+        } else {
+         res = await axios.get(`${directory}/check-google_id`, {
           params: { userId: user.user_id },
           withCredentials: true, // ✅ Ensures cookies/auth headers are included
         });
+      }
         if (res.data.user.google_id === null) {
           return setGoogle(true);
         } else {
@@ -155,9 +211,6 @@ const SettingsPage = () => {
     checkGoogle();
   }, [user]);
 
-  const handleRenewMembership = () => {
-    alert("Membership has been renewed!");
-  };
 
   return (
     <div className="settings-container">

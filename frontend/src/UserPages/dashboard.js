@@ -26,7 +26,7 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
-
+import { shopifyAxios } from "../utils/shopifyFetch";
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
@@ -62,7 +62,7 @@ const Dashboard = () => {
   const [lastConv, setLastConv] = useState([]);
   const [integration, setIntegration] = useState(false)
   const [bookingIntegration, setBookingIntegration] = useState(false)
-  const [shopifyUser, setShopifyUser] = useState(false)
+
 
 
 
@@ -229,66 +229,7 @@ const Dashboard = () => {
   }, []);
   
   */
-
- 
-  
-  // FETCH MEMBERSHIP
-  useEffect(() => {
-    const fetchMembership = async () => {
-      if (!user) return
-      try{
-        const response = await axios.get(`${directory}/get-membership`, {
-          params: { userId: user?.user_id}
-        })
-        if(response.data.message.subscription_plan === "Pro") {
-          setMembership(true)
-        } else {
-          setMembership(false)
-        }
-      } catch(e) {
-        console.log("Error occured with retreiveing the membership status",e)
-        showErrorNotification()
-      }
-    }
-    fetchMembership()
-  }, [user])
-  //FETCH USER
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
-        setRenew(res.data.showRenewalModal)
-      } catch (error) {
-        setUser(null);
-        showErrorNotification()
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
-  //fETCH QUERIES
-  useEffect(() => {
-    const fetchQueries = async () => {
-      if (!user) {
-        return;
-      }
-      try {
-        const response = await axios.get(`${directory}/get-queries`, {
-          params: { userId: user.user_id }
-        });
-        setUnresolvedQueries(response.data.unresolvedQueries.length);
-        setResolvedQueries(response.data.resolvedQueries.length);
-      } catch (e) {
-        console.log("Error occurred with fetching the queries", e);
-        showErrorNotification()
-      }
-    };
-    
-    fetchQueries();
-  }, [user]); 
-
+  const [shopifyUser, setShopifyUser] = useState(false)
   useEffect(() => {   
     if (!user) return;
 
@@ -305,6 +246,102 @@ const Dashboard = () => {
   }, [])
 
 
+ 
+  
+  // FETCH MEMBERSHIP
+  useEffect(() => {
+    const fetchMembership = async () => {
+      if (!user) return;
+      try {
+        if (shopifyUser) {
+          const response = await shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-membership`,
+            params: { userId: user?.user_id },
+          });
+          if (response.data.message.subscription_plan === "Pro") {
+            setMembership(true);
+          } else {
+            setMembership(false);
+          }
+        } else {
+          const response = await axios.get(`${directory}/get-membership`, {
+            params: { userId: user?.user_id },
+          });
+          if (response.data.message.subscription_plan === "Pro") {
+            setMembership(true);
+          } else {
+            setMembership(false);
+          }
+        }
+      } catch (e) {
+        console.log("Error occurred with retrieving the membership status", e);
+        showErrorNotification();
+      }
+    };
+    fetchMembership();
+  }, [user]);
+  
+  //FETCH USER
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        if (shopifyUser ){
+          const res = shopifyAxios({
+            method: 'get',
+            url: `${directory}/auth-check`,
+            params: { userId: user?.user_id }
+          });
+          setUser(res.data.user);
+        setRenew(res.data.showRenewalModal)
+        } else {
+        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        setUser(res.data.user);
+        setRenew(res.data.showRenewalModal)
+        }
+      } catch (error) {
+        setUser(null);
+        showErrorNotification()
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+  //fETCH QUERIES
+  useEffect(() => {
+    const fetchQueries = async () => {
+      if (!user) {
+        return;
+      }
+      try {
+        if (shopifyUser) {
+          const response = shopifyAxios({
+            method: 'get',
+            url: `${directory}/get-queries`,
+            params: { userId: user?.user_id }
+          });
+          setUnresolvedQueries(response.data.unresolvedQueries.length);
+          setResolvedQueries(response.data.resolvedQueries.length);
+        } else {
+          const response = await axios.get(`${directory}/get-queries`, {
+            params: { userId: user.user_id }
+          });
+          setUnresolvedQueries(response.data.unresolvedQueries.length);
+          setResolvedQueries(response.data.resolvedQueries.length);
+        }
+        
+      } catch (e) {
+        console.log("Error occurred with fetching the queries", e);
+        showErrorNotification()
+      }
+    };
+    
+    fetchQueries();
+  }, [user]); 
+
+
+
 
 
   // FETCH USER SATISFACTION
@@ -313,9 +350,19 @@ const Dashboard = () => {
   
     const fetchSatisfaction = async () => {
       try {
-        const response = await axios.get(`${directory}/satisfaction`, {
+        let response;
+        if(shopifyUser) {
+          response = shopifyAxios({
+            method: 'get',
+            url: `${directory}/satisfaction`,
+            params: { userId: user?.user_id }
+          });
+        } else {
+           response = await axios.get(`${directory}/satisfaction`, {
           params: { userId: user.user_id }
         });
+        }
+       
   
         const satisfactionData = response.data.message;
         setSatisfaction(satisfactionData);
@@ -362,7 +409,17 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await axios.get(`${directory}/chat-history/${userId}`)
+        let response;
+
+        if(shopifyUser) {
+          response = shopifyAxios({
+            method: 'get',
+            url: `${directory}/chat-history/${userId}`
+          });
+        } else {
+          response = await axios.get(`${directory}/chat-history/${userId}`)
+        }
+         
         
         const messages = response.data.messages;
         if (!messages || messages.length === 0) return;
@@ -406,10 +463,20 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await axios.get(`${directory}/daily-messages` , {
-          params: { userId }
-        })
-        setDailyCount(response.data.dailyMessages);    
+
+        if(shopifyUser) {
+          shopifyAxios({
+            method: 'get',
+            url: `${directory}/daily-messages`,
+            params: { userId }
+          });
+          setDailyCount(response.data.dailyMessages); 
+        } else {
+          const response = await axios.get(`${directory}/daily-messages` , {
+            params: { userId }
+          })
+          setDailyCount(response.data.dailyMessages); 
+        }   
       } catch (e) {
         console.log("An error occured with fetching the daily conversations", e)
         showErrorNotification()
@@ -424,12 +491,24 @@ useEffect(() => {
 
   const fetchBotStatus = async () => {
     const userId = user.user_id;
+
     try {
-      const res = await axios.get(`${directory}/get-bot-status`, {
+      if(shopifyUser) {
+        const res = shopifyAxios({
+          method: 'get',
+          url: `${directory}/get-bot-status`,
+          params: { userId }
+        });
+        const botEnabled = !!res.data.bool; // Ensure boolean
+        setAiBot(botEnabled);
+      } else {
+          const res = await axios.get(`${directory}/get-bot-status`, {
         params: { userId }
       });
       const botEnabled = !!res.data.bool; // Ensure boolean
       setAiBot(botEnabled);
+      }
+    
     } catch (e) {
       console.log("Error getting the status of bot", e);
       showErrorNotification();
@@ -444,9 +523,19 @@ useEffect(() => {
   const fetchAllFaq = async () => {
     if(!user) return
     try {
-      const res = await axios.get(`${directory}/fetch-all-faq`, {
+      let res;
+      if(shopifyUser) {
+        res = shopifyAxios({
+          method: 'get',
+          url: `${directory}/fetch-all-faq`,
+          params: { userId: user?.user_id }
+        });
+      } else {
+        res = await axios.get(`${directory}/fetch-all-faq`, {
         params: { userId: user.user_id}
       })
+      }
+   
       const data = res.data.faq;
 
       if (!data) {
@@ -486,9 +575,18 @@ useEffect(() => {
 
   const checkConnected = async () => {
     try {
-      const res = await axios.get(`${directory}/get-connected`, {
+      let res;
+      if(shopifyUser) {
+        res = shopifyAxios({
+          method: 'get',
+          url: `${directory}/get-connected`,
+          params: { userId: user?.user_id }
+        });
+      } else {
+       res = await axios.get(`${directory}/get-connected`, {
         params: { userId: user.user_id },
       });
+    }
 
       if (res.data.connected) {
         setConnected(true);
@@ -598,7 +696,15 @@ const fetchConvHistory = async (loadAllChats = false) => {
   if (!user || (!hasMore && !loadAllChats)) return;
 
   try {
-    const res = await axios.get(`${directory}/conv-history`, {
+    let res;
+    if(shopifyUser) {
+      res = shopifyAxios({
+        method: 'get',
+        url: `${directory}/conv-history`,
+        params: { userId: user.user_id, page: loadAllChats ? undefined : page, limit: 20, all: loadAllChats}
+      });
+    }
+     res = await axios.get(`${directory}/conv-history`, {
       params: { userId: user.user_id, page: loadAllChats ? undefined : page, limit: 20, all: loadAllChats }
     });
 
@@ -646,11 +752,21 @@ const fetchConvHistory = async (loadAllChats = false) => {
     e.preventDefault()
     if(!user) return
     try {
-      const res = await axios.post(`${directory}/send-question`, {
-        userId: user?.user_id,
-        email: user?.email,
-        msg: userQuery
-      })
+      let res;
+if(shopifyUser) {
+  res = shopifyAxios({
+    method: 'get',
+    url: `${directory}/send-question`,
+    params: {  userId: user?.user_id, email: user?.email, msg: userQuery }
+  });
+} else {
+  res = await axios.post(`${directory}/send-question`, {
+    userId: user?.user_id,
+    email: user?.email,
+    msg: userQuery
+  })
+}
+     
       showNotification("Message sent successfully!")
       setUserQuery("")
     } catch(e) {
