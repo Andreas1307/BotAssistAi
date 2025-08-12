@@ -720,7 +720,7 @@ app.use(conditionalVerifySessionToken);
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    const storedState = req.session.shopify_state;
+    const storedState = oauthStateStore.get(shop);
 
     // ✅ Basic validation
     if (!shop || !isValidShop(shop)) {
@@ -732,7 +732,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!state || state !== storedState) {
       return res.status(400).send("❌ Invalid state");
     }
-    oauthStateStore.delete(shop);
 
     const normalizedShop = shop.toLowerCase();
 
@@ -874,7 +873,6 @@ app.get("/shopify/callback", async (req, res) => {
         return res.status(500).send("❌ Failed to log in after registration.");
       }
 
-      // ✅ Store install with user_id
       await pool.query(`
         INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
         VALUES (?, ?, ?, NOW())
