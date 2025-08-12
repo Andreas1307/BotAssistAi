@@ -526,7 +526,7 @@ const Homepage = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => redirectToInstall(shop)}>
+                  <button >
                     Install App
                   </button>
                 </div>
