@@ -465,7 +465,7 @@ const Dashboard = () => {
         const userId = user.user_id
 
         if(shopifyUser) {
-          shopifyAxios({
+         const response = shopifyAxios({
             method: 'get',
             url: `${directory}/daily-messages`,
             params: { userId }
