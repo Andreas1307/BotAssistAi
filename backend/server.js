@@ -60,7 +60,6 @@ const sessionStore = new MySQLStore({
 });
 
 
-app.use(shopifySessionMiddleware);
 app.set('trust proxy', 1);
 app.use(cookieParser());
 
@@ -729,6 +728,7 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(shopifySessionMiddleware);
 
 
 app.get("/shopify/callback", async (req, res) => {
