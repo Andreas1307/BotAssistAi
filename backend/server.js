@@ -865,12 +865,15 @@ app.get("/shopify/callback", async (req, res) => {
 
 
     }
-
+    console.log("Shopify callback query:", req.query);
+      console.log("Stored state:", req.session.shopify_state);
+      console.log("HMAC valid:", verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET));
     req.logIn(user, async (err) => {
       if (err) {
         return res.status(500).send("❌ Failed to log in after registration.");
       }
-
+  
+      
       await pool.query(`
         INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
         VALUES (?, ?, ?, NOW())
