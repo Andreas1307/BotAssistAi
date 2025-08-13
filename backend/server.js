@@ -865,24 +865,42 @@ app.get("/shopify/callback", async (req, res) => {
 
 
     }
-    console.log("Shopify callback query:", req.query);
-      console.log("Stored state:", req.session.shopify_state);
-      console.log("HMAC valid:", verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET));
+
     req.logIn(user, async (err) => {
       if (err) {
         return res.status(500).send("❌ Failed to log in after registration.");
       }
-  
-      
+
       await pool.query(`
         INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
         VALUES (?, ?, ?, NOW())
         ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
       `, [normalizedShop, accessToken, user.user_id]);
 
-      const embeddedUrl = `/?shop=${shop}&host=${host}`;
-      return res.redirect(embeddedUrl);
-      
+      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+
+      res.set('Content-Type', 'text/html');
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>App Installed</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+          </style>
+        </head>
+        <body>
+          <h2>✅ App installed successfully</h2>
+          <p>Redirecting to your app...</p>
+          <script>
+            setTimeout(() => {
+              window.location.href = "${embeddedUrl}";
+            }, 1200);
+          </script>
+        </body>
+        </html>
+      `);
       
     });
 
