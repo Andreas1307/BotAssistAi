@@ -791,7 +791,6 @@ async function handlePostInstall(shop, accessToken) {
   await registerWebhooks(shop, accessToken);
   await registerGdprWebhooks({ shop, accessToken }, shop);
 
-  // Fetch shop info
   const client = new shopify.clients.Rest({ session: { shop, accessToken } });
   const response = await client.get({ path: "shop" });
   if (!response?.body?.shop) throw new Error("Failed to fetch shop info");
@@ -820,8 +819,20 @@ async function handlePostInstall(shop, accessToken) {
     userId = result.insertId;
     await handleSendNewUserEmail(rawKey, email);
   }
+
+  // ✅ Insert into shopify_installs
+  await pool.query(`
+    INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+    VALUES (?, ?, ?, NOW())
+    ON DUPLICATE KEY UPDATE
+      access_token = VALUES(access_token),
+      user_id = VALUES(user_id),
+      installed_at = NOW()
+  `, [shop, accessToken, userId]);
+
   return userId;
 }
+
 
 const handleSendNewUserEmail = async (rawKey, email) => {
   const transporter = nodemailer.createTransport({
