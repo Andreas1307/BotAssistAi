@@ -721,7 +721,7 @@ app.get("/shopify/callback", async (req, res) => {
     const { shop, code, state, host } = req.query;
     if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    // Validate & exchange for token
+    // Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -730,10 +730,21 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Fire and forget post-install logic
+    // Post-install logic: fire-and-forget (don’t block redirect)
     handlePostInstall(shop, accessToken).catch(console.error);
 
-    // Respond instantly with embedded redirect
+    // Get or create user session immediately
+    const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
+    const user = rows[0];
+    if (user) {
+      await new Promise((resolve, reject) => {
+        req.logIn(user, err => (err ? reject(err) : resolve()));
+      });
+    }
+
+    // Redirect to the proper embedded app route
+    // This must match your frontend React/Vue route that renders the embedded app UI
+    const appUrl = `/app?shop=${shop}&host=${host}`; // <-- change "/app" to whatever your frontend uses
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -743,29 +754,25 @@ app.get("/shopify/callback", async (req, res) => {
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
             document.addEventListener('DOMContentLoaded', function() {
-              var AppBridge = window['app-bridge'];
-              var createApp = AppBridge.default;
-              var Redirect = AppBridge.actions.Redirect;
+              const AppBridge = window['app-bridge'];
+              const createApp = AppBridge.default;
+              const Redirect = AppBridge.actions.Redirect;
 
-              var app = createApp({
+              const app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
                 host: "${host}"
               });
 
-              var redirect = Redirect.create(app);
-              redirect.dispatch(
-                Redirect.Action.APP,
-                "/?shop=${shop}&host=${host}"
-              );
+              const redirect = Redirect.create(app);
+              redirect.dispatch(Redirect.Action.APP, "${appUrl}");
             });
           </script>
         </head>
         <body></body>
       </html>
     `);
-
   } catch (err) {
-    console.error("❌ Callback error:", err);
+    console.error("❌ Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
