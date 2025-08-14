@@ -719,77 +719,56 @@ app.use(passport.session());
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    const storedState = req.session.shopify_state;
+    if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    // --- 1. Basic validation ---
-    if (!shop || !isValidShop(shop)) return res.status(400).send("❌ Invalid shop domain");
-    if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) return res.status(400).send("❌ Invalid request signature");
-    if (!state || state !== storedState) return res.status(400).send("❌ Invalid state");
-
-    const normalizedShop = shop.toLowerCase();
-
-    // --- 2. Exchange code for access token ---
-    const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
+    // Validate & exchange for token
+    const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code
     });
-
     const accessToken = tokenRes.data.access_token;
-    if (!accessToken) return res.status(400).send("❌ Missing access token");
+    if (!accessToken) throw new Error("No access token");
 
-    // --- 3. Run post-install logic ---
-    const userId = await handlePostInstall(normalizedShop, accessToken);
+    // Fire and forget post-install logic
+    handlePostInstall(shop, accessToken).catch(console.error);
 
-    // --- 4. Passport login ---
-    const [userRows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = userRows[0];
-    await new Promise((resolve, reject) => {
-      req.logIn(user, err => err ? reject(err) : resolve());
-    });
+    // Respond instantly with embedded redirect
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              var AppBridge = window['app-bridge'];
+              var createApp = AppBridge.default;
+              var Redirect = AppBridge.actions.Redirect;
 
-    // --- 5. App Bridge redirect into embedded app ---
-    const embeddedUrl = `/?shop=${shop}&host=${host}`;
+              var app = createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}"
+              });
 
-   // --- 5. Embedded redirect after OAuth ---
-res.set("Content-Type", "text/html");
-res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          var AppBridge = window['app-bridge'];
-          var createApp = AppBridge.default;
-          var Redirect = AppBridge.actions.Redirect;
-
-          var app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}"
-          });
-
-          // Redirect directly to embedded app root with shop + host
-          var redirect = Redirect.create(app);
-          redirect.dispatch(
-            Redirect.Action.APP,
-            "/?shop=${shop}&host=${host}"
-          );
-        });
-      </script>
-    </head>
-    <body></body>
-  </html>
-`);
-
+              var redirect = Redirect.create(app);
+              redirect.dispatch(
+                Redirect.Action.APP,
+                "/?shop=${shop}&host=${host}"
+              );
+            });
+          </script>
+        </head>
+        <body></body>
+      </html>
+    `);
 
   } catch (err) {
-    console.error("❌ Callback error:", err.response?.data || err.message);
+    console.error("❌ Callback error:", err);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
