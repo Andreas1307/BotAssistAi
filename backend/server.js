@@ -751,35 +751,38 @@ app.get("/shopify/callback", async (req, res) => {
     // --- 5. App Bridge redirect into embedded app ---
     const embeddedUrl = `/?shop=${shop}&host=${host}`;
 
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              var AppBridge = window['app-bridge'];
-              var createApp = AppBridge.default;
-              var Redirect = AppBridge.actions.Redirect;
+   // --- 5. Embedded redirect after OAuth ---
+res.set("Content-Type", "text/html");
+res.send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var AppBridge = window['app-bridge'];
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
 
-              var app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}"
-              });
+          var app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}"
+          });
 
-              var redirect = Redirect.create(app);
-              redirect.dispatch(
-                Redirect.Action.APP,
-                "${embeddedUrl}"
-              );
-            });
-          </script>
-        </head>
-        <body></body>
-      </html>
-    `);
+          // Redirect directly to embedded app root with shop + host
+          var redirect = Redirect.create(app);
+          redirect.dispatch(
+            Redirect.Action.APP,
+            "/?shop=${shop}&host=${host}"
+          );
+        });
+      </script>
+    </head>
+    <body></body>
+  </html>
+`);
+
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
