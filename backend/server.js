@@ -877,24 +877,28 @@ app.get("/shopify/callback", async (req, res) => {
         ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
       `, [normalizedShop, accessToken, user.user_id]);
 
-      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
 
-res.set('Content-Type', 'text/html');
-res.send(`
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Redirecting…</title>
-  </head>
-  <body>
-    <script>
-      window.top.location.href = "${embeddedUrl}";
-    </script>
-  </body>
-  </html>
-`);
-
+      res.set('Content-Type', 'text/html');
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting…</title>
+          <script>
+            if (window.top === window.self) {
+              // Not in iframe
+              window.location.href = "${embeddedUrl}";
+            } else {
+              // In iframe
+              window.top.location.href = "${embeddedUrl}";
+            }
+          </script>
+        </head>
+        <body></body>
+        </html>
+      `);
       
     });
 
