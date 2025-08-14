@@ -745,162 +745,40 @@ app.get("/shopify/callback", async (req, res) => {
       return res.status(400).send("❌ Missing access token");
     }
 
-    // ✅ Store install + optional hooks
+    // ✅ Store minimal install info
     await pool.query(`
       INSERT INTO shopify_installs (shop, access_token, installed_at)
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE access_token = ?, installed_at = NOW()
     `, [normalizedShop, accessToken, accessToken]);
 
-    await registerScriptTag(normalizedShop, accessToken);
-    await registerWebhooks(normalizedShop, accessToken);
-
-    // ✅ Also run GDPR webhook registration
-    await registerGdprWebhooks({ shop: normalizedShop, accessToken }, normalizedShop);
-
-    // ✅ Fetch shop info via Shopify API lib
-    const session = {
-      shop: normalizedShop,
-      accessToken,
-    };
-    const client = new shopify.clients.Rest({ session });
-    const response = await client.get({ path: "shop" });
-
-    if (!response?.body?.shop) {
-      return res.status(500).send("❌ Failed to fetch shop info from Shopify.");
-    }
-
-    const shopData = response.body.shop;
-    const email = shopData?.email || normalizedShop;
-    const username = shopData?.name || normalizedShop;
-    const rawKey = Math.random().toString(36).slice(-8);
-    const toEncryptKey = uuidv4();
-    const encryptedKey = encryptApiKey(toEncryptKey);
-    const hashedPassword = await bcrypt.hash(rawKey, 10);
-
-    // ✅ Check if user exists
-    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-    let user;
-    if (existingUser.length > 0) {
-      user = existingUser[0];
-      await pool.query(`
-        UPDATE users
-        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-        WHERE user_id = ?
-      `, [normalizedShop, accessToken, user.user_id]);
-    } else {
-      await pool.query(`
-        INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-        VALUES (?, ?, ?, ?, ?, ?, NOW())
-      `, [username, email, hashedPassword, encryptedKey, normalizedShop, accessToken]);
-
-      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-      user = newUserResult[0];
-
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL,
-          pass: process.env.PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: process.env.EMAIL,
-        to: email,
-        subject: "Your Account Password for Our App",
-        html: `
-         <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
-
-<img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
-
-<h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">Hey there!</h1>
-
-<p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
-  Your <strong>account </strong> has been created. Here is your temporary password:  
-  <br />
-  <strong>${rawKey}</strong>
-</p>
-
-
-    <h3 style="color: #00F5D4; font-size: 22px;">Please log in and change your password in the settings for security.</h3>
-
-
-
-<p style="margin-top: 35px; font-size: 14px; color: #aaa;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
-
-<div style="margin-top: 25px;">
-    <a href="https://facebook.com/botassistai" style="margin: 0 8px;">
-        <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" alt="Facebook" width="28">
-    </a>
-    <a href="https://instagram.com/botassistai" style="margin: 0 8px;">
-        <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" alt="Instagram" width="28">
-    </a>
-    <a href="https://twitter.com/botassistai" style="margin: 0 8px;">
-        <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" alt="Twitter" width="28">
-    </a>
-    <a href="https://linkedin.com/company/botassistai" style="margin: 0 8px;">
-        <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" alt="LinkedIn" width="28">
-    </a>
-</div>
-
-<p style="font-size: 12px; color: #666; margin-top: 20px;">
-  You received this email because you have an account with us. 
-  <a href="https://botassistai.com/unsubscribe" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
-</p>
-</div>
-
-
-        `,
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          return console.error('❌ Error sending password email:', error);
-        }
-        console.log('✅ Password email sent:', info.response);
-      });
-
-
-    }
-
-    req.logIn(user, async (err) => {
-      if (err) {
-        return res.status(500).send("❌ Failed to log in after registration.");
-      }
-
-      await pool.query(`
-        INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-        VALUES (?, ?, ?, NOW())
-        ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
-      `, [normalizedShop, accessToken, user.user_id]);
-
-      const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
-
-      res.set('Content-Type', 'text/html');
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting…</title>
-          <script>
-            if (window.top === window.self) {
-              // Not in iframe
-              window.location.href = "${embeddedUrl}";
-            } else {
-              // In iframe
-              window.top.location.href = "${embeddedUrl}";
-            }
-          </script>
-        </head>
-        <body></body>
-        </html>
-      `);
-      
+    // 🚀 Kick off post-install setup in the background
+    setImmediate(() => {
+      handlePostInstall(normalizedShop, accessToken).catch(err =>
+        console.error("❌ Post-install error:", err)
+      );
     });
+
+    // ✅ Redirect immediately to embedded app
+    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+    res.set('Content-Type', 'text/html');
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Redirecting…</title>
+        <script>
+          if (window.top === window.self) {
+            window.location.href = "${embeddedUrl}";
+          } else {
+            window.top.location.href = "${embeddedUrl}";
+          }
+        </script>
+      </head>
+      <body></body>
+      </html>
+    `);
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
@@ -909,6 +787,118 @@ app.get("/shopify/callback", async (req, res) => {
     }
   }
 });
+
+async function handlePostInstall(shop, accessToken) {
+  // Register ScriptTags & Webhooks
+  await registerScriptTag(shop, accessToken);
+  await registerWebhooks(shop, accessToken);
+  await registerGdprWebhooks({ shop, accessToken }, shop);
+
+  // Fetch shop info
+  const client = new shopify.clients.Rest({ session: { shop, accessToken } });
+  const response = await client.get({ path: "shop" });
+  if (!response?.body?.shop) throw new Error("Failed to fetch shop info");
+
+  const shopData = response.body.shop;
+  const email = shopData.email || shop;
+  const username = shopData.name || shop;
+  const rawKey = Math.random().toString(36).slice(-8);
+  const encryptedKey = encryptApiKey(uuidv4());
+  const hashedPassword = await bcrypt.hash(rawKey, 10);
+
+  // Check if user exists
+  const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+  let userId;
+  if (existingUser.length > 0) {
+    userId = existingUser[0].user_id;
+    await pool.query(`
+      UPDATE users
+      SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+      WHERE user_id = ?
+    `, [shop, accessToken, userId]);
+  } else {
+    const [result] = await pool.query(`
+      INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+      VALUES (?, ?, ?, ?, ?, ?, NOW())
+    `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
+    userId = result.insertId;
+
+    // Send welcome email
+    await handleSendNewUserEmail(rawKey, email);
+  }
+
+  console.log(`✅ Post-install setup complete for ${shop}`);
+}
+
+
+const handleSendNewUserEmail = async (rawKey, email) => {
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Your Account Password for Our App",
+    html: `
+     <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
+
+<img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
+
+<h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">Hey there!</h1>
+
+<p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
+Your <strong>account </strong> has been created. Here is your temporary password:  
+<br />
+<strong>${rawKey}</strong>
+</p>
+
+
+<h3 style="color: #00F5D4; font-size: 22px;">Please log in and change your password in the settings for security.</h3>
+
+
+
+<p style="margin-top: 35px; font-size: 14px; color: #aaa;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
+
+<div style="margin-top: 25px;">
+<a href="https://facebook.com/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" alt="Facebook" width="28">
+</a>
+<a href="https://instagram.com/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" alt="Instagram" width="28">
+</a>
+<a href="https://twitter.com/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" alt="Twitter" width="28">
+</a>
+<a href="https://linkedin.com/company/botassistai" style="margin: 0 8px;">
+    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" alt="LinkedIn" width="28">
+</a>
+</div>
+
+<p style="font-size: 12px; color: #666; margin-top: 20px;">
+You received this email because you have an account with us. 
+<a href="https://botassistai.com/unsubscribe" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
+</p>
+</div>
+
+
+    `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.error('❌ Error sending password email:', error);
+    }
+    console.log('✅ Password email sent:', info.response);
+  });
+
+}
 
 
 
