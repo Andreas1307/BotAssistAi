@@ -722,15 +722,9 @@ app.get("/shopify/callback", async (req, res) => {
     const storedState = req.session.shopify_state;
 
     // --- 1. Basic validation ---
-    if (!shop || !isValidShop(shop)) {
-      return res.status(400).send("❌ Invalid shop domain");
-    }
-    if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) {
-      return res.status(400).send("❌ Invalid request signature");
-    }
-    if (!state || state !== storedState) {
-      return res.status(400).send("❌ Invalid state");
-    }
+    if (!shop || !isValidShop(shop)) return res.status(400).send("❌ Invalid shop domain");
+    if (!verifyHMAC(req.query, process.env.SHOPIFY_API_SECRET)) return res.status(400).send("❌ Invalid request signature");
+    if (!state || state !== storedState) return res.status(400).send("❌ Invalid state");
 
     const normalizedShop = shop.toLowerCase();
 
@@ -742,49 +736,57 @@ app.get("/shopify/callback", async (req, res) => {
     });
 
     const accessToken = tokenRes.data.access_token;
-    if (!accessToken) {
-      return res.status(400).send("❌ Missing access token");
-    }
+    if (!accessToken) return res.status(400).send("❌ Missing access token");
 
     // --- 3. Run post-install logic ---
     const userId = await handlePostInstall(normalizedShop, accessToken);
 
-    // --- 4. Log the user in ---
+    // --- 4. Passport login ---
     const [userRows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = userRows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, err => err ? reject(err) : resolve());
     });
 
-    // --- 5. Redirect to embedded app ---
-    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+    // --- 5. App Bridge redirect into embedded app ---
+    const embeddedUrl = `/?shop=${shop}&host=${host}`;
 
-    res.set('Content-Type', 'text/html');
+    res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Redirecting…</title>
-        <script>
-          if (window.top === window.self) {
-            window.location.href = "${embeddedUrl}";
-          } else {
-            window.top.location.href = "${embeddedUrl}";
-          }
-        </script>
-      </head>
-      <body></body>
+        <head>
+          <meta charset="utf-8">
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              var AppBridge = window['app-bridge'];
+              var createApp = AppBridge.default;
+              var Redirect = AppBridge.actions.Redirect;
+
+              var app = createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}"
+              });
+
+              var redirect = Redirect.create(app);
+              redirect.dispatch(
+                Redirect.Action.APP,
+                "${embeddedUrl}"
+              );
+            });
+          </script>
+        </head>
+        <body></body>
       </html>
     `);
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
-    if (!res.headersSent) {
-      res.status(500).send("OAuth callback failed.");
-    }
+    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
@@ -832,7 +834,6 @@ async function handlePostInstall(shop, accessToken) {
 
   return userId;
 }
-
 
 const handleSendNewUserEmail = async (rawKey, email) => {
   const transporter = nodemailer.createTransport({
