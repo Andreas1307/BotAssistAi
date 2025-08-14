@@ -721,7 +721,7 @@ app.get("/shopify/callback", async (req, res) => {
     const { shop, code, state, host } = req.query;
     const storedState = req.session.shopify_state;
 
-    // ✅ Basic validation
+    // --- 1. Basic validation ---
     if (!shop || !isValidShop(shop)) {
       return res.status(400).send("❌ Invalid shop domain");
     }
@@ -734,33 +734,31 @@ app.get("/shopify/callback", async (req, res) => {
 
     const normalizedShop = shop.toLowerCase();
 
-    // ✅ Exchange code for access token
+    // --- 2. Exchange code for access token ---
     const tokenRes = await axios.post(`https://${normalizedShop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code
     });
+
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) {
       return res.status(400).send("❌ Missing access token");
     }
 
-    // ✅ Store minimal install info
-    await pool.query(`
-      INSERT INTO shopify_installs (shop, access_token, installed_at)
-      VALUES (?, ?, NOW())
-      ON DUPLICATE KEY UPDATE access_token = ?, installed_at = NOW()
-    `, [normalizedShop, accessToken, accessToken]);
+    // --- 3. Run post-install logic ---
+    const userId = await handlePostInstall(normalizedShop, accessToken);
 
-    // 🚀 Kick off post-install setup in the background
-    setImmediate(() => {
-      handlePostInstall(normalizedShop, accessToken).catch(err =>
-        console.error("❌ Post-install error:", err)
-      );
+    // --- 4. Log the user in ---
+    const [userRows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+    const user = userRows[0];
+    await new Promise((resolve, reject) => {
+      req.logIn(user, err => err ? reject(err) : resolve());
     });
 
-    // ✅ Redirect immediately to embedded app
+    // --- 5. Redirect to embedded app ---
     const embeddedUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}`;
+
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
@@ -789,7 +787,6 @@ app.get("/shopify/callback", async (req, res) => {
 });
 
 async function handlePostInstall(shop, accessToken) {
-  // Register ScriptTags & Webhooks
   await registerScriptTag(shop, accessToken);
   await registerWebhooks(shop, accessToken);
   await registerGdprWebhooks({ shop, accessToken }, shop);
@@ -806,7 +803,6 @@ async function handlePostInstall(shop, accessToken) {
   const encryptedKey = encryptApiKey(uuidv4());
   const hashedPassword = await bcrypt.hash(rawKey, 10);
 
-  // Check if user exists
   const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
   let userId;
   if (existingUser.length > 0) {
@@ -822,14 +818,10 @@ async function handlePostInstall(shop, accessToken) {
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
     userId = result.insertId;
-
-    // Send welcome email
     await handleSendNewUserEmail(rawKey, email);
   }
-
-  console.log(`✅ Post-install setup complete for ${shop}`);
+  return userId;
 }
-
 
 const handleSendNewUserEmail = async (rawKey, email) => {
   const transporter = nodemailer.createTransport({
