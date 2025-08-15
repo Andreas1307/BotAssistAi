@@ -720,7 +720,7 @@ app.get("/shopify/callback", async (req, res) => {
     const { shop, code, state, host } = req.query;
     if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    // Validate state to prevent CSRF
+    // Validate state
     if (state !== req.session.shopify_state) {
       return res.status(400).send("Invalid state");
     }
@@ -735,17 +735,17 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install logic
+    // Post-install logic (store tokens, create user if needed)
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log in user to create session
+    // Log in user to persist session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // Redirect to the embedded app
+    // ✅ Redirect to `/` so frontend can auto-route to /:username/dashboard
     const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     res.set("Content-Type", "text/html");
     res.send(`
@@ -777,6 +777,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
