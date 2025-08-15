@@ -746,7 +746,8 @@ app.get("/shopify/callback", async (req, res) => {
     });
 
     // ✅ Redirect to `/` so frontend can auto-route to /:username/dashboard
-    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
