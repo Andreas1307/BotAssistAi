@@ -294,27 +294,26 @@ app.use((req, res, next) => {
 });
  
 app.get('/shopify/install', (req, res) => {
-  const { shop } = req.query;
-
+  const { shop, host } = req.query;
   if (!shop || !isValidShop(shop)) {
     return res.status(400).send('Invalid shop parameter');
   }
 
-  // Generate state and save in session
   const state = crypto.randomBytes(16).toString('hex');
   req.session.shopify_state = state;
+  req.session.shopify_host = host; // ✅ Save host in session
 
-  // OAuth install URL
-  const installUrl = `https://${shop}/admin/oauth/authorize` +
+  const installUrl =
+    `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
     `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}` +
-    `&grant_options[]=per-user`; // optional for online tokens
+    `&grant_options[]=per-user`;
 
-  // Immediate redirect to Shopify
-  return res.redirect(installUrl);
+  res.redirect(installUrl);
 });
+
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
@@ -749,9 +748,9 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Final embedded URL WITH host param (this is mandatory for Shopify)
-    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
+    const shopName = shop.replace('.myshopify.com', '');
+    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(hostParam)}`;
+    
     // Return an HTML page that uses App Bridge to redirect inside the iframe
     res.set("Content-Type", "text/html");
     res.send(`
