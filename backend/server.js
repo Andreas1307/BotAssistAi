@@ -719,11 +719,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-app.get('/shopify/callback', async (req, res) => {
+app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-
-    if (!shop || !code) return res.status(400).send("Missing params");
+    if (!shop || !code || !host) return res.status(400).send("Missing params");
 
     // Validate state
     if (state !== req.session.shopify_state) {
@@ -737,49 +736,50 @@ app.get('/shopify/callback', async (req, res) => {
       client_secret: process.env.SHOPIFY_API_SECRET,
       code
     });
-
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install tasks
+    // Post-install logic
     const userId = await handlePostInstall(shop, accessToken);
 
+    // Persist session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
-
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    const redirectUrl = `/${encodeURIComponent(user.username)}/dashboard?host=${encodeURIComponent(host)}`;
-
+    // Embedded app redirect
+    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard`;
 
     res.set("Content-Type", "text/html");
     res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8" />
-      <script>
-        (function() {
-          var redirectTo = "${redirectUrl}";
-          if (window.top === window.self) {
-            // Not in an iframe, redirect top-level
-            window.location.href = redirectTo;
-          } else {
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
-            var app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodeURIComponent(host)}" });
-            Redirect.create(app).dispatch(Redirect.Action.APP, redirectTo);
-          }
-        })();
-      </script>
-    </head>
-    <body></body>
-    </html>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const AppBridge = window['app-bridge'];
+              const createApp = AppBridge.default;
+              const Redirect = AppBridge.actions.Redirect;
+
+              const app = createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${encodeURIComponent(host)}",
+              });
+
+              Redirect.create(app).dispatch(
+                Redirect.Action.APP,
+                "${embeddedUrl}"
+              );
+            });
+          </script>
+        </head>
+        <body></body>
+      </html>
     `);
-    
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
