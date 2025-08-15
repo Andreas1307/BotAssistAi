@@ -294,23 +294,27 @@ app.use((req, res, next) => {
 });
  
 app.get('/shopify/install', (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
+
   if (!shop || !isValidShop(shop)) {
     return res.status(400).send('Invalid shop parameter');
   }
+  if (!host) {
+    return res.status(400).send('Missing host parameter');
+  }
 
   const state = crypto.randomBytes(16).toString('hex');
-  req.session.shopify_state = state; // keep for callback validation
+  req.session.shopify_state = state;
 
   const installUrl = `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
-    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
+    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}` +
+    `&grant_options[]=per-user`; // optional: generate online tokens for embedded apps
 
-  return res.redirect(installUrl); // immediate 302 to Shopify
+  return res.redirect(installUrl);
 });
-
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
