@@ -717,12 +717,16 @@ app.use(passport.session());
 
 app.get("/shopify/callback", async (req, res) => {
   try {
-    const { shop, code, host } = req.query;
-    if (!shop || !code || !host) {
-      return res.status(400).send("Missing params");
-    }
+    const { shop, code, state, host } = req.query;
+    if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    // 1. Get access token
+    // Validate state to prevent CSRF
+    if (state !== req.session.shopify_state) {
+      return res.status(400).send("Invalid state");
+    }
+    delete req.session.shopify_state;
+
+    // Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -731,18 +735,18 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2. Handle post-install and create/update user
+    // Post-install logic
     const userId = await handlePostInstall(shop, accessToken);
 
-    // 3. Log user into the session
+    // Log in user to create session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // 4. Redirect to actual frontend route
-    const embeddedUrl = `/app?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    // Redirect to the embedded app
+    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -755,12 +759,10 @@ app.get("/shopify/callback", async (req, res) => {
               const AppBridge = window['app-bridge'];
               const createApp = AppBridge.default;
               const Redirect = AppBridge.actions.Redirect;
-              
               const app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}"
+                host: "${encodeURIComponent(host)}"
               });
-
               const redirect = Redirect.create(app);
               redirect.dispatch(Redirect.Action.APP, "${embeddedUrl}");
             });
@@ -775,7 +777,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
