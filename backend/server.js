@@ -749,9 +749,10 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // Embedded app redirect
-    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard`;
+    // ✅ Final embedded URL WITH host param (this is mandatory for Shopify)
+    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
+    // Return an HTML page that uses App Bridge to redirect inside the iframe
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -761,13 +762,13 @@ app.get("/shopify/callback", async (req, res) => {
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
             document.addEventListener('DOMContentLoaded', function() {
-              const AppBridge = window['app-bridge'];
-              const createApp = AppBridge.default;
-              const Redirect = AppBridge.actions.Redirect;
+              var AppBridge = window['app-bridge'];
+              var createApp = AppBridge.default;
+              var Redirect = AppBridge.actions.Redirect;
 
-              const app = createApp({
+              var app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${encodeURIComponent(host)}",
+                host: "${encodeURIComponent(host)}"
               });
 
               Redirect.create(app).dispatch(
@@ -786,6 +787,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
