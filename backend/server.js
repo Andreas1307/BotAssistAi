@@ -294,25 +294,25 @@ app.use((req, res, next) => {
 });
  
 app.get('/shopify/install', (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
 
   if (!shop || !isValidShop(shop)) {
     return res.status(400).send('Invalid shop parameter');
   }
-  if (!host) {
-    return res.status(400).send('Missing host parameter');
-  }
 
+  // Generate state and save in session
   const state = crypto.randomBytes(16).toString('hex');
   req.session.shopify_state = state;
 
+  // OAuth install URL
   const installUrl = `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
     `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}` +
-    `&grant_options[]=per-user`; // optional: generate online tokens for embedded apps
+    `&grant_options[]=per-user`; // optional for online tokens
 
+  // Immediate redirect to Shopify
   return res.redirect(installUrl);
 });
 
@@ -719,10 +719,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-app.get("/shopify/callback", async (req, res) => {
+app.get('/shopify/callback', async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    if (!shop || !code || !host) return res.status(400).send("Missing params");
+
+    if (!shop || !code) return res.status(400).send("Missing params");
 
     // Validate state
     if (state !== req.session.shopify_state) {
@@ -736,22 +737,27 @@ app.get("/shopify/callback", async (req, res) => {
       client_secret: process.env.SHOPIFY_API_SECRET,
       code
     });
+
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install logic
+    // Post-install tasks
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Persist session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
+
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // Embedded app redirect
+    // Embedded app URL
     const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard`;
 
+    // If host is missing, fallback to redirecting to top-level login
+    const redirectHost = host ? encodeURIComponent(host) : shop;
+
+    // Top-level redirect HTML (Shopify expects JS redirect)
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -759,6 +765,7 @@ app.get("/shopify/callback", async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions/Redirect"></script>
           <script>
             document.addEventListener('DOMContentLoaded', function() {
               const AppBridge = window['app-bridge'];
@@ -767,13 +774,11 @@ app.get("/shopify/callback", async (req, res) => {
 
               const app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${encodeURIComponent(host)}",
+                host: "${redirectHost}",
               });
 
-              Redirect.create(app).dispatch(
-                Redirect.Action.APP,
-                "${embeddedUrl}"
-              );
+              // Use App Bridge redirect
+              Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
             });
           </script>
         </head>
