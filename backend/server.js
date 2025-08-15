@@ -749,8 +749,8 @@ app.get("/shopify/callback", async (req, res) => {
     });
 
     const shopName = shop.replace('.myshopify.com', '');
-    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(hostParam)}`;
-    
+    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
     // Return an HTML page that uses App Bridge to redirect inside the iframe
     res.set("Content-Type", "text/html");
     res.send(`
@@ -786,7 +786,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
