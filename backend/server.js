@@ -735,18 +735,18 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install logic (store tokens, create user if needed)
+    // Post-install logic
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log in user to persist session
+    // Persist session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Redirect to `/` so frontend can auto-route to /:username/dashboard
-    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    // Embedded app redirect
+    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard`;
 
     res.set("Content-Type", "text/html");
     res.send(`
@@ -760,12 +760,16 @@ app.get("/shopify/callback", async (req, res) => {
               const AppBridge = window['app-bridge'];
               const createApp = AppBridge.default;
               const Redirect = AppBridge.actions.Redirect;
+
               const app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${encodeURIComponent(host)}"
+                host: "${encodeURIComponent(host)}",
               });
-              const redirect = Redirect.create(app);
-              redirect.dispatch(Redirect.Action.APP, "${embeddedUrl}");
+
+              Redirect.create(app).dispatch(
+                Redirect.Action.APP,
+                "${embeddedUrl}"
+              );
             });
           </script>
         </head>
@@ -778,7 +782,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
