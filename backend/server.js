@@ -751,7 +751,7 @@ app.get('/shopify/callback', async (req, res) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    const redirectUrl = `/dashboard/${encodeURIComponent(user.username)}?host=${encodeURIComponent(host)}`;
+    const redirectUrl = `/${encodeURIComponent(user.username)}/dashboard?host=${encodeURIComponent(host)}`;
 
 
     res.set("Content-Type", "text/html");
