@@ -757,34 +757,33 @@ app.get('/shopify/callback', async (req, res) => {
     // If host is missing, fallback to redirecting to top-level login
     const redirectHost = host ? encodeURIComponent(host) : shop;
 
-    // Top-level redirect HTML (Shopify expects JS redirect)
     res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions/Redirect"></script>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              const AppBridge = window['app-bridge'];
-              const createApp = AppBridge.default;
-              const Redirect = AppBridge.actions.Redirect;
-
-              const app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${redirectHost}",
-              });
-
-              // Use App Bridge redirect
-              Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
-            });
-          </script>
-        </head>
-        <body></body>
-      </html>
-    `);
+res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script>
+    // Shopify top-level redirect for new installs
+    (function() {
+      var redirectTo = "${embeddedUrl}";
+      if (window.top === window.self) {
+        // Not in an iframe, redirect top-level
+        window.location.href = redirectTo;
+      } else {
+        // Embedded, use App Bridge
+        var AppBridge = window['app-bridge'];
+        var createApp = AppBridge.default;
+        var Redirect = AppBridge.actions.Redirect;
+        var app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodeURIComponent(host)}" });
+        Redirect.create(app).dispatch(Redirect.Action.APP, redirectTo);
+      }
+    })();
+  </script>
+</head>
+<body></body>
+</html>
+`);
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
