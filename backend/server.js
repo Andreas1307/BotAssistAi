@@ -718,10 +718,10 @@ app.use(passport.session());
 
 app.get("/shopify/callback", async (req, res) => {
   try {
-    const { shop, code, state, host } = req.query;
+    const { shop, code, host } = req.query;
     if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    // Exchange code for access token
+    // 1. Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -730,21 +730,19 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install logic: fire-and-forget (don’t block redirect)
-    handlePostInstall(shop, accessToken).catch(console.error);
+    // 2. Post-install logic (webhooks, etc.)
+    const userId = await handlePostInstall(shop, accessToken);
 
-    // Get or create user session immediately
-    const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
+    // 3. Log in the user (create session)
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
-    if (user) {
-      await new Promise((resolve, reject) => {
-        req.logIn(user, err => (err ? reject(err) : resolve()));
-      });
-    }
+    await new Promise((resolve, reject) => {
+      req.logIn(user, err => (err ? reject(err) : resolve()));
+    });
 
-    // Redirect to the proper embedded app route
-    // This must match your frontend React/Vue route that renders the embedded app UI
-    const appUrl = `/app?shop=${shop}&host=${host}`; // <-- change "/app" to whatever your frontend uses
+    // 4. App Bridge redirect to your **existing frontend route**
+    const appUrl = `/app?shop=${shop}&host=${host}`; // <--- CHANGE THIS to your real frontend route
+
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -771,11 +769,13 @@ app.get("/shopify/callback", async (req, res) => {
         <body></body>
       </html>
     `);
+
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
