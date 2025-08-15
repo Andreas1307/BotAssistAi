@@ -751,39 +751,35 @@ app.get('/shopify/callback', async (req, res) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // Embedded app URL
-    const embeddedUrl = `/${encodeURIComponent(user.username)}/dashboard`;
+    const redirectUrl = `/dashboard/${encodeURIComponent(user.username)}?host=${encodeURIComponent(host)}`;
 
-    // If host is missing, fallback to redirecting to top-level login
-    const redirectHost = host ? encodeURIComponent(host) : shop;
 
     res.set("Content-Type", "text/html");
-res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <script>
-    // Shopify top-level redirect for new installs
-    (function() {
-      var redirectTo = "${embeddedUrl}";
-      if (window.top === window.self) {
-        // Not in an iframe, redirect top-level
-        window.location.href = redirectTo;
-      } else {
-        // Embedded, use App Bridge
-        var AppBridge = window['app-bridge'];
-        var createApp = AppBridge.default;
-        var Redirect = AppBridge.actions.Redirect;
-        var app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodeURIComponent(host)}" });
-        Redirect.create(app).dispatch(Redirect.Action.APP, redirectTo);
-      }
-    })();
-  </script>
-</head>
-<body></body>
-</html>
-`);
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <script>
+        (function() {
+          var redirectTo = "${redirectUrl}";
+          if (window.top === window.self) {
+            // Not in an iframe, redirect top-level
+            window.location.href = redirectTo;
+          } else {
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var Redirect = AppBridge.actions.Redirect;
+            var app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodeURIComponent(host)}" });
+            Redirect.create(app).dispatch(Redirect.Action.APP, redirectTo);
+          }
+        })();
+      </script>
+    </head>
+    <body></body>
+    </html>
+    `);
+    
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
