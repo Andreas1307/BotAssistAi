@@ -719,7 +719,9 @@ app.use(passport.session());
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, host } = req.query;
-    if (!shop || !code || !host) return res.status(400).send("Missing params");
+    if (!shop || !code || !host) {
+      return res.status(400).send("Missing params");
+    }
 
     // 1. Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
@@ -730,19 +732,13 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2. Post-install logic (webhooks, etc.)
-    const userId = await handlePostInstall(shop, accessToken);
-
-    // 3. Log in the user (create session)
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = rows[0];
-    await new Promise((resolve, reject) => {
-      req.logIn(user, err => (err ? reject(err) : resolve()));
+    // 2. Fire post-install tasks in the background (don’t block redirect)
+    handlePostInstall(shop, accessToken).catch(err => {
+      console.error("❌ Post-install error:", err);
     });
 
-    // 4. App Bridge redirect to your **existing frontend route**
-    const appUrl = `/app?shop=${shop}&host=${host}`; // <--- CHANGE THIS to your real frontend route
-
+    // 3. Immediately redirect merchant to embedded app UI
+    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -755,14 +751,14 @@ app.get("/shopify/callback", async (req, res) => {
               const AppBridge = window['app-bridge'];
               const createApp = AppBridge.default;
               const Redirect = AppBridge.actions.Redirect;
-
+              
               const app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
                 host: "${host}"
               });
 
               const redirect = Redirect.create(app);
-              redirect.dispatch(Redirect.Action.APP, "${appUrl}");
+              redirect.dispatch(Redirect.Action.APP, "${embeddedUrl}");
             });
           </script>
         </head>
@@ -775,7 +771,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
