@@ -293,25 +293,25 @@ app.use((req, res, next) => {
   next();
 });
  
-app.get('/shopify/install', (req, res) => {
-  const { shop, host } = req.query;
+app.get("/shopify/install", (req, res) => {
+  const { shop } = req.query;
   if (!shop || !isValidShop(shop)) {
-    return res.status(400).send('Invalid shop parameter');
+    return res.status(400).send("Invalid shop parameter");
   }
 
-  const state = crypto.randomBytes(16).toString('hex');
+  const state = crypto.randomBytes(16).toString("hex");
   req.session.shopify_state = state;
-  req.session.shopify_host = host; // ✅ Save host in session
 
   const installUrl =
     `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
-    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}` +
-    `&grant_options[]=per-user`;
+    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
+    // ⬆ remove &grant_options[]=per-user here. Install uses offline token.
+    // You can request an online token later inside the embedded UI via App Bridge.
 
-  res.redirect(installUrl);
+  return res.redirect(installUrl);
 });
 
 
@@ -719,45 +719,130 @@ app.use(passport.session());
 
 app.get("/shopify/callback", async (req, res) => {
   try {
-    const { shop, code, state, host } = req.query;
-    if (!shop || !code || !host) return res.status(400).send("Missing params");
+    const { shop, code, state } = req.query; // ⬅ DO NOT require host here
+    if (!shop || !code) return res.status(400).send("Missing params");
 
-    if (state !== req.session.shopify_state) {
+    // Validate state (if install always goes through /shopify/install this will be present)
+    if (!req.session.shopify_state || state !== req.session.shopify_state) {
       return res.status(400).send("Invalid state");
     }
     delete req.session.shopify_state;
 
-    // Exchange code for token
+    // Exchange code -> offline access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
-      code
-    });
-    const accessToken = tokenRes.data.access_token;
+      code,
+    }, { timeout: 10000 });
+
+    const accessToken = tokenRes.data?.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Run install logic
-    const userId = await handlePostInstall(shop, accessToken);
+    // --- Minimal, fast DB work only: upsert user + persist token ---
+    const userId = await upsertUserQuick(shop, accessToken);
 
-    // Log user into your system
+    // Create login session in your app domain (cookie)
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Construct embedded app URL
-    const shopName = shop.replace(".myshopify.com", "");
-    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    // --- Kick off heavy post-install tasks in background (do NOT await) ---
+    setImmediate(() => runPostInstallTasks(shop, accessToken).catch(err => {
+      console.error("Post-install task error:", err?.response?.data || err);
+    }));
 
-    // ✅ Direct top-level redirect
-    return res.redirect(embeddedUrl);
+    // --- Immediately drop merchant into the embedded app in Admin ---
+    const shopName = shop.replace(/\.myshopify\.com$/i, "");
+    const adminAppUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
+
+    // Use top-level JS redirect to Admin (works for both bot and real users)
+    res.set("Content-Type", "text/html");
+    return res.send(`
+      <!DOCTYPE html>
+      <html><head><meta charset="utf-8" /></head>
+      <body>
+        <script>
+          // Top-level redirect straight to your app in Admin
+          window.top.location.href = ${JSON.stringify(adminAppUrl)};
+        </script>
+      </body></html>
+    `);
 
   } catch (err) {
-    console.error("❌ Callback error:", err.response?.data || err.message);
+    console.error("❌ Callback error:", err?.response?.data || err?.message || err);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
+async function upsertUserQuick(shop, accessToken) {
+  const client = new shopify.clients.Rest({ session: { shop, accessToken } });
+  const response = await client.get({ path: "shop" });
+  const shopData = response?.body?.shop;
+  if (!shopData) throw new Error("Failed to fetch shop info");
+
+  const email = shopData.email || shop;
+  const username = shopData.name || shop;
+
+  const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+  let userId;
+
+  if (existingUser.length) {
+    userId = existingUser[0].user_id;
+    await pool.query(
+      `UPDATE users
+         SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+       WHERE user_id = ?`,
+      [shop, accessToken, userId]
+    );
+  } else {
+    // Minimal creation only (no email sending here)
+    const rawKey = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(rawKey, 10);
+    const encryptedKey = encryptApiKey(uuidv4());
+
+    const [result] = await pool.query(
+      `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [username, email, hashedPassword, encryptedKey, shop, accessToken]
+    );
+    userId = result.insertId;
+
+    // Optional: enqueue email elsewhere; don't block callback
+    // queueEmail({ to: email, tempPassword: rawKey }).catch(console.error);
+  }
+
+  // Track install record (fast)
+  await pool.query(
+    `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+     VALUES (?, ?, ?, NOW())
+     ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id), installed_at = NOW()`,
+    [shop, accessToken, userId]
+  );
+
+  return userId;
+}
+
+async function runPostInstallTasks(shop, accessToken) {
+  try {
+    await registerWebhooks(shop, accessToken);
+  } catch (e) {
+    console.error("registerWebhooks failed:", e?.response?.data || e);
+  }
+  try {
+    await registerGdprWebhooks({ shop, accessToken }, shop);
+  } catch (e) {
+    console.error("registerGdprWebhooks failed:", e?.response?.data || e);
+  }
+  try {
+    await registerScriptTag(shop, accessToken);
+  } catch (e) {
+    console.error("registerScriptTag failed:", e?.response?.data || e);
+  }
+}
+
+
 
 async function handlePostInstall(shop, accessToken) {
   await registerScriptTag(shop, accessToken);
