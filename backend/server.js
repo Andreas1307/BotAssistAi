@@ -40,6 +40,7 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise();
+const jwt = require("jsonwebtoken");
 const { shopifyApi } = require('@shopify/shopify-api');
 const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
@@ -736,20 +737,60 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Minimal DB insert (don’t wait on webhooks/scripts here)
+    // Upsert user in DB
     const userId = await upsertUserQuick(shop, accessToken);
 
-    // Background tasks
+    // Create short-lived JWT for logging into your app
+    const sessionToken = jwt.sign(
+      { shop, userId },
+      process.env.JWT_SECRET,
+      { expiresIn: "2m" } // only valid for 2 minutes
+    );
+
+    // Background jobs (async, don’t block)
     setImmediate(() => runPostInstallTasks(shop, accessToken));
 
-    // ✅ IMMEDIATE 302 redirect to Admin app URL
+    // ✅ Redirect immediately into Shopify Admin app
     const shopName = shop.replace(".myshopify.com", "");
-    const adminAppUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
+    const adminAppUrl =
+      `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}` +
+      `?token=${sessionToken}&shop=${encodeURIComponent(shop)}`;
+
     return res.redirect(302, adminAppUrl);
 
   } catch (err) {
     console.error("❌ Callback error:", err?.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
+  }
+});
+
+
+// Step 2: App entry point → verify token & log user in
+app.get("/auth/complete", async (req, res) => {
+  try {
+    const { token, shop } = req.query;
+    if (!token) return res.status(400).send("Missing token");
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { userId } = decoded;
+
+    // Fetch user
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+    const user = rows[0];
+    if (!user) return res.status(400).send("User not found");
+
+    // Log user into your Express session
+    await new Promise((resolve, reject) => {
+      req.logIn(user, err => (err ? reject(err) : resolve()));
+    });
+
+    // Redirect to your dashboard (inside embedded app)
+    return res.redirect(`/dashboard?shop=${encodeURIComponent(shop)}`);
+
+  } catch (err) {
+    console.error("❌ Auth complete error:", err.message);
+    if (!res.headersSent) res.status(500).send("Auth complete failed.");
   }
 });
 
