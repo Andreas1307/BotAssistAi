@@ -722,13 +722,12 @@ app.get("/shopify/callback", async (req, res) => {
     const { shop, code, state, host } = req.query;
     if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    // Validate state
     if (state !== req.session.shopify_state) {
       return res.status(400).send("Invalid state");
     }
     delete req.session.shopify_state;
 
-    // Exchange code for access token
+    // Exchange code for token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -737,39 +736,22 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Run your post-install logic
-    await handlePostInstall(shop, accessToken);
+    // Run install logic
+    const userId = await handlePostInstall(shop, accessToken);
 
-    // ✅ Always send back App Bridge redirect to your app root
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              var AppBridge = window['app-bridge'];
-              var createApp = AppBridge.default;
-              var Redirect = AppBridge.actions.Redirect;
+    // Log user into your system
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+    const user = rows[0];
+    await new Promise((resolve, reject) => {
+      req.logIn(user, err => (err ? reject(err) : resolve()));
+    });
 
-              var app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${encodeURIComponent(host)}"
-              });
+    // ✅ Construct embedded app URL
+    const shopName = shop.replace(".myshopify.com", "");
+    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-              // Redirect to your app's root (/) with params
-              Redirect.create(app).dispatch(
-                Redirect.Action.APP,
-                "/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-              );
-            });
-          </script>
-        </head>
-        <body></body>
-      </html>
-    `);
+    // ✅ Direct top-level redirect
+    return res.redirect(embeddedUrl);
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
