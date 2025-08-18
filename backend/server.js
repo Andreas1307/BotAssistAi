@@ -792,9 +792,8 @@ app.get("/auth/complete", async (req, res) => {
   }
 });
 
-// Upsert user function
 async function upsertUserQuick(shop, accessToken) {
-  // REST client for the shop
+  // Initialize REST client
   const client = new Shopify.Clients.Rest(shop, accessToken);
 
   const response = await client.get({ path: "shop" });
@@ -837,6 +836,7 @@ async function upsertUserQuick(shop, accessToken) {
 
   return userId;
 }
+
 
 // Post-install tasks
 async function runPostInstallTasks(shop, accessToken) {
