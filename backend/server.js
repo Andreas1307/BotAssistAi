@@ -40,7 +40,6 @@ user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise();
-const jwt = require("jsonwebtoken");
 const { shopifyApi } = require('@shopify/shopify-api');
 const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
@@ -720,12 +719,10 @@ app.use(passport.session());
 
 app.get("/shopify/callback", async (req, res) => {
   try {
-    const { shop, code, state } = req.query;
-    if (!shop || !code) return res.status(400).send("Missing params");
+    const { shop, code, state, host } = req.query;
+    if (!shop || !code || !host) return res.status(400).send("Missing params");
 
-    if (!req.session.shopify_state || state !== req.session.shopify_state) {
-      return res.status(400).send("Invalid state");
-    }
+    if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
     // Exchange code for access token
@@ -734,138 +731,53 @@ app.get("/shopify/callback", async (req, res) => {
       client_secret: process.env.SHOPIFY_API_SECRET,
       code,
     });
-
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Upsert user in DB
-    const userId = await upsertUserQuick(shop, accessToken);
+    // Run install logic
+    const userId = await handlePostInstall(shop, accessToken);
 
-    // Short-lived JWT for immediate login in your app
-    const sessionToken = jwt.sign(
-      { shop, userId },
-      process.env.JWT_SECRET,
-      { expiresIn: "2m" } // 2 minutes
-    );
-
-    // Background tasks
-    setImmediate(() => runPostInstallTasks(shop, accessToken));
-
-    // Immediate redirect to Shopify Admin app (pass JWT)
-    const shopName = shop.replace(".myshopify.com", "");
-    const adminAppUrl =
-      `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}` +
-      `?token=${sessionToken}&shop=${encodeURIComponent(shop)}`;
-
-    return res.redirect(302, adminAppUrl);
-  } catch (err) {
-    console.error("❌ Callback error:", err?.response?.data || err.message);
-    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
-  }
-});
-
-// App entry point → verify token & log user in
-app.get("/auth/complete", async (req, res) => {
-  try {
-    const { token, shop } = req.query;
-    if (!token) return res.status(400).send("Missing token");
-
-    // Verify JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { userId } = decoded;
-
-    // Fetch user from DB
+    // Log user into session immediately
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
-    if (!user) return res.status(400).send("User not found");
-
-    // Log user into Express session
     await new Promise((resolve, reject) => {
       req.logIn(user, err => (err ? reject(err) : resolve()));
     });
 
-    // Redirect to dashboard
-    return res.redirect(`/dashboard?shop=${encodeURIComponent(shop)}`);
+    // Redirect immediately to embedded app URL
+    const shopName = shop.replace(".myshopify.com", "");
+    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+    return res.redirect(302, embeddedUrl);
   } catch (err) {
-    console.error("❌ Auth complete error:", err.message);
-    if (!res.headersSent) res.status(500).send("Auth complete failed.");
+    console.error("❌ Callback error:", err.response?.data || err.message);
+    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
 
-async function upsertUserQuick(shop, accessToken) {
-  // Initialize REST client
-  const client = new Shopify.Clients.Rest(shop, accessToken);
+async function handlePostInstall(shop, accessToken) {
+  // ✅ Post-install tasks
+  await Promise.all([
+    registerScriptTag(shop, accessToken),
+    registerWebhooks(shop, accessToken),
+    registerGdprWebhooks({ shop, accessToken }, shop)
+  ]);
 
+  // Proper Shopify REST client
+  const client = new Shopify.Clients.Rest(shop, accessToken);
   const response = await client.get({ path: "shop" });
   const shopData = response?.body?.shop;
   if (!shopData) throw new Error("Failed to fetch shop info");
 
   const email = shopData.email || shop;
   const username = shopData.name || shop;
-
-  const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-  let userId;
-
-  if (existingUser.length) {
-    userId = existingUser[0].user_id;
-    await pool.query(
-      `UPDATE users
-       SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-       WHERE user_id = ?`,
-      [shop, accessToken, userId]
-    );
-  } else {
-    const rawKey = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(rawKey, 10);
-    const encryptedKey = encryptApiKey(uuidv4());
-
-    const [result] = await pool.query(
-      `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [username, email, hashedPassword, encryptedKey, shop, accessToken]
-    );
-    userId = result.insertId;
-  }
-
-  await pool.query(
-    `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-     VALUES (?, ?, ?, NOW())
-     ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id), installed_at = NOW()`,
-    [shop, accessToken, userId]
-  );
-
-  return userId;
-}
-
-
-// Post-install tasks
-async function runPostInstallTasks(shop, accessToken) {
-  try { await registerWebhooks(shop, accessToken); } catch (e) { console.error(e); }
-  try { await registerGdprWebhooks({ shop, accessToken }, shop); } catch (e) { console.error(e); }
-  try { await registerScriptTag(shop, accessToken); } catch (e) { console.error(e); }
-}
-
-
-
-async function handlePostInstall(shop, accessToken) {
-  await registerScriptTag(shop, accessToken);
-  await registerWebhooks(shop, accessToken);
-  await registerGdprWebhooks({ shop, accessToken }, shop);
-
-  const client = new shopify.clients.Rest({ session: { shop, accessToken } });
-  const response = await client.get({ path: "shop" });
-  if (!response?.body?.shop) throw new Error("Failed to fetch shop info");
-
-  const shopData = response.body.shop;
-  const email = shopData.email || shop;
-  const username = shopData.name || shop;
   const rawKey = Math.random().toString(36).slice(-8);
-  const encryptedKey = encryptApiKey(uuidv4());
   const hashedPassword = await bcrypt.hash(rawKey, 10);
+  const encryptedKey = encryptApiKey(uuidv4());
 
   const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
   let userId;
-  if (existingUser.length > 0) {
+  if (existingUser.length) {
     userId = existingUser[0].user_id;
     await pool.query(`
       UPDATE users
@@ -878,10 +790,9 @@ async function handlePostInstall(shop, accessToken) {
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
     userId = result.insertId;
-   // await handleSendNewUserEmail(rawKey, email);
   }
 
-  // ✅ Insert into shopify_installs
+  // Upsert install record
   await pool.query(`
     INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
     VALUES (?, ?, ?, NOW())
