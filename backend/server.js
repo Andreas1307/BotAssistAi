@@ -50,7 +50,6 @@ const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
-const { shopifyApi } = require('@shopify/shopify-api');
 const shopifySessionMiddleware = require('./shopifySessionMiddleware');
 const sessionStore = new MySQLStore({
   host: process.env.DATABASE_HOST,
