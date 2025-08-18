@@ -719,59 +719,36 @@ app.use(passport.session());
 
 app.get("/shopify/callback", async (req, res) => {
   try {
-    const { shop, code, state } = req.query; // ⬅ DO NOT require host here
+    const { shop, code, state } = req.query;
     if (!shop || !code) return res.status(400).send("Missing params");
 
-    // Validate state (if install always goes through /shopify/install this will be present)
     if (!req.session.shopify_state || state !== req.session.shopify_state) {
       return res.status(400).send("Invalid state");
     }
     delete req.session.shopify_state;
 
-    // Exchange code -> offline access token
+    // Exchange code for token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code,
-    }, { timeout: 10000 });
-
-    const accessToken = tokenRes.data?.access_token;
+    });
+    const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // --- Minimal, fast DB work only: upsert user + persist token ---
+    // Minimal DB insert (don’t wait on webhooks/scripts here)
     const userId = await upsertUserQuick(shop, accessToken);
 
-    // Create login session in your app domain (cookie)
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = rows[0];
-    await new Promise((resolve, reject) => {
-      req.logIn(user, err => (err ? reject(err) : resolve()));
-    });
+    // Background tasks
+    setImmediate(() => runPostInstallTasks(shop, accessToken));
 
-    // --- Kick off heavy post-install tasks in background (do NOT await) ---
-    setImmediate(() => runPostInstallTasks(shop, accessToken).catch(err => {
-      console.error("Post-install task error:", err?.response?.data || err);
-    }));
-
-    // --- Immediately drop merchant into the embedded app in Admin ---
-    const shopName = shop.replace(/\.myshopify\.com$/i, "");
+    // ✅ IMMEDIATE 302 redirect to Admin app URL
+    const shopName = shop.replace(".myshopify.com", "");
     const adminAppUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
-
-    // Use top-level JS redirect to Admin (works for both bot and real users)
-    res.set("Content-Type", "text/html");
-    return res.send(`
-      <!DOCTYPE html>
-      <html><head><meta charset="utf-8" /></head>
-      <body>
-        <script>
-          // Top-level redirect straight to your app in Admin
-          window.top.location.href = ${JSON.stringify(adminAppUrl)};
-        </script>
-      </body></html>
-    `);
+    return res.redirect(302, adminAppUrl);
 
   } catch (err) {
-    console.error("❌ Callback error:", err?.response?.data || err?.message || err);
+    console.error("❌ Callback error:", err?.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
