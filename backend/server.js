@@ -762,11 +762,12 @@ async function handlePostInstall(shop, accessToken) {
   ]);
 
   // ✅ Create a REST client using a fake session
-  const client = new shopifyApi.clients.Rest({
-    shop,
-    accessToken
+  const client = new shopify.clients.Rest({
+    session: {
+      shop,
+      accessToken,
+    },
   });
-
   const response = await client.get({ path: 'shop' });
   const shopData = response?.body?.shop;
   if (!shopData) throw new Error('Failed to fetch shop info');
