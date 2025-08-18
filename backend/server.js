@@ -717,7 +717,6 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
@@ -738,20 +737,10 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install logic
-    const userId = await handlePostInstall(shop, accessToken);
+    // Run your post-install logic
+    await handlePostInstall(shop, accessToken);
 
-    // Persist session
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = rows[0];
-    await new Promise((resolve, reject) => {
-      req.logIn(user, err => (err ? reject(err) : resolve()));
-    });
-
-    const shopName = shop.replace('.myshopify.com', '');
-    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-    // Return an HTML page that uses App Bridge to redirect inside the iframe
+    // ✅ Always send back App Bridge redirect to your app root
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -770,9 +759,10 @@ app.get("/shopify/callback", async (req, res) => {
                 host: "${encodeURIComponent(host)}"
               });
 
+              // Redirect to your app's root (/) with params
               Redirect.create(app).dispatch(
                 Redirect.Action.APP,
-                "${embeddedUrl}"
+                "/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
               );
             });
           </script>
@@ -818,7 +808,7 @@ async function handlePostInstall(shop, accessToken) {
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
     userId = result.insertId;
-    await handleSendNewUserEmail(rawKey, email);
+   // await handleSendNewUserEmail(rawKey, email);
   }
 
   // ✅ Insert into shopify_installs
