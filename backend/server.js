@@ -794,10 +794,11 @@ app.get("/auth/complete", async (req, res) => {
 
 // Upsert user function
 async function upsertUserQuick(shop, accessToken) {
-  // Correct REST client initialization
+  // REST client for the shop
   const client = new Shopify.Clients.Rest(shop, accessToken);
+
   const response = await client.get({ path: "shop" });
-  const shopData = response.body?.shop;
+  const shopData = response?.body?.shop;
   if (!shopData) throw new Error("Failed to fetch shop info");
 
   const email = shopData.email || shop;
@@ -810,7 +811,7 @@ async function upsertUserQuick(shop, accessToken) {
     userId = existingUser[0].user_id;
     await pool.query(
       `UPDATE users
-         SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+       SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
        WHERE user_id = ?`,
       [shop, accessToken, userId]
     );
@@ -827,7 +828,6 @@ async function upsertUserQuick(shop, accessToken) {
     userId = result.insertId;
   }
 
-  // Track install record
   await pool.query(
     `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
      VALUES (?, ?, ?, NOW())
