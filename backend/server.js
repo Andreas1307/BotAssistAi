@@ -50,7 +50,7 @@ const { storeCallback } = require('./sessionStorage');
 const { Session } = require("@shopify/shopify-api");
 const { DeliveryMethod } = require("@shopify/shopify-api");
 const MySQLStore = require('express-mysql-session')(session);
-const { Shopify } = require("@shopify/shopify-api");
+const { shopifyApi } = require('@shopify/shopify-api');
 const shopifySessionMiddleware = require('./shopifySessionMiddleware');
 const sessionStore = new MySQLStore({
   host: process.env.DATABASE_HOST,
@@ -756,18 +756,21 @@ app.get("/shopify/callback", async (req, res) => {
 });
 
 async function handlePostInstall(shop, accessToken) {
-  // ✅ Post-install tasks
   await Promise.all([
     registerScriptTag(shop, accessToken),
     registerWebhooks(shop, accessToken),
     registerGdprWebhooks({ shop, accessToken }, shop)
   ]);
 
-  // Proper Shopify REST client
-  const client = new Shopify.Clients.Rest(shop, accessToken);
-  const response = await client.get({ path: "shop" });
+  // ✅ Create a REST client using a fake session
+  const client = new shopifyApi.clients.Rest({
+    shop,
+    accessToken
+  });
+
+  const response = await client.get({ path: 'shop' });
   const shopData = response?.body?.shop;
-  if (!shopData) throw new Error("Failed to fetch shop info");
+  if (!shopData) throw new Error('Failed to fetch shop info');
 
   const email = shopData.email || shop;
   const username = shopData.name || shop;
@@ -775,8 +778,9 @@ async function handlePostInstall(shop, accessToken) {
   const hashedPassword = await bcrypt.hash(rawKey, 10);
   const encryptedKey = encryptApiKey(uuidv4());
 
-  const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+  const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
   let userId;
+
   if (existingUser.length) {
     userId = existingUser[0].user_id;
     await pool.query(`
@@ -792,7 +796,6 @@ async function handlePostInstall(shop, accessToken) {
     userId = result.insertId;
   }
 
-  // Upsert install record
   await pool.query(`
     INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
     VALUES (?, ?, ?, NOW())
