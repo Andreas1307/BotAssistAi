@@ -747,8 +747,8 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-   // ✅ At the end of /shopify/callback
-const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+   // ✅ After login + install logic
+const embeddedUrl = `/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
 res.set("Content-Type", "text/html");
 res.send(`
@@ -770,15 +770,10 @@ res.send(`
       host: "${encodeURIComponent(host)}"
     });
 
-    // ✅ If inside Shopify Admin, use App Bridge redirect
     if (window.top === window.self) {
-      // Outside iframe (manual install), force redirect top-level
       window.top.location.href = "${embeddedUrl}";
     } else {
-      Redirect.create(app).dispatch(
-        Redirect.Action.APP,
-        "${embeddedUrl}"
-      );
+      Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
     }
   })();
 </script>
