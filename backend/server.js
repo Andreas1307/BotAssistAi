@@ -745,7 +745,7 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Immediately redirect into embedded frontend
+    // ✅ Immediately redirect into embedded frontend (your app UI)
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -765,7 +765,7 @@ app.get("/shopify/callback", async (req, res) => {
 
           Redirect.create(app).dispatch(
             Redirect.Action.APP,
-            "/?shop=${shop}&host=${host}"
+            "/dashboard?shop=${shop}&host=${host}"
           );
         </script>
       </body>
@@ -775,40 +775,6 @@ app.get("/shopify/callback", async (req, res) => {
     console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
-});
-
-
-
-app.get("/shopify/auth/redirect", (req, res) => {
-  const { shop, host } = req.query;
-
-  res.set("Content-Type", "text/html");
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8" />
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    </head>
-    <body>
-      <script>
-        var AppBridge = window['app-bridge'];
-        var createApp = AppBridge.default;
-        var Redirect = AppBridge.actions.Redirect;
-
-        var app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${encodeURIComponent(host)}"
-        });
-
-        Redirect.create(app).dispatch(
-          Redirect.Action.APP,
-          "/apps/dashboard?shop=${shop}&host=${host}"
-        );
-      </script>
-    </body>
-    </html>
-  `);
 });
 
 async function handlePostInstall(shop, accessToken) {
