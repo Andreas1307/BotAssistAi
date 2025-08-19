@@ -748,7 +748,7 @@ app.get("/shopify/callback", async (req, res) => {
       );
     } else {
       const username = shop;
-      const email = shop; // fallback
+      const email = shop;
       const rawPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
       const [result] = await pool.query(
@@ -762,7 +762,7 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // 3️⃣ Immediately redirect to embedded app UI (Shopify automated checks happy)
+    // 3️⃣ Immediately redirect to embedded app UI
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -789,18 +789,10 @@ app.get("/shopify/callback", async (req, res) => {
       </html>
     `);
 
-    // 4️⃣ Do heavy async work AFTER sending response
+    // 4️⃣ Run handlePostInstall asynchronously
     (async () => {
       try {
-        await Promise.all([
-          registerScriptTag(shop, accessToken),
-          registerWebhooks(shop, accessToken),
-          registerGdprWebhooks({ shop, accessToken }, shop),
-        ]);
-        await pool.query(
-          "INSERT INTO shopify_installs (shop, access_token, user_id, installed_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id), installed_at = NOW()",
-          [shop, accessToken, user.user_id]
-        );
+        await handlePostInstall(shop, accessToken);
       } catch (err) {
         console.error("Post-install async error:", err);
       }
@@ -811,7 +803,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
