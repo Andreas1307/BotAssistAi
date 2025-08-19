@@ -294,6 +294,7 @@ app.use((req, res, next) => {
  
 app.get("/shopify/install", (req, res) => {
   const { shop } = req.query;
+
   if (!shop || !isValidShop(shop)) {
     return res.status(400).send("Invalid shop parameter");
   }
@@ -301,16 +302,13 @@ app.get("/shopify/install", (req, res) => {
   const state = crypto.randomBytes(16).toString("hex");
   req.session.shopify_state = state;
 
-  const installUrl =
-    `https://${shop}/admin/oauth/authorize` +
+  const installUrl = `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
     `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
-    // ⬆ remove &grant_options[]=per-user here. Install uses offline token.
-    // You can request an online token later inside the embedded UI via App Bridge.
 
-  return res.redirect(installUrl);
+  return res.redirect(installUrl); // Direct redirect to Shopify grant page
 });
 
 
@@ -719,12 +717,8 @@ app.use(passport.session());
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    if (!shop || !code || !host) {
-      return res.status(400).send("Missing params");
-    }
-
-    if (state !== req.session.shopify_state) {
-      return res.status(400).send("Invalid state");
+    if (!shop || !code || !host || state !== req.session.shopify_state) {
+      return res.status(400).send("Invalid callback params");
     }
     delete req.session.shopify_state;
 
@@ -739,34 +733,31 @@ app.get("/shopify/callback", async (req, res) => {
 
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Login session
+    // Log user into session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Redirect back into embedded Admin app
+    // ✅ Immediately redirect into embedded app
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html>
-      <head>
-        <meta charset="utf-8" />
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      </head>
+      <head><meta charset="utf-8" /></head>
       <body>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         <script>
-          var AppBridge = window['app-bridge'];
-          var createApp = AppBridge.default;
-          var Redirect = AppBridge.actions.Redirect;
+          const AppBridge = window['app-bridge'];
+          const createApp = AppBridge.default;
+          const Redirect = AppBridge.actions.Redirect;
 
-          var app = createApp({
+          const app = createApp({
             apiKey: "${process.env.SHOPIFY_API_KEY}",
             host: "${encodeURIComponent(host)}"
           });
 
-          // 👇 IMPORTANT: Use APP, not REMOTE
           Redirect.create(app).dispatch(
             Redirect.Action.APP,
             "/apps/dashboard"
@@ -777,10 +768,11 @@ app.get("/shopify/callback", async (req, res) => {
     `);
 
   } catch (err) {
-    console.error("❌ Callback error:", err.response?.data || err.message);
-    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
+    console.error("Callback error:", err.response?.data || err.message);
+    if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
+
 
 app.get("/shopify/auth/redirect", (req, res) => {
   const { shop, host } = req.query;
