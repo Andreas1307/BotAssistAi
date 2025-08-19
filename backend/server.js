@@ -737,15 +737,7 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    const userId = await handlePostInstall(shop, accessToken);
-
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = rows[0];
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => (err ? reject(err) : resolve()));
-    });
-
-    // ✅ Immediately redirect into embedded frontend (your app UI)
+    // ✅ Immediately redirect to embedded app UI
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -771,11 +763,16 @@ app.get("/shopify/callback", async (req, res) => {
       </body>
       </html>
     `);
+
+    // ✅ Do async DB and post-install work AFTER sending redirect
+    handlePostInstall(shop, accessToken).catch(err => console.error('Post-install error:', err));
+
   } catch (err) {
     console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
