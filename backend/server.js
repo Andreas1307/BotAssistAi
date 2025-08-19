@@ -747,41 +747,40 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Relative path for embedded redirect
-const embeddedUrl = `/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const embeddedUrl = `/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-res.set("Content-Type", "text/html");
-res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-  <script src="https://unpkg.com/@shopify/app-bridge-utils@3"></script>
-</head>
-<body>
-<script>
-  (function() {
-    var AppBridge = window['app-bridge'];
-    var createApp = AppBridge.default;
-    var Redirect = AppBridge.actions.Redirect;
-    var app = createApp({
-      apiKey: "${process.env.SHOPIFY_API_KEY}",
-      host: "${encodeURIComponent(host)}"
-    });
-
-    if (window.top === window.self) {
-      // Install step → force outside browser redirect
-      window.top.location.href = "https://botassistai.com${embeddedUrl}";
-    } else {
-      // Already inside Shopify → stay embedded
-      Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
-    }
-  })();
-</script>
-</body>
-</html>
-`);
+    res.set("Content-Type", "text/html");
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    </head>
+    <body>
+    <script>
+      (function() {
+        var AppBridge = window['app-bridge'];
+        var createApp = AppBridge.default;
+        var Redirect = AppBridge.actions.Redirect;
+    
+        var app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${encodeURIComponent(host)}"
+        });
+    
+        // Always redirect into the embedded app inside Shopify
+        var redirect = Redirect.create(app);
+        redirect.dispatch(
+          Redirect.Action.REMOTE,
+          "https://botassistai.com${embeddedUrl}"
+        );
+      })();
+    </script>
+    </body>
+    </html>
+    `);
+    
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
