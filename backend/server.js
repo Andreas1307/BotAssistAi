@@ -748,7 +748,7 @@ app.get("/shopify/callback", async (req, res) => {
     });
 
    // ✅ After login + install logic
-const embeddedUrl = `/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+const embeddedUrl = `https://botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
 res.set("Content-Type", "text/html");
 res.send(`
