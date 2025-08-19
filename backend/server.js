@@ -732,18 +732,18 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Minimal fake user for immediate login
-    const user = { username: shop, shopify_shop_domain: shop, user_id: shop };
+    // 2️⃣ Minimal user object to satisfy Passport session
+    const user = { username: shop, shopify_shop_domain: shop, user_id: shop }; 
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // 3️⃣ Immediately redirect inside Shopify iframe
+    // 3️⃣ Immediately redirect INSIDE the Shopify admin iframe
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html>
-      <head><meta charset="utf-8"></head>
+      <head><meta charset="utf-8" /></head>
       <body>
         <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         <script>
@@ -757,9 +757,10 @@ app.get("/shopify/callback", async (req, res) => {
               host: "${encodeURIComponent(host)}"
             });
 
+            // Embedded app redirect INSIDE Shopify iframe
             Redirect.create(app).dispatch(
               Redirect.Action.APP,
-              "/dashboard?shop=${shop}&host=${host}"
+              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           })();
         </script>
@@ -767,11 +768,10 @@ app.get("/shopify/callback", async (req, res) => {
       </html>
     `);
 
-    // 4️⃣ Run full post-install async after redirect
+    // 4️⃣ Run post-install async tasks AFTER sending redirect
     (async () => {
       try {
         await handlePostInstall(shop, accessToken);
-        console.log("✅ Post-install completed for shop:", shop);
       } catch (err) {
         console.error("Post-install async error:", err);
       }
@@ -782,7 +782,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
