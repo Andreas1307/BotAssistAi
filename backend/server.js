@@ -747,10 +747,19 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    const embeddedUrl = `/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    res.redirect(`/shopify/auth/redirect?shop=${shop}&host=${host}&user=${user.username}`);
 
-    res.set("Content-Type", "text/html");
-    res.send(`
+  } catch (err) {
+    console.error("❌ Callback error:", err.response?.data || err.message);
+    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
+  }
+});
+
+app.get("/shopify/auth/redirect", (req, res) => {
+  const { shop, host, user } = req.query;
+
+  res.set("Content-Type", "text/html");
+  res.send(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -758,35 +767,28 @@ app.get("/shopify/callback", async (req, res) => {
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
     </head>
     <body>
-    <script>
-      (function() {
+      <script>
         var AppBridge = window['app-bridge'];
         var createApp = AppBridge.default;
         var Redirect = AppBridge.actions.Redirect;
-    
+
         var app = createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: "${encodeURIComponent(host)}"
         });
-    
-        // Always redirect into the embedded app inside Shopify
-        var redirect = Redirect.create(app);
-        redirect.dispatch(
-          Redirect.Action.REMOTE,
-          "https://botassistai.com${embeddedUrl}"
-        );
-      })();
-    </script>
+
+        // Send merchant back inside Shopify iframe
+        Redirect.create(app).dispatch(
+  Redirect.Action.REMOTE,
+  "https://botassistai.com/${user}/dashboard?shop=${shop}&host=${host}"
+);
+
+      </script>
     </body>
     </html>
-    `);
-    
-
-  } catch (err) {
-    console.error("❌ Callback error:", err.response?.data || err.message);
-    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
-  }
+  `);
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
