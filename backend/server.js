@@ -728,7 +728,7 @@ app.get("/shopify/callback", async (req, res) => {
     }
     delete req.session.shopify_state;
 
-    // Exchange code for access token
+    // Exchange code for token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -737,16 +737,16 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
+    // Do your DB stuff
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log user into session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Immediately redirect into embedded app
+    // ✅ Immediately redirect into the embedded app root
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -764,20 +764,21 @@ app.get("/shopify/callback", async (req, res) => {
             host: "${encodeURIComponent(host)}"
           });
 
+          // Redirect to your frontend root (React/Vue app)
           Redirect.create(app).dispatch(
             Redirect.Action.APP,
-            "/apps/dashboard"
+            "/?shop=${shop}&host=${host}"
           );
         </script>
       </body>
       </html>
     `);
-
   } catch (err) {
     console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
+
 
 app.get("/shopify/auth/redirect", (req, res) => {
   const { shop, host } = req.query;
