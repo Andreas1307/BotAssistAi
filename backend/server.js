@@ -740,14 +740,14 @@ app.get("/shopify/callback", async (req, res) => {
     // Run install logic
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Get user for session
+    // Log user into express-session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Instead of res.redirect, send embedded redirect HTML right away
+    // ✅ Send App Bridge redirect directly into embedded app
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -767,9 +767,10 @@ app.get("/shopify/callback", async (req, res) => {
             host: "${encodeURIComponent(host)}"
           });
 
+          // ✅ Correct: redirect into embedded app (not external full page)
           Redirect.create(app).dispatch(
-            Redirect.Action.REMOTE,
-            "https://botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}"
+            Redirect.Action.APP,
+            "/${user.username}/dashboard?shop=${shop}&host=${host}"
           );
         </script>
       </body>
