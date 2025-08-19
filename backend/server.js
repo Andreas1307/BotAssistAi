@@ -719,9 +719,13 @@ app.use(passport.session());
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    if (!shop || !code || !host) return res.status(400).send("Missing params");
+    if (!shop || !code || !host) {
+      return res.status(400).send("Missing params");
+    }
 
-    if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
+    if (state !== req.session.shopify_state) {
+      return res.status(400).send("Invalid state");
+    }
     delete req.session.shopify_state;
 
     // Exchange code for access token
@@ -733,19 +737,24 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Run install logic
+    // Run install logic (creates user + saves token)
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log user into session immediately
+    // Log user into express-session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
-      req.logIn(user, err => (err ? reject(err) : resolve()));
+      req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // Redirect immediately to embedded app URL
-    const shopName = shop.replace(".myshopify.com", "");
-    const embeddedUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    // ✅ Redirect directly to embedded app
+    // Shopify requires host + shop query params
+    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace(
+      ".myshopify.com",
+      ""
+    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(
+      shop
+    )}&host=${encodeURIComponent(host)}`;
 
     return res.redirect(302, embeddedUrl);
   } catch (err) {
@@ -758,19 +767,24 @@ async function handlePostInstall(shop, accessToken) {
   await Promise.all([
     registerScriptTag(shop, accessToken),
     registerWebhooks(shop, accessToken),
-    registerGdprWebhooks({ shop, accessToken }, shop)
+    registerGdprWebhooks({ shop, accessToken }, shop),
   ]);
 
-  // ✅ Create a REST client using a fake session
-  const client = new shopify.clients.Rest({
-    session: {
-      shop,
-      accessToken,
-    },
-  });
-  const response = await client.get({ path: 'shop' });
+  // ✅ Fake minimal session for REST client
+  const session = {
+    id: `offline_${shop}`,
+    shop,
+    state: "active",
+    isOnline: false,
+    accessToken,
+    scope: process.env.SHOPIFY_SCOPES,
+  };
+
+  const client = new shopify.clients.Rest({ session });
+
+  const response = await client.get({ path: "shop" });
   const shopData = response?.body?.shop;
-  if (!shopData) throw new Error('Failed to fetch shop info');
+  if (!shopData) throw new Error("Failed to fetch shop info");
 
   const email = shopData.email || shop;
   const username = shopData.name || shop;
@@ -778,32 +792,41 @@ async function handlePostInstall(shop, accessToken) {
   const hashedPassword = await bcrypt.hash(rawKey, 10);
   const encryptedKey = encryptApiKey(uuidv4());
 
-  const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+  const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
   let userId;
 
   if (existingUser.length) {
     userId = existingUser[0].user_id;
-    await pool.query(`
+    await pool.query(
+      `
       UPDATE users
       SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
       WHERE user_id = ?
-    `, [shop, accessToken, userId]);
+    `,
+      [shop, accessToken, userId]
+    );
   } else {
-    const [result] = await pool.query(`
+    const [result] = await pool.query(
+      `
       INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
-    `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
+    `,
+      [username, email, hashedPassword, encryptedKey, shop, accessToken]
+    );
     userId = result.insertId;
   }
 
-  await pool.query(`
+  await pool.query(
+    `
     INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
     VALUES (?, ?, ?, NOW())
     ON DUPLICATE KEY UPDATE
       access_token = VALUES(access_token),
       user_id = VALUES(user_id),
       installed_at = NOW()
-  `, [shop, accessToken, userId]);
+  `,
+    [shop, accessToken, userId]
+  );
 
   return userId;
 }
