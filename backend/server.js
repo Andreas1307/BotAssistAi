@@ -747,8 +747,8 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-   // ✅ After login + install logic
-const embeddedUrl = `https://botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    // ✅ Relative path for embedded redirect
+const embeddedUrl = `/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
 res.set("Content-Type", "text/html");
 res.send(`
@@ -771,8 +771,10 @@ res.send(`
     });
 
     if (window.top === window.self) {
-      window.top.location.href = "${embeddedUrl}";
+      // Install step → force outside browser redirect
+      window.top.location.href = "https://botassistai.com${embeddedUrl}";
     } else {
+      // Already inside Shopify → stay embedded
       Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
     }
   })();
@@ -925,7 +927,7 @@ You received this email because you have an account with us.
 }
 
 
-
+//  OK DAAR NUU MA REDIRECTIONEAZA IN SHOPIFY IFRAME
 
 // asta nu mai este folosita
 app.get("/auth/callback", async (req, res) => {
