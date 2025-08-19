@@ -737,16 +737,11 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // ✅ Create/update user and log them in
-    const userId = await handlePostInstall(shop, accessToken);
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = rows[0];
+    // ✅ Immediately set minimal session for login
+    req.session.shop = shop;
+    req.session.accessToken = accessToken;
 
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => (err ? reject(err) : resolve()));
-    });
-
-    // ✅ Immediately redirect to embedded app UI
+    // ✅ Immediately redirect to app UI (Shopify checks this)
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -773,41 +768,34 @@ app.get("/shopify/callback", async (req, res) => {
       </html>
     `);
 
+    // ✅ Run DB / webhook / script-tag tasks asynchronously, after redirect
+    handlePostInstall(shop, accessToken).catch(err =>
+      console.error("Post-install error:", err)
+    );
+
   } catch (err) {
     console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
 
-
-
 async function handlePostInstall(shop, accessToken) {
+  // Run webhooks, script tags, GDPR hooks in parallel
   await Promise.all([
     registerScriptTag(shop, accessToken),
     registerWebhooks(shop, accessToken),
     registerGdprWebhooks({ shop, accessToken }, shop),
   ]);
 
-  // ✅ Fake minimal session for REST client
-  const session = {
-    id: `offline_${shop}`,
-    shop,
-    state: "active",
-    isOnline: false,
-    accessToken,
-    scope: process.env.SHOPIFY_SCOPES,
-  };
-
-  const client = new shopify.clients.Rest({ session });
-
-  const response = await client.get({ path: "shop" });
-  const shopData = response?.body?.shop;
-  if (!shopData) throw new Error("Failed to fetch shop info");
-
+  // Create or update user in DB
+  const client = new shopify.clients.Rest({
+    session: { id: `offline_${shop}`, shop, isOnline: false, accessToken },
+  });
+  const { body } = await client.get({ path: "shop" });
+  const shopData = body.shop;
   const email = shopData.email || shop;
   const username = shopData.name || shop;
-  const rawKey = Math.random().toString(36).slice(-8);
-  const hashedPassword = await bcrypt.hash(rawKey, 10);
+  const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(-8), 10);
   const encryptedKey = encryptApiKey(uuidv4());
 
   const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
@@ -816,38 +804,30 @@ async function handlePostInstall(shop, accessToken) {
   if (existingUser.length) {
     userId = existingUser[0].user_id;
     await pool.query(
-      `
-      UPDATE users
-      SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-      WHERE user_id = ?
-    `,
+      `UPDATE users
+       SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+       WHERE user_id = ?`,
       [shop, accessToken, userId]
     );
   } else {
     const [result] = await pool.query(
-      `
-      INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-      VALUES (?, ?, ?, ?, ?, ?, NOW())
-    `,
+      `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
       [username, email, hashedPassword, encryptedKey, shop, accessToken]
     );
     userId = result.insertId;
   }
 
   await pool.query(
-    `
-    INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-    VALUES (?, ?, ?, NOW())
-    ON DUPLICATE KEY UPDATE
-      access_token = VALUES(access_token),
-      user_id = VALUES(user_id),
-      installed_at = NOW()
-  `,
+    `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+     VALUES (?, ?, ?, NOW())
+     ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id), installed_at = NOW()`,
     [shop, accessToken, userId]
   );
 
   return userId;
 }
+
 
 const handleSendNewUserEmail = async (rawKey, email) => {
   const transporter = nodemailer.createTransport({
