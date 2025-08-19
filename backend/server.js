@@ -747,36 +747,45 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Redirect directly to embedded app
-    // Shopify requires host + shop query params
-    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace(
-      ".myshopify.com",
-      ""
-    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host)}`;
+   // ✅ At the end of /shopify/callback
+const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-  
-    res.set("Content-Type", "text/html");
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8" />
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          var AppBridge = window['app-bridge'];
-          var createApp = AppBridge.default;
-          var Redirect = AppBridge.actions.Redirect;
-          var app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodeURIComponent(host)}" });
-          Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
-        });
-      </script>
-    </head>
-    <body>Redirecting…</body>
-    </html>
-    `);
+res.set("Content-Type", "text/html");
+res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+  <script src="https://unpkg.com/@shopify/app-bridge-utils@3"></script>
+</head>
+<body>
+<script>
+  (function() {
+    var AppBridge = window['app-bridge'];
+    var createApp = AppBridge.default;
+    var Redirect = AppBridge.actions.Redirect;
+    var app = createApp({
+      apiKey: "${process.env.SHOPIFY_API_KEY}",
+      host: "${encodeURIComponent(host)}"
+    });
+
+    // ✅ If inside Shopify Admin, use App Bridge redirect
+    if (window.top === window.self) {
+      // Outside iframe (manual install), force redirect top-level
+      window.top.location.href = "${embeddedUrl}";
+    } else {
+      Redirect.create(app).dispatch(
+        Redirect.Action.APP,
+        "${embeddedUrl}"
+      );
+    }
+  })();
+</script>
+</body>
+</html>
+`);
+
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
