@@ -716,9 +716,6 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-app.use("/apps", express.static(path.join(__dirname, "../frontend/dist")));
-
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
@@ -740,17 +737,20 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Install logic
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log user
+    // Log user into session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Send App Bridge redirect into embedded app
+    // Build Admin URL
+    const shopName = shop.replace(".myshopify.com", "");
+    const adminAppUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
+
+    // ✅ Minimal HTML with redirect
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -771,8 +771,8 @@ app.get("/shopify/callback", async (req, res) => {
           });
 
           Redirect.create(app).dispatch(
-            Redirect.Action.APP,
-            "/apps/dashboard?shop=${shop}&host=${host}"
+            Redirect.Action.REMOTE,
+            "${adminAppUrl}"
           );
         </script>
       </body>
