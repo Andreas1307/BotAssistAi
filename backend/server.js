@@ -756,7 +756,27 @@ app.get("/shopify/callback", async (req, res) => {
       shop
     )}&host=${encodeURIComponent(host)}`;
 
-    return res.redirect(302, embeddedUrl);
+  
+    res.set("Content-Type", "text/html");
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          var AppBridge = window['app-bridge'];
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
+          var app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodeURIComponent(host)}" });
+          Redirect.create(app).dispatch(Redirect.Action.APP, "${embeddedUrl}");
+        });
+      </script>
+    </head>
+    <body>Redirecting…</body>
+    </html>
+    `);
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
