@@ -737,17 +737,44 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Run install logic (creates user + saves token)
+    // Run install logic
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log user into express-session
+    // Get user for session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    res.redirect(`/shopify/auth/redirect?shop=${shop}&host=${host}&user=${user.username}`);
+    // ✅ Instead of res.redirect, send embedded redirect HTML right away
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      </head>
+      <body>
+        <script>
+          var AppBridge = window['app-bridge'];
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
+
+          var app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${encodeURIComponent(host)}"
+          });
+
+          Redirect.create(app).dispatch(
+            Redirect.Action.REMOTE,
+            "https://botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}"
+          );
+        </script>
+      </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
@@ -927,8 +954,6 @@ You received this email because you have an account with us.
 
 }
 
-
-//  OK DAAR NUU MA REDIRECTIONEAZA IN SHOPIFY IFRAME
 
 // asta nu mai este folosita
 app.get("/auth/callback", async (req, res) => {
