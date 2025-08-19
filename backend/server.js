@@ -732,44 +732,46 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Minimal fake user object for immediate login
-    const user = { username: shop, shopify_shop_domain: shop, user_id: shop }; // user_id can be shop for session
+    // 2️⃣ Minimal fake user for immediate login
+    const user = { username: shop, shopify_shop_domain: shop, user_id: shop };
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // 3️⃣ Immediately send redirect HTML
+    // 3️⃣ Immediately redirect inside Shopify iframe
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html>
-      <head><meta charset="utf-8" /></head>
+      <head><meta charset="utf-8"></head>
       <body>
         <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         <script>
-          var AppBridge = window['app-bridge'];
-          var createApp = AppBridge.default;
-          var Redirect = AppBridge.actions.Redirect;
+          (function() {
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var Redirect = AppBridge.actions.Redirect;
 
-          var app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${encodeURIComponent(host)}"
-          });
+            var app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${encodeURIComponent(host)}"
+            });
 
-          Redirect.create(app).dispatch(
-            Redirect.Action.APP,
-            "/dashboard?shop=${shop}&host=${host}"
-          );
+            Redirect.create(app).dispatch(
+              Redirect.Action.APP,
+              "/dashboard?shop=${shop}&host=${host}"
+            );
+          })();
         </script>
       </body>
       </html>
     `);
 
-    // 4️⃣ Run full post-install async AFTER sending redirect
+    // 4️⃣ Run full post-install async after redirect
     (async () => {
       try {
-        const userId = await handlePostInstall(shop, accessToken);
-        console.log("✅ Post-install completed for user:", userId);
+        await handlePostInstall(shop, accessToken);
+        console.log("✅ Post-install completed for shop:", shop);
       } catch (err) {
         console.error("Post-install async error:", err);
       }
@@ -780,6 +782,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
@@ -917,9 +920,6 @@ You received this email because you have an account with us.
   });
 
 }
-
-
-//  OK DAAR NUU MA REDIRECTIONEAZA IN SHOPIFY IFRAME
 
 // asta nu mai este folosita
 app.get("/auth/callback", async (req, res) => {
