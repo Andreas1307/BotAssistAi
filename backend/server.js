@@ -737,32 +737,7 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Immediately create/fetch user and log in
-    const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
-    let user;
-    if (rows.length) {
-      user = rows[0];
-      await pool.query(
-        "UPDATE users SET shopify_access_token = ?, shopify_installed_at = NOW() WHERE user_id = ?",
-        [accessToken, user.user_id]
-      );
-    } else {
-      const username = shop;
-      const email = shop;
-      const rawPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(rawPassword, 10);
-      const [result] = await pool.query(
-        "INSERT INTO users (username, email, password, shopify_shop_domain, shopify_access_token, shopify_installed_at) VALUES (?, ?, ?, ?, ?, NOW())",
-        [username, email, hashedPassword, shop, accessToken]
-      );
-      user = { user_id: result.insertId, username, email, shopify_shop_domain: shop };
-    }
-
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => (err ? reject(err) : resolve()));
-    });
-
-    // 3️⃣ Immediately redirect to embedded app UI
+    // 2️⃣ Immediately send redirect HTML (Shopify automated checks happy)
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -789,10 +764,20 @@ app.get("/shopify/callback", async (req, res) => {
       </html>
     `);
 
-    // 4️⃣ Run handlePostInstall asynchronously
+    // 3️⃣ Run post-install async tasks AFTER sending redirect
     (async () => {
       try {
-        await handlePostInstall(shop, accessToken);
+        const userId = await handlePostInstall(shop, accessToken);
+
+        // Optional: create a session for the user after install
+        const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+        if (rows.length) {
+          const user = rows[0];
+          req.logIn(user, (err) => {
+            if (err) console.error("Login after redirect failed:", err);
+          });
+        }
+
       } catch (err) {
         console.error("Post-install async error:", err);
       }
@@ -803,6 +788,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
