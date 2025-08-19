@@ -728,64 +728,55 @@ app.get("/shopify/callback", async (req, res) => {
     }
     delete req.session.shopify_state;
 
-    // 1️⃣ Exchange code for token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code,
     });
     const accessToken = tokenRes.data.access_token;
-    if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Immediately send redirect HTML (Shopify automated checks happy)
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8" /></head>
-      <body>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script>
-          var AppBridge = window['app-bridge'];
-          var createApp = AppBridge.default;
-          var Redirect = AppBridge.actions.Redirect;
+    // Save temporary info in your DB or session
+    const installToken = uuidv4();
+    await pool.query(
+      `INSERT INTO shopify_temp_installs (shop, access_token, install_token) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE access_token = VALUES(access_token)`,
+      [shop, accessToken, installToken]
+    );
 
-          var app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${encodeURIComponent(host)}"
-          });
-
-          Redirect.create(app).dispatch(
-            Redirect.Action.APP,
-            "/dashboard?shop=${shop}&host=${host}"
-          );
-        </script>
-      </body>
-      </html>
-    `);
-
-    // 3️⃣ Run post-install async tasks AFTER sending redirect
-    (async () => {
-      try {
-        const userId = await handlePostInstall(shop, accessToken);
-
-        // Optional: create a session for the user after install
-        const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-        if (rows.length) {
-          const user = rows[0];
-          req.logIn(user, (err) => {
-            if (err) console.error("Login after redirect failed:", err);
-          });
-        }
-
-      } catch (err) {
-        console.error("Post-install async error:", err);
-      }
-    })();
-
+    // Immediately redirect Shopify app to a login handler
+    res.redirect(`/login-after-install?shop=${shop}&token=${installToken}&host=${host}`);
   } catch (err) {
     console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
+  }
+});
+
+app.get("/login-after-install", async (req, res) => {
+  try {
+    const { shop, token, host } = req.query;
+
+    const [rows] = await pool.query(
+      "SELECT * FROM shopify_temp_installs WHERE shop = ? AND install_token = ?",
+      [shop, token]
+    );
+    if (!rows.length) return res.status(400).send("Invalid token");
+
+    const accessToken = rows[0].access_token;
+
+    // Create/fetch user
+    const userId = await handlePostInstall(shop, accessToken);
+    const [userRows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+    const user = userRows[0];
+
+    // ✅ Log in before sending response
+    req.logIn(user, (err) => {
+      if (err) return res.status(500).send("Login failed");
+
+      // Redirect to app dashboard
+      res.redirect(`/${user.username}/dashboard?shop=${shop}&host=${host}`);
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Login after install failed");
   }
 });
 
