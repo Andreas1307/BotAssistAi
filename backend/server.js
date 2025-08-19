@@ -723,7 +723,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // Exchange code for access token
+    // 1️⃣ Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -732,22 +732,17 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Post-install: save user + token in DB
-    const userId = await handlePostInstall(shop, accessToken);
+    // 2️⃣ Minimal user for session
+    const minimalUser = { username: shop, shopify_shop_domain: shop };
 
-    // Get full user from DB
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = rows[0];
-
-    // Log user in and **force session save before sending redirect**
-    req.logIn(user, async (err) => {
+    req.logIn(minimalUser, (err) => {
       if (err) {
         console.error("Login failed:", err);
         return res.status(500).send("Login failed");
       }
 
+      // Save session and immediately redirect inside iframe
       req.session.save(() => {
-        // Send embedded app redirect AFTER session is saved
         res.set("Content-Type", "text/html");
         res.send(`
           <!DOCTYPE html>
@@ -778,12 +773,16 @@ app.get("/shopify/callback", async (req, res) => {
       });
     });
 
+    // 3️⃣ Run post-install tasks asynchronously (don’t block iframe redirect)
+    handlePostInstall(shop, accessToken).catch((err) => {
+      console.error("Post-install error:", err);
+    });
+
   } catch (err) {
-    console.error("❌ Callback error:", err.response?.data || err.message);
+    console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
