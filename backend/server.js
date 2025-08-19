@@ -737,7 +737,6 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Do your DB stuff
     const userId = await handlePostInstall(shop, accessToken);
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
@@ -746,7 +745,7 @@ app.get("/shopify/callback", async (req, res) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Immediately redirect into the embedded app root
+    // ✅ Immediately redirect into embedded frontend
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -755,16 +754,15 @@ app.get("/shopify/callback", async (req, res) => {
       <body>
         <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         <script>
-          const AppBridge = window['app-bridge'];
-          const createApp = AppBridge.default;
-          const Redirect = AppBridge.actions.Redirect;
+          var AppBridge = window['app-bridge'];
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
 
-          const app = createApp({
+          var app = createApp({
             apiKey: "${process.env.SHOPIFY_API_KEY}",
             host: "${encodeURIComponent(host)}"
           });
 
-          // Redirect to your frontend root (React/Vue app)
           Redirect.create(app).dispatch(
             Redirect.Action.APP,
             "/?shop=${shop}&host=${host}"
@@ -778,6 +776,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
+
 
 
 app.get("/shopify/auth/redirect", (req, res) => {
