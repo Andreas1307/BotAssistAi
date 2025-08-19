@@ -723,7 +723,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // 1️⃣ Exchange code for access token
+    // Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -732,56 +732,58 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Minimal user object to satisfy Passport session
-    const user = { username: shop, shopify_shop_domain: shop, user_id: shop }; 
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => (err ? reject(err) : resolve()));
-    });
+    // Post-install: save user + token in DB
+    const userId = await handlePostInstall(shop, accessToken);
 
-    // 3️⃣ Immediately redirect INSIDE the Shopify admin iframe
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8" /></head>
-      <body>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script>
-          (function() {
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
+    // Get full user from DB
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+    const user = rows[0];
 
-            var app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${encodeURIComponent(host)}"
-            });
-
-            // Embedded app redirect INSIDE Shopify iframe
-            Redirect.create(app).dispatch(
-              Redirect.Action.APP,
-              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-            );
-          })();
-        </script>
-      </body>
-      </html>
-    `);
-
-    // 4️⃣ Run post-install async tasks AFTER sending redirect
-    (async () => {
-      try {
-        await handlePostInstall(shop, accessToken);
-      } catch (err) {
-        console.error("Post-install async error:", err);
+    // Log user in and **force session save before sending redirect**
+    req.logIn(user, async (err) => {
+      if (err) {
+        console.error("Login failed:", err);
+        return res.status(500).send("Login failed");
       }
-    })();
+
+      req.session.save(() => {
+        // Send embedded app redirect AFTER session is saved
+        res.set("Content-Type", "text/html");
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8" /></head>
+          <body>
+            <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+            <script>
+              (function() {
+                var AppBridge = window['app-bridge'];
+                var createApp = AppBridge.default;
+                var Redirect = AppBridge.actions.Redirect;
+
+                var app = createApp({
+                  apiKey: "${process.env.SHOPIFY_API_KEY}",
+                  host: "${encodeURIComponent(host)}"
+                });
+
+                Redirect.create(app).dispatch(
+                  Redirect.Action.APP,
+                  "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+                );
+              })();
+            </script>
+          </body>
+          </html>
+        `);
+      });
+    });
 
   } catch (err) {
     console.error("❌ Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
