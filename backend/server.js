@@ -716,6 +716,9 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+app.use("/apps", express.static(path.join(__dirname, "../frontend/dist")));
+
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
@@ -737,17 +740,17 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Run install logic
+    // Install logic
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log user into express-session
+    // Log user
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Send App Bridge redirect directly into embedded app
+    // ✅ Send App Bridge redirect into embedded app
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -767,10 +770,9 @@ app.get("/shopify/callback", async (req, res) => {
             host: "${encodeURIComponent(host)}"
           });
 
-          // ✅ Correct: redirect into embedded app (not external full page)
           Redirect.create(app).dispatch(
             Redirect.Action.APP,
-            "/${user.username}/dashboard?shop=${shop}&host=${host}"
+            "/apps/dashboard?shop=${shop}&host=${host}"
           );
         </script>
       </body>
@@ -784,7 +786,7 @@ app.get("/shopify/callback", async (req, res) => {
 });
 
 app.get("/shopify/auth/redirect", (req, res) => {
-  const { shop, host, user } = req.query;
+  const { shop, host } = req.query;
 
   res.set("Content-Type", "text/html");
   res.send(`
@@ -805,18 +807,15 @@ app.get("/shopify/auth/redirect", (req, res) => {
           host: "${encodeURIComponent(host)}"
         });
 
-        // Send merchant back inside Shopify iframe
         Redirect.create(app).dispatch(
-  Redirect.Action.REMOTE,
-  "https://botassistai.com/${user}/dashboard?shop=${shop}&host=${host}"
-);
-
+          Redirect.Action.APP,
+          "/apps/dashboard?shop=${shop}&host=${host}"
+        );
       </script>
     </body>
     </html>
   `);
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
