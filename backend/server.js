@@ -294,28 +294,24 @@ app.use((req, res, next) => {
  
 app.get("/shopify/install", (req, res) => {
   const { shop } = req.query;
-
   if (!shop || !isValidShop(shop)) {
     return res.status(400).send("Invalid shop parameter");
   }
 
-  // Create random state
   const state = crypto.randomBytes(16).toString("hex");
   req.session.shopify_state = state;
 
-  // Directly send them to Shopify's OAuth grant
-  const redirectUri = `${process.env.SHOPIFY_REDIRECT_URI}`; // must match callback domain set in dashboard
   const installUrl =
     `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
-    `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
+    // ⬆ remove &grant_options[]=per-user here. Install uses offline token.
+    // You can request an online token later inside the embedded UI via App Bridge.
 
-  // 👇 IMPORTANT: do not render HTML, just redirect
-  res.redirect(installUrl);
+  return res.redirect(installUrl);
 });
-
 
 
 app.get('/clear-cookies', (req, res) => {
@@ -723,45 +719,26 @@ app.use(passport.session());
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
-    if (!shop || !code || !host || state !== req.session.shopify_state) {
-      return res.status(400).send("Invalid callback params");
-    }
+    if (!shop || !code || !host) return res.status(400).send("Missing params");
+    if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // 1️⃣ Exchange code for token
+    // 1️⃣ Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code,
     });
     const accessToken = tokenRes.data.access_token;
+    if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Create/fetch user and log in BEFORE sending response
-    const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
-    let user;
-    if (rows.length) {
-      user = rows[0];
-      await pool.query(
-        "UPDATE users SET shopify_access_token = ?, shopify_installed_at = NOW() WHERE user_id = ?",
-        [accessToken, user.user_id]
-      );
-    } else {
-      const username = shop;
-      const email = shop;
-      const rawPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(rawPassword, 10);
-      const [result] = await pool.query(
-        "INSERT INTO users (username, email, password, shopify_shop_domain, shopify_access_token, shopify_installed_at) VALUES (?, ?, ?, ?, ?, NOW())",
-        [username, email, hashedPassword, shop, accessToken]
-      );
-      user = { user_id: result.insertId, username, email, shopify_shop_domain: shop };
-    }
-
+    // 2️⃣ Minimal fake user object for immediate login
+    const user = { username: shop, shopify_shop_domain: shop, user_id: shop }; // user_id can be shop for session
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // ✅ Now redirect with embedded App Bridge
+    // 3️⃣ Immediately send redirect HTML
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -788,18 +765,19 @@ app.get("/shopify/callback", async (req, res) => {
       </html>
     `);
 
-    // 3️⃣ Run heavy async work AFTER sending response
+    // 4️⃣ Run full post-install async AFTER sending redirect
     (async () => {
       try {
-        await handlePostInstall(shop, accessToken);
+        const userId = await handlePostInstall(shop, accessToken);
+        console.log("✅ Post-install completed for user:", userId);
       } catch (err) {
         console.error("Post-install async error:", err);
       }
     })();
 
   } catch (err) {
-    console.error("Callback error:", err.response?.data || err.message);
-    if (!res.headersSent) res.status(500).send("OAuth callback failed");
+    console.error("❌ Callback error:", err.response?.data || err.message);
+    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
 
@@ -940,6 +918,8 @@ You received this email because you have an account with us.
 
 }
 
+
+//  OK DAAR NUU MA REDIRECTIONEAZA IN SHOPIFY IFRAME
 
 // asta nu mai este folosita
 app.get("/auth/callback", async (req, res) => {
