@@ -728,6 +728,7 @@ app.get("/shopify/callback", async (req, res) => {
     }
     delete req.session.shopify_state;
 
+    // 1️⃣ Exchange code for token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -735,51 +736,72 @@ app.get("/shopify/callback", async (req, res) => {
     });
     const accessToken = tokenRes.data.access_token;
 
-    // Save temporary info in your DB or session
-    const installToken = uuidv4();
-    await pool.query(
-      `INSERT INTO shopify_temp_installs (shop, access_token, install_token) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE access_token = VALUES(access_token)`,
-      [shop, accessToken, installToken]
-    );
+    // 2️⃣ Create/fetch user and log in BEFORE sending response
+    const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
+    let user;
+    if (rows.length) {
+      user = rows[0];
+      await pool.query(
+        "UPDATE users SET shopify_access_token = ?, shopify_installed_at = NOW() WHERE user_id = ?",
+        [accessToken, user.user_id]
+      );
+    } else {
+      const username = shop;
+      const email = shop;
+      const rawPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(rawPassword, 10);
+      const [result] = await pool.query(
+        "INSERT INTO users (username, email, password, shopify_shop_domain, shopify_access_token, shopify_installed_at) VALUES (?, ?, ?, ?, ?, NOW())",
+        [username, email, hashedPassword, shop, accessToken]
+      );
+      user = { user_id: result.insertId, username, email, shopify_shop_domain: shop };
+    }
 
-    // Immediately redirect Shopify app to a login handler
-    res.redirect(`/login-after-install?shop=${shop}&token=${installToken}&host=${host}`);
+    await new Promise((resolve, reject) => {
+      req.logIn(user, (err) => (err ? reject(err) : resolve()));
+    });
+
+    // ✅ Now redirect with embedded App Bridge
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8" /></head>
+      <body>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script>
+          var AppBridge = window['app-bridge'];
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
+
+          var app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${encodeURIComponent(host)}"
+          });
+
+          Redirect.create(app).dispatch(
+            Redirect.Action.APP,
+            "/dashboard?shop=${shop}&host=${host}"
+          );
+        </script>
+      </body>
+      </html>
+    `);
+
+    // 3️⃣ Run heavy async work AFTER sending response
+    (async () => {
+      try {
+        await handlePostInstall(shop, accessToken);
+      } catch (err) {
+        console.error("Post-install async error:", err);
+      }
+    })();
+
   } catch (err) {
     console.error("Callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
-
-app.get("/login-after-install", async (req, res) => {
-  try {
-    const { shop, token, host } = req.query;
-
-    const [rows] = await pool.query(
-      "SELECT * FROM shopify_temp_installs WHERE shop = ? AND install_token = ?",
-      [shop, token]
-    );
-    if (!rows.length) return res.status(400).send("Invalid token");
-
-    const accessToken = rows[0].access_token;
-
-    // Create/fetch user
-    const userId = await handlePostInstall(shop, accessToken);
-    const [userRows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-    const user = userRows[0];
-
-    // ✅ Log in before sending response
-    req.logIn(user, (err) => {
-      if (err) return res.status(500).send("Login failed");
-
-      // Redirect to app dashboard
-      res.redirect(`/${user.username}/dashboard?shop=${shop}&host=${host}`);
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Login after install failed");
-  }
-});
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
