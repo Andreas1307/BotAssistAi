@@ -739,18 +739,14 @@ app.get("/shopify/callback", async (req, res) => {
 
     const userId = await handlePostInstall(shop, accessToken);
 
-    // Log user into session
+    // Login session
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
     const user = rows[0];
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => (err ? reject(err) : resolve()));
     });
 
-    // Build Admin URL
-    const shopName = shop.replace(".myshopify.com", "");
-    const adminAppUrl = `https://admin.shopify.com/store/${shopName}/apps/${process.env.SHOPIFY_APP_HANDLE}`;
-
-    // ✅ Minimal HTML with redirect
+    // ✅ Redirect back into embedded Admin app
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -770,9 +766,10 @@ app.get("/shopify/callback", async (req, res) => {
             host: "${encodeURIComponent(host)}"
           });
 
+          // 👇 IMPORTANT: Use APP, not REMOTE
           Redirect.create(app).dispatch(
-            Redirect.Action.REMOTE,
-            "${adminAppUrl}"
+            Redirect.Action.APP,
+            "/apps/dashboard"
           );
         </script>
       </body>
