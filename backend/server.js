@@ -299,17 +299,23 @@ app.get("/shopify/install", (req, res) => {
     return res.status(400).send("Invalid shop parameter");
   }
 
+  // Create random state
   const state = crypto.randomBytes(16).toString("hex");
   req.session.shopify_state = state;
 
-  const installUrl = `https://${shop}/admin/oauth/authorize` +
+  // Directly send them to Shopify's OAuth grant
+  const redirectUri = `${process.env.SHOPIFY_REDIRECT_URI}`; // must match callback domain set in dashboard
+  const installUrl =
+    `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
-    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
+    `&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
-  return res.redirect(installUrl); // Direct redirect to Shopify grant page
+  // 👇 IMPORTANT: do not render HTML, just redirect
+  res.redirect(installUrl);
 });
+
 
 
 app.get('/clear-cookies', (req, res) => {
@@ -772,7 +778,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed");
   }
 });
-
 
 app.get("/shopify/auth/redirect", (req, res) => {
   const { shop, host } = req.query;
