@@ -776,6 +776,63 @@ app.get("/shopify/callback", async (req, res) => {
 });
 
 
+app.get("/auth/finish", async (req, res, next) => {
+  try {
+    const { shop, token, host } = req.query;
+    if (!shop || !token || !host) return res.status(400).send("Missing params");
+
+    // Get shop info
+    const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
+      headers: { "X-Shopify-Access-Token": token }
+    });
+    const shopData = shopRes.data.shop;
+    const email = shopData.email || shop;
+    const username = shopData.name || shop;
+
+    // Upsert user
+    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user;
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+      await pool.query(
+        "UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?",
+        [shop, token, user.user_id]
+      );
+    } else {
+      const rawKey = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(rawKey, 10);
+      const encryptedKey = encryptApiKey(uuidv4());
+
+      await pool.query(
+        "INSERT INTO users (username,email,password,api_key,shopify_shop_domain,shopify_access_token,shopify_installed_at) VALUES (?,?,?,?,?,?,NOW())",
+        [username, email, hashedPassword, encryptedKey, shop, token]
+      );
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+    }
+
+    // Track install
+    await pool.query(
+      `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+       VALUES (?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
+      [shop, token, user.user_id]
+    );
+
+    // Log in user
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      req.session.save(() => res.redirect(`/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`));
+    });
+
+  } catch (err) {
+    console.error("❌ Auth finish error:", err.response?.data || err.message);
+    res.status(500).send("Auth finish failed.");
+  }
+});
+
+
+
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
     registerScriptTag(shop, accessToken),
