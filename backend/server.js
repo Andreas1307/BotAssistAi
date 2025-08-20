@@ -716,11 +716,13 @@ app.use(passport.session());
 app.get("/shopify/callback", async (req, res, next) => {
   try {
     const { shop, code, state, host } = req.query;
+
+    // ✅ Validate required query params
     if (!shop || !code || !host) return res.status(400).send("Missing params");
     if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // 1️⃣ Exchange code for token
+    // 1️⃣ Exchange code for access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -766,7 +768,7 @@ app.get("/shopify/callback", async (req, res, next) => {
       [shop, accessToken, user.user_id]
     );
 
-    // 5️⃣ Log in user + wait until session saved
+    // 5️⃣ Log in user & redirect via App Bridge
     req.logIn(user, (err) => {
       if (err) return next(err);
 
@@ -781,16 +783,16 @@ app.get("/shopify/callback", async (req, res, next) => {
               <script>
                 const AppBridge = window["app-bridge"].default;
                 const actions = window["app-bridge"].actions;
-      
+
                 const app = AppBridge({
                   apiKey: "${process.env.SHOPIFY_API_KEY}",
                   host: "${encodeURIComponent(host)}",
                   forceRedirect: true
                 });
-      
+
                 const redirect = actions.Redirect.create(app);
-      
-                // ✅ Embedded redirect into iframe
+
+                // ✅ Embedded redirect for automated Shopify checks
                 redirect.dispatch(
                   actions.Redirect.Action.APP,
                   "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
@@ -800,7 +802,6 @@ app.get("/shopify/callback", async (req, res, next) => {
           </html>
         `);
       });
-      
     });
 
   } catch (err) {
@@ -808,7 +809,6 @@ app.get("/shopify/callback", async (req, res, next) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
