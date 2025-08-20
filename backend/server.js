@@ -292,7 +292,6 @@ app.use((req, res, next) => {
   next();
 });
  
-// /shopify/install
 app.get("/shopify/install", async (req, res) => {
   try {
     const shop = req.query.shop;
@@ -300,8 +299,10 @@ app.get("/shopify/install", async (req, res) => {
       return res.status(400).send("Invalid shop parameter");
     }
 
-    // Shopify library generates auth URL and sets OAuth cookies
+    // Use Shopify auth helper with Express
     const redirectUrl = await shopify.auth.begin({
+      rawRequest: req,
+      rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true, // or false for offline
@@ -313,6 +314,7 @@ app.get("/shopify/install", async (req, res) => {
     res.status(500).send("Failed to start OAuth");
   }
 });
+
 
 
 app.get('/clear-cookies', (req, res) => {
