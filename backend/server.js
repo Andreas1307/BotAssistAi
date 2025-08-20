@@ -729,10 +729,10 @@ app.get("/shopify/callback", async (req, res) => {
     });
     const accessToken = tokenRes.data.access_token;
 
-    // Save accessToken in DB (async, don't block redirect)
-    saveToken(shop, accessToken).catch(console.error);
+    // ✅ TODO: Save token in your DB for later API calls
+    // e.g., await db.saveShopToken(shop, accessToken);
 
-    // 🚀 Always redirect back into Shopify Admin Embedded App
+    // 🚀 Redirect back into Shopify Admin Embedded App
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -764,6 +764,7 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
