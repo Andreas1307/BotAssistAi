@@ -292,24 +292,28 @@ app.use((req, res, next) => {
   next();
 });
  
-app.get("/shopify/install", (req, res) => {
-  const { shop } = req.query;
-  if (!shop || !isValidShop(shop)) {
-    return res.status(400).send("Invalid shop parameter");
+// /shopify/install
+app.get("/shopify/install", async (req, res) => {
+  try {
+    const shop = req.query.shop;
+    if (!shop || !isValidShop(shop)) {
+      return res.status(400).send("Invalid shop parameter");
+    }
+
+    // Shopify library generates auth URL and sets OAuth cookies
+    const redirectUrl = await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true, // or false for offline
+    });
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error("❌ Shopify install error:", err);
+    res.status(500).send("Failed to start OAuth");
   }
-
-  const state = crypto.randomBytes(16).toString("hex");
-  req.session.shopify_state = state;
-
-  const installUrl =
-    `https://${shop}/admin/oauth/authorize` +
-    `?client_id=${process.env.SHOPIFY_API_KEY}` +
-    `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
-    `&state=${state}` +
-    `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
-
-  return res.redirect(installUrl);
 });
+
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
