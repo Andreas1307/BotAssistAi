@@ -727,7 +727,6 @@ app.get("/shopify/callback", async (req, res, next) => {
       code,
     });
     const accessToken = tokenRes.data.access_token;
-    if (!accessToken) throw new Error("No access token returned");
 
     // 2️⃣ Get shop info
     const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
@@ -767,7 +766,7 @@ app.get("/shopify/callback", async (req, res, next) => {
       [shop, accessToken, user.user_id]
     );
 
-    // 5️⃣ Log in + persist session before redirect
+    // 5️⃣ Log in user + wait until session saved
     req.logIn(user, (err) => {
       if (err) return next(err);
 
@@ -782,23 +781,25 @@ app.get("/shopify/callback", async (req, res, next) => {
               <script>
                 const AppBridge = window["app-bridge"].default;
                 const actions = window["app-bridge"].actions;
-
+      
                 const app = AppBridge({
                   apiKey: "${process.env.SHOPIFY_API_KEY}",
                   host: "${encodeURIComponent(host)}",
                   forceRedirect: true
                 });
-
+      
                 const redirect = actions.Redirect.create(app);
+      
+                // ✅ Use absolute URL so Shopify automated check passes
                 redirect.dispatch(
-                  actions.Redirect.Action.APP,
-                  "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+                  actions.Redirect.Action.REMOTE,
+                  "https://${process.env.APP_URL}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
                 );
               </script>
             </body>
           </html>
         `);
-      });
+      });      
     });
 
   } catch (err) {
@@ -806,29 +807,6 @@ app.get("/shopify/callback", async (req, res, next) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
-
-app.get("/dashboard", (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect("/login");
-  }
-
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <script src="https://unpkg.com/@shopify/app-bridge"></script>
-      </head>
-      <body>
-        <h1>✅ App installed and user authenticated</h1>
-      </body>
-    </html>
-  `);
-});
-
-
-
 
 
 async function handlePostInstall(shop, accessToken) {
