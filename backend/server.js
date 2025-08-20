@@ -292,6 +292,7 @@ app.use((req, res, next) => {
   next();
 });
  
+// /shopify/install
 app.get("/shopify/install", async (req, res) => {
   try {
     const shop = req.query.shop;
@@ -299,21 +300,24 @@ app.get("/shopify/install", async (req, res) => {
       return res.status(400).send("Invalid shop parameter");
     }
 
-    // Use Shopify auth helper with Express
-    const redirectUrl = await shopify.auth.begin({
+    // Begin Shopify OAuth flow
+    await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
-      isOnline: true, // or false for offline
+      isOnline: true,
     });
 
-    return res.redirect(redirectUrl);
+    // Shopify auth.begin automatically handles the redirect.
+    // We do not need to call res.redirect manually here.
   } catch (err) {
     console.error("❌ Shopify install error:", err);
     res.status(500).send("Failed to start OAuth");
   }
 });
+
+
 
 
 
@@ -719,6 +723,7 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 app.get("/shopify/callback", async (req, res) => {
   try {
     const result = await shopify.auth.callback({
@@ -728,54 +733,47 @@ app.get("/shopify/callback", async (req, res) => {
     });
 
     const session = result.session;
-
     if (!session || !session.shop || !session.accessToken) {
-      console.log("❌ Missing session data");
       return res.status(400).send("Session missing required data.");
     }
 
     const shop = session.shop;
     const accessToken = session.accessToken;
 
-    // ✅ Store session (Shopify lib handles this with your sessionStorage)
+    // Store session using your sessionStorage helper
     const { storeCallback } = require("./sessionStorage");
     await storeCallback(session);
     await registerGdprWebhooks(session, shop);
 
-    // ✅ Fetch shop info
+    // Fetch shop info
     const client = new shopify.clients.Rest({ session });
     const response = await client.get({ path: "shop" });
 
     if (!response?.body?.shop) {
-      console.error("❌ Invalid response from Shopify API:", response);
       return res.status(500).send("Failed to fetch shop info.");
     }
 
     const shopData = response.body.shop;
     const email = shopData.email || `${shop}`;
     const username = shopData.name || shop;
-    const domain = shop;
 
-    // 🔑 Credentials / API Key generation
+    // Generate credentials
     const rawKey = Math.random().toString(36).slice(-8);
     const toEncryptKey = uuidv4();
     const encryptedKey = encryptApiKey(toEncryptKey);
     const hashedPassword = await bcrypt.hash(rawKey, 10);
 
-    // ✅ Find or create user
+    // Find or create user
     const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
 
     if (existingUser.length > 0) {
       user = existingUser[0];
-      console.log("✅ Existing Shopify user found:", user.username);
-
       await pool.query(`
         UPDATE users
         SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
         WHERE user_id = ?
       `, [shop, accessToken, user.user_id]);
-
     } else {
       await pool.query(`
         INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
@@ -784,24 +782,22 @@ app.get("/shopify/callback", async (req, res) => {
 
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
-      console.log("✅ New Shopify user created:", user.username);
     }
 
-    // ✅ Log the user in
+    // Log in the user
     req.logIn(user, async (err) => {
       if (err) {
-        console.error("Login error after Shopify auth:", err);
         return res.status(500).send("Failed to log in after registration.");
       }
 
-      // ✅ Track install
+      // Track install
       await pool.query(`
         INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
         VALUES (?, ?, ?, NOW())
         ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
       `, [shop, accessToken, user.user_id]);
 
-      // 🚀 Redirect back into Embedded App
+      // Redirect to embedded app
       const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`;
 
       res.set("Content-Type", "text/html");
@@ -828,6 +824,7 @@ app.get("/shopify/callback", async (req, res) => {
     }
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
