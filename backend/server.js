@@ -292,7 +292,7 @@ app.use((req, res, next) => {
   next();
 });
  
-// /shopify/install
+
 app.get("/shopify/install", async (req, res) => {
   try {
     const shop = req.query.shop;
@@ -300,8 +300,16 @@ app.get("/shopify/install", async (req, res) => {
       return res.status(400).send("Invalid shop parameter");
     }
 
+    const session = await shopify.sessions.getCurrentSession(req, res, true);
+
+    if (session && session.accessToken) {
+      // ✅ Already authenticated → redirect to app
+      const redirectUrl = `/?shop=${shop}&host=${req.query.host}&shopifyUser=true`;
+      return res.redirect(redirectUrl);
+    }
+
     // Begin Shopify OAuth flow
-    await shopify.auth.begin({
+    const redirect = await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
@@ -309,15 +317,12 @@ app.get("/shopify/install", async (req, res) => {
       isOnline: true,
     });
 
-    // Shopify auth.begin automatically handles the redirect.
-    // We do not need to call res.redirect manually here.
+    return res.redirect(redirect);
   } catch (err) {
     console.error("❌ Shopify install error:", err);
     res.status(500).send("Failed to start OAuth");
   }
 });
-
-
 
 
 
