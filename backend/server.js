@@ -307,11 +307,11 @@ app.get("/shopify/install", (req, res) => {
     `&scope=${encodeURIComponent(process.env.SHOPIFY_SCOPES)}` +
     `&state=${state}` +
     `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
-    // ⬆ remove &grant_options[]=per-user here. Install uses offline token.
-    // You can request an online token later inside the embedded UI via App Bridge.
 
+  // Immediately redirect Shopify bot to the OAuth grant page
   return res.redirect(installUrl);
 });
+
 
 
 app.get('/clear-cookies', (req, res) => {
@@ -716,14 +716,14 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/shopify/callback", async (req, res, next) => {
+app.get("/shopify/callback", async (req, res) => {
   try {
     const { shop, code, state, host } = req.query;
     if (!shop || !code || !host) return res.status(400).send("Missing params");
     if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // 1️⃣ Exchange code → token
+    // Exchange code → access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -732,7 +732,7 @@ app.get("/shopify/callback", async (req, res, next) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ 🚀 Respond immediately with App Bridge redirect (Shopify check ✅)
+    // Immediately redirect into embedded app using App Bridge
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -743,24 +743,22 @@ app.get("/shopify/callback", async (req, res, next) => {
           <script>
             const AppBridge = window["app-bridge"].default;
             const actions = window["app-bridge"].actions;
-
             const app = AppBridge({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${encodeURIComponent(host)}",
               forceRedirect: true
             });
-
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              "/shopify/finish-login?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&token=${accessToken}"
+              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&shopifyUser=true"
             );
           </script>
         </body>
       </html>
     `);
 
-    // 3️⃣ Do DB + login in background (not blocking Shopify)
+    // Optional: create/update user in background, track install
     (async () => {
       try {
         const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
@@ -770,7 +768,6 @@ app.get("/shopify/callback", async (req, res, next) => {
         const email = shopData.email || shop;
         const username = shopData.name || shop;
 
-        // Ensure user exists
         const rawKey = Math.random().toString(36).slice(-8);
         const hashedPassword = await bcrypt.hash(rawKey, 10);
         const encryptedKey = encryptApiKey(uuidv4());
@@ -788,32 +785,24 @@ app.get("/shopify/callback", async (req, res, next) => {
             "INSERT INTO users (username,email,password,api_key,shopify_shop_domain,shopify_access_token,shopify_installed_at) VALUES (?,?,?,?,?,?,NOW())",
             [username, email, hashedPassword, encryptedKey, shop, accessToken]
           );
-          const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-          user = newUserResult[0];
         }
 
-        // Track install
         await pool.query(
           `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
            VALUES (?, ?, ?, NOW())
-           ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
-          [shop, accessToken, user.user_id]
+           ON DUPLICATE KEY UPDATE access_token=VALUES(access_token)`,
+          [shop, accessToken, existingUser[0]?.user_id || null]
         );
-
-        console.log("✅ Shopify user processed:", user.email);
-
-      } catch (e) {
-        console.error("Background user creation error:", e);
+      } catch (err) {
+        console.error("Background user creation error:", err);
       }
     })();
 
   } catch (err) {
-    console.error("❌ Shopify callback error:", err.response?.data || err.message);
+    console.error("Shopify callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
-
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
