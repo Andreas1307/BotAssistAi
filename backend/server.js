@@ -790,16 +790,17 @@ app.get("/shopify/callback", async (req, res, next) => {
       
                 const redirect = actions.Redirect.create(app);
       
-                // ✅ Use absolute URL so Shopify automated check passes
+                // ✅ Embedded redirect into iframe
                 redirect.dispatch(
-                  actions.Redirect.Action.REMOTE,
-                  "https://${process.env.APP_URL}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+                  actions.Redirect.Action.APP,
+                  "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
                 );
               </script>
             </body>
           </html>
         `);
-      });      
+      });
+      
     });
 
   } catch (err) {
