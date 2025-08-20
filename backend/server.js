@@ -720,16 +720,15 @@ app.get("/shopify/callback", async (req, res, next) => {
     if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // 1️⃣ Exchange code → token
+    // 1️⃣ Exchange code for token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
       code,
     });
     const accessToken = tokenRes.data.access_token;
-    if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Fetch shop info
+    // 2️⃣ Get shop info
     const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
       headers: { "X-Shopify-Access-Token": accessToken }
     });
@@ -737,11 +736,7 @@ app.get("/shopify/callback", async (req, res, next) => {
     const email = shopData.email || shop;
     const username = shopData.name || shop;
 
-    // 3️⃣ Ensure user exists in DB
-    const rawKey = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(rawKey, 10);
-    const encryptedKey = encryptApiKey(uuidv4());
-
+    // 3️⃣ Upsert user
     const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
     if (existingUser.length > 0) {
@@ -751,6 +746,10 @@ app.get("/shopify/callback", async (req, res, next) => {
         [shop, accessToken, user.user_id]
       );
     } else {
+      const rawKey = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(rawKey, 10);
+      const encryptedKey = encryptApiKey(uuidv4());
+
       await pool.query(
         "INSERT INTO users (username,email,password,api_key,shopify_shop_domain,shopify_access_token,shopify_installed_at) VALUES (?,?,?,?,?,?,NOW())",
         [username, email, hashedPassword, encryptedKey, shop, accessToken]
@@ -767,37 +766,39 @@ app.get("/shopify/callback", async (req, res, next) => {
       [shop, accessToken, user.user_id]
     );
 
-    // 5️⃣ Log user into session FIRST
+    // 5️⃣ Log in user + wait until session saved
     req.logIn(user, (err) => {
       if (err) return next(err);
 
-      // 6️⃣ THEN send App Bridge redirect so Shopify automated check passes ✅
-      res.set("Content-Type", "text/html");
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head><meta charset="utf-8" /></head>
-          <body>
-            <script src="https://unpkg.com/@shopify/app-bridge"></script>
-            <script>
-              const AppBridge = window["app-bridge"].default;
-              const actions = window["app-bridge"].actions;
+      req.session.save(() => {
+        // 6️⃣ Embedded App Bridge redirect (✅ required for Shopify checks)
+        res.set("Content-Type", "text/html");
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head><meta charset="utf-8" /></head>
+            <body>
+              <script src="https://unpkg.com/@shopify/app-bridge"></script>
+              <script>
+                const AppBridge = window["app-bridge"].default;
+                const actions = window["app-bridge"].actions;
 
-              const app = AppBridge({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${encodeURIComponent(host)}",
-                forceRedirect: true
-              });
+                const app = AppBridge({
+                  apiKey: "${process.env.SHOPIFY_API_KEY}",
+                  host: "${encodeURIComponent(host)}",
+                  forceRedirect: true
+                });
 
-              const redirect = actions.Redirect.create(app);
-              redirect.dispatch(
-                actions.Redirect.Action.APP,
-                "/dashboard?shop=${encodeURIComponent(shop)}"
-              );
-            </script>
-          </body>
-        </html>
-      `);
+                const redirect = actions.Redirect.create(app);
+                redirect.dispatch(
+                  actions.Redirect.Action.APP,
+                  "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+                );
+              </script>
+            </body>
+          </html>
+        `);
+      });
     });
 
   } catch (err) {
