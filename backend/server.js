@@ -732,57 +732,76 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // 2️⃣ Minimal user for session
-    const minimalUser = { username: shop, shopify_shop_domain: shop };
+    // 2️⃣ Fetch shop data
+    const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
+      headers: { "X-Shopify-Access-Token": accessToken }
+    });
+    const shopData = shopRes.data.shop;
+    const email = shopData.email || shop;
+    const username = shopData.name || shop;
 
-    req.logIn(minimalUser, (err) => {
+    // 3️⃣ Create or update user in DB
+    const rawKey = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(rawKey, 10);
+    const encryptedKey = encryptApiKey(uuidv4());
+
+    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user;
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+      await pool.query(`
+        UPDATE users
+        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+        WHERE user_id = ?
+      `, [shop, accessToken, user.user_id]);
+    } else {
+      await pool.query(`
+        INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
+      `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
+
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+    }
+
+    // 4️⃣ Log user in (works with your existing passport serialize/deserialize)
+    req.logIn(user, async (err) => {
       if (err) {
-        console.error("Login failed:", err);
-        return res.status(500).send("Login failed");
+        console.error("Login error after Shopify auth:", err);
+        return res.status(500).send("Failed to log in after registration.");
       }
 
-      // Save session and immediately redirect inside iframe
-      req.session.save(() => {
-        res.set("Content-Type", "text/html");
-        res.send(`
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8" /></head>
-          <body>
-            <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-            <script>
-              (function() {
-                var AppBridge = window['app-bridge'];
-                var createApp = AppBridge.default;
-                var Redirect = AppBridge.actions.Redirect;
+      // 5️⃣ Log install
+      await pool.query(`
+        INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+        VALUES (?, ?, ?, NOW())
+        ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
+      `, [shop, accessToken, user.user_id]);
 
-                var app = createApp({
-                  apiKey: "${process.env.SHOPIFY_API_KEY}",
-                  host: "${encodeURIComponent(host)}"
-                });
-
-                Redirect.create(app).dispatch(
-                  Redirect.Action.APP,
-                  "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-                );
-              })();
-            </script>
-          </body>
-          </html>
-        `);
-      });
-    });
-
-    // 3️⃣ Run post-install tasks asynchronously (don’t block iframe redirect)
-    handlePostInstall(shop, accessToken).catch((err) => {
-      console.error("Post-install error:", err);
+      // 6️⃣ Redirect inside Shopify iframe
+      res.set("Content-Type", "text/html");
+      res.send(`
+        <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        <script>
+          const AppBridge = window["app-bridge"].default;
+          const actions = window["app-bridge"].actions;
+          const app = AppBridge({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${req.query.host}",
+            forceRedirect: true
+          });
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "/dashboard?shop=${shop}&host=${req.query.host}&shopifyUser=true");
+        </script>
+      `);
     });
 
   } catch (err) {
-    console.error("Callback error:", err.response?.data || err.message);
+    console.error("❌ Shopify callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
