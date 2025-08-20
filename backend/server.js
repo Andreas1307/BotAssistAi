@@ -308,11 +308,8 @@ app.get("/shopify/install", (req, res) => {
     `&state=${state}` +
     `&redirect_uri=${encodeURIComponent(process.env.SHOPIFY_REDIRECT_URI)}`;
 
-  // Immediately redirect Shopify bot to the OAuth grant page
   return res.redirect(installUrl);
 });
-
-
 
 app.get('/clear-cookies', (req, res) => {
   const options = {
@@ -716,14 +713,14 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/shopify/callback", async (req, res) => {
+app.get("/shopify/callback", async (req, res, next) => {
   try {
     const { shop, code, state, host } = req.query;
     if (!shop || !code || !host) return res.status(400).send("Missing params");
     if (state !== req.session.shopify_state) return res.status(400).send("Invalid state");
     delete req.session.shopify_state;
 
-    // Exchange code → access token
+    // 1️⃣ Exchange code → access token
     const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
@@ -732,77 +729,83 @@ app.get("/shopify/callback", async (req, res) => {
     const accessToken = tokenRes.data.access_token;
     if (!accessToken) throw new Error("No access token");
 
-    // Immediately redirect into embedded app using App Bridge
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head><meta charset="utf-8" /></head>
-        <body>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
-          <script>
-            const AppBridge = window["app-bridge"].default;
-            const actions = window["app-bridge"].actions;
-            const app = AppBridge({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${encodeURIComponent(host)}",
-              forceRedirect: true
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&shopifyUser=true"
-            );
-          </script>
-        </body>
-      </html>
-    `);
+    // 2️⃣ Fetch shop data
+    const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
+      headers: { "X-Shopify-Access-Token": accessToken }
+    });
+    const shopData = shopRes.data.shop;
+    const email = shopData.email || shop;
+    const username = shopData.name || shop;
 
-    // Optional: create/update user in background, track install
-    (async () => {
-      try {
-        const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
-          headers: { "X-Shopify-Access-Token": accessToken }
-        });
-        const shopData = shopRes.data.shop;
-        const email = shopData.email || shop;
-        const username = shopData.name || shop;
+    // 3️⃣ Create or update user in DB
+    const rawKey = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(rawKey, 10);
+    const encryptedKey = encryptApiKey(uuidv4());
 
-        const rawKey = Math.random().toString(36).slice(-8);
-        const hashedPassword = await bcrypt.hash(rawKey, 10);
-        const encryptedKey = encryptApiKey(uuidv4());
+    const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user;
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+      await pool.query(
+        "UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?",
+        [shop, accessToken, user.user_id]
+      );
+    } else {
+      await pool.query(
+        "INSERT INTO users (username,email,password,api_key,shopify_shop_domain,shopify_access_token,shopify_installed_at) VALUES (?,?,?,?,?,?,NOW())",
+        [username, email, hashedPassword, encryptedKey, shop, accessToken]
+      );
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+    }
 
-        const [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-        let user;
-        if (existingUser.length > 0) {
-          user = existingUser[0];
-          await pool.query(
-            "UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?",
-            [shop, accessToken, user.user_id]
-          );
-        } else {
-          await pool.query(
-            "INSERT INTO users (username,email,password,api_key,shopify_shop_domain,shopify_access_token,shopify_installed_at) VALUES (?,?,?,?,?,?,NOW())",
-            [username, email, hashedPassword, encryptedKey, shop, accessToken]
-          );
-        }
+    // 4️⃣ Track install
+    await pool.query(
+      `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+       VALUES (?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
+      [shop, accessToken, user.user_id]
+    );
 
-        await pool.query(
-          `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-           VALUES (?, ?, ?, NOW())
-           ON DUPLICATE KEY UPDATE access_token=VALUES(access_token)`,
-          [shop, accessToken, existingUser[0]?.user_id || null]
-        );
-      } catch (err) {
-        console.error("Background user creation error:", err);
-      }
-    })();
+    // 5️⃣ Log in user via Passport
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+
+      // 6️⃣ Send App Bridge redirect to embedded app
+      res.set("Content-Type", "text/html");
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8" /></head>
+          <body>
+            <script src="https://unpkg.com/@shopify/app-bridge"></script>
+            <script>
+              const AppBridge = window["app-bridge"].default;
+              const actions = window["app-bridge"].actions;
+
+              const app = AppBridge({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${encodeURIComponent(host)}",
+                forceRedirect: true
+              });
+
+              const redirect = actions.Redirect.create(app);
+              redirect.dispatch(
+                actions.Redirect.Action.APP,
+                "/dashboard?shop=${encodeURIComponent(shop)}&shopifyUser=true"
+              );
+            </script>
+          </body>
+        </html>
+      `);
+    });
 
   } catch (err) {
-    console.error("Shopify callback error:", err.response?.data || err.message);
+    console.error("❌ Shopify callback error:", err.response?.data || err.message);
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
