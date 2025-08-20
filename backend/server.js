@@ -727,6 +727,7 @@ app.get("/shopify/callback", async (req, res, next) => {
       code,
     });
     const accessToken = tokenRes.data.access_token;
+    if (!accessToken) throw new Error("No access token returned");
 
     // 2️⃣ Get shop info
     const shopRes = await axios.get(`https://${shop}/admin/api/2023-10/shop.json`, {
@@ -766,12 +767,11 @@ app.get("/shopify/callback", async (req, res, next) => {
       [shop, accessToken, user.user_id]
     );
 
-    // 5️⃣ Log in user + wait until session saved
+    // 5️⃣ Log in + persist session before redirect
     req.logIn(user, (err) => {
       if (err) return next(err);
 
       req.session.save(() => {
-        // 6️⃣ Embedded App Bridge redirect (✅ required for Shopify checks)
         res.set("Content-Type", "text/html");
         res.send(`
           <!DOCTYPE html>
@@ -806,6 +806,30 @@ app.get("/shopify/callback", async (req, res, next) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
+
+
+app.get("/dashboard", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <script src="https://unpkg.com/@shopify/app-bridge"></script>
+      </head>
+      <body>
+        <h1>✅ App installed and user authenticated</h1>
+      </body>
+    </html>
+  `);
+});
+
+
+
+
 
 async function handlePostInstall(shop, accessToken) {
   await Promise.all([
