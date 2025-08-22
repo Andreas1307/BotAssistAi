@@ -1063,24 +1063,25 @@ app.get('/shopify/callback', async (req, res) => {
         ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
       `, [shop, accessToken, user.user_id]);
 
-      // Step 6: Redirect immediately **inside Shopify Admin iframe**
-      const redirectUrl = `/?shop=${shop}&host=${host}&shopifyUser=true`;
+    // Step 6: Redirect into Shopify Admin iframe (NOT raw domain)
+const redirectUrl = `/app?shop=${shop}&host=${host}&shopifyUser=true`;
 
-      res.set('Content-Type', 'text/html');
-      res.send(`
-        <script src="https://unpkg.com/@shopify/app-bridge"></script>
-        <script>
-          const AppBridge = window['app-bridge'].default;
-          const actions = window['app-bridge'].actions;
-          const app = AppBridge({
-            apiKey: '${process.env.SHOPIFY_API_KEY}',
-            host: '${host}',
-            forceRedirect: true
-          });
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, '${redirectUrl}');
-        </script>
-      `);
+res.set('Content-Type', 'text/html');
+res.send(`
+  <script src="https://unpkg.com/@shopify/app-bridge"></script>
+  <script>
+    const AppBridge = window['app-bridge'].default;
+    const actions = window['app-bridge'].actions;
+    const app = AppBridge({
+      apiKey: '${process.env.SHOPIFY_API_KEY}',
+      host: '${host}',
+      forceRedirect: true
+    });
+    const redirect = actions.Redirect.create(app);
+    redirect.dispatch(actions.Redirect.Action.APP, '${redirectUrl}');
+  </script>
+`);
+
     });
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
