@@ -1051,7 +1051,7 @@ app.get('/shopify/callback', async (req, res) => {
         return res.status(500).send("Login failed");
       }
 
-      // Step 4: Store Shopify session
+      // Step 4: Store Shopify session + GDPR webhooks
       const { storeCallback } = require('./sessionStorage');
       await storeCallback(session);
       await registerGdprWebhooks(session, shop);
@@ -1063,31 +1063,16 @@ app.get('/shopify/callback', async (req, res) => {
         ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
       `, [shop, accessToken, user.user_id]);
 
-    // Step 6: Redirect into Shopify Admin iframe (NOT raw domain)
-const redirectUrl = `/app?shop=${shop}&host=${host}&shopifyUser=true`;
-
-res.set('Content-Type', 'text/html');
-res.send(`
-  <script src="https://unpkg.com/@shopify/app-bridge"></script>
-  <script>
-    const AppBridge = window['app-bridge'].default;
-    const actions = window['app-bridge'].actions;
-    const app = AppBridge({
-      apiKey: '${process.env.SHOPIFY_API_KEY}',
-      host: '${host}',
-      forceRedirect: true
-    });
-    const redirect = actions.Redirect.create(app);
-    redirect.dispatch(actions.Redirect.Action.APP, '${redirectUrl}');
-  </script>
-`);
-
+      // ✅ Step 6: Redirect directly into Shopify Admin embedded app
+      const redirectUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}&shopifyUser=true`;
+      return res.redirect(302, redirectUrl);
     });
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 
 
