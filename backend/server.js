@@ -1075,6 +1075,36 @@ app.get('/shopify/callback', async (req, res, next) => {
   }
 });
 
+// Serve your embedded app UI
+app.get('/app', async (req, res) => {
+  const shop = req.query.shop;
+  const host = req.query.host;
+
+  if (!shop || !host) return res.status(400).send('Missing shop or host');
+
+  // If you're using Shopify App Bridge, send HTML with App Bridge redirect
+  res.set('Content-Type', 'text/html');
+  res.send(`
+    <script src="https://unpkg.com/@shopify/app-bridge"></script>
+    <script>
+      const AppBridge = window['app-bridge'].default;
+      const actions = window['app-bridge'].actions;
+
+      const app = AppBridge({
+        apiKey: '${process.env.SHOPIFY_API_KEY}',
+        host: '${host}',
+        forceRedirect: true
+      });
+
+      const redirect = actions.Redirect.create(app);
+      redirect.dispatch(
+        actions.Redirect.Action.APP,
+        '/dashboard' // or wherever your main app UI lives
+      );
+    </script>
+  `);
+});
+
 
 
 
