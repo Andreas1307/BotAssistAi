@@ -979,7 +979,6 @@ app.get('/shopify/install', async (req, res) => {
     const shop = req.query.shop;
     if (!shop) return res.status(400).send('Missing shop');
 
-    // Begin OAuth — shopify.auth.begin handles redirect automatically
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
@@ -989,14 +988,13 @@ app.get('/shopify/install', async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Shopify install error:', err);
-    return res.status(500).send('Failed to start OAuth');
+    res.status(500).send('Failed to start OAuth');
   }
 });
 
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-    // Finish OAuth
     const result = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1004,82 +1002,58 @@ app.get('/shopify/callback', async (req, res) => {
     });
 
     const session = result.session;
-    if (!session || !session.shop || !session.accessToken) {
+    if (!session?.shop || !session?.accessToken) {
       return res.status(400).send('Session missing required data.');
     }
 
     const shop = session.shop;
-    const accessToken = session.accessToken;
-    const host = req.query.host; // host param passed by Shopify
+    const host = req.query.host;
 
-    // --------- DB: find or create local user (synchronous to ensure login works)
-    const client = new shopify.clients.Rest({ session });
-    const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
-    const email = shopInfo.email || shop;
-    const username = shopInfo.name || shop;
+    // ✅ MUST redirect immediately back to Shopify Admin Embedded App
+    const redirectUrl = `https://admin.shopify.com/store/${shop.replace(
+      '.myshopify.com',
+      ''
+    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    // Find existing user
-    let [[existingUserRow]] = await pool.query("SELECT * FROM users WHERE email = ?", [email])
-      .catch(e => [ [] ]);
-    // Note: if your pool returns differently, adjust destructuring accordingly.
+    // Do async DB work AFTER sending redirect
+    res.redirect(302, redirectUrl);
 
-    let user;
-    if (existingUserRow && existingUserRow.user_id) {
-      user = existingUserRow;
-      await pool.query(`
-        UPDATE users
-        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-        WHERE user_id = ?
-      `, [shop, accessToken, user.user_id]);
-    } else {
-      const rawKey = Math.random().toString(36).slice(-8);
-      const toEncryptKey = uuidv4();
-      const encryptedKey = encryptApiKey(toEncryptKey);
-      const hashedPassword = await bcrypt.hash(rawKey, 10);
-
-      await pool.query(`
-        INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-        VALUES (?, ?, ?, ?, ?, ?, NOW())
-      `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
-
-      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-      user = newUserResult[0];
-    }
-
-    // --------- Passport login: must finish before redirect so cookie is set
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => {
-        if (err) return reject(err);
-        // ensure session persisted to store and cookie flushed
-        req.session.save((saveErr) => {
-          if (saveErr) return reject(saveErr);
-          resolve();
-        });
-      });
-    });
-
-    // --------- Store Shopify session + register webhooks (can be async but ok to run here)
-    const { storeCallback } = require('./sessionStorage');
-    await storeCallback(session);
-    await registerGdprWebhooks(session, shop).catch(e => console.error('gdpr register failed', e));
-
-    // --------- Install tracking (async)
+    // Background async stuff (not blocking redirect)
     (async () => {
       try {
-        await pool.query(`
-          INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-          VALUES (?, ?, ?, NOW())
-          ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
-        `, [shop, accessToken, user.user_id]);
-      } catch (e) {
-        console.error('install tracking failed', e);
+        const client = new shopify.clients.Rest({ session });
+        const shopData = (await client.get({ path: 'shop' })).body.shop;
+
+        const email = shopData.email || shop;
+        const username = shopData.name || shop;
+
+        // find or create user
+        let [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+        if (existingUser.length > 0) {
+          await pool.query(
+            `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
+            [shop, session.accessToken, existingUser[0].user_id]
+          );
+        } else {
+          const rawKey = Math.random().toString(36).slice(-8);
+          const toEncryptKey = uuidv4();
+          const encryptedKey = encryptApiKey(toEncryptKey);
+          const hashedPassword = await bcrypt.hash(rawKey, 10);
+
+          await pool.query(
+            `INSERT INTO users (username,email,password,api_key,shopify_shop_domain,shopify_access_token,shopify_installed_at)
+             VALUES (?,?,?,?,?,?,NOW())`,
+            [username, email, hashedPassword, encryptedKey, shop, session.accessToken]
+          );
+        }
+
+        const { storeCallback } = require('./sessionStorage');
+        await storeCallback(session);
+        await registerGdprWebhooks(session, shop);
+      } catch (err) {
+        console.error('❌ Background setup error:', err);
       }
     })();
-
-    // --------- Final: redirect into Shopify Admin embedded app (immediate 302)
-    const embeddedAppUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&shopifyUser=true`;
-    return res.redirect(302, embeddedAppUrl);
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1087,13 +1061,10 @@ app.get('/shopify/callback', async (req, res) => {
 });
 
 
-app.get('/app', async (req, res) => {
-  const shop = req.query.shop;
-  const host = req.query.host;
-
+app.get('/app', (req, res) => {
+  const { shop, host } = req.query;
   if (!shop || !host) return res.status(400).send('Missing shop or host');
 
-  // User is now logged in, App Bridge will redirect inside Shopify Admin
   res.set('Content-Type', 'text/html');
   res.send(`
     <script src="https://unpkg.com/@shopify/app-bridge"></script>
@@ -1108,13 +1079,11 @@ app.get('/app', async (req, res) => {
       });
 
       const redirect = actions.Redirect.create(app);
-      redirect.dispatch(
-        actions.Redirect.Action.APP,
-        '/dashboard' // main app UI
-      );
+      redirect.dispatch(actions.Redirect.Action.APP, '/dashboard');
     </script>
   `);
 });
+
 
 
 
