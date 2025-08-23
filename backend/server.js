@@ -974,8 +974,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Step 1: Install — redirect to Shopify OAuth grant page
-
 app.get('/shopify/install', async (req, res) => {
   try {
     const shop = req.query.shop;
@@ -1009,16 +1007,15 @@ app.get('/shopify/callback', async (req, res) => {
     const shop = session.shop;
     const host = req.query.host;
 
-    // --- Fetch merchant info
+    // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
     const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
     const email = shopInfo.email || shop;
     const username = shopInfo.name || shop;
 
-    // --- Find or create user in your DB
+    // --- Find or create user
     let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
-
     if (existing.length > 0) {
       user = existing[0];
       await pool.query(
@@ -1041,7 +1038,7 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- LOG THE USER IN via Passport
+    // --- Log the user in via Passport
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1052,9 +1049,9 @@ app.get('/shopify/callback', async (req, res) => {
       });
     });
 
-    console.log(`✅ User ${user.email} logged in successfully`);
+    console.log(`✅ User ${user.email} logged in`);
 
-    // --- Respond with App Bridge redirect
+    // --- Respond with App Bridge redirect to /app
     res.set('Content-Type', 'text/html');
     res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge"></script>
@@ -1074,7 +1071,7 @@ app.get('/shopify/callback', async (req, res) => {
       </script>
     `);
 
-    // --- Post-redirect async tasks
+    // --- Async post-redirect tasks (don’t block redirect)
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
@@ -1120,6 +1117,7 @@ app.get('/app', (req, res) => {
     </script>
   `);
 });
+
 
 
 
