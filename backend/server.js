@@ -1038,7 +1038,7 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- Log the user in via Passport
+    // --- Log the user in (Passport session)
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1051,51 +1051,62 @@ app.get('/shopify/callback', async (req, res) => {
 
     console.log(`✅ User ${user.email} logged in`);
 
-    // --- Respond with App Bridge redirect to /app
-    res.set('Content-Type', 'text/html');
-    res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge"></script>
-      <script>
-        const AppBridge = window['app-bridge'].default;
-        const actions = window['app-bridge'].actions;
-        const app = AppBridge({
-          apiKey: '${process.env.SHOPIFY_API_KEY}',
-          host: '${host}',
-          forceRedirect: true
-        });
-        const redirect = actions.Redirect.create(app);
-        redirect.dispatch(
-          actions.Redirect.Action.APP,
-          '/app?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-        );
-      </script>
-    `);
+    // --- Save install info
+    await pool.query(
+      `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+       VALUES (?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
+      [shop, session.accessToken, user.user_id]
+    );
 
-    // --- Async post-redirect tasks (don’t block redirect)
+    // --- Register GDPR webhooks (background, don’t block)
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
-
-        await pool.query(
-          `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-           VALUES (?, ?, ?, NOW())
-           ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
-          [shop, session.accessToken, user.user_id]
-        );
-
         console.log(`✅ Setup complete for ${shop}`);
       } catch (err) {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
 
+    // --- Return Shopify-approved App Bridge redirect page
+    res.set('Content-Type', 'text/html');
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
+          <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              const AppBridge = window['app-bridge'].default;
+              const actions = window['app-bridge'].actions;
+              const app = AppBridge({
+                apiKey: '${process.env.SHOPIFY_API_KEY}',
+                host: '${host}',
+                forceRedirect: true
+              });
+              const redirect = actions.Redirect.create(app);
+              redirect.dispatch(
+                actions.Redirect.Action.APP,
+                '/app?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              );
+            });
+          </script>
+        </body>
+      </html>
+    `);
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 app.get('/app', (req, res) => {
   const { shop, host } = req.query;
