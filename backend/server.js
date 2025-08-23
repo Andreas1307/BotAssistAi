@@ -1052,15 +1052,25 @@ app.get('/shopify/callback', async (req, res) => {
         });
       });
     });
-
-    // ----- Immediate redirect to embedded app
-    const embeddedAppUrl = `https://admin.shopify.com/store/${shop.replace(
-      '.myshopify.com', ''
-    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-    res.redirect(302, embeddedAppUrl);
-
-    // ----- Post-redirect tasks (async)
+// Respond with App Bridge redirect (Shopify requires this for embedded apps)
+res.set('Content-Type', 'text/html');
+res.send(`
+  <script src="https://unpkg.com/@shopify/app-bridge"></script>
+  <script>
+    const AppBridge = window['app-bridge'].default;
+    const actions = window['app-bridge'].actions;
+    const app = AppBridge({
+      apiKey: '${process.env.SHOPIFY_API_KEY}',
+      host: '${host}',
+      forceRedirect: true
+    });
+    const redirect = actions.Redirect.create(app);
+    redirect.dispatch(
+      actions.Redirect.Action.APP,
+      '/dashboard'
+    );
+  </script>
+`);
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
