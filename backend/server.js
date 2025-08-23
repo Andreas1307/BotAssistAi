@@ -975,6 +975,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
+// Step 1: Install — redirect to Shopify OAuth grant page
 app.get('/shopify/install', async (req, res) => {
   try {
     const shop = req.query.shop;
@@ -993,7 +994,7 @@ app.get('/shopify/install', async (req, res) => {
   }
 });
 
-// Step 2: Callback — finish OAuth, immediately redirect with auto-login token
+// Step 2: Callback — finish OAuth and log in merchant immediately
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
@@ -1009,13 +1010,13 @@ app.get('/shopify/callback', async (req, res) => {
     const shop = session.shop;
     const host = req.query.host;
 
-    // Fetch merchant info to create local user
+    // Fetch merchant info
     const client = new shopify.clients.Rest({ session });
     const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
     const email = shopInfo.email || shop;
     const username = shopInfo.name || shop;
 
-    // Create or update user in DB
+    // Find or create user in DB
     let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
     if (existing.length > 0) {
@@ -1040,63 +1041,55 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- Create short-lived JWT for auto-login
-    const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, { expiresIn: '5m' });
+    // ----- DIRECTLY log the user in with Passport BEFORE redirect
+    await new Promise((resolve, reject) => {
+      req.logIn(user, (err) => {
+        if (err) return reject(err);
+        // Save session to ensure cookie is set before redirect
+        req.session.save((saveErr) => {
+          if (saveErr) return reject(saveErr);
+          resolve();
+        });
+      });
+    });
 
-    // --- Immediate redirect to embedded app with auto-login token
+    // ----- Immediate redirect to embedded app
     const embeddedAppUrl = `https://admin.shopify.com/store/${shop.replace(
       '.myshopify.com', ''
-    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&autoLoginToken=${token}`;
+    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
     res.redirect(302, embeddedAppUrl);
 
-    // --- Background tasks (async, post-redirect)
+    // ----- Post-redirect tasks (async)
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
+
         await pool.query(
           `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
            VALUES (?, ?, ?, NOW())
            ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
           [shop, session.accessToken, user.user_id]
         );
+
+        console.log(`✅ Setup complete for ${shop}`);
       } catch (err) {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
 
-app.get('/app', async (req, res) => {
-  const { shop, host, autoLoginToken } = req.query;
+// Step 3: Embedded app route
+app.get('/app', (req, res) => {
+  const { shop, host } = req.query;
   if (!shop || !host) return res.status(400).send('Missing shop or host');
 
-  // Auto-login if token present
-  if (autoLoginToken) {
-    try {
-      const decoded = jwt.verify(autoLoginToken, process.env.JWT_SECRET);
-      const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [decoded.userId]);
-      if (rows.length > 0) {
-        await new Promise((resolve, reject) => {
-          req.logIn(rows[0], (err) => {
-            if (err) return reject(err);
-            req.session.save(reject);
-            resolve();
-          });
-        });
-      }
-    } catch (err) {
-      console.error('❌ Auto-login token invalid', err);
-    }
-  }
-
-  // Render embedded app using App Bridge
   res.set('Content-Type', 'text/html');
   res.send(`
     <script src="https://unpkg.com/@shopify/app-bridge"></script>
