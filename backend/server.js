@@ -1038,7 +1038,7 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- Log the user in (Passport session)
+    // --- Log the user in
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1059,7 +1059,7 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Register GDPR webhooks (background, don’t block)
+    // --- Background tasks
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
@@ -1071,16 +1071,23 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Return Shopify-approved App Bridge redirect page
+    // --- Render landing page WITH App Bridge redirect
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
+          <title>Installing...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding: 50px; }
+            .loader { font-size: 18px; color: #444; }
+          </style>
         </head>
         <body>
+          <h2>✅ App installed successfully</h2>
+          <p class="loader">Redirecting you to your dashboard...</p>
           <script>
             document.addEventListener("DOMContentLoaded", function() {
               const AppBridge = window['app-bridge'].default;
@@ -1093,7 +1100,7 @@ app.get('/shopify/callback', async (req, res) => {
               const redirect = actions.Redirect.create(app);
               redirect.dispatch(
                 actions.Redirect.Action.APP,
-                '/app?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+                '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
               );
             });
           </script>
@@ -1107,27 +1114,6 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
-
-app.get('/app', (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop || !host) return res.status(400).send('Missing shop or host');
-
-  res.set('Content-Type', 'text/html');
-  res.send(`
-    <script src="https://unpkg.com/@shopify/app-bridge"></script>
-    <script>
-      const AppBridge = window['app-bridge'].default;
-      const actions = window['app-bridge'].actions;
-      const app = AppBridge({
-        apiKey: '${process.env.SHOPIFY_API_KEY}',
-        host: '${host}',
-        forceRedirect: true
-      });
-      const redirect = actions.Redirect.create(app);
-      redirect.dispatch(actions.Redirect.Action.APP, '/dashboard');
-    </script>
-  `);
-});
 
 
 
