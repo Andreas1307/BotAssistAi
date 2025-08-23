@@ -110,8 +110,7 @@ app.use(session({
     httpOnly: true,
     secure: true,      
     sameSite: 'none',
-    maxAge: 24 * 60 * 60 * 1000,
-    domain: 'api.botassistai.com' 
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 app.use(shopifySessionMiddleware);

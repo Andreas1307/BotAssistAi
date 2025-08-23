@@ -205,6 +205,7 @@ const Homepage = () => {
         ) : (
           <div>
             <Header />
+            {/*
             {shop && installed === false && (
               <div className="shopify-welcomeDiv">
                 <span
@@ -437,6 +438,7 @@ const Homepage = () => {
                 </div>
               </div>
             )}
+              */}
             <div className="container">
               <section className="hero">
                 <div className="hero-text">
