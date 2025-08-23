@@ -995,7 +995,7 @@ app.get('/shopify/install', async (req, res) => {
 
 
 
-app.get('/shopify/callback', async (req, res) => {
+app.get('/shopify/callback', async (req, res, next) => {
   try {
     // Step 1: Complete OAuth
     const result = await shopify.auth.callback({
@@ -1013,89 +1013,76 @@ app.get('/shopify/callback', async (req, res) => {
     const accessToken = session.accessToken;
     const host = req.query.host;
 
-    // ✅ Step 2: IMMEDIATE REDIRECT (Shopify bot only cares about this)
-    const redirectUrl = `https://admin.shopify.com/store/${shop.replace(
-      '.myshopify.com',
-      ''
-    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}&shopifyUser=true`;
+    // ---- Step 2: Fetch shop details from Shopify
+    const client = new shopify.clients.Rest({ session });
+    const response = await client.get({ path: 'shop' });
+    const shopData = response?.body?.shop || {};
+    const email = shopData.email || shop;
+    const username = shopData.name || shop;
 
-    res.redirect(302, redirectUrl);
+    // ---- Step 3: Create/update local user
+    const rawKey = Math.random().toString(36).slice(-8);
+    const toEncryptKey = uuidv4();
+    const encryptedKey = encryptApiKey(toEncryptKey);
+    const hashedPassword = await bcrypt.hash(rawKey, 10);
 
-    // 🚀 Continue async setup AFTER redirect is sent
-    (async () => {
+    let [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user;
+
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+      await pool.query(`
+        UPDATE users
+        SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
+        WHERE user_id = ?
+      `, [shop, accessToken, user.user_id]);
+    } else {
+      await pool.query(`
+        INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
+      `, [username, email, hashedPassword, encryptedKey, shop, accessToken]);
+
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+    }
+
+    // ---- Step 4: Log user in with Passport BEFORE redirect
+    req.logIn(user, async (err) => {
+      if (err) {
+        console.error("❌ Failed to log in user:", err);
+        return next(err);
+      }
+
       try {
-        const client = new shopify.clients.Rest({ session });
-        const response = await client.get({ path: 'shop' });
-        const shopData = response?.body?.shop || {};
-        const email = shopData.email || shop;
-        const username = shopData.name || shop;
-
-        const rawKey = Math.random().toString(36).slice(-8);
-        const toEncryptKey = uuidv4();
-        const encryptedKey = encryptApiKey(toEncryptKey);
-        const hashedPassword = await bcrypt.hash(rawKey, 10);
-
-        let [existingUser] = await pool.query(
-          "SELECT * FROM users WHERE email = ?",
-          [email]
-        );
-
-        let user;
-        if (existingUser.length > 0) {
-          user = existingUser[0];
-          await pool.query(
-            `UPDATE users
-             SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
-             WHERE user_id = ?`,
-            [shop, accessToken, user.user_id]
-          );
-        } else {
-          await pool.query(
-            `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [username, email, hashedPassword, encryptedKey, shop, accessToken]
-          );
-
-          const [newUserResult] = await pool.query(
-            "SELECT * FROM users WHERE email = ?",
-            [email]
-          );
-          user = newUserResult[0];
-        }
-
-        // Async login
-        req.logIn(user, (err) => {
-          if (err) console.error("❌ Failed to log in user:", err);
-        });
-
-        // Store session + GDPR webhooks
+        // Store Shopify session + GDPR hooks
         const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
 
         // Track install
-        await pool.query(
-          `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-           VALUES (?, ?, ?, NOW())
-           ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)`,
-          [shop, accessToken, user.user_id]
-        );
-
-        console.log(`✅ Setup complete for ${shop}`);
+        await pool.query(`
+          INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+          VALUES (?, ?, ?, NOW())
+          ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
+        `, [shop, accessToken, user.user_id]);
       } catch (innerErr) {
-        console.error("❌ Post-redirect setup error:", innerErr);
+        console.error("❌ Post-login setup error:", innerErr);
       }
-    })();
+
+      // ---- Step 5: Redirect IMMEDIATELY (Shopify bot requires this)
+      const redirectUrl = `https://admin.shopify.com/store/${shop.replace(
+        '.myshopify.com',
+        ''
+      )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}&shopifyUser=true`;
+
+      return res.redirect(302, redirectUrl);
+    });
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
-
 
 
 
