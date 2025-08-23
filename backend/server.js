@@ -1077,7 +1077,6 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
-
 app.get('/app', async (req, res) => {
   const shop = req.query.shop;
   const host = req.query.host;
