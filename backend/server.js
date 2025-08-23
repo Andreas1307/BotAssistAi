@@ -1044,11 +1044,7 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    req.logIn(user, async (err) => {
-      if (err) {
-        console.error("❌ Failed to log in user:", err);
-      }
-    });
+  
     
     // Step 4: Store Shopify session + GDPR webhooks
     const { storeCallback } = require('./sessionStorage');
@@ -1069,7 +1065,11 @@ app.get('/shopify/callback', async (req, res) => {
     )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}&shopifyUser=true`;
     
     return res.redirect(302, redirectUrl);
-    
+      req.logIn(user, async (err) => {
+      if (err) {
+        console.error("❌ Failed to log in user:", err);
+      }
+    });
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
