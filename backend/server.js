@@ -996,6 +996,7 @@ app.get('/shopify/install', async (req, res) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
+    // Finish OAuth
     const result = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1009,18 +1010,22 @@ app.get('/shopify/callback', async (req, res) => {
 
     const shop = session.shop;
     const accessToken = session.accessToken;
-    const host = req.query.host;
+    const host = req.query.host; // host param passed by Shopify
 
+    // --------- DB: find or create local user (synchronous to ensure login works)
     const client = new shopify.clients.Rest({ session });
-    const shopData = (await client.get({ path: 'shop' })).body.shop;
-    const email = shopData.email || shop;
-    const username = shopData.name || shop;
+    const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
+    const email = shopInfo.email || shop;
+    const username = shopInfo.name || shop;
 
-    let [existingUser] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    // Find existing user
+    let [[existingUserRow]] = await pool.query("SELECT * FROM users WHERE email = ?", [email])
+      .catch(e => [ [] ]);
+    // Note: if your pool returns differently, adjust destructuring accordingly.
+
     let user;
-
-    if (existingUser.length > 0) {
-      user = existingUser[0];
+    if (existingUserRow && existingUserRow.user_id) {
+      user = existingUserRow;
       await pool.query(`
         UPDATE users
         SET shopify_shop_domain = ?, shopify_access_token = ?, shopify_installed_at = NOW()
@@ -1041,33 +1046,46 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // Log user in BEFORE redirect
+    // --------- Passport login: must finish before redirect so cookie is set
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
-        resolve();
+        // ensure session persisted to store and cookie flushed
+        req.session.save((saveErr) => {
+          if (saveErr) return reject(saveErr);
+          resolve();
+        });
       });
     });
 
-    // Store Shopify session + GDPR hooks
+    // --------- Store Shopify session + register webhooks (can be async but ok to run here)
     const { storeCallback } = require('./sessionStorage');
     await storeCallback(session);
-    await registerGdprWebhooks(session, shop);
+    await registerGdprWebhooks(session, shop).catch(e => console.error('gdpr register failed', e));
 
-    // Track install
-    await pool.query(`
-      INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-      VALUES (?, ?, ?, NOW())
-      ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
-    `, [shop, accessToken, user.user_id]);
+    // --------- Install tracking (async)
+    (async () => {
+      try {
+        await pool.query(`
+          INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+          VALUES (?, ?, ?, NOW())
+          ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
+        `, [shop, accessToken, user.user_id]);
+      } catch (e) {
+        console.error('install tracking failed', e);
+      }
+    })();
 
-    // Redirect to your app route (users are now logged in)
-    return res.redirect(`/app?shop=${shop}&host=${host}`);
+    // --------- Final: redirect into Shopify Admin embedded app (immediate 302)
+    const embeddedAppUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&shopifyUser=true`;
+    return res.redirect(302, embeddedAppUrl);
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 app.get('/app', async (req, res) => {
   const shop = req.query.shop;
@@ -1097,7 +1115,6 @@ app.get('/app', async (req, res) => {
     </script>
   `);
 });
-
 
 
 
