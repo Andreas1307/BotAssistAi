@@ -34,6 +34,7 @@ const encryptionKey = Buffer.from(keyString, 'hex');
 const ivLength = 16;
 const axios = require('axios');
 const chrono = require('chrono-node');
+const jwt = require('jsonwebtoken');
 const pool = createPool({
 host: process.env.DATABASE_HOST,
 user: process.env.DATABASE_USER,
@@ -979,7 +980,6 @@ app.get('/shopify/install', async (req, res) => {
     const shop = req.query.shop;
     if (!shop) return res.status(400).send('Missing shop');
 
-    // Begin OAuth — automatically redirects to Shopify grant page
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
@@ -993,7 +993,7 @@ app.get('/shopify/install', async (req, res) => {
   }
 });
 
-// Step 2: Callback — finish OAuth, immediately redirect back to embedded app
+// Step 2: Callback — finish OAuth, immediately redirect with auto-login token
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
@@ -1009,76 +1009,94 @@ app.get('/shopify/callback', async (req, res) => {
     const shop = session.shop;
     const host = req.query.host;
 
-    // Redirect merchant immediately to embedded app
+    // Fetch merchant info to create local user
+    const client = new shopify.clients.Rest({ session });
+    const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
+    const email = shopInfo.email || shop;
+    const username = shopInfo.name || shop;
+
+    // Create or update user in DB
+    let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user;
+    if (existing.length > 0) {
+      user = existing[0];
+      await pool.query(
+        `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
+        [shop, session.accessToken, user.user_id]
+      );
+    } else {
+      const rawKey = Math.random().toString(36).slice(-8);
+      const toEncryptKey = uuidv4();
+      const encryptedKey = encryptApiKey(toEncryptKey);
+      const hashedPassword = await bcrypt.hash(rawKey, 10);
+
+      await pool.query(
+        `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
+         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+        [username, email, hashedPassword, encryptedKey, shop, session.accessToken]
+      );
+
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      user = newUserResult[0];
+    }
+
+    // --- Create short-lived JWT for auto-login
+    const token = jwt.sign({ userId: user.user_id }, process.env.JWT_SECRET, { expiresIn: '5m' });
+
+    // --- Immediate redirect to embedded app with auto-login token
     const embeddedAppUrl = `https://admin.shopify.com/store/${shop.replace(
-      '.myshopify.com',
-      ''
-    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host)}`;
+      '.myshopify.com', ''
+    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&autoLoginToken=${token}`;
 
     res.redirect(302, embeddedAppUrl);
 
-    // Post-redirect tasks: create/update user, store Shopify session, webhooks
+    // --- Background tasks (async, post-redirect)
     (async () => {
       try {
-        const client = new shopify.clients.Rest({ session });
-        const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
-        const email = shopInfo.email || shop;
-        const username = shopInfo.name || shop;
-
-        // DB: find or create user
-        let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-        let user;
-        if (existing.length > 0) {
-          user = existing[0];
-          await pool.query(
-            `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
-            [shop, session.accessToken, user.user_id]
-          );
-        } else {
-          const rawKey = Math.random().toString(36).slice(-8);
-          const toEncryptKey = uuidv4();
-          const encryptedKey = encryptApiKey(toEncryptKey);
-          const hashedPassword = await bcrypt.hash(rawKey, 10);
-
-          await pool.query(
-            `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [username, email, hashedPassword, encryptedKey, shop, session.accessToken]
-          );
-        }
-
-        // Store session + register GDPR webhooks
         const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
-
-        // Track install
         await pool.query(
           `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
            VALUES (?, ?, ?, NOW())
            ON DUPLICATE KEY UPDATE access_token=VALUES(access_token), user_id=VALUES(user_id)`,
           [shop, session.accessToken, user.user_id]
         );
-
-        console.log(`✅ Setup complete for ${shop}`);
       } catch (err) {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
 
-// Step 3: Embedded app route
-app.get('/app', (req, res) => {
-  const shop = req.query.shop;
-  const host = req.query.host;
+app.get('/app', async (req, res) => {
+  const { shop, host, autoLoginToken } = req.query;
   if (!shop || !host) return res.status(400).send('Missing shop or host');
 
+  // Auto-login if token present
+  if (autoLoginToken) {
+    try {
+      const decoded = jwt.verify(autoLoginToken, process.env.JWT_SECRET);
+      const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [decoded.userId]);
+      if (rows.length > 0) {
+        await new Promise((resolve, reject) => {
+          req.logIn(rows[0], (err) => {
+            if (err) return reject(err);
+            req.session.save(reject);
+            resolve();
+          });
+        });
+      }
+    } catch (err) {
+      console.error('❌ Auto-login token invalid', err);
+    }
+  }
+
+  // Render embedded app using App Bridge
   res.set('Content-Type', 'text/html');
   res.send(`
     <script src="https://unpkg.com/@shopify/app-bridge"></script>
