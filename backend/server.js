@@ -974,8 +974,8 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 // Step 1: Install — redirect to Shopify OAuth grant page
+
 app.get('/shopify/install', async (req, res) => {
   try {
     const shop = req.query.shop;

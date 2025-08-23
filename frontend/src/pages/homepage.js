@@ -85,6 +85,15 @@ const Homepage = () => {
         });
         console.log("✅ Backend says installed:", res.data.installed);
         setInstalled(res.data.installed);
+        if (!res.data.installed) {
+          const response = await axios.post(`/chatbot-config-shopify`, {
+            shop: shopParam,
+            colors,
+          });
+          if (response.data.data === true) {
+            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+          }
+        }
       } catch (e) {
         console.error("❌ Error checking install status:", e);
         setInstalled(false); // fallback if backend call fails
@@ -94,6 +103,8 @@ const Homepage = () => {
     checkShop();
   }, []);
 
+
+  /*
   const redirectToInstall = async (shop) => {
     if (!shop) return;
     try {
@@ -109,7 +120,7 @@ const Homepage = () => {
     }
    
   };
-  
+  */
   
   
    
