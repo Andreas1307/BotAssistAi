@@ -995,9 +995,9 @@ app.get('/shopify/install', async (req, res) => {
 
 
 
-app.get('/shopify/callback', async (req, res, next) => {
+app.get('/shopify/callback', async (req, res) => {
   try {
-    // Complete OAuth
+    // Step 1: Complete OAuth
     const result = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1013,7 +1013,7 @@ app.get('/shopify/callback', async (req, res, next) => {
     const accessToken = session.accessToken;
     const host = req.query.host;
 
-    // --- Step 1: Do DB + session setup FIRST
+    // Step 2: Do DB + session setup
     const client = new shopify.clients.Rest({ session });
     const response = await client.get({ path: 'shop' });
     const shopData = response?.body?.shop || {};
@@ -1045,7 +1045,6 @@ app.get('/shopify/callback', async (req, res, next) => {
       user = newUserResult[0];
     }
 
-    // --- Step 2: Log user in BEFORE redirect
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1053,21 +1052,25 @@ app.get('/shopify/callback', async (req, res, next) => {
       });
     });
 
-    // --- Step 3: Store session + GDPR hooks
+    // Step 3: Store session + GDPR hooks
     const { storeCallback } = require('./sessionStorage');
     await storeCallback(session);
     await registerGdprWebhooks(session, shop);
 
-    // --- Step 4: Track install
+    // Step 4: Track install
     await pool.query(`
       INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
       VALUES (?, ?, ?, NOW())
       ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
     `, [shop, accessToken, user.user_id]);
 
-    // --- Step 5: IMMEDIATE REDIRECT to embedded app
-    const redirectUrl = `/app?shop=${shop}&host=${host}&shopifyUser=true`;
-    res.redirect(302, redirectUrl);
+    // Step 5: **Directly redirect to embedded app URL** — THIS PASSES THE CHECK
+    const embeddedUrl = `https://admin.shopify.com/store/${shop.replace(
+      '.myshopify.com',
+      ''
+    )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}&shopifyUser=true`;
+
+    return res.redirect(302, embeddedUrl);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1075,7 +1078,6 @@ app.get('/shopify/callback', async (req, res, next) => {
   }
 });
 
-// Serve your embedded app UI
 app.get('/app', async (req, res) => {
   const shop = req.query.shop;
   const host = req.query.host;
