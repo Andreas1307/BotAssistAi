@@ -994,7 +994,6 @@ app.get('/shopify/install', async (req, res) => {
   }
 });
 
-// Step 2: Callback — finish OAuth and log in merchant immediately
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
@@ -1067,10 +1066,11 @@ res.send(`
     const redirect = actions.Redirect.create(app);
     redirect.dispatch(
       actions.Redirect.Action.APP,
-      '/dashboard'
+      '/app?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
     );
   </script>
 `);
+
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
@@ -1095,7 +1095,6 @@ res.send(`
   }
 });
 
-// Step 3: Embedded app route
 app.get('/app', (req, res) => {
   const { shop, host } = req.query;
   if (!shop || !host) return res.status(400).send('Missing shop or host');
