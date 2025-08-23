@@ -91,7 +91,7 @@ const Homepage = () => {
             colors,
           });
           if (response.data.data === true) {
-            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shop}`;
+            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
           }
         }
       } catch (e) {
