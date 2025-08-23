@@ -997,7 +997,7 @@ app.get('/shopify/install', async (req, res) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-    // Complete OAuth
+    // Step 1: Complete OAuth
     const result = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1013,7 +1013,7 @@ app.get('/shopify/callback', async (req, res) => {
     const accessToken = session.accessToken;
     const host = req.query.host;
 
-    // Do DB + session setup BEFORE redirect
+    // Step 2: Do DB + session setup BEFORE redirect
     const client = new shopify.clients.Rest({ session });
     const shopData = (await client.get({ path: 'shop' })).body.shop;
     const email = shopData.email || shop;
@@ -1044,7 +1044,7 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // Log the user in BEFORE redirect
+    // Step 3: Log the user in BEFORE redirect
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1052,19 +1052,24 @@ app.get('/shopify/callback', async (req, res) => {
       });
     });
 
-    // Store Shopify session + GDPR webhooks
-    const { storeCallback } = require('./sessionStorage');
-    await storeCallback(session);
-    await registerGdprWebhooks(session, shop);
+    // Step 4: Async background tasks (GDPR webhooks, tracking)
+    (async () => {
+      try {
+        const { storeCallback } = require('./sessionStorage');
+        await storeCallback(session);
+        await registerGdprWebhooks(session, shop);
 
-    // Track install
-    await pool.query(`
-      INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
-      VALUES (?, ?, ?, NOW())
-      ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
-    `, [shop, accessToken, user.user_id]);
+        await pool.query(`
+          INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
+          VALUES (?, ?, ?, NOW())
+          ON DUPLICATE KEY UPDATE access_token = VALUES(access_token), user_id = VALUES(user_id)
+        `, [shop, accessToken, user.user_id]);
+      } catch (err) {
+        console.error("❌ Post-redirect setup error:", err);
+      }
+    })();
 
-    // ✅ Immediate redirect to embedded app (Shopify bot requirement)
+    // Step 5: Immediate redirect to embedded app (Shopify bot requirement)
     const embeddedAppUrl = `https://admin.shopify.com/store/${shop.replace(
       '.myshopify.com', ''
     )}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${host}&shopifyUser=true`;
@@ -1076,6 +1081,7 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 app.get('/app', async (req, res) => {
   const shop = req.query.shop;
