@@ -128,7 +128,7 @@
     const satisfactionDiv = document.createElement("div");
     satisfactionDiv.style.cssText = `
       position: absolute;
-      bottom: 30px;
+      bottom: 35px;
       left: 0;
       width: 100%;
       display: none;
@@ -150,7 +150,7 @@
     buttonsDiv.style.cssText = `
       display: flex;
       gap: 15px;
-      margin-top: -10px;
+      margin-top: -14px;
     `;
   
     const likeButton = document.createElement("button");
