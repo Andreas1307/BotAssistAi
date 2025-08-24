@@ -1046,14 +1046,14 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Render App Bridge redirect page (no token generated here)
+    // --- Redirect to your app (Shopify embedded app expects App Bridge redirect)
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Redirecting...</title>
+          <title>Installing...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
         </head>
         <body>
@@ -1074,6 +1074,18 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
+
+    // --- Background async tasks
+    (async () => {
+      try {
+        const { storeCallback } = require('./sessionStorage');
+        await storeCallback(session);
+        await registerGdprWebhooks(session, shop);
+        console.log(`✅ Setup complete for ${shop}`);
+      } catch (err) {
+        console.error('❌ Post-redirect setup error:', err);
+      }
+    })();
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
