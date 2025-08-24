@@ -1038,6 +1038,19 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
+    // --- Log the user in via Passport BEFORE redirect
+    await new Promise((resolve, reject) => {
+      req.logIn(user, (err) => {
+        if (err) return reject(err);
+        req.session.save((saveErr) => {
+          if (saveErr) return reject(saveErr);
+          resolve();
+        });
+      });
+    });
+
+    console.log(`✅ User ${user.email} logged in`);
+
     // --- Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
@@ -1046,7 +1059,19 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Redirect to your app (Shopify embedded app expects App Bridge redirect)
+    // --- Async background tasks
+    (async () => {
+      try {
+        const { storeCallback } = require('./sessionStorage');
+        await storeCallback(session);
+        await registerGdprWebhooks(session, shop);
+        console.log(`✅ Setup complete for ${shop}`);
+      } catch (err) {
+        console.error('❌ Post-redirect setup error:', err);
+      }
+    })();
+
+    // --- Redirect via App Bridge
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
@@ -1075,23 +1100,12 @@ app.get('/shopify/callback', async (req, res) => {
       </html>
     `);
 
-    // --- Background async tasks
-    (async () => {
-      try {
-        const { storeCallback } = require('./sessionStorage');
-        await storeCallback(session);
-        await registerGdprWebhooks(session, shop);
-        console.log(`✅ Setup complete for ${shop}`);
-      } catch (err) {
-        console.error('❌ Post-redirect setup error:', err);
-      }
-    })();
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 
 
