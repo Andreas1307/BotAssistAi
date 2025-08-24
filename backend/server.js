@@ -1065,7 +1065,21 @@ app.get('/shopify/callback', async (req, res) => {
         const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
-        console.log(`✅ Setup complete for ${shop}`);
+
+        // --- Register ScriptTag to load chatbot on storefront
+        const scriptClient = new shopify.clients.Rest({ session });
+        await scriptClient.post({
+          path: "script_tags",
+          data: {
+            script_tag: {
+              event: "onload",
+              src: `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`,
+            },
+          },
+          type: "application/json",
+        });
+
+        console.log(`✅ Setup complete & ScriptTag installed for ${shop}`);
       } catch (err) {
         console.error('❌ Post-redirect setup error:', err);
       }
