@@ -128,7 +128,7 @@
     const satisfactionDiv = document.createElement("div");
     satisfactionDiv.style.cssText = `
       position: absolute;
-      bottom: 35px;
+      bottom: 30px;
       left: 0;
       width: 100%;
       display: none;
@@ -264,7 +264,7 @@
     const submit = document.createElement("div");
     submit.style.cssText = `
         width: 100%;
-        max-height: 42px;
+        max-height: 43px;
   display: flex;
   background: var(--ai-input);
   border-top: 1px solid var(--ai-border);
