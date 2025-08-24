@@ -150,6 +150,7 @@
     buttonsDiv.style.cssText = `
       display: flex;
       gap: 15px;
+      margin-top: -10px;
     `;
   
     const likeButton = document.createElement("button");
