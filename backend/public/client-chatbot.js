@@ -264,7 +264,7 @@
     const submit = document.createElement("div");
     submit.style.cssText = `
         width: 100%;
-        max-height: 40px;
+        max-height: 42px;
   display: flex;
   background: var(--ai-input);
   border-top: 1px solid var(--ai-border);
