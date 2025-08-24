@@ -1038,18 +1038,8 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- Log the user in
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => {
-        if (err) return reject(err);
-        req.session.save((saveErr) => {
-          if (saveErr) return reject(saveErr);
-          resolve();
-        });
-      });
-    });
-
-    console.log(`✅ User ${user.email} logged in`);
+    // --- Generate Shopify session token for frontend (JWT)
+    const token = await shopify.auth.SessionToken.create(session);
 
     // --- Save install info
     await pool.query(
@@ -1059,19 +1049,7 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Background tasks
-    (async () => {
-      try {
-        const { storeCallback } = require('./sessionStorage');
-        await storeCallback(session);
-        await registerGdprWebhooks(session, shop);
-        console.log(`✅ Setup complete for ${shop}`);
-      } catch (err) {
-        console.error('❌ Post-redirect setup error:', err);
-      }
-    })();
-
-    // --- Render landing page WITH App Bridge redirect
+    // --- Render landing page WITH token and App Bridge redirect
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
@@ -1089,6 +1067,8 @@ app.get('/shopify/callback', async (req, res) => {
           <h2>✅ App installed successfully</h2>
           <p class="loader">Redirecting you to your dashboard...</p>
           <script>
+            window.SHOPIFY_TOKEN = "${token}"; // <-- pass token to frontend
+
             document.addEventListener("DOMContentLoaded", function() {
               const AppBridge = window['app-bridge'].default;
               const actions = window['app-bridge'].actions;
@@ -1113,6 +1093,7 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 
 
