@@ -1038,9 +1038,6 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- Generate Shopify session token for frontend (JWT)
-    const token = await shopify.auth.SessionToken.create(session);
-
     // --- Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
@@ -1049,40 +1046,30 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Render landing page WITH token and App Bridge redirect
+    // --- Render App Bridge redirect page (no token generated here)
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Installing...</title>
+          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
-          <style>
-            body { font-family: sans-serif; text-align: center; padding: 50px; }
-            .loader { font-size: 18px; color: #444; }
-          </style>
         </head>
         <body>
-          <h2>✅ App installed successfully</h2>
-          <p class="loader">Redirecting you to your dashboard...</p>
           <script>
-            window.SHOPIFY_TOKEN = "${token}"; // <-- pass token to frontend
-
-            document.addEventListener("DOMContentLoaded", function() {
-              const AppBridge = window['app-bridge'].default;
-              const actions = window['app-bridge'].actions;
-              const app = AppBridge({
-                apiKey: '${process.env.SHOPIFY_API_KEY}',
-                host: '${host}',
-                forceRedirect: true
-              });
-              const redirect = actions.Redirect.create(app);
-              redirect.dispatch(
-                actions.Redirect.Action.APP,
-                '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-              );
+            const AppBridge = window['app-bridge'].default;
+            const actions = window['app-bridge'].actions;
+            const app = AppBridge({
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              host: '${host}',
+              forceRedirect: true
             });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
           </script>
         </body>
       </html>
@@ -1093,6 +1080,7 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 
 
