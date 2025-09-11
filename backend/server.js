@@ -1036,6 +1036,15 @@ app.get('/shopify/callback', async (req, res) => {
 
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
+/*
+      try {
+        await handleSendNewUserEmail(rawKey, email);
+      } catch (err) {
+        console.error("❌ Failed to send new user email:", err);
+      }
+
+      SA FAC UPDATE DACA VREAU
+        */
     }
 
     // --- Log the user in via Passport BEFORE redirect
@@ -3499,15 +3508,7 @@ app.get(
 
 
 
-app.post("/logout", (req, res) => {
-req.logout((err) => {
-  if (err) return res.status(500).json({ error: "Logout failed" });
-  req.session.destroy(() => {
-    res.clearCookie("connect.sid");
-    return res.json({ message: "Logged out successfully" });
-  });
-});
-});
+ 
 
 
 

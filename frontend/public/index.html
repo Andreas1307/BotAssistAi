@@ -5,16 +5,8 @@
 
 
 
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
-      const host = params.get("host");
-      const isEmbedded = window.top !== window.self;
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 
-      if (isEmbedded && shop && host) {
-        document.write('<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"><\/script>');
-      }
-    </script>
 
 
 
