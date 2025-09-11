@@ -18,7 +18,8 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
-import { getSessionToken, createApp } from "@shopify/app-bridge-utils";
+import createApp from "@shopify/app-bridge";
+import { getSessionToken } from "@shopify/app-bridge-utils";
 import useShopifyInstallRedirect from "../utils/dash-redirect"
 import {
   fetchWithAuth,
