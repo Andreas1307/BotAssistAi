@@ -243,8 +243,6 @@ const Dashboard = () => {
   
   */
 
- 
-  
   // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
@@ -255,6 +253,8 @@ const Dashboard = () => {
         })
         if(response.data.message.subscription_plan === "Pro") {
           setMembership(true)
+        } else if (response.data.message.subscription_plan === "Free" && response.data.message.shopify_access_token) {
+          alert("hello hello")
         } else {
           setMembership(false)
         }

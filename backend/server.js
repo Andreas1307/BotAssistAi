@@ -2191,7 +2191,7 @@ if(!userId) {
   return res.status(404).json({ message: "Invalid credentials"})
 }
 try {
-  const [rows] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [userId])
+  const [rows] = await pool.query("SELECT subscription_plan, shopify_access_token FROM users WHERE user_id = ?", [userId])
   return res.status(200).json({ message: rows[0] })
 } catch(e) {
   console.log("Error occured with retreving membership", e)

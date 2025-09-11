@@ -16,7 +16,7 @@ export async function initShopifyAppBridge() {
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true, // usually true inside embedded apps
+    forceRedirect: true, 
   });
 
   window.appBridge = app;
