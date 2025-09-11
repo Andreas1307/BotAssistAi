@@ -2199,6 +2199,89 @@ try {
 }
 })
 
+
+
+
+app.post('/create-shopify-charge', async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
+    if (rows.length === 0) return res.status(404).send("User not found");
+
+    const user = rows[0];
+    if (!user.shopify_access_token) return res.status(400).send("No Shopify token");
+
+    const shop = user.shopify_shop_domain;
+    const token = user.shopify_access_token;
+
+    // Create recurring charge
+    const response = await axios.post(
+      `https://${shop}/admin/api/2023-10/recurring_application_charges.json`,
+      {
+        recurring_application_charge: {
+          name: "BotAssist Pro Plan",
+          price: 19.99,
+          return_url: `https://api.botassistai.com/billing/callback?userId=${userId}`,
+          test: true 
+        }
+      },
+      { headers: { "X-Shopify-Access-Token": token } }
+    );
+
+    const confirmationUrl = response.data.recurring_application_charge.confirmation_url;
+    res.json({ confirmationUrl });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error creating Shopify charge");
+  }
+});
+
+
+app.get('/billing/callback', async (req, res) => {
+  try {
+    const { charge_id, userId } = req.query;
+
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
+    if (rows.length === 0) return res.status(404).send("User not found");
+
+    const user = rows[0];
+    const shop = user.shopify_shop_domain;
+    const token = user.shopify_access_token;
+
+    await axios.post(
+      `https://${shop}/admin/api/2023-10/recurring_application_charges/${charge_id}/activate.json`,
+      {},
+      { headers: { "X-Shopify-Access-Token": token } }
+    );
+
+    await pool.query(
+      "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
+      [userId]
+    );
+
+    res.redirect(`https://botassistai.com`);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Billing callback failed");
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const dailyConversations = async (userId) => {
   if (!userId) {
     throw new Error("Missing userId parameter.");

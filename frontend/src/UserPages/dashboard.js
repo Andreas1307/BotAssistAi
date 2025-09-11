@@ -254,7 +254,13 @@ const Dashboard = () => {
         if(response.data.message.subscription_plan === "Pro") {
           setMembership(true)
         } else if (response.data.message.subscription_plan === "Free" && response.data.message.shopify_access_token) {
-          alert("hello hello")
+          const createCharge = async () => {
+            const res = await axios.post(`${directory}/create-shopify-charge`, { userId: user.user_id });
+            if(res.data.confirmationUrl) {
+              window.location.href = res.data.confirmationUrl;
+            }
+          }
+          createCharge();
         } else {
           setMembership(false)
         }
