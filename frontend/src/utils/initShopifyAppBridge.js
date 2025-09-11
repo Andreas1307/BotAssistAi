@@ -1,3 +1,5 @@
+import createApp from "@shopify/app-bridge";
+
 export async function initShopifyAppBridge() {
   const urlParams = new URLSearchParams(window.location.search);
   const shop = urlParams.get("shop");
