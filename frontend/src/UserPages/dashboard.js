@@ -246,71 +246,66 @@ const Dashboard = () => {
   
   */
 
-// FETCH MEMBERSHIP
-useEffect(() => {
-  const fetchMembership = async () => {
-    if (!user) return;
 
-    try {
-      const response = await axios.get(`${directory}/get-membership`, {
-        params: { userId: user.user_id },
-      });
 
-      console.log("Membership response:", response.data); // Debug
-
-      const membershipData = response.data?.message;
-
-      if (!membershipData) {
-        console.error("No membership data found");
-        setMembership(false);
-        return;
-      }
-
-      if (membershipData.subscription_plan === "Pro") {
-        setMembership(true);
-      } else if (
-        membershipData.subscription_plan === "Free" &&
-        membershipData.shopify_access_token
-      ) {
-        const res = await axios.post(`${directory}/create-subscription2`, {
-          userId: user.user_id,
+  
+  useEffect(() => {
+    const fetchMembership = async () => {
+      if (!user) return;
+  
+      try {
+        const response = await axios.get(`${directory}/get-membership`, {
+          params: { userId: user.user_id },
         });
-
-        console.log("Create subscription response:", res.data); // Debug
-        const confirmationUrl = res.data.confirmationUrl;
-
-        if (confirmationUrl) {
-          // ✅ Make sure host is properly retrieved from Shopify query params
-          const urlParams = new URLSearchParams(window.location.search);
-          const host = urlParams.get("host");
-
-          if (!host) {
-            console.error("Shopify host parameter missing!");
-            showErrorNotification();
-            return;
-          }
-
-          const app = createApp({
-            apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-            host, // ✅ Must be provided
-            forceRedirect: true,
-          });
-
-          const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // Opens Shopify billing outside iframe
+  
+        const membershipData = response.data?.message;
+  
+        if (!membershipData) {
+          setMembership(false);
+          return;
         }
-      } else {
-        setMembership(false);
+  
+        if (membershipData.subscription_plan === "Pro") {
+          setMembership(true);
+        } else if (
+          membershipData.subscription_plan === "Free" &&
+          membershipData.shopify_access_token
+        ) {
+          const res = await axios.post(`${directory}/create-subscription2`, {
+            userId: user.user_id,
+          });
+  
+          const confirmationUrl = res.data.confirmationUrl;
+          if (!confirmationUrl) return;
+  
+          const isEmbedded = window.top !== window.self;
+          const host = new URLSearchParams(window.location.search).get("host");
+  
+          if (isEmbedded && host) {
+            // Inside Shopify iframe → use App Bridge
+            const app = createApp({
+              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+              host,
+              forceRedirect: true,
+            });
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+          } else {
+            // Outside iframe → fallback
+            window.location.href = confirmationUrl;
+          }
+        } else {
+          setMembership(false);
+        }
+      } catch (e) {
+        console.error("Error retrieving membership status:", e);
+        showErrorNotification();
       }
-    } catch (e) {
-      console.error("Error retrieving membership status:", e);
-      showErrorNotification();
-    }
-  };
-
-  fetchMembership();
-}, [user]);
-
+    };
+  
+    fetchMembership();
+  }, [user]);
+  
 
   
   //FETCH USER
