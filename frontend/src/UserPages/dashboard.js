@@ -247,50 +247,61 @@ const Dashboard = () => {
   */
 
 
-
-
- useEffect(() => {
-  const fetchMembership = async () => {
-    if (!user) return;
-
-    try {
-      const response = await axios.get(`${directory}/get-membership`, {
-        params: { userId: user.user_id },
-      });
-
-      const membershipData = response.data?.message;
-
-      if (!membershipData) {
-        setMembership(false);
-        return;
-      }
-
-      if (membershipData.subscription_plan === "Pro") {
-        setMembership(true);
-      } else if (
-        membershipData.subscription_plan === "Free" &&
-        membershipData.shopify_access_token
-      ) {
-        const res = await axios.post(`${directory}/create-subscription2`, {
-          userId: user.user_id,
+  useEffect(() => {
+    const fetchMembership = async () => {
+      if (!user) return;
+  
+      try {
+        const response = await axios.get(`${directory}/get-membership`, {
+          params: { userId: user.user_id },
         });
-
-        const confirmationUrl = res.data.confirmationUrl;
-        if (!confirmationUrl) return;
-
-        // ✅ Always open billing outside iframe
-        window.top.location.href = confirmationUrl;
-      } else {
-        setMembership(false);
+  
+        const membershipData = response.data?.message;
+  
+        if (!membershipData) {
+          setMembership(false);
+          return;
+        }
+  
+        if (membershipData.subscription_plan === "Pro") {
+          setMembership(true);
+        } else if (
+          membershipData.subscription_plan === "Free" &&
+          membershipData.shopify_access_token
+        ) {
+          const res = await axios.post(`${directory}/create-subscription2`, {
+            userId: user.user_id,
+          });
+  
+          const confirmationUrl = res.data.confirmationUrl;
+          if (!confirmationUrl) return;
+  
+          const host = new URLSearchParams(window.location.search).get("host");
+  
+          if (window.top !== window.self && host) {
+            // ✅ Embedded app → use App Bridge
+            const app = createApp({
+              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+              host,
+            });
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+          } else {
+            // ✅ Non-embedded → fallback
+            window.location.href = confirmationUrl;
+          }
+        } else {
+          setMembership(false);
+        }
+      } catch (e) {
+        console.error("Error retrieving membership status:", e);
+        showErrorNotification();
       }
-    } catch (e) {
-      console.error("Error retrieving membership status:", e);
-      showErrorNotification();
-    }
-  };
-
-  fetchMembership();
-}, [user]);
+    };
+  
+    fetchMembership();
+  }, [user]);
+  
   
 
   
