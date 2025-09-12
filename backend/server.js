@@ -2202,30 +2202,56 @@ try {
 
 
 
-app.post("/create-shopify-charge", async (req, res) => {
+app.post("/create-subscription", async (req, res) => {
   try {
     const { userId } = req.body;
 
+    // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
     const user = rows[0];
-    if (!user.shopify_access_token) return res.status(400).send("No Shopify token");
-
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
 
-    // ✅ Correct axios call with backticks
-    const response = await axios.post(
-      `https://${shop}/admin/api/2023-10/recurring_application_charges.json`,
-      {
-        recurring_application_charge: {
-          name: "BotAssist Pro Plan",
-          price: 19.99,
-          return_url: `https://api.botassistai.com/billing/callback?userId=${userId}`,
-          test: true, // remove this in production
+    // GraphQL mutation
+    const query = `
+      mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
+          userErrors {
+            field
+            message
+          }
+          appSubscription {
+            id
+            name
+          }
+          confirmationUrl
+        }
+      }
+    `;
+
+    const variables = {
+      name: "BotAssist Pro Plan",
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
+      lineItems: [
+        {
+          plan: {
+            appRecurringPricingDetails: {
+              price: {
+                amount: 19.99,
+                currencyCode: "USD",
+              },
+              interval: "EVERY_30_DAYS",
+            },
+          },
         },
-      },
+      ],
+    };
+
+    const response = await axios.post(
+      `https://${shop}/admin/api/2025-01/graphql.json`,
+      { query, variables },
       {
         headers: {
           "X-Shopify-Access-Token": token,
@@ -2234,11 +2260,20 @@ app.post("/create-shopify-charge", async (req, res) => {
       }
     );
 
-    const confirmationUrl = response.data.recurring_application_charge.confirmation_url;
+    const { data } = response.data;
+    const errors = data.appSubscriptionCreate.userErrors;
+
+    if (errors.length > 0) {
+      console.error("Shopify errors:", errors);
+      return res.status(400).json({ errors });
+    }
+
+    const confirmationUrl = data.appSubscriptionCreate.confirmationUrl;
     res.json({ confirmationUrl });
+
   } catch (err) {
-    console.error("❌ Error creating Shopify charge:", err.response?.data || err.message);
-    res.status(500).send("Error creating Shopify charge");
+    console.error("❌ Error creating subscription:", err.response?.data || err.message);
+    res.status(500).send("Failed to create subscription");
   }
 });
 
