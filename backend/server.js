@@ -1253,48 +1253,7 @@ app.post("/paypal/webhook", async (req, res) => {
 
 
 
-app.post("/create-subscription", async (req, res) => {
-  try {
-    const { paymentMethodId, email, userId } = req.body;
 
-    // Create the Stripe customer
-    const customer = await stripe.customers.create({
-      email,
-      payment_method: paymentMethodId,
-      invoice_settings: { default_payment_method: paymentMethodId },
-    });
-
-    // Save customer ID to your database
-    await pool.query("UPDATE users SET stripe_customer_id = ? WHERE user_id = ?", [
-      customer.id,
-      userId,
-    ]);
-
-    // Create a subscription for the user
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: process.env.STRIPE_PRICE_ID }],  // Ensure this is the correct price ID
-      expand: ["latest_invoice.payment_intent"],
-      payment_settings: {
-        payment_method_types: ["card"],
-      },
-    });
-
-    // Ensure payment intent was created successfully
-    if (!subscription.latest_invoice.payment_intent) {
-      throw new Error("Payment intent creation failed.");
-    }
-
-    res.json({
-      success: true,
-      subscriptionId: subscription.id,
-      clientSecret: subscription.latest_invoice.payment_intent.client_secret,
-    });
-  } catch (error) {
-    console.error("Stripe Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
 
 
@@ -1440,59 +1399,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error("Webhook signature error:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  switch (event.type) {
-    case "invoice.payment_succeeded":
-      const invoice = event.data.object;
-      const customerId = invoice.customer;
-
-      // Lookup your user by Stripe customer ID and extend their access
-      await pool.query(
-        `UPDATE users 
-         SET subscription_plan = 'pro', 
-             subscribed_at = NOW(), 
-             subscription_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY)
-         WHERE stripe_customer_id = ?`,
-        [customerId]
-      );
-
-      console.log(`✅ Extended subscription for customer ${customerId}`);
-      break;
-
-    case "customer.subscription.deleted":
-    case "invoice.payment_failed":
-      const failedCustomer = event.data.object.customer;
-
-      await pool.query(
-        `UPDATE users 
-         SET subscription_plan = 'free' 
-         WHERE stripe_customer_id = ?`,
-        [failedCustomer]
-      );
-
-      console.log(`⚠️ Downgraded customer ${failedCustomer} due to payment failure or cancelation.`);
-      break;
-
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
-  }
-
-  res.sendStatus(200);
-});
 
 app.post("/save-services", upload.any(), async (req, res) => {
   const { userId, services: rawServices } = req.body;
