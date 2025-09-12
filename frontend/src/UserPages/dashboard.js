@@ -247,7 +247,7 @@ const Dashboard = () => {
   */
 
  // FETCH MEMBERSHIP
-useEffect(() => {
+ useEffect(() => {
   const fetchMembership = async () => {
     if (!user) return;
     try {
@@ -255,27 +255,38 @@ useEffect(() => {
         params: { userId: user.user_id },
       });
 
-      if (response.data.message.subscription_plan === "Pro") {
+      console.log("Membership response:", response.data); // ✅ Debug
+
+      const membershipData = response.data?.message;
+
+      if (!membershipData) {
+        console.error("No membership data found");
+        setMembership(false);
+        return;
+      }
+
+      if (membershipData.subscription_plan === "Pro") {
         setMembership(true);
       } else if (
-        response.data.message.subscription_plan === "Free" &&
-        response.data.message.shopify_access_token
+        membershipData.subscription_plan === "Free" &&
+        membershipData.shopify_access_token
       ) {
         const res = await axios.post(`${directory}/create-subscription2`, {
           userId: user.user_id,
         });
 
-        const confirmationUrl = res.data.confirmationUrl; // ✅ assign it here
+        console.log("Create subscription response:", res.data); // ✅ Debug
+        const confirmationUrl = res.data.confirmationUrl;
+
         if (confirmationUrl) {
           const app = createApp({
             apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
             host: new URLSearchParams(window.location.search).get("host"),
-            forceRedirect: true, // ensures it redirects outside iframe
+            forceRedirect: true,
           });
 
           const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-
+          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // ✅ REMOTE is correct
         }
       } else {
         setMembership(false);
@@ -288,6 +299,7 @@ useEffect(() => {
 
   fetchMembership();
 }, [user]);
+
 
   
   //FETCH USER
