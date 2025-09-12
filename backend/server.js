@@ -19,7 +19,6 @@ const path = require("path");
 const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 const { OpenAI } = require('openai');
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const cookieParser = require("cookie-parser");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -2202,7 +2201,7 @@ try {
 
 
 
-app.post("/create-subscription", async (req, res) => {
+app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId } = req.body;
 
