@@ -246,38 +246,48 @@ const Dashboard = () => {
   
   */
 
-  // FETCH MEMBERSHIP
-  useEffect(() => {
-    const fetchMembership = async () => {
-      if (!user) return;
-      try {
-        const response = await axios.get(`${directory}/get-membership`, {
-          params: { userId: user.user_id },
+ // FETCH MEMBERSHIP
+useEffect(() => {
+  const fetchMembership = async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`${directory}/get-membership`, {
+        params: { userId: user.user_id },
+      });
+
+      if (response.data.message.subscription_plan === "Pro") {
+        setMembership(true);
+      } else if (
+        response.data.message.subscription_plan === "Free" &&
+        response.data.message.shopify_access_token
+      ) {
+        const res = await axios.post(`${directory}/create-subscription2`, {
+          userId: user.user_id,
         });
-  
-        if (response.data.message.subscription_plan === "Pro") {
-          setMembership(true);
-        } else if (
-          response.data.message.subscription_plan === "Free" &&
-          response.data.message.shopify_access_token
-        ) {
-          const res = await axios.post(`${directory}/create-subscription2`, {
-            userId: user.user_id,
-          });          
-          if (res.data.confirmationUrl) {
-            window.location.href = res.data.confirmationUrl; // correct
-          }          
-        } else {
-          setMembership(false);
+
+        const confirmationUrl = res.data.confirmationUrl; // ✅ assign it here
+        if (confirmationUrl) {
+          const app = createApp({
+            apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+            host: new URLSearchParams(window.location.search).get("host"),
+            forceRedirect: true, // ensures it redirects outside iframe
+          });
+
+          const redirect = Redirect.create(app);
+          redirect.dispatch(Redirect.Action.APP, confirmationUrl); // ✅ use the assigned variable
         }
-      } catch (e) {
-        console.error("Error retrieving membership status:", e);
-        showErrorNotification();
+      } else {
+        setMembership(false);
       }
-    };
-  
-    fetchMembership();
-  }, [user]);
+    } catch (e) {
+      console.error("Error retrieving membership status:", e);
+      showErrorNotification();
+    }
+  };
+
+  fetchMembership();
+}, [user]);
+
   
   //FETCH USER
   useEffect(() => {
