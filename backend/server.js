@@ -2305,14 +2305,12 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // redirect wherever you want after activation
     res.redirect("https://instagram.com");
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 

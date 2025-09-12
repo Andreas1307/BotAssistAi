@@ -258,9 +258,9 @@ const Dashboard = () => {
           response.data.message.subscription_plan === "Free" &&
           response.data.message.shopify_access_token
         ) {
-          const res = await axios.post(`${directory}/create-shopify-charge`, {
+          const res = await axios.post(`${directory}/create-subscription`, {
             userId: user.user_id,
-          });
+          });          
           if (res.data.confirmationUrl) {
             window.location.href = res.data.confirmationUrl;
           }
