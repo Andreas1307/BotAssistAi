@@ -92,8 +92,14 @@ const Homepage = () => {
             colors,
           });
           if (response.data.data === true) {
-            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
+            // ⏱️ Defer so React Router doesn't choke
+            setTimeout(() => {
+              window.location.assign(
+                `https://api.botassistai.com/shopify/install?shop=${shopParam}`
+              );
+            }, 0);
           }
+          
         }
       } catch (e) {
         console.error("❌ Error checking install status:", e);
