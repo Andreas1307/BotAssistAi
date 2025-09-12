@@ -262,8 +262,8 @@ const Dashboard = () => {
             userId: user.user_id,
           });          
           if (res.data.confirmationUrl) {
-            window.location.href = res.data.confirmationUrl;
-          }
+            window.location.href = res.data.confirmationUrl; // correct
+          }          
         } else {
           setMembership(false);
         }

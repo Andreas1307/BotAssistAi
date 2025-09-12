@@ -2190,14 +2190,12 @@ app.get("/billing/callback", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
-    // Mark subscription as active in DB
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
-    // Redirect to your dashboard (or success page)
-    res.redirect("https://instagram.com");
+    res.redirect(`https://botassistai.com/${rows[0].username}/dashboard`);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
