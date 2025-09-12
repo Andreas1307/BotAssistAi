@@ -976,20 +976,37 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/shopify/install', async (req, res) => {
   try {
     const shop = req.query.shop;
-    if (!shop) return res.status(400).send('Missing shop');
 
+    if (!shop) {
+      return res.status(400).send("Missing shop parameter. Expected ?shop=your-store.myshopify.com");
+    }
+
+    // Ensure shop param looks valid
+    if (!shop.endsWith(".myshopify.com")) {
+      return res.status(400).send("Invalid shop parameter");
+    }
+
+    console.log("🚀 Starting OAuth for shop:", shop);
+
+    // Start OAuth (Shopify will handle redirect to their auth screen)
     await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
       rawRequest: req,
       rawResponse: res,
-      shop,
-      callbackPath: '/shopify/callback',
-      isOnline: true,
     });
+
+    // ⛔️ Don't send any other response — shopify.auth.begin() already ends it
   } catch (err) {
-    console.error('❌ Shopify install error:', err);
-    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
+    console.error("❌ Shopify install error:", err);
+
+    if (!res.headersSent) {
+      res.redirect("/error?reason=install_failed");
+    }
   }
 });
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
