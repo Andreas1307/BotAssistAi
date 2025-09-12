@@ -246,16 +246,17 @@ const Dashboard = () => {
   
   */
 
- // FETCH MEMBERSHIP
- useEffect(() => {
+// FETCH MEMBERSHIP
+useEffect(() => {
   const fetchMembership = async () => {
     if (!user) return;
+
     try {
       const response = await axios.get(`${directory}/get-membership`, {
         params: { userId: user.user_id },
       });
 
-      console.log("Membership response:", response.data); // ✅ Debug
+      console.log("Membership response:", response.data); // Debug
 
       const membershipData = response.data?.message;
 
@@ -275,18 +276,28 @@ const Dashboard = () => {
           userId: user.user_id,
         });
 
-        console.log("Create subscription response:", res.data); // ✅ Debug
+        console.log("Create subscription response:", res.data); // Debug
         const confirmationUrl = res.data.confirmationUrl;
 
         if (confirmationUrl) {
+          // ✅ Make sure host is properly retrieved from Shopify query params
+          const urlParams = new URLSearchParams(window.location.search);
+          const host = urlParams.get("host");
+
+          if (!host) {
+            console.error("Shopify host parameter missing!");
+            showErrorNotification();
+            return;
+          }
+
           const app = createApp({
             apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-            host: new URLSearchParams(window.location.search).get("host"),
+            host, // ✅ Must be provided
             forceRedirect: true,
           });
 
           const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // ✅ REMOTE is correct
+          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // Opens Shopify billing outside iframe
         }
       } else {
         setMembership(false);
