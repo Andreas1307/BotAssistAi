@@ -72,43 +72,41 @@ const Homepage = () => {
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const shopParam = urlParams.get("shop");
-      console.log("🔍 shopParam:", shopParam);
-
-      if (!shopParam) {
-        console.warn("❌ No shop param, skipping Shopify logic.");
-        return;
-      }
-
-      setShop(shopParam); // Will trigger re-render
+  
+      if (!shopParam) return;
+  
+      setShop(shopParam);
+      setInstalled(null); // Show loader
+  
       try {
         const res = await axios.get(`/check-shopify-store`, {
           params: { shop: shopParam },
         });
-        console.log("✅ Backend says installed:", res.data.installed);
+  
         setInstalled(res.data.installed);
+  
         if (!res.data.installed) {
-          const response = await axios.post(`/chatbot-config-shopify`, {
+          // show a loader UI to avoid multiple clicks
+          setInstalled(false);
+  
+          // Trigger backend to start OAuth flow
+          await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
             colors,
           });
-          if (response.data.data === true) {
-            // ⏱️ Defer so React Router doesn't choke
-            setTimeout(() => {
-              window.location.assign(
-                `https://api.botassistai.com/shopify/install?shop=${shopParam}`
-              );
-            }, 0);
-          }
-          
+  
+          // Redirect to Shopify install URL
+          window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
         }
-      } catch (e) {
-        console.error("❌ Error checking install status:", e);
-        setInstalled(false); // fallback if backend call fails
+      } catch (err) {
+        console.error("❌ Error checking install status:", err);
+        setInstalled(false);
       }
     };
-
+  
     checkShop();
   }, []);
+  
 
 
   /*
