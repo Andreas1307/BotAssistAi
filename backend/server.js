@@ -2202,7 +2202,7 @@ try {
 
 
 
-app.post('/create-shopify-charge', async (req, res) => {
+app.post("/create-shopify-charge", async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -2215,7 +2215,7 @@ app.post('/create-shopify-charge', async (req, res) => {
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
 
-    // Create recurring charge
+    // ✅ Correct axios call with backticks
     const response = await axios.post(
       `https://${shop}/admin/api/2023-10/recurring_application_charges.json`,
       {
@@ -2223,23 +2223,26 @@ app.post('/create-shopify-charge', async (req, res) => {
           name: "BotAssist Pro Plan",
           price: 19.99,
           return_url: `https://api.botassistai.com/billing/callback?userId=${userId}`,
-          test: true 
-        }
+          test: true, // remove this in production
+        },
       },
-      { headers: { "X-Shopify-Access-Token": token } }
+      {
+        headers: {
+          "X-Shopify-Access-Token": token,
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     const confirmationUrl = response.data.recurring_application_charge.confirmation_url;
     res.json({ confirmationUrl });
-
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error creating Shopify charge:", err.response?.data || err.message);
     res.status(500).send("Error creating Shopify charge");
   }
 });
 
-
-app.get('/billing/callback', async (req, res) => {
+app.get("/billing/callback", async (req, res) => {
   try {
     const { charge_id, userId } = req.query;
 
@@ -2250,10 +2253,16 @@ app.get('/billing/callback', async (req, res) => {
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
 
+    // ✅ Correct axios call with backticks
     await axios.post(
       `https://${shop}/admin/api/2023-10/recurring_application_charges/${charge_id}/activate.json`,
       {},
-      { headers: { "X-Shopify-Access-Token": token } }
+      {
+        headers: {
+          "X-Shopify-Access-Token": token,
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     await pool.query(
@@ -2261,18 +2270,16 @@ app.get('/billing/callback', async (req, res) => {
       [userId]
     );
 
-    res.redirect(`https://instagram.com`);
-
+    // redirect wherever you want after activation
+    res.redirect("https://instagram.com");
   } catch (err) {
-    console.error(err);
+    console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
 
 
 
-
-// sa fac install ap pe new store si sa vad cum merge ce am mesterit aici
 
 
 
