@@ -2279,32 +2279,18 @@ app.post("/create-subscription", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { charge_id, userId } = req.query;
+    const { userId } = req.query;
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
-    const user = rows[0];
-    const shop = user.shopify_shop_domain;
-    const token = user.shopify_access_token;
-
-    // ✅ Correct axios call with backticks
-    await axios.post(
-      `https://${shop}/admin/api/2023-10/recurring_application_charges/${charge_id}/activate.json`,
-      {},
-      {
-        headers: {
-          "X-Shopify-Access-Token": token,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    // Mark subscription as active in DB
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
+    // Redirect to your dashboard (or success page)
     res.redirect("https://instagram.com");
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
