@@ -274,7 +274,8 @@ useEffect(() => {
           });
 
           const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.APP, confirmationUrl); // ✅ use the assigned variable
+          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+
         }
       } else {
         setMembership(false);
