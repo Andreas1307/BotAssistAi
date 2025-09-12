@@ -276,18 +276,23 @@ const Dashboard = () => {
           const confirmationUrl = res.data.confirmationUrl;
           if (!confirmationUrl) return;
   
-          const host = new URLSearchParams(window.location.search).get("host");
+          // Show loader while redirecting
+          setLoading(true);
   
-          if (window.top !== window.self && host) {
-            // ✅ Embedded app → use App Bridge
+          const host = new URLSearchParams(window.location.search).get("host");
+          const isEmbedded = window.top !== window.self;
+  
+          if (isEmbedded && host) {
+            // ✅ Embedded → force App Bridge remote redirect
             const app = createApp({
               apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
               host,
+              forceRedirect: true,
             });
             const redirect = Redirect.create(app);
             redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
           } else {
-            // ✅ Non-embedded → fallback
+            // ✅ Non-embedded → normal redirect
             window.location.href = confirmationUrl;
           }
         } else {
@@ -296,6 +301,8 @@ const Dashboard = () => {
       } catch (e) {
         console.error("Error retrieving membership status:", e);
         showErrorNotification();
+      } finally {
+        setLoading(false);
       }
     };
   
