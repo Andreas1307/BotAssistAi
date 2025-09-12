@@ -2261,7 +2261,7 @@ app.get('/billing/callback', async (req, res) => {
       [userId]
     );
 
-    res.redirect(`https://botassistai.com`);
+    res.redirect(`https://instagram.com`);
 
   } catch (err) {
     console.error(err);
@@ -2272,7 +2272,7 @@ app.get('/billing/callback', async (req, res) => {
 
 
 
-
+// sa fac install ap pe new store si sa vad cum merge ce am mesterit aici
 
 
 
