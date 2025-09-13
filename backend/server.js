@@ -2146,7 +2146,7 @@ app.post("/create-subscription2", async (req, res) => {
             appRecurringPricingDetails: {
               price: {
                 amount: 19.99,
-                currencyCode: "USD",
+                currencyCode: "EUR",
               },
               interval: "EVERY_30_DAYS",
             },
