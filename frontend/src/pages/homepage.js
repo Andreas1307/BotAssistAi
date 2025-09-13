@@ -67,39 +67,29 @@ const Homepage = () => {
 
   
 
+  const redirectRef = useRef(false);
 
   useEffect(() => {
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const shopParam = urlParams.get("shop");
-  
       if (!shopParam) return;
   
       setShop(shopParam);
-      setInstalled(null); // Show loader
+      setInstalled(null);
   
       try {
-        const res = await axios.get(`/check-shopify-store`, {
-          params: { shop: shopParam },
-        });
+        const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
   
-        setInstalled(res.data.installed);
-  
-        if (!res.data.installed) {
-          // show a loader UI to avoid multiple clicks
-          setInstalled(false);
-  
-          // Trigger backend to start OAuth flow
-          await axios.post(`/chatbot-config-shopify`, {
-            shop: shopParam,
-            colors,
-          });
-  
-          // Redirect to Shopify install URL
+        if (!res.data?.installed && !redirectRef.current) {
+          redirectRef.current = true;
+          await axios.post(`/chatbot-config-shopify`, { shop: shopParam, colors });
           window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
+        } else {
+          setInstalled(true);
         }
       } catch (err) {
-        console.error("❌ Error checking install status:", err);
+        console.error(err);
         setInstalled(false);
       }
     };
@@ -107,6 +97,7 @@ const Homepage = () => {
     checkShop();
   }, []);
   
+
 
 
   /*
@@ -173,6 +164,7 @@ const Homepage = () => {
       }
     }
   }, [user, loading, navigate, location.pathname]);
+  
   
   if (loading) {
     return null;
