@@ -64,6 +64,34 @@ const Homepage = () => {
   const navigate = useNavigate();
 
 
+  function useAppBridge() {
+    const [app, setApp] = useState(null);
+  
+    useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get("shop");
+      const host = params.get("host");
+  
+      if (shop && host) {
+        const appBridge = createApp({
+          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+          host: host,
+          forceRedirect: true, // ✅ ensures redirection if app is opened outside Admin
+        });
+        setApp(appBridge);
+      }
+    }, []);
+  
+    return app;
+  }
+
+  const app = useAppBridge();
+
+  useEffect(() => {
+    if (app) {
+      console.log("✅ App Bridge initialized");
+    }
+  }, [app]);
 
   
 
