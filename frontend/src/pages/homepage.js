@@ -72,20 +72,18 @@ const Homepage = () => {
       const shop = params.get("shop");
       const host = params.get("host");
   
-      if (shop && host && window.appBridge) {
-        const AppBridge = window.appBridge.default; // ✅ use global
-        const appInstance = AppBridge({
+      if (shop && host) {
+        const appBridge = createApp({
           apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host,
-          forceRedirect: true,
+          host: host,
+          forceRedirect: true, // ✅ ensures redirection if app is opened outside Admin
         });
-        setApp(appInstance);
+        setApp(appBridge);
       }
     }, []);
   
     return app;
   }
-  
 
   const app = useAppBridge();
 
