@@ -64,9 +64,7 @@ const Homepage = () => {
   const navigate = useNavigate();
 
 
-
-  
-
+ 
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -75,7 +73,9 @@ const Homepage = () => {
 
     if (!shop) return;
 
-    if (host) {
+    const isEmbedded = window.top !== window.self;
+
+    if (isEmbedded && host) {
       // Embedded in Shopify Admin
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
