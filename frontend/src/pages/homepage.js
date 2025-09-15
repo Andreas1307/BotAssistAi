@@ -102,8 +102,6 @@ const Homepage = () => {
 
     checkShop();
   }, []);
-  
-  
 
 
   /*
@@ -128,7 +126,7 @@ const Homepage = () => {
    
 
 
-/*
+
   const showPopupToRegister = () => {
     setTimeout(() => {
       setShowModal(true)
@@ -144,7 +142,7 @@ const Homepage = () => {
     }
   }, []);
   
-*/
+
 
   useEffect(() => {
     const fetchUser = async () => {
