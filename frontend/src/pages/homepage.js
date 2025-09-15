@@ -70,28 +70,81 @@ const Homepage = () => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
     const host = params.get("host");
-
+  
     if (!shop) return;
-
+  
     const isEmbedded = window.top !== window.self;
-
-    if (isEmbedded && host) {
-      // Embedded inside Shopify Admin
-      const app = createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host,
-        forceRedirect: true,
-      });
-      const redirect = Redirect.create(app);
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
-      );
-    } else {
-      // Outside Shopify
-      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
-    }
+  
+    // Always force top-level navigation when going to Shopify Admin
+    const redirectTo = (url, app = null, forceTop = false) => {
+      if (forceTop) {
+        // ✅ Billing confirmation pages must break out of iframe
+        window.top.location.href = url;
+      } else if (isEmbedded && app) {
+        // ✅ Safe to use App Bridge for in-admin redirects (install)
+        const redirect = Redirect.create(app);
+        redirect.dispatch(Redirect.Action.REMOTE, url);
+      } else {
+        // ✅ Fallback: full page redirect
+        window.top.location.href = url;
+      }
+    };
+  
+    const run = async () => {
+      try {
+        // 🔍 Ask backend if shop is installed & has billing
+        const res = await axios.get(`/check-shopify-store`, {
+          params: { shop },
+        });
+  
+        // 🚀 If not installed → go to install route
+        if (!res.data?.installed) {
+          if (host && isEmbedded) {
+            const app = createApp({
+              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+              host,
+              forceRedirect: true,
+            });
+            redirectTo(
+              `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
+                shop
+              )}`,
+              app
+            );
+          } else {
+            redirectTo(
+              `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
+                shop
+              )}`
+            );
+          }
+          return;
+        }
+  
+        // 🚀 If installed but no billing → create subscription
+        if (!res.data?.hasBilling) {
+          const subRes = await axios.post(`/create-subscription2`, {
+            userId: res.data.userId,
+          });
+  
+          const confirmationUrl = subRes.data.confirmationUrl;
+          if (confirmationUrl) {
+            // ✅ Billing page must open in top window
+            redirectTo(confirmationUrl, null, true);
+          }
+          return;
+        }
+  
+        // ✅ Already installed + billing → stay in app
+        console.log("Shop is fully installed with billing.");
+      } catch (err) {
+        console.error("❌ Shopify redirect flow failed:", err);
+      }
+    };
+  
+    run();
   }, []);
+  
 
 
 
