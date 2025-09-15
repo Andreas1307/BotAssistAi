@@ -98,13 +98,6 @@ const Homepage = () => {
   const redirectRef = useRef(false);
 
   useEffect(() => {
-    const path = window.location.pathname;
-  
-    // 🚨 Skip checkShop if we are in the middle of OAuth
-    if (path.startsWith("/shopify/install") || path.startsWith("/shopify/callback")) {
-      return;
-    }
-  
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const shopParam = urlParams.get("shop");
@@ -116,21 +109,24 @@ const Homepage = () => {
       try {
         const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
   
-        if (res.data?.installed && !redirectRef.current) {
+        if (!res.data?.installed && !redirectRef.current) {
+          // 🚀 Shop not in DB → start OAuth install flow
           redirectRef.current = true;
+          window.location.href = `/shopify/install?shop=${encodeURIComponent(shopParam)}`;
+          return;
+        }
   
-          if (!res.data?.hasBilling) {
-            const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
-            const { confirmationUrl } = subRes.data;
+        // 🚀 Shop is installed
+        if (!res.data?.hasBilling && !redirectRef.current) {
+          redirectRef.current = true;
+          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
+          const { confirmationUrl } = subRes.data;
   
-            if (window.top === window.self) {
-              window.location.href = confirmationUrl;
-            } else {
-              const redirect = Redirect.create(app);
-              redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-            }
+          if (window.top === window.self) {
+            window.location.href = confirmationUrl; // outside iframe
           } else {
-            setInstalled(true);
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // inside iframe
           }
         } else {
           setInstalled(true);
