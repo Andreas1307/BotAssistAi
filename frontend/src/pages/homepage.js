@@ -96,7 +96,6 @@ const Homepage = () => {
   
 
   const redirectRef = useRef(false);
-
   useEffect(() => {
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -111,8 +110,19 @@ const Homepage = () => {
   
         if (!res.data?.installed && !redirectRef.current) {
           redirectRef.current = true;
-          await axios.post(`/chatbot-config-shopify`, { shop: shopParam, colors });
-          window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
+  
+          // Call backend to create subscription
+          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
+          const { confirmationUrl } = subRes.data;
+  
+          if (window.top === window.self) {
+            // 🚀 Outside iframe → normal redirect works
+            window.location.href = confirmationUrl;
+          } else {
+            // 🚀 Inside Shopify iframe → must use App Bridge redirect
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+          }
         } else {
           setInstalled(true);
         }
@@ -123,7 +133,8 @@ const Homepage = () => {
     };
   
     checkShop();
-  }, []);
+  }, [app]); 
+  
   
 
 
