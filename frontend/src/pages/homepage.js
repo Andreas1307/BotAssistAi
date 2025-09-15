@@ -68,16 +68,40 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shop = urlParams.get("shop");
-  
-    if (!shop) return; // nothing to do
-  
-    // Redirect directly to your backend to start OAuth
-    window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+    const checkShop = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const shopParam = urlParams.get("shop");
+      console.log("🔍 shopParam:", shopParam);
+
+      if (!shopParam) {
+        console.warn("❌ No shop param, skipping Shopify logic.");
+        return;
+      }
+
+      setShop(shopParam); // Will trigger re-render
+      try {
+        const res = await axios.get(`/check-shopify-store`, {
+          params: { shop: shopParam },
+        });
+        console.log("✅ Backend says installed:", res.data.installed);
+        setInstalled(res.data.installed);
+        if (!res.data.installed) {
+          const response = await axios.post(`/chatbot-config-shopify`, {
+            shop: shopParam,
+            colors,
+          });
+          if (response.data.data === true) {
+            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
+          }
+        }
+      } catch (e) {
+        console.error("❌ Error checking install status:", e);
+        setInstalled(false); // fallback if backend call fails
+      }
+    };
+
+    checkShop();
   }, []);
-  
-  
   
   
 
