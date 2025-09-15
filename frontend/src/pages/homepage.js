@@ -68,41 +68,32 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    const checkShop = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shopParam = urlParams.get("shop");
-      console.log("🔍 shopParam:", shopParam);
-
-      if (!shopParam) {
-        console.warn("❌ No shop param, skipping Shopify logic.");
-        return;
-      }
-
-      setShop(shopParam); // Will trigger re-render
-      try {
-        const res = await axios.get(`/check-shopify-store`, {
-          params: { shop: shopParam },
-        });
-        console.log("✅ Backend says installed:", res.data.installed);
-        setInstalled(res.data.installed);
-        if (!res.data.installed) {
-          const response = await axios.post(`/chatbot-config-shopify`, {
-            shop: shopParam,
-            colors,
-          });
-          if (response.data.data === true) {
-            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
-          }
-        }
-      } catch (e) {
-        console.error("❌ Error checking install status:", e);
-        setInstalled(false); // fallback if backend call fails
-      }
-    };
-
-    checkShop();
+    const urlParams = new URLSearchParams(window.location.search);
+    const shop = urlParams.get("shop");
+    const host = urlParams.get("host");
+  
+    if (!shop) return;
+  
+    // If embedded inside Shopify Admin
+    if (host) {
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
+  
+      const redirect = Redirect.create(app);
+  
+      // ✅ Use Redirect.Action.REMOTE to break out of the iframe
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
+      );
+    } else {
+      // Outside Shopify (new tab, testing, etc.)
+      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+    }
   }, []);
-
 
   /*
   const redirectToInstall = async (shop) => {
