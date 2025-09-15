@@ -96,6 +96,7 @@ const Homepage = () => {
   
 
   const redirectRef = useRef(false);
+
   useEffect(() => {
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -108,32 +109,35 @@ const Homepage = () => {
       try {
         const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
   
-        if (!res.data?.installed && !redirectRef.current) {
+        // 🚨 IMPORTANT: Only run billing if shop is already installed
+        if (res.data?.installed && !redirectRef.current) {
           redirectRef.current = true;
   
-          // Call backend to create subscription
-          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
-          const { confirmationUrl } = subRes.data;
+          // Check if this user already has billing
+          if (!res.data?.hasBilling) {
+            const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
+            const { confirmationUrl } = subRes.data;
   
-          if (window.top === window.self) {
-            // 🚀 Outside iframe → normal redirect works
-            window.location.href = confirmationUrl;
+            if (window.top === window.self) {
+              window.location.href = confirmationUrl; // outside iframe
+            } else {
+              const redirect = Redirect.create(app);
+              redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // inside iframe
+            }
           } else {
-            // 🚀 Inside Shopify iframe → must use App Bridge redirect
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+            setInstalled(true);
           }
         } else {
-          setInstalled(true);
+          setInstalled(true); // shop exists but no billing required yet
         }
       } catch (err) {
-        console.error(err);
+        console.error("❌ checkShop failed:", err);
         setInstalled(false);
       }
     };
   
-    checkShop();
-  }, [app]); 
+    if (app) checkShop();
+  }, [app]);
   
   
 
