@@ -75,7 +75,6 @@ const Homepage = () => {
   
     if (!shop) return;
   
-    // If embedded inside Shopify Admin
     if (host) {
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -84,17 +83,16 @@ const Homepage = () => {
       });
   
       const redirect = Redirect.create(app);
-  
-      // ✅ Use Redirect.Action.REMOTE to break out of the iframe
       redirect.dispatch(
         Redirect.Action.REMOTE,
         `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
       );
     } else {
-      // Outside Shopify (new tab, testing, etc.)
       window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
     }
   }, []);
+  
+
 
   /*
   const redirectToInstall = async (shop) => {
