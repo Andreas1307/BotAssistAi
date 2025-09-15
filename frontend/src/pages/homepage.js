@@ -98,6 +98,13 @@ const Homepage = () => {
   const redirectRef = useRef(false);
 
   useEffect(() => {
+    const path = window.location.pathname;
+  
+    // 🚨 Skip checkShop if we are in the middle of OAuth
+    if (path.startsWith("/shopify/install") || path.startsWith("/shopify/callback")) {
+      return;
+    }
+  
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const shopParam = urlParams.get("shop");
@@ -109,26 +116,24 @@ const Homepage = () => {
       try {
         const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
   
-        // 🚨 IMPORTANT: Only run billing if shop is already installed
         if (res.data?.installed && !redirectRef.current) {
           redirectRef.current = true;
   
-          // Check if this user already has billing
           if (!res.data?.hasBilling) {
             const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
             const { confirmationUrl } = subRes.data;
   
             if (window.top === window.self) {
-              window.location.href = confirmationUrl; // outside iframe
+              window.location.href = confirmationUrl;
             } else {
               const redirect = Redirect.create(app);
-              redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // inside iframe
+              redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
             }
           } else {
             setInstalled(true);
           }
         } else {
-          setInstalled(true); // shop exists but no billing required yet
+          setInstalled(true);
         }
       } catch (err) {
         console.error("❌ checkShop failed:", err);
