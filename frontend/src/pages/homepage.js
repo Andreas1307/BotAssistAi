@@ -79,7 +79,7 @@ const Homepage = () => {
       try {
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
-        // 🚀 Not installed → install
+        // 🚀 Not installed → install flow
         if (!res.data?.installed) {
           if (host && isEmbedded) {
             const app = createApp({
@@ -110,19 +110,8 @@ const Homepage = () => {
   
           const confirmationUrl = subRes.data.confirmationUrl;
           if (confirmationUrl) {
-            if (host && isEmbedded) {
-              // ✅ Use App Bridge for billing confirmation
-              const app = createApp({
-                apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-                host,
-                forceRedirect: true,
-              });
-              const redirect = Redirect.create(app);
-              redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-            } else {
-              // Fallback outside iframe
-              window.top.location.href = confirmationUrl;
-            }
+            // 🔑 IMPORTANT: Billing must break out of iframe
+            window.top.location.href = confirmationUrl;
           }
           return;
         }
@@ -135,6 +124,7 @@ const Homepage = () => {
   
     run();
   }, []);
+  
   
 
 
