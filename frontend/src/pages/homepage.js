@@ -18,12 +18,13 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
-import { getSessionToken, createApp } from "@shopify/app-bridge-utils";
+import { getSessionToken } from "@shopify/app-bridge-utils";
 import useShopifyInstallRedirect from "../utils/dash-redirect"
 import {
   fetchWithAuth,
   waitForAppBridge,
 } from "../utils/app-bridge";
+import createApp from "@shopify/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -68,41 +69,34 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    const checkShop = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shopParam = urlParams.get("shop");
-      console.log("🔍 shopParam:", shopParam);
-
-      if (!shopParam) {
-        console.warn("❌ No shop param, skipping Shopify logic.");
-        return;
-      }
-
-      setShop(shopParam); // Will trigger re-render
-      try {
-        const res = await axios.get(`/check-shopify-store`, {
-          params: { shop: shopParam },
-        });
-        console.log("✅ Backend says installed:", res.data.installed);
-        setInstalled(res.data.installed);
-        if (!res.data.installed) {
-          const response = await axios.post(`/chatbot-config-shopify`, {
-            shop: shopParam,
-            colors,
-          });
-          if (response.data.data === true) {
-            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
-          }
-        }
-      } catch (e) {
-        console.error("❌ Error checking install status:", e);
-        setInstalled(false); // fallback if backend call fails
-      }
-    };
-
-    checkShop();
+    const urlParams = new URLSearchParams(window.location.search);
+    const shop = urlParams.get("shop");
+    const host = urlParams.get("host");
+  
+    if (!shop) {
+      console.warn("❌ No shop param, cannot continue.");
+      return;
+    }
+  
+    // If embedded inside Shopify Admin (iframe)
+    if (host) {
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
+  
+      const redirect = Redirect.create(app);
+  
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
+      );
+    } else {
+      // Outside Shopify → do a normal redirect
+      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+    }
   }, []);
-
 
   /*
   const redirectToInstall = async (shop) => {
