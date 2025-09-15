@@ -70,44 +70,13 @@ const Homepage = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const shop = urlParams.get("shop");
-    const host = urlParams.get("host");
   
-    if (!shop) return; // must have shop query param
+    if (!shop) return; // nothing to do
   
-    // If embedded inside Shopify Admin
-    if (host) {
-      try {
-        const app = createApp({
-          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host,
-          forceRedirect: true,
-        });
-  
-        const redirect = Redirect.create(app);
-  
-        // ✅ Must redirect to your backend install route, full URL
-        redirect.dispatch(
-          Redirect.Action.REMOTE,
-          `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
-        );
-      } catch (err) {
-        console.error(
-          "App Bridge redirect failed, falling back to window.location.href",
-          err
-        );
-  
-        // fallback to full URL if App Bridge fails
-        window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-          shop
-        )}`;
-      }
-    } else {
-      // Outside Shopify Admin → redirect directly
-      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-        shop
-      )}`;
-    }
+    // Redirect directly to your backend to start OAuth
+    window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
   }, []);
+  
   
   
   
