@@ -1093,10 +1093,34 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Redirect to your React frontend with shop + host
-const frontendUrl = `https://www.botassistai.com/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-return res.redirect(frontendUrl);
-
+    // --- Redirect via App Bridge
+    res.set('Content-Type', 'text/html');
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Installing...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
+          <script>
+            const AppBridge = window['app-bridge'].default;
+            const actions = window['app-bridge'].actions;
+            const app = AppBridge({
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              host: '${host}',
+              forceRedirect: true
+            });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
