@@ -95,38 +95,49 @@ const Homepage = () => {
 
 // fac aici sa mearga install, si sa fac in dashboard sa trebuiasca sa platesc 
 
-  const redirectRef = useRef(false);
-  useEffect(() => {
-    const checkShop = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shopParam = urlParams.get("shop");
-      if (!shopParam) return;
-  
-      setShop(shopParam);
-      setInstalled(null);
-  
-      try {
-        // Check if shop is already in your database
-        const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
-  
-        if (!res.data?.installed && !redirectRef.current) {
-          // 🚀 Shop not installed → start OAuth install flow
-          redirectRef.current = true;
+const redirectRef = useRef(false);
+
+useEffect(() => {
+  const checkShop = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shopParam = urlParams.get("shop");
+    if (!shopParam) return;
+
+    setShop(shopParam);
+    setInstalled(null);
+
+    try {
+      // Check if shop is already in your database
+      const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
+
+      if (!res.data?.installed && !redirectRef.current) {
+        // 🚀 Shop not installed → start OAuth install flow
+        redirectRef.current = true;
+
+        // If App Bridge is initialized → use redirect inside Shopify admin
+        if (app) {
+          const redirect = Redirect.create(app);
+          redirect.dispatch(Redirect.Action.REMOTE, `/shopify/install?shop=${encodeURIComponent(shopParam)}`);
+        } else {
+          // Otherwise, fallback to normal redirect
           window.location.href = `/shopify/install?shop=${encodeURIComponent(shopParam)}`;
-          return;
         }
-  
-        // Shop is already installed → just mark as installed
-        setInstalled(true);
-      } catch (err) {
-        console.error("❌ checkShop failed:", err);
-        setInstalled(false);
+
+        return;
       }
-    };
-  
-    if (app) checkShop();
-  }, [app]);
-  
+
+      // Shop is already installed → just mark as installed
+      setInstalled(true);
+    } catch (err) {
+      console.error("❌ checkShop failed:", err);
+      setInstalled(false);
+    }
+  };
+
+  // Run checkShop immediately — no need to wait for App Bridge
+  checkShop();
+}, [app]);
+
   
   
 
