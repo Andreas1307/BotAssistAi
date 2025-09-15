@@ -67,16 +67,16 @@ const Homepage = () => {
  
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shop = urlParams.get("shop");
-    const host = urlParams.get("host");
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
 
     if (!shop) return;
 
     const isEmbedded = window.top !== window.self;
 
     if (isEmbedded && host) {
-      // Embedded in Shopify Admin
+      // Embedded inside Shopify Admin
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host,
