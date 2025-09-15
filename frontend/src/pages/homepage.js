@@ -72,32 +72,21 @@ const Homepage = () => {
     const shop = urlParams.get("shop");
     const host = urlParams.get("host");
   
-    if (!shop) return; // must have shop
+    if (!shop || !host) return; // skip if not embedded
   
-    // Check if inside Shopify admin (embedded)
-    if (host) {
-      try {
-        const app = createApp({
-          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host,
-          forceRedirect: true,
-        });
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
   
-        const redirect = Redirect.create(app);
-        // This should be the app install path on your backend
-        redirect.dispatch(
-          Redirect.Action.REMOTE,
-          `/shopify/install?shop=${encodeURIComponent(shop)}`
-        );
-      } catch (err) {
-        console.error("App Bridge redirect failed, falling back to window.location.href", err);
-        window.location.href = `/shopify/install?shop=${encodeURIComponent(shop)}`;
-      }
-    } else {
-      // Outside Shopify admin → just redirect normally
-      window.location.href = `/shopify/install?shop=${encodeURIComponent(shop)}`;
-    }
+    const redirect = Redirect.create(app);
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      `/shopify/install?shop=${encodeURIComponent(shop)}`
+    );
   }, []);
+  
   
   
 
