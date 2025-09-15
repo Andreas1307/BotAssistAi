@@ -93,10 +93,9 @@ const Homepage = () => {
     }
   }, [app]);
 
-  
+// fac aici sa mearga install, si sa fac in dashboard sa trebuiasca sa platesc 
 
   const redirectRef = useRef(false);
-
   useEffect(() => {
     const checkShop = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -107,30 +106,18 @@ const Homepage = () => {
       setInstalled(null);
   
       try {
+        // Check if shop is already in your database
         const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
   
         if (!res.data?.installed && !redirectRef.current) {
-          // 🚀 Shop not in DB → start OAuth install flow
+          // 🚀 Shop not installed → start OAuth install flow
           redirectRef.current = true;
           window.location.href = `/shopify/install?shop=${encodeURIComponent(shopParam)}`;
           return;
         }
   
-        // 🚀 Shop is installed
-        if (!res.data?.hasBilling && !redirectRef.current) {
-          redirectRef.current = true;
-          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
-          const { confirmationUrl } = subRes.data;
-  
-          if (window.top === window.self) {
-            window.location.href = confirmationUrl; // outside iframe
-          } else {
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl); // inside iframe
-          }
-        } else {
-          setInstalled(true);
-        }
+        // Shop is already installed → just mark as installed
+        setInstalled(true);
       } catch (err) {
         console.error("❌ checkShop failed:", err);
         setInstalled(false);
@@ -139,6 +126,7 @@ const Homepage = () => {
   
     if (app) checkShop();
   }, [app]);
+  
   
   
 
