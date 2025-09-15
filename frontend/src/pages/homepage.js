@@ -72,31 +72,31 @@ const Homepage = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shop = urlParams.get("shop");
     const host = urlParams.get("host");
-  
-    if (!shop) {
-      console.warn("❌ No shop param, cannot continue.");
-      return;
-    }
-  
-    // If embedded inside Shopify Admin (iframe)
+
+    if (!shop) return;
+
     if (host) {
+      // Embedded in Shopify Admin
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host,
         forceRedirect: true,
       });
-  
       const redirect = Redirect.create(app);
-  
       redirect.dispatch(
         Redirect.Action.REMOTE,
         `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
       );
     } else {
-      // Outside Shopify → do a normal redirect
+      // Outside Shopify
       window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
     }
   }, []);
+
+
+
+
+
 
   /*
   const redirectToInstall = async (shop) => {
@@ -117,10 +117,6 @@ const Homepage = () => {
   */
   
   
-   
-
-
-
   const showPopupToRegister = () => {
     setTimeout(() => {
       setShowModal(true)
