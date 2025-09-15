@@ -18,8 +18,7 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
-import createApp from "@shopify/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
+import { getSessionToken, createApp } from "@shopify/app-bridge-utils";
 import useShopifyInstallRedirect from "../utils/dash-redirect"
 import {
   fetchWithAuth,
@@ -64,83 +63,30 @@ const Homepage = () => {
   const navigate = useNavigate();
 
 
-  function useAppBridge() {
-    const [app, setApp] = useState(null);
-  
-    useEffect(() => {
-      const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
-      const host = params.get("host");
-  
-      if (shop && host) {
-        const appBridge = createApp({
-          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host: host,
-          forceRedirect: true, // ✅ ensures redirection if app is opened outside Admin
-        });
-        setApp(appBridge);
-      }
-    }, []);
-  
-    return app;
-  }
 
-  const app = useAppBridge();
+  
+
 
   useEffect(() => {
-    if (app) {
-      console.log("✅ App Bridge initialized");
-    }
-  }, [app]);
-
-// fac aici sa mearga install, si sa fac in dashboard sa trebuiasca sa platesc 
-
-const redirectRef = useRef(false);
-
-useEffect(() => {
-  const checkShop = async () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const shopParam = urlParams.get("shop");
-    if (!shopParam) return;
+    const shop = urlParams.get("shop");
+    const host = urlParams.get("host");
 
-    setShop(shopParam);
-    setInstalled(null);
+    if (shop && host) {
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
 
-    try {
-      // Check if shop is already in your database
-      const res = await axios.get(`/check-shopify-store`, { params: { shop: shopParam } });
-
-      if (!res.data?.installed && !redirectRef.current) {
-        // 🚀 Shop not installed → start OAuth install flow
-        redirectRef.current = true;
-
-        // If App Bridge is initialized → use redirect inside Shopify admin
-        if (app) {
-          const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.REMOTE, `/shopify/install?shop=${encodeURIComponent(shopParam)}`);
-        } else {
-          // Otherwise, fallback to normal redirect
-          window.location.href = `/shopify/install?shop=${encodeURIComponent(shopParam)}`;
-        }
-
-        return;
-      }
-
-      // Shop is already installed → just mark as installed
-      setInstalled(true);
-    } catch (err) {
-      console.error("❌ checkShop failed:", err);
-      setInstalled(false);
+      const redirect = Redirect.create(app);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/install?shop=${shop}`
+      );
     }
-  };
-
-  // Run checkShop immediately — no need to wait for App Bridge
-  checkShop();
-}, [app]);
-
+  }, []);
   
-  
-
 
 
   /*
@@ -207,7 +153,6 @@ useEffect(() => {
       }
     }
   }, [user, loading, navigate, location.pathname]);
-  
   
   if (loading) {
     return null;
