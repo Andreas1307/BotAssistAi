@@ -79,9 +79,10 @@ const Homepage = () => {
         // 🔍 Check install & billing status
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
-        // 🚀 Not installed → send to install URL
+        // 🚀 Not installed → install flow
         if (!res.data?.installed) {
-          if (host && isEmbedded) {
+          if (isEmbedded && host) {
+            // Inside Shopify Admin → use App Bridge
             const app = createApp({
               apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
               host,
@@ -93,6 +94,7 @@ const Homepage = () => {
               `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
             );
           } else {
+            // Outside iframe → go directly
             window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
           }
           return;
@@ -105,8 +107,9 @@ const Homepage = () => {
           });
   
           const confirmationUrl = subRes.data.confirmationUrl;
+  
           if (confirmationUrl) {
-            // 🔑 Billing pages MUST always break out of iframe
+            // 🔑 Billing MUST break out of iframe → always top-level
             window.top.location.href = confirmationUrl;
           }
           return;
