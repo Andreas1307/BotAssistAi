@@ -76,13 +76,12 @@ const Homepage = () => {
   
     const run = async () => {
       try {
-        // Check shop install & billing status from backend
+        // 🔍 Check install & billing status
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
-        // Not installed → install
+        // 🚀 Not installed → send to install URL
         if (!res.data?.installed) {
           if (host && isEmbedded) {
-            // Use App Bridge for embedded install
             const app = createApp({
               apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
               host,
@@ -94,13 +93,12 @@ const Homepage = () => {
               `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
             );
           } else {
-            // Top-level redirect outside iframe
             window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
           }
           return;
         }
   
-        // Installed but missing billing → subscription
+        // 🚀 Installed but no billing → create subscription
         if (!res.data?.hasBilling) {
           const subRes = await axios.post(`/create-subscription2`, {
             userId: res.data.userId,
@@ -108,13 +106,13 @@ const Homepage = () => {
   
           const confirmationUrl = subRes.data.confirmationUrl;
           if (confirmationUrl) {
-            // 🔑 Billing MUST always break out of iframe
+            // 🔑 Billing pages MUST always break out of iframe
             window.top.location.href = confirmationUrl;
           }
           return;
         }
   
-        // Shop fully installed and billing active
+        // ✅ Installed + billing active → stay in app
         console.log("✅ Shop installed and billing active");
       } catch (err) {
         console.error("❌ Shopify redirect flow failed:", err);
