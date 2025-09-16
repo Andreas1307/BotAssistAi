@@ -65,7 +65,6 @@ const Homepage = () => {
 
 
  
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
@@ -77,10 +76,10 @@ const Homepage = () => {
   
     const run = async () => {
       try {
-        // 🔍 Check shop install & billing status from backend
+        // Check shop install & billing status from backend
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
-        // 🚀 Not installed → install
+        // Not installed → install
         if (!res.data?.installed) {
           if (host && isEmbedded) {
             // Use App Bridge for embedded install
@@ -101,7 +100,7 @@ const Homepage = () => {
           return;
         }
   
-        // 🚀 Installed but missing billing → subscription
+        // Installed but missing billing → subscription
         if (!res.data?.hasBilling) {
           const subRes = await axios.post(`/create-subscription2`, {
             userId: res.data.userId,
@@ -115,7 +114,7 @@ const Homepage = () => {
           return;
         }
   
-        // ✅ Shop fully installed and billing active
+        // Shop fully installed and billing active
         console.log("✅ Shop installed and billing active");
       } catch (err) {
         console.error("❌ Shopify redirect flow failed:", err);
@@ -124,6 +123,7 @@ const Homepage = () => {
   
     run();
   }, []);
+  
   
   
   
