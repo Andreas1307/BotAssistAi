@@ -2107,6 +2107,11 @@ try {
 
 
 
+// DACA TOT NU MERGE , SA COMENTEZ LINILE ASTEA SI SA VAD CUM 
+
+
+//si sa vad ce zice pe chatgpt
+
 
 app.post("/create-subscription2", async (req, res) => {
   try {

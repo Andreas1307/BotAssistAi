@@ -10,11 +10,17 @@
       const shop = params.get("shop");
       const host = params.get("host");
       const isEmbedded = window.top !== window.self;
-
+    
       if (isEmbedded && shop && host) {
         document.write('<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"><\/script>');
       }
     </script>
+    <script>
+      // After CDN loads, expose to window for React
+      if (window.shopify && window.appBridge == null) {
+        window.appBridge = window['app-bridge'];
+      }
+    </script>    
 
 
 

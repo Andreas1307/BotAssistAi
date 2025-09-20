@@ -24,8 +24,6 @@ import {
   fetchWithAuth,
   waitForAppBridge,
 } from "../utils/app-bridge";
-import createApp from "@shopify/app-bridge";
-import { Redirect } from "@shopify/app-bridge/actions";
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -63,8 +61,6 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-
- 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
@@ -76,46 +72,40 @@ const Homepage = () => {
   
     const run = async () => {
       try {
-        // 🔍 Check install & billing status
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
-        // 🚀 Not installed → install flow
         if (!res.data?.installed) {
           if (isEmbedded && host) {
-            // Inside Shopify Admin → use App Bridge
-            const app = createApp({
+            // ✅ Use App Bridge from window (loaded via CDN)
+            const app = window.appBridge.createApp({
               apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
               host,
               forceRedirect: true,
             });
-            const redirect = Redirect.create(app);
+  
+            const redirect = window.appBridge.actions.Redirect.create(app);
             redirect.dispatch(
-              Redirect.Action.REMOTE,
+              window.appBridge.actions.Redirect.Action.REMOTE,
               `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
             );
           } else {
-            // Outside iframe → go directly
             window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
           }
           return;
         }
   
-        // 🚀 Installed but no billing → create subscription
         if (!res.data?.hasBilling) {
           const subRes = await axios.post(`/create-subscription2`, {
             userId: res.data.userId,
           });
   
           const confirmationUrl = subRes.data.confirmationUrl;
-  
           if (confirmationUrl) {
-            // 🔑 Billing MUST break out of iframe → always top-level
-            window.top.location.href = confirmationUrl;
+            window.top.location.href = confirmationUrl; // 🔑 billing always top-level
           }
           return;
         }
   
-        // ✅ Installed + billing active → stay in app
         console.log("✅ Shop installed and billing active");
       } catch (err) {
         console.error("❌ Shopify redirect flow failed:", err);
@@ -124,6 +114,7 @@ const Homepage = () => {
   
     run();
   }, []);
+  
   
   
   
@@ -204,7 +195,7 @@ const Homepage = () => {
   }
 
   if (shop && installed === null) {
-    return <div>Checking install status...</div>; // or a spinner
+    return <div>Checking install status...</div>; 
   }
   
 
