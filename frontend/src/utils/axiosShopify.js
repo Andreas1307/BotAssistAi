@@ -1,7 +1,5 @@
 // utils/axiosShopify.js
 import axios from "axios";
-import { getSessionToken } from "@shopify/app-bridge-utils";
-import { useAppBridge } from "@shopify/app-bridge-react";
 
 // We'll store the App Bridge instance once
 let appBridgeInstance = null;
@@ -20,27 +18,26 @@ const instance = axios.create({
   withCredentials: true,
 });
 
-// Interceptor to automatically attach Shopify token
+// Interceptor to attach Shopify session info (if inside Shopify)
 instance.interceptors.request.use(async (config) => {
   try {
-    if (!appBridgeInstance) {
-      console.warn(
-        "⚠️ App Bridge instance not set. Call setAppBridge(app) in your component first."
-      );
-      return config;
-    }
+    if (appBridgeInstance && window.shopify) {
+      // ✅ Use direct API access via the Shopify global
+      const token = await window.shopify.idToken(); // Shopify gives ID token
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
 
-    const token = await getSessionToken(appBridgeInstance);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    const shop = new URLSearchParams(window.location.search).get("shop");
-    if (shop) {
-      config.headers["X-Shopify-Shop-Domain"] = shop;
+      const shop = new URLSearchParams(window.location.search).get("shop");
+      if (shop) {
+        config.headers["X-Shopify-Shop-Domain"] = shop;
+      }
+    } else {
+      // ✅ Non-Shopify users (regular axios request)
+      console.log("🟢 Non-Shopify request (no appBridgeInstance).");
     }
   } catch (err) {
-    console.error("Error fetching Shopify session token:", err);
+    console.error("Error preparing Shopify request:", err);
   }
 
   return config;

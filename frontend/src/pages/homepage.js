@@ -15,15 +15,11 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
-import axios from "../utils/axiosShopify.js"
+import axios, { setAppBridge } from "../utils/axiosShopify.js";
+
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
-import { getSessionToken } from "@shopify/app-bridge-utils";
-import useShopifyInstallRedirect from "../utils/dash-redirect"
-import {
-  fetchWithAuth,
-  waitForAppBridge,
-} from "../utils/app-bridge";
+
 
 import { Redirect } from "@shopify/app-bridge/actions"; // Correct
 import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
@@ -72,6 +68,13 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   const app = useAppBridge(); // Get App Bridge instance
+
+useEffect(() => {
+  if (app) {
+    setAppBridge(app); // ✅ register App Bridge with axios
+  }
+}, [app]);
+
 
   const redirectToUrl = (url) => {
     if (!app) return;
