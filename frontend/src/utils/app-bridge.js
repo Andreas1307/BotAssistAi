@@ -1,4 +1,3 @@
-// utils/app-bridge.js
 import createApp from '@shopify/app-bridge';
 import { Redirect } from '@shopify/app-bridge/actions';
 import { getSessionToken } from '@shopify/app-bridge-utils';
@@ -12,7 +11,7 @@ export function getAppBridgeInstance() {
   const shop = params.get('shop');
   const host = params.get('host');
 
-  // ✅ Only initialize App Bridge if Shopify context exists
+  // Only initialize App Bridge if Shopify context exists
   if (!shop || !host) {
     console.warn('⚠️ Not running in Shopify context. Skipping App Bridge.');
     return null;
@@ -30,7 +29,6 @@ export function getAppBridgeInstance() {
 export async function waitForAppBridge() {
   const isEmbedded = window.top !== window.self;
   if (!isEmbedded) return null;
-
   return getAppBridgeInstance();
 }
 

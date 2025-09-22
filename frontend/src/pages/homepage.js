@@ -15,14 +15,13 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
-import axios, { setAppBridge } from "../utils/axiosShopify.js";
 
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
 
+import axios from "../utils/axiosShopify";
+import { safeRedirect } from "../utils/app-bridge";
 
-import { Redirect } from "@shopify/app-bridge";
-import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
 
 
 const Homepage = () => {
@@ -84,9 +83,8 @@ const safeRedirect = (url) => {
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
-  const host = params.get("host");
 
-  if (!shop) return; // Normal user, skip Shopify flow
+  if (!shop) return; // normal user, skip Shopify flow
 
   const run = async () => {
     try {
@@ -94,14 +92,14 @@ useEffect(() => {
       const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
 
       if (!res.data?.installed) {
-        safeRedirect(installUrl, window.ShopifyAppBridgeApp);
+        safeRedirect(installUrl);
         return;
       }
 
       if (!res.data?.hasBilling) {
         const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
         const confirmationUrl = subRes.data?.confirmationUrl;
-        if (confirmationUrl) safeRedirect(confirmationUrl, window.ShopifyAppBridgeApp);
+        if (confirmationUrl) safeRedirect(confirmationUrl);
         return;
       }
 
