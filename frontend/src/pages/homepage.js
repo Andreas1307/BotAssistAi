@@ -25,10 +25,8 @@ import {
   waitForAppBridge,
 } from "../utils/app-bridge";
 
+import { useAppBridge, Redirect } from "@shopify/app-bridge-react";
 
-
-import { useAppBridge } from "@shopify/app-bridge-react";
-import { Redirect } from "@shopify/app-bridge/actions";
 
 
 
@@ -71,12 +69,13 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const app = useAppBridge();  // Get App Bridge instance
+  const app = useAppBridge();  // App Bridge instance
   const redirect = Redirect.create(app);
   
   const redirectToUrl = (url) => {
     redirect.dispatch(Redirect.Action.REMOTE, url);
   };
+  
 
   // Example usage inside your useEffect
   useEffect(() => {
