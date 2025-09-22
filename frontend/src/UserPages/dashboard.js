@@ -263,41 +263,49 @@ const Dashboard = () => {
   
         if (membershipData.subscription_plan === "Pro") {
           setMembership(true);
-        } else if (
+          return;
+        }
+  
+        // ✅ Free plan but Shopify access exists → create billing
+        if (
           membershipData.subscription_plan === "Free" &&
           membershipData.shopify_access_token
         ) {
+          // prevent redirect loops
+          if (sessionStorage.getItem("billingRedirected")) {
+            console.warn("⚠️ Already redirected for billing, skipping...");
+            return;
+          }
+  
           const res = await axios.post(`${directory}/create-subscription2`, {
             userId: user.user_id,
           });
   
-          const confirmationUrl = res.data.confirmationUrl;
+          const confirmationUrl = res.data?.confirmationUrl;
           if (!confirmationUrl) return;
   
-          // Show loader while redirecting
+          // mark redirect attempt
+          sessionStorage.setItem("billingRedirected", "true");
+  
           setLoading(true);
   
           const host = new URLSearchParams(window.location.search).get("host");
           const isEmbedded = window.top !== window.self;
   
           if (isEmbedded && host) {
-            // ✅ Embedded → force App Bridge remote redirect
-            const app = createApp({
-              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-              host,
-              forceRedirect: true,
-            });
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+            // ✅ Embedded → force App Bridge global redirect
+            shopify.redirect.remote(confirmationUrl);
           } else {
             // ✅ Non-embedded → normal redirect
-            window.location.href = confirmationUrl;
+            window.top.location.href = confirmationUrl;
           }
-        } else {
-          setMembership(false);
+          return;
         }
+  
+        // fallback
+        setMembership(false);
       } catch (e) {
-        console.error("Error retrieving membership status:", e);
+        console.error("❌ Error retrieving membership status:", e);
         showErrorNotification();
       } finally {
         setLoading(false);
@@ -306,6 +314,7 @@ const Dashboard = () => {
   
     fetchMembership();
   }, [user]);
+  
   
   
 

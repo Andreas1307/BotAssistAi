@@ -75,31 +75,44 @@ const Homepage = () => {
       try {
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
+        // 🚀 Not installed → install flow
         if (!res.data?.installed) {
+          const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+  
           if (isEmbedded && host) {
-            // ✅ New App Bridge redirect
-            shopify.redirect.remote(
-              `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
-            );
+            shopify.redirect.remote(installUrl);
           } else {
-            window.top.location.href =
-              `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+            window.top.location.href = installUrl;
           }
           return;
         }
   
+        // 🚀 Installed but no billing → subscription
         if (!res.data?.hasBilling) {
+          // prevent billing loop
+          if (sessionStorage.getItem("billingRedirected")) {
+            console.warn("⚠️ Already redirected for billing, skipping...");
+            return;
+          }
+  
           const subRes = await axios.post(`/create-subscription2`, {
             userId: res.data.userId,
           });
   
-          const confirmationUrl = subRes.data.confirmationUrl;
-          if (confirmationUrl) {
-            window.top.location.href = confirmationUrl; // 🔑 billing must be top-level
+          const confirmationUrl = subRes.data?.confirmationUrl;
+          if (!confirmationUrl) return;
+  
+          sessionStorage.setItem("billingRedirected", "true");
+  
+          if (isEmbedded && host) {
+            shopify.redirect.remote(confirmationUrl);
+          } else {
+            window.top.location.href = confirmationUrl;
           }
           return;
         }
   
+        // ✅ Installed + billing active → stay in app
         console.log("✅ Shop installed and billing active");
       } catch (err) {
         console.error("❌ Shopify redirect flow failed:", err);
@@ -108,6 +121,7 @@ const Homepage = () => {
   
     run();
   }, []);
+  
   
 
 
