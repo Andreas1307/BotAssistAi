@@ -22,10 +22,6 @@ import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
 
 
-import { Redirect } from "@shopify/app-bridge";
-import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
-
-
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -63,56 +59,43 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const app = useAppBridge(); // Get App Bridge instance
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
 
-useEffect(() => {
-  if (app) {
-    setAppBridge(app); // ✅ register App Bridge with axios
-  }
-}, [app]);
-
-
-const safeRedirect = (url) => {
-  const isEmbedded = window.top !== window.self;
-  if (isEmbedded && app) {
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
-  } else {
-    window.top.location.href = url;
-  }
-};
-
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-
-  if (!shop) return; // normal user, skip Shopify flow
-
-  const run = async () => {
-    try {
-      const res = await axios.get(`/check-shopify-store`, { params: { shop } });
-      const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
-
-      if (!res.data?.installed) {
-        safeRedirect(installUrl);
-        return;
-      }
-
-      if (!res.data?.hasBilling) {
-        const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
-        const confirmationUrl = subRes.data?.confirmationUrl;
-        if (confirmationUrl) safeRedirect(confirmationUrl);
-        return;
-      }
-
-      console.log("✅ Shop installed and billing active");
-    } catch (err) {
-      console.error("❌ Shopify redirect flow failed:", err);
+    // Only run Shopify flow if shop is present
+    if (!shop || !host) {
+      console.log("🟢 Non-Shopify user, skipping App Bridge flow.");
+      return;
     }
-  };
 
-  run();
-}, []);
+    const runShopifyFlow = async () => {
+      try {
+        const res = await axios.get(`/check-shopify-store`, { params: { shop } });
+        const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+
+        if (!res.data?.installed) {
+          safeRedirect(installUrl);
+          return;
+        }
+
+        if (!res.data?.hasBilling) {
+          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
+          const confirmationUrl = subRes.data?.confirmationUrl;
+          if (confirmationUrl) safeRedirect(confirmationUrl);
+          return;
+        }
+
+        console.log("✅ Shopify store installed and billing active.");
+      } catch (err) {
+        console.error("❌ Shopify redirect flow failed:", err);
+      }
+    };
+
+    runShopifyFlow();
+  }, []);
+
 
   
 
