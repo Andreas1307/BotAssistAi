@@ -15,7 +15,7 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
-import {axios, setAppBridge} from "../utils/axiosShopify";
+import axios, { setAppBridge } from "../utils/axiosShopify";
 import { safeRedirect } from "../utils/app-bridge";
 
 import { Helmet } from "react-helmet";
