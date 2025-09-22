@@ -4239,6 +4239,17 @@ app.get("/check-shopify-user", async (req, res) => {
   }
 })
 
+app.post("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({ error: "Logout failed" });
+    req.session.destroy(() => {
+      res.clearCookie("connect.sid");
+      return res.json({ message: "Logged out successfully" });
+    });
+  });
+  });
+
+
 
 app.get("/get-shopify-styles", async (req, res) => {
   const { shop } = req.query;
