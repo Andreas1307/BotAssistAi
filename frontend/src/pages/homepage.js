@@ -25,6 +25,12 @@ import {
   waitForAppBridge,
 } from "../utils/app-bridge";
 
+import { useAppBridge } from "@shopify/app-bridge-react";
+import { Redirect } from "@shopify/app-bridge/actions";
+
+
+
+
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -75,25 +81,28 @@ const Homepage = () => {
       try {
         const res = await axios.get(`/check-shopify-store`, { params: { shop } });
   
-        // 🚀 Not installed → install flow
+        // Not installed → install flow
         if (!res.data?.installed) {
           const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
   
           if (isEmbedded && host) {
-            shopify.redirect.remote(installUrl);
+            const app = createApp({
+              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+              host,
+              forceRedirect: true,
+            });
+  
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, installUrl);
           } else {
             window.top.location.href = installUrl;
           }
           return;
         }
   
-        // 🚀 Installed but no billing → subscription
+        // Installed but no billing → subscription
         if (!res.data?.hasBilling) {
-          // prevent billing loop
-          if (sessionStorage.getItem("billingRedirected")) {
-            console.warn("⚠️ Already redirected for billing, skipping...");
-            return;
-          }
+          if (sessionStorage.getItem("billingRedirected")) return;
   
           const subRes = await axios.post(`/create-subscription2`, {
             userId: res.data.userId,
@@ -105,14 +114,20 @@ const Homepage = () => {
           sessionStorage.setItem("billingRedirected", "true");
   
           if (isEmbedded && host) {
-            shopify.redirect.remote(confirmationUrl);
+            const app = createApp({
+              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+              host,
+              forceRedirect: true,
+            });
+  
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
           } else {
             window.top.location.href = confirmationUrl;
           }
           return;
         }
   
-        // ✅ Installed + billing active → stay in app
         console.log("✅ Shop installed and billing active");
       } catch (err) {
         console.error("❌ Shopify redirect flow failed:", err);
@@ -121,6 +136,7 @@ const Homepage = () => {
   
     run();
   }, []);
+  
   
   
 
