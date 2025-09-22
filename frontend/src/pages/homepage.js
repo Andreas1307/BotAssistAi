@@ -25,11 +25,6 @@ import { Redirect } from "@shopify/app-bridge";
 import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
 
 
-
-
-
-
-
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -76,46 +71,50 @@ useEffect(() => {
 }, [app]);
 
 
-  const redirectToUrl = (url) => {
-    if (!app) return;
-    const redirect = Redirect.create(app); // Create Redirect instance here
+const safeRedirect = (url) => {
+  const isEmbedded = window.top !== window.self;
+  if (isEmbedded && app) {
+    const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
+  } else {
+    window.top.location.href = url;
+  }
+};
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
+
+  if (!shop) return;
+
+  const run = async () => {
+    try {
+      const res = await axios.get(`/check-shopify-store`, { params: { shop } });
+      const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+
+      if (!res.data?.installed) {
+        safeRedirect(installUrl); // ← use safeRedirect
+        return;
+      }
+
+      if (!res.data?.hasBilling) {
+        const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
+        const confirmationUrl = subRes.data?.confirmationUrl;
+        if (!confirmationUrl) return;
+
+        safeRedirect(confirmationUrl); // ← use safeRedirect
+        return;
+      }
+
+      console.log("✅ Shop installed and billing active");
+    } catch (err) {
+      console.error("❌ Shopify redirect flow failed:", err);
+    }
   };
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
-
-    if (!shop) return;
-
-    const run = async () => {
-      try {
-        const res = await axios.get(`/check-shopify-store`, { params: { shop } });
-        const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
-
-        if (!res.data?.installed && host) {
-          redirectToUrl(installUrl);
-          return;
-        }
-
-        if (!res.data?.hasBilling && host) {
-          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
-          const confirmationUrl = subRes.data?.confirmationUrl;
-          if (!confirmationUrl) return;
-
-          redirectToUrl(confirmationUrl);
-          return;
-        }
-
-        console.log("✅ Shop installed and billing active");
-      } catch (err) {
-        console.error("❌ Shopify redirect flow failed:", err);
-      }
-    };
-
-    run();
-  }, [app]);
+  run();
+}, [app]);
 
   
 
