@@ -15,13 +15,15 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
+import axios from "../utils/axiosShopify";
+import { safeRedirect } from "../utils/app-bridge";
 
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
 
-import axios from "../utils/axiosShopify";
-import { safeRedirect } from "../utils/app-bridge";
 
+import { Redirect } from "@shopify/app-bridge";
+import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
 
 
 const Homepage = () => {
