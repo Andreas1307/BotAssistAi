@@ -25,8 +25,11 @@ import {
   waitForAppBridge,
 } from "../utils/app-bridge";
 
-import { useAppBridge } from "@shopify/app-bridge-react";
+
+
+import createApp from "@shopify/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
+
 
 
 
