@@ -25,8 +25,9 @@ import {
   waitForAppBridge,
 } from "../utils/app-bridge";
 
-import { useAppBridge } from "@shopify/app-bridge-react";
-import { Redirect } from "@shopify/app-bridge/actions";
+import { Redirect } from "@shopify/app-bridge/actions"; // Correct
+import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
+
 
 
 
@@ -70,11 +71,11 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const app = useAppBridge(); 
- // App Bridge instance
+  const app = useAppBridge(); // Get App Bridge instance
+
   const redirectToUrl = (url) => {
     if (!app) return;
-    const redirect = Redirect.create(app); // Create instance here
+    const redirect = Redirect.create(app); // Create Redirect instance here
     redirect.dispatch(Redirect.Action.REMOTE, url);
   };
 
@@ -112,6 +113,7 @@ const Homepage = () => {
 
     run();
   }, [app]);
+
   
 
 
