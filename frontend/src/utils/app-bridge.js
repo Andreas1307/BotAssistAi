@@ -1,6 +1,12 @@
-import createApp from "@shopify/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
+import { useAppBridge, Redirect } from '@shopify/app-bridge-react';
+import { getSessionToken } from '@shopify/app-bridge-utils';
 
+const app = useAppBridge();        
+const redirect = Redirect.create(app);
+
+const redirectToUrl = (url) => {
+  redirect.dispatch(Redirect.Action.REMOTE, url);
+};
 let appInstance = null;
 
 export function getAppBridgeInstance() {

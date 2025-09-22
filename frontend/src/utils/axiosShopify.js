@@ -1,60 +1,48 @@
+// utils/axiosShopify.js
 import axios from "axios";
-import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import { useAppBridge } from "@shopify/app-bridge-react";
 
-let app = null;
+// We'll store the App Bridge instance once
+let appBridgeInstance = null;
 
-function isEmbeddedApp() {
-  // Shopify embedded apps run inside an iframe inside Shopify Admin.
-  // Check if window is inside iframe AND if URL has shop & host params
-  const urlParams = new URLSearchParams(window.location.search);
-  const shop = urlParams.get("shop");
-  const host = urlParams.get("host");
-  
-  const inIframe = window.self !== window.top;
-  
-  return inIframe && shop && host;
+/**
+ * Set the App Bridge instance from a React component
+ * Call this once in a component using useAppBridge()
+ */
+export function setAppBridge(app) {
+  appBridgeInstance = app;
 }
 
-function getAppInstance() {
-  if (app) return app;
-
-  if (!isEmbeddedApp()) {
-    // Not in embedded Shopify app context, do not create App Bridge instance
-    return null;
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const host = urlParams.get("host");
-
-  app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-  });
-  return app;
-}
-
+// Axios instance
 const instance = axios.create({
   baseURL: "https://api.botassistai.com",
   withCredentials: true,
 });
 
+// Interceptor to automatically attach Shopify token
 instance.interceptors.request.use(async (config) => {
   try {
-    const app = getAppInstance();
-    if (app) {
-      const token = await getSessionToken(app);
-      config.headers.Authorization = `Bearer ${token}`;
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const shop = urlParams.get("shop");
-      if (shop) {
-        config.headers["X-Shopify-Shop-Domain"] = shop;
-      }
+    if (!appBridgeInstance) {
+      console.warn(
+        "⚠️ App Bridge instance not set. Call setAppBridge(app) in your component first."
+      );
+      return config;
     }
-  } catch (error) {
-    console.error("Error getting Shopify session token", error);
+
+    const token = await getSessionToken(appBridgeInstance);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const shop = new URLSearchParams(window.location.search).get("shop");
+    if (shop) {
+      config.headers["X-Shopify-Shop-Domain"] = shop;
+    }
+  } catch (err) {
+    console.error("Error fetching Shopify session token:", err);
   }
+
   return config;
 });
 
