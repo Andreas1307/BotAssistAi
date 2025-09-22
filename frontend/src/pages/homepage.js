@@ -86,7 +86,7 @@ useEffect(() => {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  if (!shop) return;
+  if (!shop) return; // Normal user, skip Shopify flow
 
   const run = async () => {
     try {
@@ -94,16 +94,14 @@ useEffect(() => {
       const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
 
       if (!res.data?.installed) {
-        safeRedirect(installUrl); // ← use safeRedirect
+        safeRedirect(installUrl, window.ShopifyAppBridgeApp);
         return;
       }
 
       if (!res.data?.hasBilling) {
         const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
         const confirmationUrl = subRes.data?.confirmationUrl;
-        if (!confirmationUrl) return;
-
-        safeRedirect(confirmationUrl); // ← use safeRedirect
+        if (confirmationUrl) safeRedirect(confirmationUrl, window.ShopifyAppBridgeApp);
         return;
       }
 
@@ -114,7 +112,7 @@ useEffect(() => {
   };
 
   run();
-}, [app]);
+}, []);
 
   
 
