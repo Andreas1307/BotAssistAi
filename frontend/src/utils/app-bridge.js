@@ -1,4 +1,4 @@
-import { useAppBridge, Redirect } from '@shopify/app-bridge-react';
+import { useAppBridge, Redirect } from "@shopify/app-bridge";
 import { getSessionToken } from '@shopify/app-bridge-utils';
 
 const app = useAppBridge();        
