@@ -1,14 +1,12 @@
-import { useAppBridge, Redirect } from "@shopify/app-bridge";
-import { getSessionToken } from '@shopify/app-bridge-utils';
+// src/utils/app-bridge.js
+import { createApp, Redirect } from "@shopify/app-bridge";
+import { getSessionToken } from "@shopify/app-bridge-utils";
 
-const app = useAppBridge();        
-const redirect = Redirect.create(app);
-
-const redirectToUrl = (url) => {
-  redirect.dispatch(Redirect.Action.REMOTE, url);
-};
 let appInstance = null;
 
+/**
+ * Returns a singleton App Bridge instance
+ */
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
@@ -28,6 +26,9 @@ export function getAppBridgeInstance() {
   return appInstance;
 }
 
+/**
+ * Waits for App Bridge to be available (only in embedded apps)
+ */
 export async function waitForAppBridge() {
   const isEmbedded = window.top !== window.self;
   if (!isEmbedded) {
@@ -35,10 +36,12 @@ export async function waitForAppBridge() {
     return null;
   }
 
-  const app = getAppBridgeInstance();
-  return app;
+  return getAppBridgeInstance();
 }
 
+/**
+ * Performs a fetch request authenticated with Shopify session token
+ */
 export async function fetchWithAuth(url, options = {}) {
   const app = await waitForAppBridge();
   if (!app) return new Response(null, { status: 401 });
@@ -59,4 +62,19 @@ export async function fetchWithAuth(url, options = {}) {
     console.error("❌ Token error:", err);
     return new Response(null, { status: 401 });
   }
+}
+
+/**
+ * Redirects the user using App Bridge
+ */
+export function redirectToUrl(url) {
+  const app = getAppBridgeInstance();
+  if (!app) {
+    // Fallback for non-embedded or missing app instance
+    window.top.location.href = url;
+    return;
+  }
+
+  const redirect = Redirect.create(app);
+  redirect.dispatch(Redirect.Action.REMOTE, url);
 }

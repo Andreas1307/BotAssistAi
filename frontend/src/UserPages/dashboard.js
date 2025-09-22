@@ -27,7 +27,8 @@ import {
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 
-
+import { getAppBridgeInstance } from "../utils/app-bridge";
+import { Redirect } from "@shopify/app-bridge";
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
@@ -293,9 +294,12 @@ const Dashboard = () => {
           const isEmbedded = window.top !== window.self;
   
           if (isEmbedded && host) {
-            // ✅ Embedded → force App Bridge global redirect
-            shopify.redirect.remote(confirmationUrl);
-          } else {
+            const app = getAppBridgeInstance();
+            if (app) {
+                const redirect = Redirect.create(app);
+                redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+            }
+        } else {
             // ✅ Non-embedded → normal redirect
             window.top.location.href = confirmationUrl;
           }
