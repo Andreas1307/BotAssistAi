@@ -24,6 +24,7 @@ import {
   fetchWithAuth,
   waitForAppBridge,
 } from "../utils/app-bridge";
+
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -76,20 +77,13 @@ const Homepage = () => {
   
         if (!res.data?.installed) {
           if (isEmbedded && host) {
-            // ✅ Use App Bridge from window (loaded via CDN)
-            const app = window.appBridge.createApp({
-              apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-              host,
-              forceRedirect: true,
-            });
-  
-            const redirect = window.appBridge.actions.Redirect.create(app);
-            redirect.dispatch(
-              window.appBridge.actions.Redirect.Action.REMOTE,
+            // ✅ New App Bridge redirect
+            shopify.redirect.remote(
               `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`
             );
           } else {
-            window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+            window.top.location.href =
+              `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
           }
           return;
         }
@@ -101,7 +95,7 @@ const Homepage = () => {
   
           const confirmationUrl = subRes.data.confirmationUrl;
           if (confirmationUrl) {
-            window.top.location.href = confirmationUrl; // 🔑 billing always top-level
+            window.top.location.href = confirmationUrl; // 🔑 billing must be top-level
           }
           return;
         }
@@ -115,13 +109,6 @@ const Homepage = () => {
     run();
   }, []);
   
-  
-  
-  
-  
-
-
-
 
 
 

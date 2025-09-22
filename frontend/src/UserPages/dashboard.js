@@ -27,8 +27,6 @@ import {
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 
-import createApp from "@shopify/app-bridge";
-import { Redirect } from "@shopify/app-bridge/actions";
 
 
 const Dashboard = () => {
