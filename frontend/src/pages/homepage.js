@@ -21,7 +21,7 @@ import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
 
 
-import { Redirect } from "@shopify/app-bridge/actions"; // Correct
+import { Redirect } from "@shopify/app-bridge";
 import { useAppBridge } from "@shopify/app-bridge-react"; // For React hook
 
 
