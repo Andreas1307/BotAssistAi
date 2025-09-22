@@ -8,7 +8,7 @@
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@fortawesome/react-fontawesome": "^0.2.2",
         "@paypal/react-paypal-js": "^8.8.3",
-        "@shopify/app-bridge": "^4.2.5",
+        "@shopify/app-bridge": "^3.7.10",
         "@shopify/app-bridge-utils": "^3.5.1",
         "@shopify/polaris": "^13.9.5",
         "@stripe/react-stripe-js": "^3.5.1",
