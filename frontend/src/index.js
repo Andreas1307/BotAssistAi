@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 
 import { initShopifyAppBridge } from './utils/initShopifyAppBridge';
 
@@ -19,8 +19,8 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
-// Your routes setup
-const router = createBrowserRouter([
+// ✅ Use createHashRouter so Shopify ?shop=...&host=... works
+const router = createHashRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
   { path: "/unsubscribe", element: <UnsubscribePage /> },
@@ -37,6 +37,7 @@ const router = createBrowserRouter([
   { path: "*", element: <Homepage /> }
 ]);
 
+// ✅ Initialize App Bridge before rendering
 initShopifyAppBridge().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
