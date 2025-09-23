@@ -15,11 +15,14 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
-import axios, { setAppBridge } from "../utils/axiosShopify";
+import axios from "../utils/axiosShopify";
 import { safeRedirect } from "../utils/app-bridge";
 
 import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
+
+
+//SA IAU DIN CHATGPT FIX
 
 
 const Homepage = () => {
@@ -61,40 +64,36 @@ const Homepage = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
+    const shop = params.get('shop');
+    const host = params.get('host');
 
-    // Only run Shopify flow if shop is present
-    if (!shop || !host) {
-      console.log("🟢 Non-Shopify user, skipping App Bridge flow.");
-      return;
-    }
+    if (!shop || !host) return; // non-Shopify users
 
-    const runShopifyFlow = async () => {
+    const checkShop = async () => {
       try {
-        const res = await axios.get(`/check-shopify-store`, { params: { shop } });
-        const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`;
+        const res = await axios.get('/check-shopify-store', { params: { shop } });
 
         if (!res.data?.installed) {
-          safeRedirect(installUrl);
+          safeRedirect(`https://api.botassistai.com/shopify/install?shop=${shop}`);
           return;
         }
 
         if (!res.data?.hasBilling) {
-          const subRes = await axios.post(`/create-subscription2`, { userId: res.data.userId });
+          const subRes = await axios.post('/create-subscription2', { userId: res.data.userId });
           const confirmationUrl = subRes.data?.confirmationUrl;
           if (confirmationUrl) safeRedirect(confirmationUrl);
           return;
         }
 
-        console.log("✅ Shopify store installed and billing active.");
+        // Shopify store is installed and billing active
+        console.log('✅ Shopify store ready');
       } catch (err) {
-        console.error("❌ Shopify redirect flow failed:", err);
+        console.error('Shopify flow failed:', err);
       }
     };
 
-    runShopifyFlow();
-  }, []);
+    checkShop();
+  }, [navigate]);
 
 
   
