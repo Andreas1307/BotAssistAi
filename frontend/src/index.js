@@ -34,10 +34,9 @@ const router = createBrowserRouter([
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
   { path: `/admin/:key`, element: <AdminPage /> },
-  { path: "*", element: <Error /> }
+  { path: "*", element: <Homepage /> }
 ]);
 
-// Initialize App Bridge only when needed — but render either way
 initShopifyAppBridge().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
