@@ -58,13 +58,12 @@ const Homepage = () => {
 
 
 
-console.log("KKSDFDSFSDFDSDSFFDSFS")
-
   const location = useLocation()
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  /*
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get('shop');
@@ -96,7 +95,7 @@ console.log("KKSDFDSFSDFDSDSFFDSFS")
 
     checkShop();
   }, [navigate]);
-
+*/
 
   
 
