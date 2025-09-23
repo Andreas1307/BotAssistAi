@@ -975,6 +975,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/shopify/install', async (req, res) => {
   try {
+    console.log("HEYYYYYYYYYY")
     const shop = req.query.shop;
     if (!shop) return res.status(400).send('Missing shop');
 
