@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createHashRouter, RouterProvider, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { initShopifyAppBridge } from './utils/initShopifyAppBridge';
 
@@ -19,8 +19,8 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
-// ✅ Define routes using createHashRouter
-const router = createHashRouter([
+// Your routes setup
+const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
   { path: "/unsubscribe", element: <UnsubscribePage /> },
@@ -33,13 +33,11 @@ const router = createHashRouter([
   { path: "/log-in", element: <LogIn /> },
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
-  { path: "/admin/:key", element: <AdminPage /> },
-
-  // ✅ Instead of sending to Homepage, redirect unknown paths
-  { path: "*", element: <Navigate to="/" replace /> }
+  { path: `/admin/:key`, element: <AdminPage /> },
+  { path: "*", element: <Error /> }
 ]);
 
-// ✅ Initialize App Bridge before rendering
+// Initialize App Bridge only when needed — but render either way
 initShopifyAppBridge().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>

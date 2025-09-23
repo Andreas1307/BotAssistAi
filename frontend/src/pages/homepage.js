@@ -22,7 +22,6 @@ import { Helmet } from "react-helmet";
 import { detectShopifyUser } from "../utils/detectShopify"
 
 
-//SA IAU DIN CHATGPT FIX
 
 
 const Homepage = () => {
@@ -57,6 +56,10 @@ const Homepage = () => {
     setStars(newStars);
   }, []);
 
+  // sa investighez de ce nu merge
+
+
+
   const location = useLocation()
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,11 +70,11 @@ const Homepage = () => {
     const shop = params.get('shop');
     const host = params.get('host');
 
-    if (!shop || !host) return; // non-Shopify users
-
+    if (!shop || !host) return; 
+console.log("KKSDFDSFSDFDSDSFFDSFS")
     const checkShop = async () => {
       try {
-        const res = await axios.get('/check-shopify-store', { params: { shop } });
+        const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop } });
 
         if (!res.data?.installed) {
           safeRedirect(`https://api.botassistai.com/shopify/install?shop=${shop}`);
@@ -79,7 +82,7 @@ const Homepage = () => {
         }
 
         if (!res.data?.hasBilling) {
-          const subRes = await axios.post('/create-subscription2', { userId: res.data.userId });
+          const subRes = await axios.post(`${directory}/create-subscription2`, { userId: res.data.userId });
           const confirmationUrl = subRes.data?.confirmationUrl;
           if (confirmationUrl) safeRedirect(confirmationUrl);
           return;
