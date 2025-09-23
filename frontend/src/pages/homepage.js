@@ -56,9 +56,9 @@ const Homepage = () => {
     setStars(newStars);
   }, []);
 
-  // sa investighez de ce nu merge
 
 
+console.log("KKSDFDSFSDFDSDSFFDSFS")
 
   const location = useLocation()
   const [user, setUser] = useState(null);
@@ -71,7 +71,6 @@ const Homepage = () => {
     const host = params.get('host');
 
     if (!shop || !host) return; 
-console.log("KKSDFDSFSDFDSDSFFDSFS")
     const checkShop = async () => {
       try {
         const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop } });
