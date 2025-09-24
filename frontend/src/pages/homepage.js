@@ -68,39 +68,34 @@ const Homepage = () => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
     const host = params.get("host");
-
+  
     if (!shopParam || !host) {
       console.warn("❌ Not running inside Shopify context.");
       setLoading(false);
       return;
     }
-
+  
     setShop(shopParam);
-
+  
     const checkShop = async () => {
       try {
-        // Use axios for backend call
         const res = await axios.get(`/check-shopify-store`, {
           params: { shop: shopParam },
         });
-
+  
         if (!res.data.installed) {
-          // Kick off install
+          // Kick off install flow
           safeRedirect(`${directory}/shopify/install?shop=${shopParam}`);
           return;
         }
-
+  
         if (!res.data.hasBilling) {
-          // Example: call backend to create subscription
-          const subRes = await fetchWithAuth(`${directory}/create-subscription2`, {
-            method: "POST",
-            body: JSON.stringify({ userId: res.data.userId }),
-          });
-          const subData = await subRes.json();
-          if (subData?.confirmationUrl) safeRedirect(subData.confirmationUrl);
+          // Don’t auto-redirect, just flag that billing is missing
+          setInstalled(true);
+          setShowBilling(true);
           return;
         }
-
+  
         console.log("✅ Shopify store ready");
         setInstalled(true);
       } catch (err) {
@@ -110,10 +105,10 @@ const Homepage = () => {
         setLoading(false);
       }
     };
-
+  
     checkShop();
   }, []);
-
+  
   
 
   /*
