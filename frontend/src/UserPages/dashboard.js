@@ -123,6 +123,7 @@ const Dashboard = () => {
     const fetchShopifyUser = async () => {
       try {
         const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
+        console.log("SHOPIFY USER", response.data.data)
         setShopifyUser(response.data.data)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
