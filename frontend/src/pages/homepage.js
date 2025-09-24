@@ -90,9 +90,6 @@ const Homepage = () => {
         }
   
         if (!res.data.hasBilling) {
-          // Don’t auto-redirect, just flag that billing is missing
-          setInstalled(true);
-          setShowBilling(true);
           return;
         }
   
