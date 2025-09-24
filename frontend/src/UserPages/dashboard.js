@@ -319,10 +319,6 @@ const Dashboard = () => {
   
     fetchMembership();
   }, [user]);
-
-  const activatePlan = async () => {
-    await handleBilling(user?.user_id);
-  };
   
   
   
@@ -366,7 +362,9 @@ const Dashboard = () => {
   }, [user]); 
 
 
-
+  const activatePlan = async () => {
+    await handleBilling(user.user_id);
+  };
 
 
 
@@ -980,6 +978,7 @@ if (loading) {
     </button>
   </Link>
 )}
+
     </div>
 )}
         
