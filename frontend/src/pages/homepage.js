@@ -16,10 +16,10 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { safeRedirect } from "../utils/app-bridge";
+//import { safeRedirect } from "../utils/app-bridge";
 
-import { Helmet } from "react-helmet";
-import { detectShopifyUser } from "../utils/detectShopify"
+//import { Helmet } from "react-helmet";
+//import { detectShopifyUser } from "../utils/detectShopify"
 
 
 
@@ -56,14 +56,12 @@ const Homepage = () => {
     setStars(newStars);
   }, []);
 
-
-
-  const location = useLocation()
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  /*
+/*
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get('shop');
@@ -95,9 +93,8 @@ const Homepage = () => {
 
     checkShop();
   }, [navigate]);
-*/
 
-  
+  */
 
 
 
