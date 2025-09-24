@@ -4229,7 +4229,7 @@ app.get("/check-shopify-user", async (req, res) => {
       [id]
     );
     console.log("AAAAAAAAAAAA", rows)
-    if (rows.length && rows[0].shopify_shop_domain) {
+    if (rows.length && rows[0].shopify_access_token) {
       return res.json({ data: true, domain: rows[0].shopify_access_token });
     } else {
       return res.json({ data: false, domain: "" });
