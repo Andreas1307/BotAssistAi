@@ -1,25 +1,26 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from "react";
+import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import { initShopifyAppBridge } from './utils/initShopifyAppBridge';
+// ✅ Use a single App Bridge utility (from utils/appBridge.js)
+import { getAppBridgeInstance } from "./utils/appBridge";
 
-import Homepage from './pages/homepage';
-import Error from './pages/errorPage';
-import FeaturesPage from './pages/featuresPage';
-import Contact from './pages/contact';
-import About from './pages/about';
-import Pricing from './pages/pricing';
-import SignUp from './pages/SignUp';
-import LogIn from './pages/LogIn';
-import Dashboard from './UserPages/dashboard';
-import AdminPage from './UserPages/admin';
-import UpgradeDetails from './UserPages/Upgrade';
-import UnsubscribePage from './pages/UnsubscribePage';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
+import Homepage from "./pages/homepage";
+import Error from "./pages/errorPage";
+import FeaturesPage from "./pages/featuresPage";
+import Contact from "./pages/contact";
+import About from "./pages/about";
+import Pricing from "./pages/pricing";
+import SignUp from "./pages/SignUp";
+import LogIn from "./pages/LogIn";
+import Dashboard from "./UserPages/dashboard";
+import AdminPage from "./UserPages/admin";
+import UpgradeDetails from "./UserPages/Upgrade";
+import UnsubscribePage from "./pages/UnsubscribePage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
-// Your routes setup
+// ✅ Define your router
 const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
@@ -33,15 +34,16 @@ const router = createBrowserRouter([
   { path: "/log-in", element: <LogIn /> },
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
-  { path: `/admin/:key`, element: <AdminPage /> },
-  { path: "*", element: <Error /> }
+  { path: "/admin/:key", element: <AdminPage /> },
+  { path: "*", element: <Error />, errorElement: <Error /> },
 ]);
 
-// Initialize App Bridge only when needed — but render either way
-initShopifyAppBridge().finally(() => {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
-  );
-});
+// ✅ Initialize App Bridge once at startup
+getAppBridgeInstance();
+
+// ✅ Render app
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);

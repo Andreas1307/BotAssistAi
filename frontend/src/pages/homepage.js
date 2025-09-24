@@ -16,10 +16,9 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-//import { safeRedirect } from "../utils/app-bridge";
+import { fetchWithAuth, safeRedirect } from "../utils/app-bridge";
 
 import { Helmet } from "react-helmet";
-//import { detectShopifyUser } from "../utils/detectShopify"
 
 
 
@@ -61,40 +60,44 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-/*
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const shop = params.get('shop');
-    const host = params.get('host');
-
-    if (!shop || !host) return; 
+    const shop = params.get("shop");
+    const host = params.get("host");
+  
+    if (!shop || !host) return; // Not in Shopify context
+  
     const checkShop = async () => {
       try {
-        const res = await axios.get(`${directory}/check-shopify-store`, { params: { shop } });
-
-        if (!res.data?.installed) {
+        // ✅ Use fetchWithAuth for App Bridge token
+        const res = await fetchWithAuth(`${directory}/check-shopify-store?shop=${shop}`);
+        const data = await res.json();
+  
+        if (!data?.installed) {
           safeRedirect(`https://api.botassistai.com/shopify/install?shop=${shop}`);
           return;
         }
-
-        if (!res.data?.hasBilling) {
-          const subRes = await axios.post(`${directory}/create-subscription2`, { userId: res.data.userId });
-          const confirmationUrl = subRes.data?.confirmationUrl;
-          if (confirmationUrl) safeRedirect(confirmationUrl);
+  
+        if (!data?.hasBilling) {
+          const subRes = await fetchWithAuth(`${directory}/create-subscription2`, {
+            method: "POST",
+            body: JSON.stringify({ userId: data.userId }),
+          });
+          const subData = await subRes.json();
+          if (subData?.confirmationUrl) safeRedirect(subData.confirmationUrl);
           return;
         }
-
-        // Shopify store is installed and billing active
-        console.log('✅ Shopify store ready');
+  
+        console.log("✅ Shopify store ready");
       } catch (err) {
-        console.error('Shopify flow failed:', err);
+        console.error("Shopify flow failed:", err);
       }
     };
-
+  
     checkShop();
-  }, [navigate]);
+  }, []);
 
-  */
+
 
 
 
