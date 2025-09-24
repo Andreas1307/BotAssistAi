@@ -1,8 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
-// ✅ Use a single App Bridge utility (from utils/appBridge.js)
 import { getAppBridgeInstance } from "./utils/app-bridge";
 
 import Homepage from "./pages/homepage";
@@ -20,11 +18,8 @@ import UnsubscribePage from "./pages/UnsubscribePage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 
-// ✅ Define your router
+// Router
 const router = createBrowserRouter([
-  { path: "/:user/dashboard", element: <Dashboard /> },
-  { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
-  { path: "/unsubscribe", element: <UnsubscribePage /> },
   { path: "/", element: <Homepage /> },
   { path: "/features", element: <FeaturesPage /> },
   { path: "/contact", element: <Contact /> },
@@ -34,14 +29,17 @@ const router = createBrowserRouter([
   { path: "/log-in", element: <LogIn /> },
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
+  { path: "/unsubscribe", element: <UnsubscribePage /> },
+  { path: "/:user/dashboard", element: <Dashboard /> },
+  { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
   { path: "/admin/:key", element: <AdminPage /> },
   { path: "*", element: <Error />, errorElement: <Error /> },
 ]);
 
-// ✅ Initialize App Bridge once at startup
+// Initialize Shopify App Bridge once
 getAppBridgeInstance();
 
-// ✅ Render app
+// Render app
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <RouterProvider router={router} />
