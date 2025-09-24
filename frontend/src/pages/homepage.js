@@ -15,16 +15,13 @@ import Footer from "../components/footer";
 import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
-import axios from "../utils/axiosShopify.js"
+import axios from "../utils/axiosShopify";
+import { fetchWithAuth, safeRedirect } from "../utils/app-bridge";
 import { Helmet } from "react-helmet";
-import { detectShopifyUser } from "../utils/detectShopify"
-import { getSessionToken, createApp } from "@shopify/app-bridge-utils";
-import useShopifyInstallRedirect from "../utils/dash-redirect"
-import {
-  fetchWithAuth,
-  waitForAppBridge,
-} from "../utils/app-bridge";
-import { Redirect } from "@shopify/app-bridge/actions";
+
+
+
+
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -57,52 +54,50 @@ const Homepage = () => {
     setStars(newStars);
   }, []);
 
-  const location = useLocation()
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
 
-
-  
-
-
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
+  
+    if (!shop || !host) return;
+  
     const checkShop = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shopParam = urlParams.get("shop");
-      console.log("🔍 shopParam:", shopParam);
-
-      if (!shopParam) {
-        console.warn("❌ No shop param, skipping Shopify logic.");
-        return;
-      }
-
-      setShop(shopParam); // Will trigger re-render
       try {
-        const res = await axios.get(`/check-shopify-store`, {
-          params: { shop: shopParam },
-        });
-        console.log("✅ Backend says installed:", res.data.installed);
-        setInstalled(res.data.installed);
-        if (!res.data.installed) {
-          const response = await axios.post(`/chatbot-config-shopify`, {
-            shop: shopParam,
-            colors,
-          });
-          if (response.data.data === true) {
-            window.location.href = `https://api.botassistai.com/shopify/install?shop=${shopParam}`;
-          }
+        const res = await fetchWithAuth(`${directory}/check-shopify-store?shop=${shop}`);
+        const data = await res.json();
+  
+        if (!data?.installed) {
+          safeRedirect(`${directory}/shopify/install?shop=${shop}`);
+          return;
         }
-      } catch (e) {
-        console.error("❌ Error checking install status:", e);
-        setInstalled(false); // fallback if backend call fails
+  
+        if (!data?.hasBilling) {
+          const subRes = await fetchWithAuth(`${directory}/create-subscription2`, {
+            method: "POST",
+            body: JSON.stringify({ userId: data.userId }),
+          });
+          const subData = await subRes.json();
+          if (subData?.confirmationUrl) safeRedirect(subData.confirmationUrl);
+          return;
+        }
+  
+        console.log("✅ Shopify store ready");
+      } catch (err) {
+        console.error("Shopify flow failed:", err);
       }
     };
-
+  
     checkShop();
   }, []);
+  
 
+  
 
   /*
   const redirectToInstall = async (shop) => {
@@ -123,10 +118,6 @@ const Homepage = () => {
   */
   
   
-   
-
-
-
   const showPopupToRegister = () => {
     setTimeout(() => {
       setShowModal(true)
@@ -135,12 +126,6 @@ const Homepage = () => {
 
 
 
-  useEffect(() => {
-    const isShopifyUser = detectShopifyUser();
-    if (isShopifyUser) {
-      showPopupToRegister();
-    }
-  }, []);
   
 
 
@@ -178,7 +163,7 @@ const Homepage = () => {
   }
 
   if (shop && installed === null) {
-    return <div>Checking install status...</div>; // or a spinner
+    return <div>Checking install status...</div>; 
   }
   
 
