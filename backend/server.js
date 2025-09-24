@@ -4225,12 +4225,12 @@ app.get("/check-shopify-user", async (req, res) => {
   const { id } = req.query;
   try {
     const [rows] = await pool.query(
-      "SELECT shopify_shop_domain FROM users WHERE user_id = ?", 
+      "SELECT shopify_access_token FROM users WHERE user_id = ?", 
       [id]
     );
-    
+    console.log("AAAAAAAAAAAA", rows)
     if (rows.length && rows[0].shopify_shop_domain) {
-      return res.json({ data: true, domain: rows[0].shopify_shop_domain });
+      return res.json({ data: true, domain: rows[0].shopify_access_token });
     } else {
       return res.json({ data: false, domain: "" });
     }    
