@@ -59,44 +59,45 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
-  
-    if (!shop || !host) return; // Not running inside Shopify
-  
-    const checkShop = async () => {
-      try {
-        const res = await fetchWithAuth(
-          `${directory}/check-shopify-store?shop=${shop}`
-        );
-        const data = await res.json();
-  
-        if (!data?.installed) {
-          safeRedirect(`${directory}/shopify/install?shop=${shop}`);
-          return;
-        }
-  
-        if (!data?.hasBilling) {
-          const subRes = await fetchWithAuth(`${directory}/create-subscription2`, {
-            method: "POST",
-            body: JSON.stringify({ userId: data.userId }),
-          });
-          const subData = await subRes.json();
-          if (subData?.confirmationUrl) safeRedirect(subData.confirmationUrl);
-          return;
-        }
-  
-        console.log("✅ Shopify store ready");
-      } catch (err) {
-        console.error("Shopify flow failed:", err);
+
+ useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
+
+  if (!shop || !host) return; // Not running inside Shopify
+
+  const checkShop = async () => {
+    try {
+      const res = await fetchWithAuth(
+        `${directory}/check-shopify-store?shop=${shop}`
+      );
+      const data = await res.json();
+
+      if (!data?.installed) {
+        safeRedirect(`${directory}/shopify/install?shop=${shop}`);
+        return;
       }
-    };
-  
-    checkShop();
-  }, []);
+
+      if (!data?.hasBilling) {
+        const subRes = await fetchWithAuth(`${directory}/create-subscription2`, {
+          method: "POST",
+          body: JSON.stringify({ userId: data.userId }),
+        });
+        const subData = await subRes.json();
+        if (subData?.confirmationUrl) safeRedirect(subData.confirmationUrl);
+        return;
+      }
+
+      console.log("✅ Shopify store ready");
+    } catch (err) {
+      console.error("Shopify flow failed:", err);
+    }
+  };
+
+  checkShop();
+}, []);
+
   
 
   /*
