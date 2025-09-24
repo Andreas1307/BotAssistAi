@@ -29,6 +29,7 @@ import BookingSettings from "../UserComponents/BookingSettings";
 
 import { getAppBridgeInstance } from "../utils/app-bridge";
 import { Redirect } from "@shopify/app-bridge";
+import { handleBilling } from "../utils/billing";
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
@@ -318,6 +319,10 @@ const Dashboard = () => {
   
     fetchMembership();
   }, [user]);
+
+  const activatePlan = async () => {
+    await handleBilling(user?.user_id);
+  };
   
   
   
@@ -964,11 +969,17 @@ if (loading) {
         <li>📁 More configuartion options</li>
       </ul>
       </div>
+      {shopifyUser ? (
+  <button onClick={activatePlan}>
+    Activate Plan
+  </button>
+) : (
   <Link to={`/${user?.username}/upgrade-plan`}>
-      <button>
-        Upgrade Now
-        </button>
-        </Link>
+    <button>
+      Upgrade Now
+    </button>
+  </Link>
+)}
     </div>
 )}
         

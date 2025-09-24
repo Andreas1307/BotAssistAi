@@ -63,7 +63,6 @@ const Homepage = () => {
     getAppBridgeInstance();
   }, []);
 
-  // Shopify install flow
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
