@@ -18,7 +18,7 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify";
 //import { safeRedirect } from "../utils/app-bridge";
 
-//import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet";
 //import { detectShopifyUser } from "../utils/detectShopify"
 
 
@@ -125,12 +125,6 @@ const Homepage = () => {
 
 
 
-  useEffect(() => {
-    const isShopifyUser = detectShopifyUser();
-    if (isShopifyUser) {
-      showPopupToRegister();
-    }
-  }, []);
   
 
 
