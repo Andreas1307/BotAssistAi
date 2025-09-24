@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // ✅ Use a single App Bridge utility (from utils/appBridge.js)
-import { getAppBridgeInstance } from "./utils/appBridge";
+import { getAppBridgeInstance } from "./utils/app-bridge";
 
 import Homepage from "./pages/homepage";
 import Error from "./pages/errorPage";
