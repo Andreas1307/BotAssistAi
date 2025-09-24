@@ -1,10 +1,10 @@
+// index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { getAppBridgeInstance } from "./utils/app-bridge";
 
 import Homepage from "./pages/homepage";
-import Error from "./pages/errorPage";
 import FeaturesPage from "./pages/featuresPage";
 import Contact from "./pages/contact";
 import About from "./pages/about";
@@ -17,11 +17,12 @@ import UpgradeDetails from "./UserPages/Upgrade";
 import UnsubscribePage from "./pages/UnsubscribePage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import Error from "./pages/errorPage";
 
-// Initialize App Bridge first
+// Initialize App Bridge
 getAppBridgeInstance();
 
-// Use a catch-all route to prevent Shopify embedded app 404
+// Router
 const router = createBrowserRouter([
   { path: "/", element: <Homepage /> },
   { path: "/features", element: <FeaturesPage /> },
@@ -36,7 +37,8 @@ const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
   { path: "/admin/:key", element: <AdminPage /> },
-  { path: "*", element: <Homepage /> }, // ← fallback to homepage inside Shopify
+  // Fallback: redirect to homepage (ignores query params)
+  { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
