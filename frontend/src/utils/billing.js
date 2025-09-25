@@ -5,7 +5,7 @@ import axios from "axios";
 export async function handleBilling(userId) {
   try {
     const res = await axios.post(`${directory}/create-subscription2`, {
-      userId, // axios handles JSON automatically
+      userId,
     });
 
     const data = res.data;
