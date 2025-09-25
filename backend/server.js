@@ -2191,7 +2191,7 @@ app.post("/create-subscription2", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, host } = req.query;
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
@@ -2201,12 +2201,16 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    res.redirect(`https://botassistai.com/${rows[0].username}/dashboard`);
+    // Redirect back into Shopify iframe
+    res.redirect(
+      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?host=${host}`
+    );
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 

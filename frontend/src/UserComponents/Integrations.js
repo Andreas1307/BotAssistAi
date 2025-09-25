@@ -343,6 +343,7 @@ const Integrations = () => {
           withCredentials: true,
         });
         setUser(res.data.user);
+        setShopifyDomain(res.data.user.shopify_shop_domain)
       } catch (error) {
         setUser(null);
         showErrorNotification();
@@ -389,6 +390,7 @@ const Integrations = () => {
     const getShopifyStyles = async () => {
       if (!shopifyDomain) return;
       try {
+        console.log("SHOPIFY DOMAIJN", shopifyDomain)
         const response = await axios.get(`/get-shopify-styles`, {
           params: { shop: shopifyDomain }
         });
@@ -398,7 +400,7 @@ const Integrations = () => {
       }
     };
     getShopifyStyles();
-  }, [shopifyDomain]);
+  }, [user]);
 
 
 
