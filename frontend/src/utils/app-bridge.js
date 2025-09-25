@@ -4,9 +4,9 @@ import { Redirect } from "@shopify/app-bridge/actions";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 
 let appInstance = null;
-console.log("Inside the app-bridge.js")
-export function getAppBridgeInstance() {
+console.log("Inside the app-bridge.js");
 
+export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   let shop, host;
@@ -17,20 +17,23 @@ export function getAppBridgeInstance() {
   host = params.get("host");
 
   // Fallback to embedded global if available
-  if ((!shop || !host) && window.__SHOPIFY__) {
-    shop = window.__SHOPIFY__.shop;
-    host = window.__SHOPIFY__.host;
+  if ((!shop || !host) && window.__SHOPIFY_APP_BRIDGE) {
+    shop = window.__SHOPIFY_APP_BRIDGE?.shop;
+    host = window.__SHOPIFY_APP_BRIDGE?.host;
   }
 
   if (!shop || !host) {
-    console.warn("⚠️ Not running in Shopify context. Skipping App Bridge init");
+    console.warn(
+      "⚠️ Not running in Shopify iframe or missing 'shop'/'host'. App Bridge will not initialize"
+    );
     return null;
   }
 
+  // Initialize App Bridge
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true, // ensures iframe redirect
+    forceRedirect: window.top !== window.self, // only redirect if embedded
   });
 
   console.log("✅ Shopify App Bridge initialized", { shop, host });
