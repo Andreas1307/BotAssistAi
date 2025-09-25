@@ -1,4 +1,3 @@
-// utils/app-bridge.js
 import createApp from "@shopify/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
 import { getSessionToken } from "@shopify/app-bridge-utils";
@@ -8,9 +7,16 @@ let appInstance = null;
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
+  // Try URL first
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-  const host = params.get("host");
+  let shop = params.get("shop");
+  let host = params.get("host");
+
+  // Fallback to Shopify injected object
+  if ((!shop || !host) && window.__SHOPIFY__) {
+    shop = window.__SHOPIFY__.shop;
+    host = window.__SHOPIFY__.host;
+  }
 
   if (!shop || !host) {
     console.warn("⚠️ Not running in Shopify context. Skipping App Bridge init");
@@ -23,38 +29,6 @@ export function getAppBridgeInstance() {
     forceRedirect: true,
   });
 
-  console.log("✅ Shopify App Bridge initialized");
+  console.log("✅ Shopify App Bridge initialized", { shop, host });
   return appInstance;
-}
-
-export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
-  if (!app) return fetch(url, options);
-
-  try {
-    const token = await getSessionToken(app);
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
-    });
-  } catch (err) {
-    console.error("❌ Token error:", err);
-    return new Response(null, { status: 401 });
-  }
-}
-
-export function safeRedirect(url) {
-  const app = getAppBridgeInstance();
-  const isEmbedded = window.top !== window.self;
-
-  if (isEmbedded && app) {
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
-  } else {
-    window.top.location.href = url;
-  }
 }
