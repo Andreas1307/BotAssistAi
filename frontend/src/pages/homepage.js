@@ -83,7 +83,10 @@ const Homepage = () => {
         });
   
         if (!res.data.installed) {
-          // Kick off install flow
+          const response = await axios.post(`/chatbot-config-shopify`, {
+            shop: shopParam,
+            colors,
+          }); 
           safeRedirect(`${directory}/shopify/install?shop=${shopParam}`);
           return;
         }

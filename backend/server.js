@@ -3354,8 +3354,8 @@ app.post('/register', async (req, res, next) => {
     // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
     const [userResult] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
     const user = userResult[0];
-console.log(user)
-    // Log the user in
+ 
+    
     req.logIn(user, async (err) => {
       if (err) {
         console.error("Login error after registration:", err);

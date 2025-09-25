@@ -386,6 +386,11 @@ const Integrations = () => {
     fetchShopifyUser()
   }, [user])
 
+
+
+
+ // sa fac asta sa mearga ca nu stiu ce are si dupaia sa verific daca totul este ok cu codul
+
   useEffect(() => {
     const getShopifyStyles = async () => {
       if (!shopifyDomain) return;

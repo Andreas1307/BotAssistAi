@@ -914,9 +914,11 @@ if (loading) {
       </ul>
       </div>
       {shopifyUser ? (
+        <Link>
   <button onClick={activatePlan}>
     Activate Plan
   </button>
+  </Link>
 ) : (
   <Link to={`/${user?.username}/upgrade-plan`}>
     <button>
