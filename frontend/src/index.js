@@ -2,8 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import { initShopifyAppBridge } from './utils/initShopifyAppBridge';
-
 import Homepage from './pages/homepage';
 import Error from './pages/errorPage';
 import FeaturesPage from './pages/featuresPage';
@@ -19,7 +17,7 @@ import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
-// Your routes setup
+// Define routes
 const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
@@ -37,11 +35,8 @@ const router = createBrowserRouter([
   { path: "*", element: <Error /> }
 ]);
 
-// Initialize App Bridge only when needed — but render either way
-initShopifyAppBridge().finally(() => {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
-  );
-});
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
