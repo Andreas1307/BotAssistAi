@@ -129,7 +129,7 @@ const Dashboard = () => {
     } 
     fetchShopifyUser()
 
-  }, [])
+  }, [user])
   /*
   useShopifyInstallRedirect();
 
