@@ -1,28 +1,21 @@
-export async function initShopifyAppBridge() {
+import createApp from "@shopify/app-bridge";
+
+export function initShopifyAppBridge() {
+  // Prefer query params (shop, host, embedded)
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
   const host = params.get("host");
   const embedded = params.get("embedded");
 
-  if (!embedded || !shop || !host) {
+  if (!shop || !host) {
     console.warn("⚠️ Not embedded or missing 'shop'/'host' params — skipping App Bridge init");
     return null;
   }
 
-  await new Promise((resolve) => {
-    const interval = setInterval(() => {
-      if (window["app-bridge"]?.createApp) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, 50);
-  });
-
-  const AppBridge = window["app-bridge"];
-  const app = AppBridge.createApp({
+  const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true, // 👈 force redirect into iframe if needed
+    forceRedirect: embedded === "1", // 👈 redirect only if actually embedded
   });
 
   window.appBridge = app;
