@@ -248,76 +248,23 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchMembership = async () => {
-      if (!user) return;
-  
-      try {
-        const response = await axios.get(`${directory}/get-membership`, {
-          params: { userId: user.user_id },
-        });
-  
-        const membershipData = response.data?.message;
-  
-        if (!membershipData) {
-          setMembership(false);
-          return;
-        }
-  
-        if (membershipData.subscription_plan === "Pro") {
-          setMembership(true);
-          return;
-        }
-  
-        // ✅ Free plan but Shopify access exists → create billing
-        if (
-          membershipData.subscription_plan === "Free" &&
-          membershipData.shopify_access_token
-        ) {
-          // prevent redirect loops
-          if (sessionStorage.getItem("billingRedirected")) {
-            console.warn("⚠️ Already redirected for billing, skipping...");
-            return;
-          }
-  
-          const res = await axios.post(`${directory}/create-subscription2`, {
-            userId: user.user_id,
-          });
-  
-          const confirmationUrl = res.data?.confirmationUrl;
-          if (!confirmationUrl) return;
-  
-          // mark redirect attempt
-          sessionStorage.setItem("billingRedirected", "true");
-  
-          setLoading(true);
-  
-          const host = new URLSearchParams(window.location.search).get("host");
-          const isEmbedded = window.top !== window.self;
-  
-          if (isEmbedded && host) {
-            const app = getAppBridgeInstance();
-            if (app) {
-                const redirect = Redirect.create(app);
-                redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-            }
+      if (!user) return
+      try{
+        const response = await axios.get(`/get-membership`, {
+          params: { userId: user?.user_id}
+        })
+        if(response.data.message.subscription_plan === "Pro") {
+          setMembership(true)
         } else {
-            // ✅ Non-embedded → normal redirect
-            window.top.location.href = confirmationUrl;
-          }
-          return;
+          setMembership(false)
         }
-  
-        // fallback
-        setMembership(false);
-      } catch (e) {
-        console.error("❌ Error retrieving membership status:", e);
-        showErrorNotification();
-      } finally {
-        setLoading(false);
+      } catch(e) {
+        console.log("Error occured with retreiveing the membership status",e)
+        showErrorNotification()
       }
-    };
-  
-    fetchMembership();
-  }, [user]);
+    }
+    fetchMembership()
+  }, [user])
   
   
   
