@@ -1,4 +1,4 @@
-import { safeRedirect } from "./app-bridge2";
+import { safeRedirect } from "./initShopifyAppBridge";
 import directory from "../directory";
 import axios from "axios";
 
