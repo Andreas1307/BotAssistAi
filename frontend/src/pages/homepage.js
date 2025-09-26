@@ -16,7 +16,7 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/app-bridge";
+import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
 

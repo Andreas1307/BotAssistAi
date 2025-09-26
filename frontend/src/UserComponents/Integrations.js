@@ -387,9 +387,6 @@ const Integrations = () => {
   }, [user])
 
 
-
-// sa verific daca totul este ok cu codul
-
   useEffect(() => {
     const getShopifyStyles = async () => {
       if (!shopifyDomain) return;
