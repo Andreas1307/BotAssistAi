@@ -8,8 +8,16 @@ export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop") || window.__SHOPIFY__?.shop;
-  const host = params.get("host") || window.__SHOPIFY__?.host;
+  let shop = params.get("shop");
+  let host = params.get("host");
+
+  // Save to localStorage if present
+  if (shop) localStorage.setItem("shop", shop);
+  if (host) localStorage.setItem("host", host);
+
+  // Fallback to stored values
+  shop = shop || localStorage.getItem("shop");
+  host = host || localStorage.getItem("host");
 
   if (!shop || !host) {
     console.warn("⚠️ Missing Shopify shop or host — App Bridge cannot initialize");
@@ -18,32 +26,16 @@ export function getAppBridgeInstance() {
 
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: window.top !== window.self, // redirect only inside iframe
+    host, // Shopify wants the Base64-encoded host string
+    forceRedirect: window.top !== window.self,
   });
 
   console.log("✅ Shopify App Bridge initialized", { shop, host });
   return appInstance;
 }
 
-export async function waitForAppBridge(timeout = 3000) {
-  const isEmbedded = window.top !== window.self;
-  if (!isEmbedded) {
-    console.warn("⚠️ Not embedded (outside Shopify iframe)");
-    return null;
-  }
-
-  // Wait until App Bridge is ready
-  const start = Date.now();
-  while (!getAppBridgeInstance() && Date.now() - start < timeout) {
-    await new Promise((res) => setTimeout(res, 50));
-  }
-
-  return getAppBridgeInstance();
-}
-
 export async function fetchWithAuth(url, options = {}) {
-  const app = await waitForAppBridge();
+  const app = getAppBridgeInstance();
   if (!app) {
     console.error("❌ App Bridge not ready, cannot fetch");
     return new Response(null, { status: 401 });
@@ -67,7 +59,6 @@ export async function fetchWithAuth(url, options = {}) {
   }
 }
 
-// Optional helper to redirect safely
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
   const isEmbedded = window.top !== window.self;
