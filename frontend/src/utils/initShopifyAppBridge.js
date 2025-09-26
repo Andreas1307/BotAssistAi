@@ -7,7 +7,8 @@ import { Redirect } from "@shopify/app-bridge/actions";
  * - Skips initialization if not embedded or missing params
  * - Guards against Web Vitals errors
  * - Avoids SendBeacon/metrics failures affecting app
- */
+*/
+
 export async function initShopifyAppBridge() {
   try {
     const params = new URLSearchParams(window.location.search);

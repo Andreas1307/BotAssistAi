@@ -761,157 +761,61 @@ if (loading) {
   return (
     <div className="dashboard-container">
       <aside className="collap-sidebar">
-        <FaBars onClick={() => setCollap(!collap)} className="side-bar"/>
+        <FaBars onClick={() => setCollap(!collap)} className="side-bar" />
         <div className="sidebar-icons">
-         <a target="_blank" href=""><FaFacebook/></a> 
-         <a target="_blank" href="https://www.instagram.com/botassistai/"><FaInstagram /></a> 
-         <a target="_blank" href="https://www.tiktok.com/@botassistai"><FaTiktok /></a> 
+          <a target="_blank" href="">
+            <FaFacebook />
+          </a>
+          <a target="_blank" href="https://www.instagram.com/botassistai/">
+            <FaInstagram />
+          </a>
+          <a target="_blank" href="https://www.tiktok.com/@botassistai">
+            <FaTiktok />
+          </a>
         </div>
       </aside>
-      
+
       <aside className={`sidebar ${collap ? "active" : ""}`}>
-  <FaArrowLeft onClick={() => setCollap(false)} className="arrow-left" />
-  <h2 className="logo-dash"> BotAssistAI</h2>
+        <FaArrowLeft onClick={() => setCollap(false)} className="arrow-left" />
+        <h2 className="logo-dash"> BotAssistAI</h2>
 
+        <ul className="nav-list">
+          {[
+            { name: "Dashboard", icon: <FaHome />, hash: "#dash" },
+            { name: "Analytics", icon: <FaChartLine />, hash: "#analytics" },
+            {
+              name: "Conversations",
+              icon: <FaComments />,
+              hash: "#conversations",
+            },
+            { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
+            // Conditionally include Bookings
+            ...(shopifyUser
+              ? [
+                  {
+                    name: "Bookings",
+                    icon: <FaCalendarCheck />,
+                    hash: "#bookings",
+                  },
+                ]
+              : []),
+            { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
+            { name: "Settings", icon: <FaCogs />, hash: "#settings" },
+          ].map((item) => (
+            <a
+              href={item.hash}
+              key={item.hash}
+              className={`nav-item ${
+                window.location.hash === item.hash ? "active" : ""
+              }`}
+            >
+              <span className="nav-icon">{item.icon}</span>{" "}
+              <a href={item.hash}>{item.name}</a>
+            </a>
+          ))}
+        </ul>
 
-  <ul className="nav-list">
-  {[
-    { name: "Dashboard", icon: <FaHome />, hash: "#dash" },
-    { name: "Analytics", icon: <FaChartLine />, hash: "#analytics" },
-    { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
-    { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
-    // Conditionally include Bookings
-    ...(shopifyUser
-      ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
-      : []),
-    { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
-    { name: "Settings", icon: <FaCogs />, hash: "#settings" },
-  ].map((item) => (
-    <a
-      href={item.hash}
-      key={item.hash}
-      className={`nav-item ${window.location.hash === item.hash ? "active" : ""}`}
-    >
-      <span className="nav-icon">{item.icon}</span> <a href={item.hash}>{item.name}</a>
-    </a>
-  ))}
-</ul>
-
-
-
-  {!membership && <Link to={`/${user?.username}/upgrade-plan`}><button className="upgrade-btn">Upgrade Plan</button></Link>}
-</aside>
-
-<div className="main-content">  
-
-      {/* Main Content */}
-      <main className="dashboard-content" id="dash">
-  
-
-  {renew && (
-     <div className="membership-overlay">
-     <div className="membership-modal">
-       <h2 className="membership-title">✨ Premium Membership Expired</h2>
-       <p className="membership-text">
-         Your premium plan has ended. Renew now and unlock exclusive features, smarter tools, and priority access!
-       </p>
-       <div className="membership-buttons">
-       <Link className="membership-renew-btn" to={`/${user?.username}/upgrade-plan`}>
-      <button>
-        Renew Now
-        </button>
-        </Link>
-         <button className="membership-later-btn" onClick={() =>setRenew(false)}>
-           Not Now
-         </button>
-       </div>
-     </div>
-   </div>
-  )}
-        
-        <div className="dashboard-header">
-          <div onClick={() => setDashPopUp(!dashPopUp)} className="user-profile">
-            <FaUserCircle className="user-icon" />
-            <span className="username">{user ? user?.username : "Guest"}</span>
-           
-          </div>
-           {dashPopUp && (
-              <div className="popUp">
-                <p>{user?.email}</p>
-                <button onClick={() => showLogoutConfirm2(handleLogout)}>Log Out</button>
-                </div>
-            )}
-        </div>
-
-        <h1 className="dashboard-title">  <FaTachometerAlt className="dashIcon" />Dashboard Overview</h1>
-        <div>
-
-    <ToastContainer />
-  </div>
-
-        {/* System Status & AI Quick Actions */}
-        <div className="dashboard-widgets">
-          <div className="status-panel">
-            <h2>System Status</h2>
-            <ul>
-              <li>✅ AI Bot: {aiBot ? "Online" : "Offline"}</li>
-              <li>✅ API: {connected ? "Connected" : "Not Connected"}</li>
-              <li>
-  ⏱️ Last Active:{" "}
-  {lastConnected
-    ? formatDistanceToNow(new Date(lastConnected), { addSuffix: true })
-    : "N/A"}
-</li>
-            </ul>
-          </div>
-
-          <div className="quick-actions">
-            <h2>Quick AI Actions</h2>
-            <div className="action-btns">
-            <button
-    style={{
-      background: aiBot ? "red" : "green",
-    }}
-    className="quick-btn"
-    onClick={toggleBot}
-  >
-    <FaPowerOff className="quick-icon" />
-    {aiBot ? "Disable AI" : "Enable AI"}
-  </button>
-
-
-              <button className="quick-btn"  onClick={() => showLogoutConfirm(handleReset)}><FaSyncAlt /> Reset Bot</button>
-              <button className="quick-btn"><a href="#botTraining"><FaSlidersH /> Customize Bot</a></button>
-            </div>
-          </div>
-
-          
-        </div>
-{!membership && (
-  <div className="upgrade-section">
-      <h2>🚀 Upgrade to Premium</h2>
-      <p><strong>You're on the Free Plan.</strong> Unlock AI’s full power with a premium subscription!</p>
-      <div>
-          <ul>
-            <h3>Free Account</h3>
-        <li>❌ Limited AI Conversations (30/day)</li>
-        <li>❌ Slower AI Response Time</li>
-        <li>❌ No Custom Branding</li>
-        <li>❌ Basic AI Training Features</li>
-        <li>❌ No Priority Support</li>
-      </ul>
-
-     
-      <ul>
-         <h3>✨ Upgrade & Get:</h3>
-        <li>💬 Unlimited AI Conversations</li>
-        <li>📆 Booking System</li>
-        <li>📈 Real-time chat analytics</li>
-        <li>🔍 Conversation history</li>
-        <li>📁 More configuartion options</li>
-      </ul>
-      </div>
-      {shopifyUser ? (
+        {shopifyUser && !membership ? (
         <Link>
   <button onClick={activatePlan}>
     Activate Plan
@@ -919,415 +823,732 @@ if (loading) {
   </Link>
 ) : (
   <Link to={`/${user?.username}/upgrade-plan`}>
-    <button>
-      Upgrade Now
-    </button>
-  </Link>
+  <button className="upgrade-btn">Upgrade Plan</button>
+</Link>
 )}
+      </aside>
 
-    </div>
-)}
-        
+      <div className="main-content">
+        {/* Main Content */}
+        <main className="dashboard-content" id="dash">
+          {renew && (
+            <div className="membership-overlay">
+              <div className="membership-modal">
+                <h2 className="membership-title">
+                  ✨ Premium Membership Expired
+                </h2>
+                <p className="membership-text">
+                  Your premium plan has ended. Renew now and unlock exclusive
+                  features, smarter tools, and priority access!
+                </p>
+                <div className="membership-buttons">
+                  <Link
+                    className="membership-renew-btn"
+                    to={`/${user?.username}/upgrade-plan`}
+                  >
+                    <button>Renew Now</button>
+                  </Link>
+                  <button
+                    className="membership-later-btn"
+                    onClick={() => setRenew(false)}
+                  >
+                    Not Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
-        {/* Stats & Graphs */}
-        <div className="dashboard-widgets">
-          <div className="graph-card">
-            <h2><FaComments className="stat-icon" /> Daily Conversations</h2>
-            <p className="stat-number">{dailyCount / 2}</p>
+          <div className="dashboard-header">
+            <div
+              onClick={() => setDashPopUp(!dashPopUp)}
+              className="user-profile"
+            >
+              <FaUserCircle className="user-icon" />
+              <span className="username">
+                {user ? user?.username : "Guest"}
+              </span>
+            </div>
+            {dashPopUp && (
+              <div className="popUp">
+                <p>{user?.email}</p>
+                <button onClick={() => showLogoutConfirm2(handleLogout)}>
+                  Log Out
+                </button>
+              </div>
+            )}
           </div>
-          <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
-            <h2><FaChartLine className="stat-icon" /> Resolved Requests</h2>
-            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : resolvedQueries / 2}</p>
+
+          <h1 className="dashboard-title">
+            {" "}
+            <FaTachometerAlt className="dashIcon" />
+            Dashboard Overview
+          </h1>
+          <div>
+            <ToastContainer />
           </div>
-          <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
-            <h2><FaClock className="stat-icon" /> Response Time</h2>
-            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : `${resTime}ms`}</p>
+
+          {/* System Status & AI Quick Actions */}
+          <div className="dashboard-widgets">
+            <div className="status-panel">
+              <h2>System Status</h2>
+              <ul>
+                <li>✅ AI Bot: {aiBot ? "Online" : "Offline"}</li>
+                <li>✅ API: {connected ? "Connected" : "Not Connected"}</li>
+                <li>
+                  ⏱️ Last Active:{" "}
+                  {lastConnected
+                    ? formatDistanceToNow(new Date(lastConnected), {
+                        addSuffix: true,
+                      })
+                    : "N/A"}
+                </li>
+              </ul>
+            </div>
+
+            <div className="quick-actions">
+              <h2>Quick AI Actions</h2>
+              <div className="action-btns">
+                <button
+                  style={{
+                    background: aiBot ? "red" : "green",
+                  }}
+                  className="quick-btn"
+                  onClick={toggleBot}
+                >
+                  <FaPowerOff className="quick-icon" />
+                  {aiBot ? "Disable AI" : "Enable AI"}
+                </button>
+
+                <button
+                  className="quick-btn"
+                  onClick={() => showLogoutConfirm(handleReset)}
+                >
+                  <FaSyncAlt /> Reset Bot
+                </button>
+                <button className="quick-btn">
+                  <a href="#botTraining">
+                    <FaSlidersH /> Customize Bot
+                  </a>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        
-<div className="dashboard-widgets">
-        {/* AI Improvement Tips */}
-        <div className="improvement-tips">
-          <h2><FaLightbulb /> Improve Your AI Responses</h2>
-          <ul>
-            <li>🔹 Provide more sample conversations for better training</li>
-            <li>🔹 Regularly check logs for AI errors</li>
-            <li>🔹 Train AI with real user questions</li>
-            <li>🔹 Use customer feedback to refine responses</li>
-          </ul>
-        </div>
-        
-          <div className="faq-card">
-            <h2><FaClipboardList className="stat-icon" /> Most Popular FAQs</h2>
-            <ul>
-              {topFAQs.map((faq, index) => (
-                <li key={index}>{faq}</li>
-              ))}
-            </ul>
+          {!membership && (
+            <div className="upgrade-section">
+              <h2>🚀 Upgrade to Premium</h2>
+              <p>
+                <strong>You're on the Free Plan.</strong> Unlock AI’s full power
+                with a premium subscription!
+              </p>
+              <div>
+                <ul>
+                  <h3>Free Account</h3>
+                  <li>❌ Limited AI Conversations (30/day)</li>
+                  <li>❌ Slower AI Response Time</li>
+                  <li>❌ No Custom Branding</li>
+                  <li>❌ Basic AI Training Features</li>
+                  <li>❌ No Priority Support</li>
+                </ul>
+
+                <ul>
+                  <h3>✨ Upgrade & Get:</h3>
+                  <li>💬 Unlimited AI Conversations</li>
+                  <li>📆 Booking System</li>
+                  <li>📈 Real-time chat analytics</li>
+                  <li>🔍 Conversation history</li>
+                  <li>📁 More configuartion options</li>
+                </ul>
+              </div>
+              {shopifyUser ? (
+                <Link>
+                  <button onClick={activatePlan}>Activate Plan</button>
+                </Link>
+              ) : (
+                <Link to={`/${user?.username}/upgrade-plan`}>
+                  <button>Upgrade Now</button>
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* Stats & Graphs */}
+          <div className="dashboard-widgets">
+            <div className="graph-card">
+              <h2>
+                <FaComments className="stat-icon" /> Daily Conversations
+              </h2>
+              <p className="stat-number">{dailyCount / 2}</p>
+            </div>
+            <div
+              style={{ opacity: !membership ? 0.5 : 1 }}
+              className="graph-card"
+            >
+              <h2>
+                <FaChartLine className="stat-icon" /> Resolved Requests
+              </h2>
+              <p className="stat-number">
+                {!membership ? (
+                  <span style={{ fontSize: "21.5px" }}>Upgrade To See</span>
+                ) : (
+                  resolvedQueries / 2
+                )}
+              </p>
+            </div>
+            <div
+              style={{ opacity: !membership ? 0.5 : 1 }}
+              className="graph-card"
+            >
+              <h2>
+                <FaClock className="stat-icon" /> Response Time
+              </h2>
+              <p className="stat-number">
+                {!membership ? (
+                  <span style={{ fontSize: "21.5px" }}>Upgrade To See</span>
+                ) : (
+                  `${resTime}ms`
+                )}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="dashboard-widgets">
-          <div className="graph-card">
-            <h2><FaThumbsUp className="stat-icon" /> Customer Satisfaction</h2>
-            <p className="stat-number">{satisfactionScore}%</p>
+          <div className="dashboard-widgets">
+            {/* AI Improvement Tips */}
+            <div className="improvement-tips">
+              <h2>
+                <FaLightbulb /> Improve Your AI Responses
+              </h2>
+              <ul>
+                <li>
+                  🔹 Provide more sample conversations for better training
+                </li>
+                <li>🔹 Regularly check logs for AI errors</li>
+                <li>🔹 Train AI with real user questions</li>
+                <li>🔹 Use customer feedback to refine responses</li>
+              </ul>
+            </div>
+
+            <div className="faq-card">
+              <h2>
+                <FaClipboardList className="stat-icon" /> Most Popular FAQs
+              </h2>
+              <ul>
+                {topFAQs.map((faq, index) => (
+                  <li key={index}>{faq}</li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
-            <h2><FaTasks className="stat-icon" /> Unresolved Queries</h2>
-            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : unresolvedQueries}</p>
+
+          <div className="dashboard-widgets">
+            <div className="graph-card">
+              <h2>
+                <FaThumbsUp className="stat-icon" /> Customer Satisfaction
+              </h2>
+              <p className="stat-number">{satisfactionScore}%</p>
+            </div>
+            <div
+              style={{ opacity: !membership ? 0.5 : 1 }}
+              className="graph-card"
+            >
+              <h2>
+                <FaTasks className="stat-icon" /> Unresolved Queries
+              </h2>
+              <p className="stat-number">
+                {!membership ? (
+                  <span style={{ fontSize: "21.5px" }}>Upgrade To See</span>
+                ) : (
+                  unresolvedQueries
+                )}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="support-section">
-          <form onSubmit={sendSupport}>
-            <h2>Have a Question or Issue?</h2>
-          <textarea
-            className="support-input"
-            placeholder="Enter your problem or question here..."
-            value={userQuery}
-            onChange={(e) => setUserQuery(e.target.value)}
-            required
-          />
-          <button type="submit" className="submit-query-btn" >Submit</button>
-          </form>
-          
-        </div>
-       
-      </main>
+          <div className="support-section">
+            <form onSubmit={sendSupport}>
+              <h2>Have a Question or Issue?</h2>
+              <textarea
+                className="support-input"
+                placeholder="Enter your problem or question here..."
+                value={userQuery}
+                onChange={(e) => setUserQuery(e.target.value)}
+                required
+              />
+              <button type="submit" className="submit-query-btn">
+                Submit
+              </button>
+            </form>
+          </div>
+        </main>
 
-      <main className="dashboard-analytics" id="analytics">
-      <h1 className="dashboard-title">📊 Analytics</h1>
+        <main className="dashboard-analytics" id="analytics">
+          <h1 className="dashboard-title">📊 Analytics</h1>
 
-<AnalyticsPage />
+          <AnalyticsPage />
+        </main>
 
-      </main>
+        <main className="dashboard-conversations" id="conversations">
+          <div className="conversations-overview">
+            <h1 className="dashboard-title">
+              <FaComments /> Conversations
+            </h1>
+            <div
+              style={{ opacity: !membership ? 0.6 : 1 }}
+              className="conversation-list"
+            >
+              <h2>Latest Conversations</h2>
+              <div className="conv">
+                {!membership ? (
+                  <span
+                    style={{
+                      fontSize: "21px",
+                      fontWeight: 700,
+                      color: "#00F5D4",
+                    }}
+                  >
+                    Upgrade To See
+                  </span>
+                ) : (
+                  lastConv.map((conv, index) => (
+                    <div className="conversation-card" key={index}>
+                      <div className="conversation-header">
+                        <h3>Visitor</h3>
+                        <p>
+                          <span>Status:</span> {conv.status}
+                        </p>
+                      </div>
+                      <p>
+                        <span>User Message:</span> "
+                        {conv.userMessage.length > 50
+                          ? conv.userMessage.slice(0, 50) + "..."
+                          : conv.userMessage}
+                        "
+                      </p>
+                      <p>
+                        <span>AI Message:</span> "
+                        {conv.botMessage.length > 50
+                          ? conv.botMessage.slice(0, 50) + "..."
+                          : conv.botMessage}
+                        "
+                      </p>
+                      <p>
+                        <span>Time sent:</span>{" "}
+                        {new Date(conv.timeSent).toLocaleTimeString()}
+                      </p>
+                      <p>
+                        <span>Response Time:</span> {conv.responseTime}ms
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
 
-      <main className="dashboard-conversations" id="conversations">
-      <div className="conversations-overview">
-        <h1 className="dashboard-title">
-          <FaComments /> Conversations
-        </h1>
-        <div style={{opacity: !membership ? 0.6 : 1}} className="conversation-list">  
-            <h2>Latest Conversations</h2>
-            <div className="conv">
-            {!membership ? ( 
-  <span style={{ fontSize: "21px", fontWeight: 700, color: "#00F5D4" }}>Upgrade To See</span> 
-) : (
-  lastConv.map((conv, index) => (
-    <div className="conversation-card" key={index}>
-      <div className="conversation-header">
-        <h3>Visitor</h3>
-        <p><span>Status:</span> {conv.status}</p>
-      </div>
-      <p><span>User Message:</span> "{conv.userMessage.length > 50 ? conv.userMessage.slice(0, 50) + "..." : conv.userMessage}"</p>
-      <p><span>AI Message:</span> "{conv.botMessage.length > 50 ? conv.botMessage.slice(0, 50) + "..." : conv.botMessage}"</p>
-      <p><span>Time sent:</span> {new Date(conv.timeSent).toLocaleTimeString()}</p>
-      <p><span>Response Time:</span> {conv.responseTime}ms</p>
-    </div>
-  ))
-)}
-  
-</div>
-          
-        </div>
-      </div>
+          <div className="conv-details">
+            <div
+              style={{ opacity: !membership ? 0.5 : 1 }}
+              className="conversation-details"
+            >
+              <h2>Conversation History</h2>
+              {!membership ? (
+                <span
+                  style={{
+                    fontSize: "21px",
+                    fontWeight: 700,
+                    color: "#00F5D4",
+                  }}
+                >
+                  Upgrade To See
+                </span>
+              ) : (
+                <div className="conversation-detail">
+                  {convHistory.length > 0 ? (
+                    <>
+                      <ul className="chat-list">
+                        {convHistory.slice(0, visibleCount).map((chat, key) => (
+                          <li
+                            key={key}
+                            className={
+                              chat.sender_type === "bot"
+                                ? "bot-message"
+                                : "user-message"
+                            }
+                          >
+                            <strong>
+                              {chat.sender_type === "bot" ? "Bot" : "User"}:
+                            </strong>{" "}
+                            {chat.message_text}
+                          </li>
+                        ))}
+                      </ul>
+                      {visibleCount < convHistory.length && (
+                        <button
+                          className="load-btn"
+                          onClick={() => setVisibleCount((prev) => prev + 10)}
+                        >
+                          Load more
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <h2>No conversation history</h2>
+                  )}
+                </div>
+              )}
+            </div>
 
-            <div className="conv-details">
-            <div  style={{opacity: !membership ? 0.5 : 1}} className="conversation-details">
-  <h2>Conversation History</h2>
-  {!membership ? (
-  <span style={{ fontSize: "21px", fontWeight: 700, color: "#00F5D4" }}>
-    Upgrade To See
-  </span>
-) : (
-  <div className="conversation-detail">
-  {convHistory.length > 0 ? (
-    <>
-      <ul className="chat-list">
-        {convHistory.slice(0, visibleCount).map((chat, key) => (
-          <li
-            key={key}
-            className={chat.sender_type === "bot" ? "bot-message" : "user-message"}
-          >
-            <strong>{chat.sender_type === "bot" ? "Bot" : "User"}:</strong> {chat.message_text}
-          </li>
-        ))}
-      </ul>
-      {visibleCount < convHistory.length && (
-        <button className="load-btn" onClick={() => setVisibleCount(prev => prev + 10)}>
-          Load more
-        </button>
-      )}
-    </>
-  ) : (
-    <h2>No conversation history</h2>
-  )}
-</div>
+            <div
+              style={{ opacity: !membership ? 0.5 : 1 }}
+              className="user-sentiment"
+            >
+              <h2>Sentiment Analysis</h2>
+              <div className="sentiment-card">
+                <p>
+                  💚 Positive:{" "}
+                  <span>{!membership ? "🔒" : `${positive}%`}</span>{" "}
+                </p>
+              </div>
+              <div className="sentiment-card">
+                <p>
+                  ⚠️ Negative:{" "}
+                  <span>{!membership ? "🔒" : `${negative}%`}</span>
+                </p>
+              </div>
+              <div className="sentiment-card">
+                <p>
+                  😐 Neutral: <span>{!membership ? "🔒" : `${neutral}%`}</span>
+                </p>
+              </div>
+              {!membership && (
+                <span
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: 700,
+                    color: "#00F5D4",
+                  }}
+                >
+                  Upgrade To See
+                </span>
+              )}
+            </div>
+          </div>
 
-)}
+          <div className="conv-details">
+            <div className="real-time-analytics">
+              <h2>Chatbot Performance</h2>
+              <div className="analytics-card">
+                <h3>Chats Count</h3>
+                <p>
+                  <span>Today:</span> {dailyCount / 2}
+                </p>
+              </div>
+              <div className="analytics-card">
+                <h3>Avg. Response Time</h3>
+                <p>
+                  <span>Bot:</span> {resTime}ms
+                </p>
+              </div>
+            </div>
+            <div className="support-tools">
+              <h2>Support Tools</h2>
+              <div className="tools-card">
+                <h3>⏱️Last Training Update</h3>
+                <p>{lastUpdated}</p>
+              </div>
+              <div className="tools-card">
+                <h3>🧠Brain Boosts</h3>
+                <p>Every update makes your assistant smarter and better.</p>
+              </div>
+            </div>
+            <div className="bot-training-feedback">
+              <h2>Chatbot Training</h2>
+              <div className="feedback-card">
+                <p>
+                  ⚠️<span> Flagged Issue:</span> {flaggedIssue || "No issues"}
+                </p>
+              </div>
+              <div className="feedback-card">
+                <p>
+                  💡<span> Suggestion:</span> Upload real chat examples and FAQs
+                  to help the AI respond more naturally and accurately.
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
 
-  
-</div>
+        <main className="dashboard-integrations" id="integrations">
+          <span className="titleBox">
+            <h1 className="dashboard-title">
+              <FaProjectDiagram /> Integrations
+            </h1>
+            <button
+              className="integrate-btn"
+              onClick={() => setIntegration(true)}
+            >
+              How To Integrate
+            </button>
+          </span>
 
-      <div style={{opacity: !membership ? 0.5 : 1}} className="user-sentiment">
-        <h2>Sentiment Analysis</h2>
-        <div className="sentiment-card">
-          <p>💚 Positive: <span>{!membership? "🔒" : `${positive}%`}</span> </p>
-        </div>
-        <div className="sentiment-card">
-          <p>⚠️ Negative: <span>{!membership? "🔒" : `${negative}%`}</span></p>
-        </div>
-        <div className="sentiment-card">
-          <p>😐 Neutral: <span>{!membership? "🔒" : `${neutral}%`}</span></p>
-        </div>
-        {!membership && (
-         <span style={{fontSize: "20px", fontWeight: 700, color: "#00F5D4"}}>Upgrade To See</span> 
+          <Integration />
+        </main>
+
+        {integration && (
+          <div className="integration-popUp">
+            <FaTimes
+              onClick={() => setIntegration(false)}
+              className="close-inte"
+            />
+            <div className="inte-popUp">
+              <div className="integration">
+                <div className="integration-steps">
+                  <h2>
+                    ⚙️ Integrate <span>BotAssistAI</span> with Your Website
+                  </h2>
+                  <p className="sub-heading">
+                    Embed your AI chatbot in minutes. Just follow these simple
+                    steps.
+                  </p>
+
+                  <div className="steps-card">
+                    <div className="step-number">1</div>
+                    <div className="step-content">
+                      <h3>Customize Your Chatbot</h3>
+                      <p>
+                        Head to your BotAssistAI Bot Training section and train
+                        your bot’s information to provide the best answers about
+                        your business
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/training.png`}
+                          alt="Train your support bot"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="steps-card">
+                    <div className="step-number">2</div>
+                    <div className="step-content">
+                      <h3>Get Your API Key</h3>
+                      <p>
+                        Copy your unique API key from the{" "}
+                        <strong>Integrations</strong> section. This key links
+                        your site to your bot.
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/apiKey.png`}
+                          alt="Api-Key"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="steps-card">
+                    <div className="step-number">3</div>
+                    <div className="step-content">
+                      <h3>Embed the Script</h3>
+                      <p>
+                        Go to the integrations page and find the{" "}
+                        <strong>Copy & Embed Code</strong> box and choose your
+                        website's language.Then insert the coped code into your
+                        code.
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/code-integration.png`}
+                          alt="Api-Key"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="steps-card">
+                    <div className="step-number">4</div>
+                    <div className="step-content">
+                      <h3>Activate & Test</h3>
+                      <p>
+                        After adding the code along with the api key to your
+                        website, head over to your dashboard section and click{" "}
+                        <strong>Enable AI</strong>.
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/enableAi.png`}
+                          alt="Enable Ai Button"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="step-final">
+                    <h3>🎉 Done!</h3>
+                    <p>
+                      Your AI assistant is now live and ready to handle support
+                      24/7. You can monitor, train, and customize it anytime
+                      from your dashboard.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
-        
-      </div>
- </div>
 
+        {!shopifyUser && (
+          <main className="dashboard-bookings" id="bookings">
+            <div className="booking-dash">
+              <h1 className="dashboard-title">📅 Bookings</h1>
+              <button
+                onClick={() => setBookingIntegration(!bookingIntegration)}
+                className="booking-info"
+              >
+                How To Integrate
+              </button>
+            </div>
 
+            <BookingSettings />
+          </main>
+        )}
 
-<div className="conv-details">
-  <div className="real-time-analytics">
-        <h2>Chatbot Performance</h2>
-        <div className="analytics-card">
-          <h3>Chats Count</h3>
-          <p><span>Today:</span> {dailyCount / 2}</p>
-        </div>
-        <div className="analytics-card">
-          <h3>Avg. Response Time</h3>
-          <p><span>Bot:</span> {resTime}ms</p>
-        </div>
-      </div>
-      <div className="support-tools">
-        <h2>Support Tools</h2>
-        <div className="tools-card">
-          <h3>⏱️Last Training Update</h3>
-          <p>{lastUpdated}</p>
-        </div>
-        <div className="tools-card">
-          <h3>🧠Brain Boosts</h3>
-          <p>Every update makes your assistant smarter and better.</p>
-        </div>
-      </div>
-      <div className="bot-training-feedback">
-        <h2>Chatbot Training</h2>
-        <div className="feedback-card">
-          <p>⚠️<span> Flagged Issue:</span> {flaggedIssue || "No issues"}</p>
-        </div>
-        <div className="feedback-card">
-          <p>💡<span> Suggestion:</span> Upload real chat examples and FAQs to help the AI respond more naturally and accurately.</p>
-        </div>
-      </div>
-</div>
-      
+        {bookingIntegration && (
+          <div className="integration-popUp">
+            <FaTimes
+              onClick={() => setBookingIntegration(false)}
+              className="close-inte"
+            />
+            <div className="inte-popUp">
+              <div className="integration">
+                <div className="integration-steps">
+                  <h2>⚙️Set-Up and integrate booking to your Website</h2>
+                  <p className="sub-heading">
+                    Seamlessly connect your AI-powered booking system to your
+                    website in just a few minutes.
+                  </p>
 
-      
-    </main>
+                  <div className="steps-card">
+                    <div className="step-number">1</div>
+                    <div className="step-content">
+                      <h3>Set Up Business Hours</h3>
+                      <p>
+                        Set your operating hours to enable your AI chatbot to
+                        manage bookings on your behalf. Integrate easily with
+                        your website and deliver a seamless scheduling
+                        experience to your customers.
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/working-hours.png`}
+                          alt="Train your support bot"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-    <main className="dashboard-integrations" id="integrations">
-      <span className="titleBox">
-        <h1 className="dashboard-title">
-          <FaProjectDiagram  /> Integrations
-        </h1>
-        <button className="integrate-btn" onClick={() => setIntegration(true)}>
-          How To Integrate
-        </button>
-      </span>
-    
-        <Integration />
-    </main>
+                  <div className="steps-card">
+                    <div className="step-number">2</div>
+                    <div className="step-content">
+                      <h3>Add Your Services</h3>
+                      <p>
+                        List the services you offer so customers can book
+                        directly through your website and chatbot. Customize
+                        availability, pricing, and more!
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/services.png`}
+                          alt="services"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
+                  <div className="steps-card">
+                    <div className="step-number">3</div>
+                    <div className="step-content">
+                      <h3>Add Your Staff</h3>
+                      <p>
+                        Easily add team members, set services they offer, and
+                        let the system handle bookings with AI chatbot
+                        integration.
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/staff.png`}
+                          alt="staff-members"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-{integration && (
-  <div className="integration-popUp">
-    <FaTimes onClick={() => setIntegration(false)} className="close-inte" />
-    <div className="inte-popUp">
-      <div className="integration">
+                  <div className="steps-card">
+                    <div className="step-number">4</div>
+                    <div className="step-content">
+                      <h3>Select Your Code And Embed</h3>
+                      <p>
+                        Choose to embed the full booking system on your website
+                        for a seamless experience, or simply let the AI chatbot
+                        handle bookings without the integration. The choice is
+                        yours!
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/booking-integrate.png`}
+                          alt="staff-members"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
+                  <div className="steps-card">
+                    <div className="step-number">5</div>
+                    <div className="step-content">
+                      <h3>Start getting Appointments</h3>
+                      <p>
+                        Once everything is set up, you're ready to start
+                        receiving appointments! Let your AI-powered chatbot
+                        handle scheduling your booking process effortlessly.
+                      </p>
+                      <div className="step-image">
+                        <img
+                          src={`${process.env.PUBLIC_URL}/img/appointments.png`}
+                          alt="Enable Ai Button"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-
-
-
-      <div className="integration-steps">
-  <h2>⚙️ Integrate <span>BotAssistAI</span> with Your Website</h2>
-  <p className="sub-heading">Embed your AI chatbot in minutes. Just follow these simple steps.</p>
-
-  <div className="steps-card">
-    <div className="step-number">1</div>
-    <div className="step-content">
-      <h3>Customize Your Chatbot</h3>
-      <p>Head to your BotAssistAI Bot Training section and train your bot’s information to provide the best answers about your business</p>
-      <div className="step-image">
-        <img src={`${process.env.PUBLIC_URL}/img/training.png`} alt="Train your support bot" />
-      </div>
-    </div>
-  </div>
-
-  <div className="steps-card">
-    <div className="step-number">2</div>
-    <div className="step-content">
-      <h3>Get Your API Key</h3>
-      <p>Copy your unique API key from the <strong>Integrations</strong> section. This key links your site to your bot.</p>
-      <div className="step-image">
-        <img src={`${process.env.PUBLIC_URL}/img/apiKey.png`} alt="Api-Key" />
-      </div>
-    </div>
-  </div>
-
-      <div className="steps-card">
-    <div className="step-number">3</div>
-    <div className="step-content">
-    <h3>Embed the Script</h3>
-      <p>Go to the integrations page and find the <strong>Copy & Embed Code</strong> box and choose your website's language.Then insert the coped code into your code.</p>
-      <div className="step-image">
-        <img src={`${process.env.PUBLIC_URL}/img/code-integration.png`} alt="Api-Key" />
-      </div>
-    </div>
-  </div>
-
-  <div className="steps-card">
-    <div className="step-number">4</div>
-    <div className="step-content">
-      <h3>Activate & Test</h3>
-      <p>After adding the code along with the api key to your website, head over to your dashboard section and click <strong>Enable AI</strong>.</p>
-      <div className="step-image">
-        <img src={`${process.env.PUBLIC_URL}/img/enableAi.png`} alt="Enable Ai Button" />
-      </div>
-    </div>
-  </div>
-
-  <div className="step-final">
-    <h3>🎉 Done!</h3>
-    <p>Your AI assistant is now live and ready to handle support 24/7. You can monitor, train, and customize it anytime from your dashboard.</p>
-  </div>
-</div>
-
-
-
-
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-{shopifyUser && (
-
-  <main className="dashboard-bookings" id="bookings">
-  <div className="booking-dash">
-<h1 className="dashboard-title">📅 Bookings</h1>
-<button onClick={() => setBookingIntegration(!bookingIntegration)} className="booking-info">How To Integrate</button>
-  </div>
-      
-
-<BookingSettings />
-
-      </main>
-)}
-
-
-      {bookingIntegration && (
-        <div className="integration-popUp">
-        <FaTimes onClick={() => setBookingIntegration(false)} className="close-inte" />
-        <div className="inte-popUp">
-          <div className="integration">
-    
-          <div className="integration-steps">
-      <h2>⚙️Set-Up and integrate booking to your Website</h2>
-      <p className="sub-heading">Seamlessly connect your AI-powered booking system to your website in just a few minutes.</p>
-    
-      <div className="steps-card">
-        <div className="step-number">1</div>
-        <div className="step-content">
-          <h3>Set Up Business Hours</h3>
-          <p>Set your operating hours to enable your AI chatbot to manage bookings on your behalf. Integrate easily with your website and deliver a seamless scheduling experience to your customers.</p>
-          <div className="step-image">
-            <img src={`${process.env.PUBLIC_URL}/img/working-hours.png`} alt="Train your support bot" />
+                  <div className="step-final">
+                    <h3>🎉 All Set!</h3>
+                    <p>
+                      Your booking system is now live and ready to schedule
+                      appointments seamlessly. You can manage, track, and
+                      customize your settings anytime from your dashboard.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    
-      <div className="steps-card">
-        <div className="step-number">2</div>
-        <div className="step-content">
-          <h3>Add Your Services</h3>
-          <p>List the services you offer so customers can book directly through your website and chatbot. Customize availability, pricing, and more!</p>
-          <div className="step-image">
-            <img src={`${process.env.PUBLIC_URL}/img/services.png`} alt="services" />
-          </div>
-        </div>
-      </div>
+        )}
 
-      <div className="steps-card">
-        <div className="step-number">3</div>
-        <div className="step-content">
-          <h3>Add Your Staff</h3>
-          <p>Easily add team members, set services they offer, and let the system handle bookings with AI chatbot integration.</p>
-          <div className="step-image">
-            <img src={`${process.env.PUBLIC_URL}/img/staff.png`} alt="staff-members" />
-          </div>
-        </div>
+        <main className="dashboard-train" id="botTraining">
+          <h1 className="dashboard-title">
+            <FaRobot /> Bot Training
+          </h1>
+          <BotTraining />
+        </main>
+
+        <main className="dashboard-settings" id="settings">
+          <h1 className="dashboard-title">
+            <FaRobot /> Settings
+          </h1>
+          <SettingsPage />
+          <Footer />
+        </main>
       </div>
-    
-      <div className="steps-card">
-        <div className="step-number">4</div>
-        <div className="step-content">
-          <h3>Select Your Code And Embed</h3>
-          <p>Choose to embed the full booking system on your website for a seamless experience, or simply let the AI chatbot handle bookings without the integration. The choice is yours!</p>
-          <div className="step-image">
-            <img src={`${process.env.PUBLIC_URL}/img/booking-integrate.png`} alt="staff-members" />
-          </div>
-        </div>
-      </div>
-    
-      <div className="steps-card">
-        <div className="step-number">5</div>
-        <div className="step-content">
-          <h3>Start getting Appointments</h3>
-          <p>Once everything is set up, you're ready to start receiving appointments! Let your AI-powered chatbot handle scheduling your booking process effortlessly.</p>
-          <div className="step-image">
-            <img src={`${process.env.PUBLIC_URL}/img/appointments.png`} alt="Enable Ai Button" />
-          </div>
-        </div>
-      </div>
-    
-      <div className="step-final">
-  <h3>🎉 All Set!</h3>
-  <p>Your booking system is now live and ready to schedule appointments seamlessly. You can manage, track, and customize your settings anytime from your dashboard.</p>
-</div>
-
-    </div>
-    
-    
-    
-    
-          </div>
-        </div>
-      </div>
-      )}
-
-    <main className="dashboard-train" id="botTraining">
-    <h1 className="dashboard-title">
-          <FaRobot  /> Bot Training
-        </h1>
-        <BotTraining />
-    </main>
-
-    <main className="dashboard-settings" id="settings">
-    <h1 className="dashboard-title">
-          <FaRobot  /> Settings
-        </h1>
-        <SettingsPage />
-<Footer />
-
-    </main>
-
-
-      </div>
-      
     </div>
   );
 };

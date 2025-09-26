@@ -19,9 +19,6 @@ import axios from "../utils/axiosShopify";
 import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
-
-
-
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
