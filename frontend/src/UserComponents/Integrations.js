@@ -15,8 +15,6 @@ import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow, set } from "date-fns";
 import axios from "../utils/axiosShopify.js"
-import { authenticatedFetch } from "../utils/app-bridge2.js";
-import { useShopifyInstalled } from "../utils/useShopifyInstalled";
 const Integrations = () => {
   const [bgColor, setBgColor] = useState("#007bff");
   const [position, setPosition] = useState("bottom-right");
