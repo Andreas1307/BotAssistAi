@@ -2203,8 +2203,8 @@ app.get("/billing/callback", async (req, res) => {
 
     // Redirect back into Shopify iframe
     res.redirect(
-      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?host=${host}`
-    );
+      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${host}`
+    );    
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
@@ -3355,7 +3355,7 @@ app.post('/register', async (req, res, next) => {
     const [userResult] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
     const user = userResult[0];
  
-    
+
     req.logIn(user, async (err) => {
       if (err) {
         console.error("Login error after registration:", err);

@@ -8,34 +8,43 @@ export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
   const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop");
-  let host = params.get("host");
-
-  // Save to localStorage if present
-  if (shop) localStorage.setItem("shop", shop);
-  if (host) localStorage.setItem("host", host);
-
-  // Fallback to stored values
-  shop = shop || localStorage.getItem("shop");
-  host = host || localStorage.getItem("host");
+  const shop = params.get("shop");
+  const host = params.get("host");
 
   if (!shop || !host) {
-    console.warn("⚠️ Missing Shopify shop or host — App Bridge cannot initialize");
+    console.error("❌ Missing shop/host — App Bridge not initialized", { shop, host });
     return null;
   }
 
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host, // Shopify wants the Base64-encoded host string
-    forceRedirect: window.top !== window.self,
+    host,
+    forceRedirect: true, // always force into iframe
   });
 
   console.log("✅ Shopify App Bridge initialized", { shop, host });
   return appInstance;
 }
 
+
+export async function waitForAppBridge(timeout = 3000) {
+  const isEmbedded = window.top !== window.self;
+  if (!isEmbedded) {
+    console.warn("⚠️ Not embedded (outside Shopify iframe)");
+    return null;
+  }
+
+  // Wait until App Bridge is ready
+  const start = Date.now();
+  while (!getAppBridgeInstance() && Date.now() - start < timeout) {
+    await new Promise((res) => setTimeout(res, 50));
+  }
+
+  return getAppBridgeInstance();
+}
+
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
+  const app = await waitForAppBridge();
   if (!app) {
     console.error("❌ App Bridge not ready, cannot fetch");
     return new Response(null, { status: 401 });
@@ -63,10 +72,19 @@ export function safeRedirect(url) {
   const app = getAppBridgeInstance();
   const isEmbedded = window.top !== window.self;
 
-  if (isEmbedded && app) {
-    const redirect = Redirect.create(app);
+  if (!app || !isEmbedded) {
+    // fallback if not in iframe
+    window.top.location.href = url;
+    return;
+  }
+
+  const redirect = Redirect.create(app);
+
+  // If the URL starts with "http" → external (billing, OAuth, etc.)
+  if (/^https?:\/\//.test(url)) {
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url;
+    // Otherwise treat as in-app navigation
+    redirect.dispatch(Redirect.Action.APP, url);
   }
 }
