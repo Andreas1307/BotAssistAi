@@ -30,27 +30,15 @@ export async function initShopifyAppBridge() {
 
     window.appBridge = app;
 
-    // Clean Web Vitals init — only call if fully supported
-    if (app.initializeWebVitals && typeof app.initializeWebVitals === "function") {
-      try {
-        // Some Shopify Admin contexts may lack internal metrics functions
-        const safeApp = {
-          initializeWebVitals: () => {
-            if (typeof app.initializeWebVitals === "function") {
-              try {
-                app.initializeWebVitals();
-              } catch {
-                // suppress console errors silently
-              }
-            }
-          },
-        };
-        safeApp.initializeWebVitals();
-      } catch {
-        // completely ignore
+    // Safely initialize Web Vitals
+    try {
+      if (typeof app.initializeWebVitals === "function") {
+        app.initializeWebVitals();
+      } else {
+        console.warn("⚠️ Web Vitals init skipped: method missing");
       }
-    } else {
-      // No function exists — silently skip
+    } catch (err) {
+      console.warn("⚠️ Web Vitals initialization failed:", err);
     }
 
     console.log("✅ Shopify App Bridge initialized");
@@ -59,8 +47,7 @@ export async function initShopifyAppBridge() {
     console.error("❌ Failed to init App Bridge:", err);
     return null;
   }
-};
-
+}
 
 /**
  * Returns existing App Bridge instance or creates one if needed
