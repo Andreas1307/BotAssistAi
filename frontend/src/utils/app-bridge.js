@@ -1,30 +1,18 @@
 import createApp from "@shopify/app-bridge";
-import { Redirect } from "@shopify/app-bridge/actions";
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import { Redirect } from "@shopify/app-bridge/actions";
 
 let appInstance = null;
-console.log("Inside app-bridge.js");
 
 export function getAppBridgeInstance() {
   if (appInstance) return appInstance;
 
-  let shop, host;
-
-  // 1️⃣ Check query params first
   const params = new URLSearchParams(window.location.search);
-  shop = params.get("shop");
-  host = params.get("host");
-
-  // 2️⃣ Fallback to embedded Shopify globals
-  if ((!shop || !host) && window.__SHOPIFY__) {
-    shop = window.__SHOPIFY__.shop;
-    host = window.__SHOPIFY__.host;
-  }
+  const shop = params.get("shop") || window.__SHOPIFY__?.shop;
+  const host = params.get("host") || window.__SHOPIFY__?.host;
 
   if (!shop || !host) {
-    console.warn(
-      "⚠️ Not running in Shopify iframe or missing 'shop'/'host'. App Bridge will not initialize"
-    );
+    console.warn("⚠️ Missing Shopify shop or host — App Bridge cannot initialize");
     return null;
   }
 
@@ -38,12 +26,33 @@ export function getAppBridgeInstance() {
   return appInstance;
 }
 
+export async function waitForAppBridge(timeout = 3000) {
+  const isEmbedded = window.top !== window.self;
+  if (!isEmbedded) {
+    console.warn("⚠️ Not embedded (outside Shopify iframe)");
+    return null;
+  }
+
+  // Wait until App Bridge is ready
+  const start = Date.now();
+  while (!getAppBridgeInstance() && Date.now() - start < timeout) {
+    await new Promise((res) => setTimeout(res, 50));
+  }
+
+  return getAppBridgeInstance();
+}
+
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
-  if (!app) return fetch(url, options);
+  const app = await waitForAppBridge();
+  if (!app) {
+    console.error("❌ App Bridge not ready, cannot fetch");
+    return new Response(null, { status: 401 });
+  }
 
   try {
     const token = await getSessionToken(app);
+    if (!token) throw new Error("Token not available");
+
     return fetch(url, {
       ...options,
       headers: {
@@ -53,11 +62,12 @@ export async function fetchWithAuth(url, options = {}) {
       },
     });
   } catch (err) {
-    console.error("❌ Token error:", err);
+    console.error("❌ fetchWithAuth failed:", err);
     return new Response(null, { status: 401 });
   }
 }
 
+// Optional helper to redirect safely
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
   const isEmbedded = window.top !== window.self;
