@@ -60,7 +60,6 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("🏠 Homepage mounted");
     getAppBridgeInstance();
   }, []);
   

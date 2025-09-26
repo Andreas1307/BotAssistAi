@@ -6,12 +6,13 @@ let appInstance = null;
 console.log("📦 app-bridge.js loaded");
 
 export function getAppBridgeInstance() {
+  console.log("before appInstance");
   if (appInstance) return appInstance;
-
+  console.log("after appInstance");
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-  const host = params.get("host");
-
+  const shop = params.get("shop") || "dev-shop.myshopify.com";
+  const host = params.get("host") || "dummy-host";
+console.log("shop bay", shop, "host bay", host)
   if (!shop || !host) {
     console.error("❌ Missing shop/host — App Bridge not initialized", { shop, host });
     return null;
@@ -20,13 +21,12 @@ export function getAppBridgeInstance() {
   appInstance = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true, // always force into iframe
+    forceRedirect: true,
   });
 
   console.log("✅ Shopify App Bridge initialized", { shop, host });
   return appInstance;
 }
-
 
 export async function waitForAppBridge(timeout = 3000) {
   const isEmbedded = window.top !== window.self;
