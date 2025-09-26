@@ -1,5 +1,6 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import { Redirect } from "@shopify/app-bridge/actions";
 
 let appInstance = null;
 
