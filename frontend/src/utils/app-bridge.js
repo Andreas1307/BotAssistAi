@@ -54,3 +54,14 @@ export async function fetchWithAuth(url, options = {}) {
     return new Response(null, { status: 401 });
   }
 }
+export function safeRedirect(url) {
+  const app = getAppBridgeInstance();
+  const isEmbedded = window.top !== window.self;
+
+  if (isEmbedded && app) {
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, url);
+  } else {
+    window.top.location.href = url;
+  }
+}
