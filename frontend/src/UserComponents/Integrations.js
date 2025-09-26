@@ -334,6 +334,8 @@ const Integrations = () => {
     },
   ];
 
+  
+
   useEffect(() => {
     const fetchUser = async () => {
       try {

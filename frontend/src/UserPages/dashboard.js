@@ -790,7 +790,7 @@ if (loading) {
             },
             { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
             // Conditionally include Bookings
-            ...(shopifyUser
+            ...(!shopifyUser
               ? [
                   {
                     name: "Bookings",

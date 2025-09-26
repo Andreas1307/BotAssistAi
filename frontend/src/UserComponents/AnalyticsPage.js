@@ -28,6 +28,7 @@ const AnalyticsPage = () => {
         tension: 0.4,
     }]
   });
+  
 
   const showErrorNotification = ( ) => {
     toast.error("Something went wrong with charts. Please try again.", {
@@ -48,6 +49,19 @@ const AnalyticsPage = () => {
       },
     });
   };
+const [shopifyUser, setShopifyUser] = useState(false)
+  useEffect(() => {   
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+
+  }, [user])
   
   useEffect(() => {
     const fetchUser = async () => {
@@ -336,11 +350,17 @@ const AnalyticsPage = () => {
     />
   </div>
   </div>
-  {!membership ? (
-       <div className='upgrade-div'>
+
+  {shopifyUser && !membership ? (
+        <div onClick={activatePlan} className='upgrade-div'>
+        <Link>Upgrade Plan To See More</Link>
+       </div>
+) : (
+<div className='upgrade-div'>
      <Link style={{marginLeft: "20px"}} to={`/${user?.username}/upgrade-plan`}>Upgrade Plan To See More</Link>
     </div>
-    ) : (<p></p>)}
+)}
+ 
     </div>
   );
 };

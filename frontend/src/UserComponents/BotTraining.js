@@ -278,9 +278,20 @@ const setFieldValue = (field, value) => {
     </div>
 
     {!membership ? (
-      <div className='upgrade-div'>
-     <Link to={`/${user?.username}/upgrade-plan`}>Upgrade Plan To See More</Link>
-    </div>
+
+shopifyUser ? (
+  <div onClick={activatePlan} className='upgrade-div'>
+    <Link>
+      Upgrade Plan To See More
+    </Link>
+  </div>
+) : (
+  <div className='upgrade-div'>
+    <Link to={`/${user?.username}/upgrade-plan`}>
+      Upgrade Plan To See More
+    </Link>
+  </div>
+)
     ) : (
       <div className='div'>
     <div>
