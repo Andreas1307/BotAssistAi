@@ -5,6 +5,7 @@ import "../styling/BotTraining.css"
 import axios from "../utils/axiosShopify.js"
 import directory from '../directory';
 import { ToastContainer, toast } from 'react-toastify';
+import { handleBilling } from "../utils/billing";
 
 const SupportBotCustomization = () => {
   const [responseTone, setResponseTone] = useState('');
@@ -56,6 +57,27 @@ const SupportBotCustomization = () => {
       },
     });
   };
+
+  const [shopifyUser, setShopifyUser] = useState(false)
+  useEffect(() => {   
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+
+  }, [user])
+
+
+  
+  const activatePlan = async () => {
+    await handleBilling(user.user_id);
+  };
+
 
 
   useEffect(() => {
