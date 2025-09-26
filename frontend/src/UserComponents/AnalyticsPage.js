@@ -6,6 +6,7 @@ import axios from "../utils/axiosShopify.js"
 import directory from '../directory';
 import { Link } from "react-router-dom"
 import { ToastContainer, toast } from 'react-toastify';
+import { handleBilling } from "../utils/billing";
 
 const AnalyticsPage = () => {
   const chartRefs = useRef([]);
@@ -62,6 +63,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
     fetchShopifyUser()
 
   }, [user])
+
+  const activatePlan = async () => {
+    await handleBilling(user.user_id);
+  };
   
   useEffect(() => {
     const fetchUser = async () => {
