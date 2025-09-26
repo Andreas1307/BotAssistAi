@@ -1,4 +1,4 @@
-import { safeRedirect } from "./app-bridge";
+import { safeRedirect } from "./app-bridge2";
 import directory from "../directory";
 import axios from "axios";
 

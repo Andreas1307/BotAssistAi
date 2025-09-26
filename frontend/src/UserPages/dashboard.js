@@ -27,7 +27,6 @@ import {
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 
-import { getAppBridgeInstance } from "../utils/app-bridge";
 import { Redirect } from "@shopify/app-bridge";
 import { handleBilling } from "../utils/billing";
 
