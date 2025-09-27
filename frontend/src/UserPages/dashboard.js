@@ -779,7 +779,7 @@ if (loading) {
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
     // Conditionally include Bookings
-    ...(shopifyUser
+    ...(!shopifyUser
       ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
       : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
@@ -1137,9 +1137,12 @@ if (loading) {
         <h1 className="dashboard-title">
           <FaProjectDiagram  /> Integrations
         </h1>
-        <button className="integrate-btn" onClick={() => setIntegration(true)}>
+        {!shopifyUser && (
+               <button className="integrate-btn" onClick={() => setIntegration(true)}>
           How To Integrate
         </button>
+        )}
+   
       </span>
     
         <Integration />
@@ -1220,7 +1223,7 @@ if (loading) {
 
 
 
-{shopifyUser && (
+{!shopifyUser && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">
