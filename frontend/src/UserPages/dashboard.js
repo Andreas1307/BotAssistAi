@@ -13,6 +13,7 @@ import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
+import { handleLogoutConfirm } from "../utils/logoutConfirm";
 
 
 import { Link, useNavigate } from "react-router-dom";
@@ -757,6 +758,12 @@ const toggleBot = () => {
 };
 
 
+const handleLogout3 = () => {
+  // your existing logout logic here
+  console.log("User logged out");
+};
+
+
 if (loading) {
     return <h2>Loading...</h2>
   }
@@ -874,7 +881,7 @@ if (loading) {
               <div className="popUp">
                 <p>{user?.email}</p>
                 <button onClick={() => {
-                   toast.success("Hello from Shopify iframe!")
+                   handleLogout3()
                 //  showLogoutConfirm2(handleLogout)
                   console.log("CLicked To logout")
                   }}>

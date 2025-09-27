@@ -8,10 +8,6 @@ import { Redirect } from "@shopify/app-bridge/actions";
 function isEmbedded() {
   return window.top !== window.self;
 }
-
-
-// tocmai ce am updatat asta, sa vad cume merge in afara de shopify
-
 /**
  * Initializes Shopify App Bridge safely.
  * - Skips if not embedded or missing params
