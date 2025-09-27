@@ -1094,7 +1094,6 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Redirect via App Bridge
     res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
@@ -1116,7 +1115,7 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
             );
           </script>
         </body>
