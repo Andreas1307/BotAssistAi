@@ -594,7 +594,6 @@ const showLogoutConfirm2 = (onConfirm, reason) => {
   }
 };
 
-  //FETCH CONVERSATIONS HISTORY
 const [page, setPage] = useState(1);
 const [hasMore, setHasMore] = useState(true);
 const [loadAll, setLoadAll] = useState(false);
@@ -723,6 +722,8 @@ const fetchConvHistory = async (loadAllChats = false) => {
         draggable: false,
         toastId: "logout-confirm",
       });
+
+      console.log("LOGOUT NOTIF")
     } catch (error) {
       console.log("Error displaying logout confirmation toast:", error);
     }
@@ -817,7 +818,7 @@ if (loading) {
 
         {shopifyUser && !membership ? (
         <Link>
-  <button onClick={activatePlan}>
+  <button className="upgrade-btn" onClick={activatePlan}>
     Activate Plan
   </button>
   </Link>
@@ -829,7 +830,6 @@ if (loading) {
       </aside>
 
       <div className="main-content">
-        {/* Main Content */}
         <main className="dashboard-content" id="dash">
           {renew && (
             <div className="membership-overlay">
