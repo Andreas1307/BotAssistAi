@@ -578,6 +578,7 @@ const LogoutConfirmToast2 = ({ closeToast, onConfirm, reason = "Are you sure you
 
 
 const showLogoutConfirm2 = (onConfirm, reason) => {
+  console.log("LOGOUT NOTIF")
   try {
     toast.info(({ closeToast }) => (
       <LogoutConfirmToast2 closeToast={closeToast} onConfirm={onConfirm} reason={reason} />
@@ -589,6 +590,8 @@ const showLogoutConfirm2 = (onConfirm, reason) => {
       draggable: false,
       toastId: "logout-confirm",
     });
+
+    console.log("LOGOUT NOTIF2")
   } catch (error) {
     console.log("Error displaying logout confirmation toast:", error);
   }
@@ -711,7 +714,6 @@ const fetchConvHistory = async (loadAllChats = false) => {
   );
   
   const showLogoutConfirm = (onConfirm, reason) => {
-    console.log("LOGOUT NOTIF")
     try {
       toast.info(({ closeToast }) => (
         <LogoutConfirmToast closeToast={closeToast} onConfirm={onConfirm} reason={reason} />
@@ -723,8 +725,6 @@ const fetchConvHistory = async (loadAllChats = false) => {
         draggable: false,
         toastId: "logout-confirm",
       });
-
-      console.log("LOGOUT NOTIF2")
     } catch (error) {
       console.log("Error displaying logout confirmation toast:", error);
     }
