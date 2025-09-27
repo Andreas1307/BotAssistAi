@@ -129,6 +129,7 @@ const activatePlan = async () => {
       try {
         const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
+        console.log("DATA", response.data.data)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
       }
