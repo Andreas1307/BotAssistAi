@@ -973,14 +973,13 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- /shopify/install ---
 app.get('/shopify/install', async (req, res) => {
   try {
     const shop = req.query.shop;
     if (!shop) return res.status(400).send('Missing shop');
 
-    // Begin OAuth
-    await shopify.auth.begin({
+    // Begin OAuth and get the redirect URL
+    const authRoute = await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
@@ -989,11 +988,15 @@ app.get('/shopify/install', async (req, res) => {
     });
 
     console.log(`✅ Started OAuth for ${shop}`);
+
+    // Redirect user to Shopify's OAuth URL
+    res.redirect(authRoute);
   } catch (err) {
     console.error('❌ Shopify install error:', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
+
 
 // --- /shopify/callback ---
 app.get('/shopify/callback', async (req, res) => {
@@ -1063,19 +1066,18 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // Redirect via App Bridge safely
     res.set('Content-Type', 'text/html');
     res.status(200).send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8"><title>Installing...</title></head>
+        <head><meta charset="utf-8"><title>Redirecting...</title></head>
         <body>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
           <script>
             const AppBridge = window['app-bridge'].default;
             const actions = window['app-bridge'].actions;
             const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}', // MUST match frontend
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
               host: '${host}',
               forceRedirect: true
             });
