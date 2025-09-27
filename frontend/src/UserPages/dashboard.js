@@ -26,6 +26,7 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
+import { handleBilling } from "../utils/billing";
 
 
 const Dashboard = () => {
@@ -113,6 +114,13 @@ const Dashboard = () => {
   const [userQuery, setUserQuery] = useState("");
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
+
+  
+const activatePlan = async () => {
+  await handleBilling(user.user_id);
+};
+
+
 
   useEffect(() => {   
     if (!user) return;
@@ -301,11 +309,6 @@ const Dashboard = () => {
     
     fetchQueries();
   }, [user]); 
-
-
-
-
-
 
   // FETCH USER SATISFACTION
   useEffect(() => {
@@ -794,7 +797,17 @@ if (loading) {
 
 
 
-  {!membership && <Link to={`/${user?.username}/upgrade-plan`}><button className="upgrade-btn">Upgrade Plan</button></Link>}
+{shopifyUser && !membership ? (
+        <Link>
+  <button className="upgrade-btn" onClick={activatePlan}>
+    Activate Plan
+  </button>
+  </Link>
+) : (
+  <Link to={`/${user?.username}/upgrade-plan`}>
+  <button className="upgrade-btn">Upgrade Plan</button>
+</Link>
+)}
 </aside>
 
 <div className="main-content">  
