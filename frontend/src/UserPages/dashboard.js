@@ -27,7 +27,6 @@ import {
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 import { handleBilling } from "../utils/billing";
-import { shopify } from "../../../backend/shopify.js";
 
 
 const Dashboard = () => {
