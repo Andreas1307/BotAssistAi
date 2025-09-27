@@ -711,6 +711,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
   );
   
   const showLogoutConfirm = (onConfirm, reason) => {
+    console.log("LOGOUT NOTIF")
     try {
       toast.info(({ closeToast }) => (
         <LogoutConfirmToast closeToast={closeToast} onConfirm={onConfirm} reason={reason} />
@@ -723,7 +724,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
         toastId: "logout-confirm",
       });
 
-      console.log("LOGOUT NOTIF")
+      console.log("LOGOUT NOTIF2")
     } catch (error) {
       console.log("Error displaying logout confirmation toast:", error);
     }
@@ -872,7 +873,10 @@ if (loading) {
             {dashPopUp && (
               <div className="popUp">
                 <p>{user?.email}</p>
-                <button onClick={() => showLogoutConfirm2(handleLogout)}>
+                <button onClick={() => {
+                  showLogoutConfirm2(handleLogout)
+                  console.log("CLicked To logout")
+                  }}>
                   Log Out
                 </button>
               </div>
