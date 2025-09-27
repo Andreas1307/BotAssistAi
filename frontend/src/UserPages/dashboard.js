@@ -17,7 +17,8 @@ import { handleLogoutConfirm } from "../utils/logoutConfirm";
 
 
 import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import {
   FaBars,
   FaArrowLeft,
@@ -876,8 +877,8 @@ if (loading) {
               <div className="popUp">
                 <p>{user?.email}</p>
                 <button onClick={() => {
-                  handleLogoutConfirm()
-                //  showLogoutConfirm2(handleLogout)
+                //  handleLogoutConfirm()
+                  showLogoutConfirm2(handleLogout)
                   console.log("CLicked To logout")
                   }}>
                   Log Out
@@ -891,10 +892,17 @@ if (loading) {
             <FaTachometerAlt className="dashIcon" />
             Dashboard Overview
           </h1>
-          <div>
-            <ToastContainer />
-          </div>
-
+          <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
           {/* System Status & AI Quick Actions */}
           <div className="dashboard-widgets">
             <div className="status-panel">
