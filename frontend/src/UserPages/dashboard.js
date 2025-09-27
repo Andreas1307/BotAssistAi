@@ -874,7 +874,8 @@ if (loading) {
               <div className="popUp">
                 <p>{user?.email}</p>
                 <button onClick={() => {
-                  showLogoutConfirm2(handleLogout)
+                   toast.success("Hello from Shopify iframe!")
+                //  showLogoutConfirm2(handleLogout)
                   console.log("CLicked To logout")
                   }}>
                   Log Out

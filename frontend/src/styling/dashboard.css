@@ -875,6 +875,7 @@ body {
   font-weight: 600 !important;
   font-family: "Space Grotesk", sans-serif !important;
   backdrop-filter: blur(10px) !important;
+  z-index: 999999 !important;
 }
 
 .Toastify__progress-bar {
