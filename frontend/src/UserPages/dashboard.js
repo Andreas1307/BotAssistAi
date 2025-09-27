@@ -778,7 +778,7 @@ if (loading) {
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
     // Conditionally include Bookings
-    ...(shopifyUser
+    ...(!shopifyUser
       ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
       : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
@@ -922,7 +922,7 @@ if (loading) {
       {shopifyUser ? (
         <Link onClick={activatePlan}>
       <button>
-        ActivatePlan
+        Activate Plan
         </button>
         </Link>
       ) : (
@@ -1222,7 +1222,7 @@ if (loading) {
 
 
 
-{shopifyUser && (
+{!shopifyUser && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">
