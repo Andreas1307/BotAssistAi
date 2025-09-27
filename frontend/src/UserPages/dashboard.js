@@ -27,6 +27,7 @@ import {
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 import { handleBilling } from "../utils/billing";
+import { shopify } from "../../../backend/shopify.js";
 
 
 const Dashboard = () => {
@@ -919,11 +920,21 @@ if (loading) {
         <li>📁 More configuartion options</li>
       </ul>
       </div>
-  <Link to={`/${user?.username}/upgrade-plan`}>
+
+      {shopifyUser ? (
+        <Link onClick={activatePlan}>
+      <button>
+        ActivatePlan
+        </button>
+        </Link>
+      ) : (
+<Link to={`/${user?.username}/upgrade-plan`}>
       <button>
         Upgrade Now
         </button>
         </Link>
+      )}
+  
     </div>
 )}
         
