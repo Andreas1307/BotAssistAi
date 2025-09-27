@@ -758,11 +758,6 @@ const toggleBot = () => {
 };
 
 
-const handleLogout3 = () => {
-  // your existing logout logic here
-  console.log("User logged out");
-};
-
 
 if (loading) {
     return <h2>Loading...</h2>
@@ -881,7 +876,7 @@ if (loading) {
               <div className="popUp">
                 <p>{user?.email}</p>
                 <button onClick={() => {
-                   handleLogout3()
+                  handleLogoutConfirm()
                 //  showLogoutConfirm2(handleLogout)
                   console.log("CLicked To logout")
                   }}>
