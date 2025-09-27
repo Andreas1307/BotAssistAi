@@ -973,31 +973,35 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- /shopify/install ---
 app.get('/shopify/install', async (req, res) => {
   try {
-    console.log("HEYYYYYYYYYY")
     const shop = req.query.shop;
     if (!shop) return res.status(400).send('Missing shop');
 
+    // Begin OAuth
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
       callbackPath: '/shopify/callback',
-      isOnline: true,
+      isOnline: true
     });
+
+    console.log(`✅ Started OAuth for ${shop}`);
   } catch (err) {
     console.error('❌ Shopify install error:', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
 
+// --- /shopify/callback ---
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
-      isOnline: true,
+      isOnline: true
     });
 
     if (!session?.shop || !session?.accessToken) {
@@ -1005,18 +1009,18 @@ app.get('/shopify/callback', async (req, res) => {
     }
 
     const shop = session.shop;
-    const host = req.query.host;
+    const host = req.query.host || '';
 
-    // --- Fetch shop info
+    // Fetch shop info
     const client = new shopify.clients.Rest({ session });
     const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
     const email = shopInfo.email || shop;
     const username = shopInfo.name || shop;
 
-    // --- Find or create user
+    // Upsert user
     let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
-    if (existing.length > 0) {
+    if (existing.length) {
       user = existing[0];
       await pool.query(
         `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
@@ -1036,18 +1040,9 @@ app.get('/shopify/callback', async (req, res) => {
 
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
-/*
-      try {
-        await handleSendNewUserEmail(rawKey, email);
-      } catch (err) {
-        console.error("❌ Failed to send new user email:", err);
-      }
-
-      SA FAC UPDATE DACA VREAU
-        */
     }
 
-    // --- Log the user in via Passport BEFORE redirect
+    // Log user in via Passport
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1060,7 +1055,7 @@ app.get('/shopify/callback', async (req, res) => {
 
     console.log(`✅ User ${user.email} logged in`);
 
-    // --- Save install info
+    // Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
        VALUES (?, ?, ?, NOW())
@@ -1068,48 +1063,19 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Async background tasks
-    (async () => {
-      try {
-        const { storeCallback } = require('./sessionStorage');
-        await storeCallback(session);
-        await registerGdprWebhooks(session, shop);
-
-        // --- Register ScriptTag to load chatbot on storefront
-        const scriptClient = new shopify.clients.Rest({ session });
-        await scriptClient.post({
-          path: "script_tags",
-          data: {
-            script_tag: {
-              event: "onload",
-              src: `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`,
-            },
-          },
-          type: "application/json",
-        });
-
-        console.log(`✅ Setup complete & ScriptTag installed for ${shop}`);
-      } catch (err) {
-        console.error('❌ Post-redirect setup error:', err);
-      }
-    })();
-
-    // --- Redirect via App Bridge
+    // Redirect via App Bridge safely
     res.set('Content-Type', 'text/html');
-    res.send(`
+    res.status(200).send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Installing...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
-        </head>
+        <head><meta charset="utf-8"><title>Installing...</title></head>
         <body>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
           <script>
             const AppBridge = window['app-bridge'].default;
             const actions = window['app-bridge'].actions;
             const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              apiKey: '${process.env.SHOPIFY_API_KEY}', // MUST match frontend
               host: '${host}',
               forceRedirect: true
             });
@@ -1122,13 +1088,13 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
-    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 
 
