@@ -974,11 +974,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/shopify/install', async (req, res) => {
-  const shop = req.query.shop;
-  if (!shop) return res.status(400).send('Missing shop');
-
   try {
-    // Begin OAuth, Shopify sets the cookie
+    console.log("HEYYYYYYYYYY")
+    const shop = req.query.shop;
+    if (!shop) return res.status(400).send('Missing shop');
+
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
@@ -994,7 +994,6 @@ app.get('/shopify/install', async (req, res) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-    // Complete OAuth, reads Shopify cookie
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1007,21 +1006,21 @@ app.get('/shopify/callback', async (req, res) => {
 
     const shop = session.shop;
     const host = req.query.host;
-    if (!host) {
-      return res.status(400).send('Missing host parameter');
-    }
 
-    // --- User setup (unchanged) ---
-    let [existing] = await pool.query(
-      "SELECT * FROM users WHERE shopify_shop_domain = ?",
-      [shop]
-    );
+    // --- Fetch shop info
+    const client = new shopify.clients.Rest({ session });
+    const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
+    const email = shopInfo.email || shop;
+    const username = shopInfo.name || shop;
+
+    // --- Find or create user
+    let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
     if (existing.length > 0) {
       user = existing[0];
       await pool.query(
-        `UPDATE users SET shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
-        [session.accessToken, user.user_id]
+        `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
+        [shop, session.accessToken, user.user_id]
       );
     } else {
       const rawKey = Math.random().toString(36).slice(-8);
@@ -1032,17 +1031,23 @@ app.get('/shopify/callback', async (req, res) => {
       await pool.query(
         `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
          VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-        [shop, shop, hashedPassword, encryptedKey, shop, session.accessToken]
+        [username, email, hashedPassword, encryptedKey, shop, session.accessToken]
       );
 
-      const [newUserResult] = await pool.query(
-        "SELECT * FROM users WHERE shopify_shop_domain = ?",
-        [shop]
-      );
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
+/*
+      try {
+        await handleSendNewUserEmail(rawKey, email);
+      } catch (err) {
+        console.error("❌ Failed to send new user email:", err);
+      }
+
+      SA FAC UPDATE DACA VREAU
+        */
     }
 
-    // --- Passport login before redirect ---
+    // --- Log the user in via Passport BEFORE redirect
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1053,7 +1058,9 @@ app.get('/shopify/callback', async (req, res) => {
       });
     });
 
-    // --- Save install info ---
+    console.log(`✅ User ${user.email} logged in`);
+
+    // --- Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
        VALUES (?, ?, ?, NOW())
@@ -1061,13 +1068,14 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Async background tasks (ScriptTag etc.) ---
+    // --- Async background tasks
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
 
+        // --- Register ScriptTag to load chatbot on storefront
         const scriptClient = new shopify.clients.Rest({ session });
         await scriptClient.post({
           path: "script_tags",
@@ -1079,48 +1087,49 @@ app.get('/shopify/callback', async (req, res) => {
           },
           type: "application/json",
         });
-        console.log(`✅ ScriptTag installed for ${shop}`);
+
+        console.log(`✅ Setup complete & ScriptTag installed for ${shop}`);
       } catch (err) {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
 
-    // --- App Bridge redirect to your **actual app homepage** ---
+    // --- Redirect via App Bridge
     res.set('Content-Type', 'text/html');
-    res.status(200).send(`
+    res.send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Redirecting...</title>
+          <title>Installing...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
         </head>
         <body>
           <script>
             const AppBridge = window['app-bridge'].default;
             const actions = window['app-bridge'].actions;
-
             const app = AppBridge({
-              apiKey: '${process.SHOPIFY_API_KEY}',
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
               host: '${host}',
               forceRedirect: true
             });
-
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              '/home' // ✅ <- Replace with your actual app homepage route
+              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
             );
           </script>
         </body>
       </html>
     `);
+    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
 
 
 
