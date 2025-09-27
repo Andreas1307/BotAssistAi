@@ -1100,27 +1100,30 @@ app.get('/shopify/callback', async (req, res) => {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Installing...</title>
+          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
         </head>
         <body>
           <script>
             const AppBridge = window['app-bridge'].default;
             const actions = window['app-bridge'].actions;
+    
             const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
+              apiKey: '${process.env.SHOPIFY_API_KEY}', // ✅ must match frontend
+              host: '${host || ''}', // ✅ safe fallback
+              forceRedirect: true,
             });
+    
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}'
             );
           </script>
         </body>
       </html>
     `);
+    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
