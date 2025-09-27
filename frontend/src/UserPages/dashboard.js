@@ -15,9 +15,6 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 
 
-// 
-
-
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
