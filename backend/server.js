@@ -978,8 +978,8 @@ app.get('/shopify/install', async (req, res) => {
     const shop = req.query.shop;
     if (!shop) return res.status(400).send('Missing shop');
 
-    // Begin OAuth and get the redirect URL
-    const authRoute = await shopify.auth.begin({
+    // BEGIN OAuth – pass rawRequest/rawResponse
+    await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
@@ -989,16 +989,12 @@ app.get('/shopify/install', async (req, res) => {
 
     console.log(`✅ Started OAuth for ${shop}`);
 
-    // Redirect user to Shopify's OAuth URL
-    res.redirect(authRoute);
   } catch (err) {
     console.error('❌ Shopify install error:', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
 
-
-// --- /shopify/callback ---
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
