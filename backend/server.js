@@ -1096,32 +1096,38 @@ app.get('/shopify/callback', async (req, res) => {
 
     // --- Redirect via App Bridge
     res.set('Content-Type', 'text/html');
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Installing...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
-        </head>
-        <body>
-          <script>
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
+    res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Installing...</title>
+        <script src="https://unpkg.com/@shopify/app-bridge"></script>
+      </head>
+      <body>
+        <script>
+          const AppBridge = window['app-bridge'].default;
+          const actions = window['app-bridge'].actions;
+          const hostSafe = '${host || ''}';
+          if (hostSafe) {
             const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
+              apiKey: '${process.env.REACT_APP_SHOPIFY_API_KEY}',
+              host: hostSafe,
               forceRedirect: true
             });
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(hostSafe)}'
             );
-          </script>
-        </body>
-      </html>
+          } else {
+            window.location.href = '/';
+          }
+        </script>
+      </body>
+    </html>
     `);
+    
     
 
   } catch (err) {
