@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "./styling/homepage.css";
 
 import { initShopifyAppBridge } from './utils/initShopifyAppBridge';
 
@@ -18,7 +20,6 @@ import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
-
 
 const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
@@ -42,6 +43,10 @@ initShopifyAppBridge().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <RouterProvider router={router} />
+      <ToastContainer 
+        position="top-center"
+        portalTarget={document.body} // ensures Shopify iframe doesn’t block it
+      />
     </React.StrictMode>
   );
 });
