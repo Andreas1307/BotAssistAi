@@ -982,9 +982,10 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <script type="text/javascript">
       document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${shop}";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
     </script>
   `);
+  
 });
 
 // INSTALL ROUTE
@@ -993,9 +994,9 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    // 🔑 Ensure we always go through top-level first
-    return res.redirect(`/auth/toplevel?shop=${shop}`);
+    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
+  
 
   try {
     await shopify.auth.begin({
