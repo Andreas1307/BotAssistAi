@@ -969,27 +969,22 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 });
 
 
+app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
+
 app.get("/shopify/install", (req, res) => {
-  const shop = req.query.shop;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Render a top-level redirect page
   res.set("Content-Type", "text/html");
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head><meta charset="utf-8"><title>Redirecting...</title></head>
-      <body>
-        <script>
-          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
-        </script>
-      </body>
-    </html>
+    <script>
+      window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+    </script>
   `);
 });
 
 app.get("/shopify/auth", async (req, res) => {
-  const shop = req.query.shop;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
   await shopify.auth.begin({
@@ -1000,6 +995,7 @@ app.get("/shopify/auth", async (req, res) => {
     rawResponse: res,
   });
 });
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
