@@ -973,25 +973,26 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/shopify/install", async (req, res) => {
-  try {
-    const shop = req.query.shop;
-    if (!shop) return res.status(400).send("Missing shop");
+app.get("/shopify/install", (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Missing shop");
 
-    await shopify.auth.begin({
-      rawRequest: req,
-      rawResponse: res,
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-    });
+  // Always go to top-level redirect first
+  res.redirect(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
+});
 
-    console.log(`✅ Started OAuth for ${shop}`);
-    // Do NOT do res.redirect() here
-  } catch (err) {
-    console.error("❌ Shopify install error:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
-  }
+// STEP 2: Top-level auth
+app.get("/shopify/auth", async (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 
@@ -4189,7 +4190,6 @@ app.get("/check-shopify-user", async (req, res) => {
       "SELECT shopify_access_token FROM users WHERE user_id = ?", 
       [id]
     );
-    console.log("AAAAAAAAAAAA", rows)
     if (rows.length && rows[0].shopify_access_token) {
       return res.json({ data: true, domain: rows[0].shopify_access_token });
     } else {
