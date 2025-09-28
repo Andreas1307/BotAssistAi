@@ -971,31 +971,46 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.get("/shopify/install", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Top-level redirect page so cookies are stored correctly
   res.set("Content-Type", "text/html");
   res.send(`
-    <script>
-      window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-    </script>
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><title>Redirecting...</title></head>
+      <body>
+        <script>
+          // top-level redirect to /auth with shop
+          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body>
+    </html>
   `);
 });
 
+// STEP 2: Start OAuth
 app.get("/shopify/auth", async (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  await shopify.auth.begin({
-    shop,
-    callbackPath: "/shopify/callback",
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
+  try {
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+  } catch (err) {
+    console.error("❌ Shopify auth begin error:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+  }
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
