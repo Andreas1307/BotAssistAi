@@ -973,27 +973,27 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/shopify/install', async (req, res) => {
+app.get("/shopify/install", async (req, res) => {
   try {
     const shop = req.query.shop;
-    if (!shop) return res.status(400).send('Missing shop');
+    if (!shop) return res.status(400).send("Missing shop");
 
-    // BEGIN OAuth – pass rawRequest/rawResponse
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
-      callbackPath: '/shopify/callback',
-      isOnline: true
+      callbackPath: "/shopify/callback",
+      isOnline: true,
     });
 
     console.log(`✅ Started OAuth for ${shop}`);
-
+    // Do NOT do res.redirect() here
   } catch (err) {
-    console.error('❌ Shopify install error:', err);
-    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
+    console.error("❌ Shopify install error:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1062,46 +1062,55 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    res.set('Content-Type', 'text/html');
-    res.status(200).send(`
-      <!DOCTYPE html>
-      <html>
-        <head><meta charset="utf-8"><title>Redirecting...</title></head>
-        <body>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
-          <script>
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
-            const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
-          </script>
-        </body>
-      </html>
-    `);
+    app.get('/shopify/callback', async (req, res) => {
+      try {
+        const { session } = await shopify.auth.callback({
+          rawRequest: req,
+          rawResponse: res,
+          isOnline: true,
+        });
+    
+        if (!session?.shop || !session?.accessToken) {
+          return res.status(400).send('Session missing required data.');
+        }
+    
+        // Your existing user handling & login logic    
+        res.set("Content-Type", "text/html");
+        res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head><meta charset="utf-8"><title>Redirecting...</title></head>
+            <body>
+              <script src="https://unpkg.com/@shopify/app-bridge"></script>
+              <script>
+                const AppBridge = window['app-bridge'].default;
+                const actions = window['app-bridge'].actions;
+                const app = AppBridge({
+                  apiKey: '${process.env.SHOPIFY_API_KEY}',
+                  host: '${host}',
+                  forceRedirect: true
+                });
+                const redirect = actions.Redirect.create(app);
+                redirect.dispatch(
+                  actions.Redirect.Action.APP,
+                  '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+                );
+              </script>
+            </body>
+          </html>
+        `);
+      } catch (err) {
+        console.error('❌ Shopify callback error:', err);
+        if (!res.headersSent) res.status(500).send('OAuth callback failed.');
+      }
+    });
+    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
-
-
-
-
-
-
-
 
 
 
