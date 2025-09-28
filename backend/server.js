@@ -974,8 +974,9 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 app.get("/shopify/install", (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
   res.set("Content-Type", "text/html");
@@ -984,8 +985,8 @@ app.get("/shopify/install", (req, res) => {
     <html>
       <body>
         <script>
-          // Top-level redirect is required for OAuth cookie
-          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
+          // MUST redirect top-level for embedded apps
+          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
         </script>
       </body>
     </html>
@@ -1011,7 +1012,6 @@ app.get("/shopify/auth", async (req, res) => {
   }
 });
 
-// --- STEP 3: OAuth callback
 app.get("/shopify/callback", async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
@@ -1033,7 +1033,7 @@ app.get("/shopify/callback", async (req, res) => {
     const email = shopInfo.email || shop;
     const username = shopInfo.name || shop;
 
-    // --- Upsert user in DB
+    // --- Upsert user
     let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
 
@@ -1059,7 +1059,7 @@ app.get("/shopify/callback", async (req, res) => {
       user = newUserResult[0];
     }
 
-    // --- Log user in (Passport)
+    // --- Log user in
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1080,7 +1080,7 @@ app.get("/shopify/callback", async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Async post-install setup
+    // --- Async post-install tasks
     (async () => {
       try {
         const { storeCallback } = require("./sessionStorage");
@@ -1105,7 +1105,7 @@ app.get("/shopify/callback", async (req, res) => {
       }
     })();
 
-    // --- Redirect user back into embedded app via App Bridge
+    // --- Redirect back to embedded app via App Bridge
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -1135,7 +1135,6 @@ app.get("/shopify/callback", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
 
 
 
