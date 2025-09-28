@@ -1081,7 +1081,7 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+               '/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
             );
           </script>
         </body>
