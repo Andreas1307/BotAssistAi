@@ -977,11 +977,21 @@ app.get("/shopify/install", (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Always go to top-level redirect first
-  res.redirect(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
+  // Render a top-level redirect page
+  res.set("Content-Type", "text/html");
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><title>Redirecting...</title></head>
+      <body>
+        <script>
+          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body>
+    </html>
+  `);
 });
 
-// STEP 2: Top-level auth
 app.get("/shopify/auth", async (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
@@ -994,7 +1004,6 @@ app.get("/shopify/auth", async (req, res) => {
     rawResponse: res,
   });
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
