@@ -969,10 +969,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 });
 
 
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 app.get("/shopify/install", (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1102,6 +1098,10 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 
 
