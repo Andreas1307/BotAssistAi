@@ -975,24 +975,40 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get('/shopify/install', async (req, res) => {
-  try {
-    console.log("HEYYYYYYYYYY")
-    const shop = req.query.shop;
-    if (!shop) return res.status(400).send('Missing shop');
+app.get("/shopify/install", async (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Missing shop");
 
+  if (!req.cookies["shopify_toplevel"]) {
+    // Redirect to top-level first
+    return res.redirect(`/auth/toplevel?shop=${shop}`);
+  }
+
+  try {
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
-      callbackPath: '/shopify/callback',
+      callbackPath: "/shopify/callback",
       isOnline: true,
     });
   } catch (err) {
-    console.error('❌ Shopify install error:', err);
-    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
+    console.error("❌ Shopify install error:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
+
+app.get("/auth/toplevel", (req, res) => {
+  const { shop } = req.query;
+  res.set("Content-Type", "text/html");
+  res.send(`
+    <script type="text/javascript">
+      document.cookie = "shopify_toplevel=true; path=/";
+      window.location.href = "/shopify/install?shop=${shop}";
+    </script>
+  `);
+});
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {

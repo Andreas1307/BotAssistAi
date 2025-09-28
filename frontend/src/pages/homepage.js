@@ -81,7 +81,7 @@ const Homepage = () => {
         });
   
         if (!res.data.installed) {
-          safeRedirect(`${directory}/shopify/install?shop=${shopParam}`);
+          safeRedirect(`${directory}/auth/toplevel?shop=${shopParam}`);
           const response = await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
             colors,
