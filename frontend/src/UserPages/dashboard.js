@@ -26,7 +26,6 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
-import { handleBilling } from "../utils/billing";
 
 
 const Dashboard = () => {
@@ -116,10 +115,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {   
+    if (!user) return;
 
     const fetchShopifyUser = async () => {
       try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
         setShopifyUser(response.data.data)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
@@ -127,7 +127,7 @@ const Dashboard = () => {
     } 
     fetchShopifyUser()
 
-  }, [user])
+  }, [])
   /*
   useShopifyInstallRedirect();
 
@@ -244,10 +244,7 @@ const Dashboard = () => {
   */
 
  
-  const activatePlan = async () => {
-    await handleBilling(user.user_id);
-  };
-
+  
   // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
@@ -779,7 +776,7 @@ if (loading) {
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
     // Conditionally include Bookings
-    ...(!shopifyUser
+    ...(shopifyUser
       ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
       : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
@@ -796,17 +793,9 @@ if (loading) {
 </ul>
 
 
-{shopifyUser && !membership ? (
-        <Link>
-  <button className="upgrade-btn" onClick={activatePlan}>
-    Activate Plan
-  </button>
-  </Link>
-) : (
-  <Link to={`/${user?.username}/upgrade-plan`}>
-  <button className="upgrade-btn">Upgrade Plan</button>
-</Link>
-)}</aside>
+
+  {!membership && <Link to={`/${user?.username}/upgrade-plan`}><button className="upgrade-btn">Upgrade Plan</button></Link>}
+</aside>
 
 <div className="main-content">  
 
@@ -917,20 +906,11 @@ if (loading) {
         <li>📁 More configuartion options</li>
       </ul>
       </div>
-      {shopifyUser ? (
-        <Link onClick={activatePlan}>
-      <button>
-        Activate Plan
-        </button>
-        </Link>
-      ) : (
-<Link to={`/${user?.username}/upgrade-plan`}>
+  <Link to={`/${user?.username}/upgrade-plan`}>
       <button>
         Upgrade Now
         </button>
         </Link>
-      )}
-
     </div>
 )}
         
@@ -1137,12 +1117,9 @@ if (loading) {
         <h1 className="dashboard-title">
           <FaProjectDiagram  /> Integrations
         </h1>
-        {!shopifyUser && (
-               <button className="integrate-btn" onClick={() => setIntegration(true)}>
+        <button className="integrate-btn" onClick={() => setIntegration(true)}>
           How To Integrate
         </button>
-        )}
-   
       </span>
     
         <Integration />
@@ -1223,7 +1200,7 @@ if (loading) {
 
 
 
-{!shopifyUser && (
+{shopifyUser && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">

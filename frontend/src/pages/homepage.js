@@ -64,9 +64,9 @@ const Homepage = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
-    const host = params.get("host");
+    const hostParam = params.get("host");
   
-    if (!shopParam || !host) {
+    if (!shopParam || !hostParam) {
       console.warn("❌ Not running inside Shopify context.");
       setLoading(false);
       return;
@@ -76,27 +76,32 @@ const Homepage = () => {
   
     const checkShop = async () => {
       try {
-        const res = await axios.get(`/check-shopify-store`, {
+        const { data } = await axios.get(`/check-shopify-store`, {
           params: { shop: shopParam },
         });
   
-        if (!res.data.installed) {
-          safeRedirect(`${directory}/auth/toplevel?shop=${shopParam}`);
-          const response = await axios.post(`/chatbot-config-shopify`, {
+        if (!data.installed) {
+          // 🔐 Force OAuth flow before anything else
+          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
+  
+          // Save chatbot config once OAuth completes
+          await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
             colors,
-          }); 
-          return;
+          });
+  
+          return; // ✅ Prevents continuing flow before install
         }
   
-        if (!res.data.hasBilling) {
+        if (!data.hasBilling) {
+          console.warn("⚠️ Store installed but missing billing setup.");
           return;
         }
   
         console.log("✅ Shopify store ready");
         setInstalled(true);
       } catch (err) {
-        console.error("Shopify flow failed:", err);
+        console.error("❌ Shopify flow failed:", err);
         setInstalled(false);
       } finally {
         setLoading(false);
@@ -104,7 +109,8 @@ const Homepage = () => {
     };
   
     checkShop();
-  }, []);
+  }, [colors]); // depend on colors since it's used inside
+  
   
   
 
