@@ -26,7 +26,7 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
-
+import { handleBilling } from "../utils/billing";
 
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
@@ -114,12 +114,12 @@ const Dashboard = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {   
-    if (!user) return;
 
+
+  useEffect(() => {   
     const fetchShopifyUser = async () => {
       try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
         setShopifyUser(response.data.data)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
@@ -127,7 +127,16 @@ const Dashboard = () => {
     } 
     fetchShopifyUser()
 
-  }, [])
+  }, [user])
+
+
+
+
+  
+const activatePlan = async () => {
+  await handleBilling(user.user_id);
+};
+ 
   /*
   useShopifyInstallRedirect();
 
@@ -794,7 +803,17 @@ if (loading) {
 
 
 
-  {!membership && <Link to={`/${user?.username}/upgrade-plan`}><button className="upgrade-btn">Upgrade Plan</button></Link>}
+{shopifyUser && !membership ? (
+        <Link>
+  <button className="upgrade-btn" onClick={activatePlan}>
+    Activate Plan
+  </button>
+  </Link>
+) : (
+  <Link to={`/${user?.username}/upgrade-plan`}>
+  <button className="upgrade-btn">Upgrade Plan</button>
+</Link>
+)}
 </aside>
 
 <div className="main-content">  
@@ -906,11 +925,19 @@ if (loading) {
         <li>📁 More configuartion options</li>
       </ul>
       </div>
-  <Link to={`/${user?.username}/upgrade-plan`}>
+      {shopifyUser ? (
+        <Link onClick={activatePlan}>
+      <button>
+        Activate Plan
+        </button>
+        </Link>
+      ) : (
+<Link to={`/${user?.username}/upgrade-plan`}>
       <button>
         Upgrade Now
         </button>
         </Link>
+      )}
     </div>
 )}
         
