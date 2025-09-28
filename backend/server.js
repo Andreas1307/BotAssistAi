@@ -975,52 +975,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get("/shopify/install", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
-  // Top-level redirect required for embedded apps
-  res.set("Content-Type", "text/html");
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <script>
-          // Redirect top-level window to /shopify/auth
-          if (window.top === window.self) {
-            // Not in an iframe
-            window.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-          } else {
-            // In iframe
-            window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-          }
-        </script>
-      </body>
-    </html>
-  `);
-});
-
-
-// --- STEP 2: Begin OAuth
-app.get("/shopify/auth", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
+app.get('/shopify/install', async (req, res) => {
   try {
+    console.log("HEYYYYYYYYYY")
+    const shop = req.query.shop;
+    if (!shop) return res.status(400).send('Missing shop');
+
     await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
       rawRequest: req,
       rawResponse: res,
+      shop,
+      callbackPath: '/shopify/callback',
+      isOnline: true,
     });
   } catch (err) {
-    console.error("❌ Shopify auth begin error:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+    console.error('❌ Shopify install error:', err);
+    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
 
-app.get("/shopify/callback", async (req, res) => {
+app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
       rawRequest: req,
@@ -1029,22 +1003,21 @@ app.get("/shopify/callback", async (req, res) => {
     });
 
     if (!session?.shop || !session?.accessToken) {
-      return res.status(400).send("Session missing required data.");
+      return res.status(400).send('Session missing required data.');
     }
 
     const shop = session.shop;
-    const host = req.query.host || "";
+    const host = req.query.host;
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
-    const shopInfo = (await client.get({ path: "shop" })).body.shop || {};
+    const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
     const email = shopInfo.email || shop;
     const username = shopInfo.name || shop;
 
-    // --- Upsert user
+    // --- Find or create user
     let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
-
     if (existing.length > 0) {
       user = existing[0];
       await pool.query(
@@ -1065,9 +1038,18 @@ app.get("/shopify/callback", async (req, res) => {
 
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
+/*
+      try {
+        await handleSendNewUserEmail(rawKey, email);
+      } catch (err) {
+        console.error("❌ Failed to send new user email:", err);
+      }
+
+      SA FAC UPDATE DACA VREAU
+        */
     }
 
-    // --- Log user in
+    // --- Log the user in via Passport BEFORE redirect
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1080,7 +1062,7 @@ app.get("/shopify/callback", async (req, res) => {
 
     console.log(`✅ User ${user.email} logged in`);
 
-    // --- Save Shopify install
+    // --- Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
        VALUES (?, ?, ?, NOW())
@@ -1088,13 +1070,14 @@ app.get("/shopify/callback", async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Async post-install tasks
+    // --- Async background tasks
     (async () => {
       try {
-        const { storeCallback } = require("./sessionStorage");
+        const { storeCallback } = require('./sessionStorage');
         await storeCallback(session);
         await registerGdprWebhooks(session, shop);
 
+        // --- Register ScriptTag to load chatbot on storefront
         const scriptClient = new shopify.clients.Rest({ session });
         await scriptClient.post({
           path: "script_tags",
@@ -1107,20 +1090,23 @@ app.get("/shopify/callback", async (req, res) => {
           type: "application/json",
         });
 
-        console.log(`✅ ScriptTag installed for ${shop}`);
+        console.log(`✅ Setup complete & ScriptTag installed for ${shop}`);
       } catch (err) {
-        console.error("❌ Post-install setup error:", err);
+        console.error('❌ Post-redirect setup error:', err);
       }
     })();
 
-    // --- Redirect back to embedded app via App Bridge
-    res.set("Content-Type", "text/html");
+    // --- Redirect via App Bridge
+    res.set('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8" /><title>Redirecting...</title></head>
-        <body>
+        <head>
+          <meta charset="utf-8" />
+          <title>Installing...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
           <script>
             const AppBridge = window['app-bridge'].default;
             const actions = window['app-bridge'].actions;
@@ -1131,17 +1117,17 @@ app.get("/shopify/callback", async (req, res) => {
             });
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
-  actions.Redirect.Action.APP,
-  '/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-);
-
+              actions.Redirect.Action.APP,
+              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
           </script>
         </body>
       </html>
     `);
+
   } catch (err) {
-    console.error("❌ Shopify callback error:", err);
-    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
+    console.error('❌ Shopify callback error:', err);
+    if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
 
