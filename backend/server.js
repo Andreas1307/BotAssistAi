@@ -979,19 +979,27 @@ app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Top-level redirect required for embedded apps
   res.set("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
       <body>
         <script>
-          // MUST redirect top-level for embedded apps
-          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+          // Redirect top-level window to /shopify/auth
+          if (window.top === window.self) {
+            // Not in an iframe
+            window.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+          } else {
+            // In iframe
+            window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+          }
         </script>
       </body>
     </html>
   `);
 });
+
 
 // --- STEP 2: Begin OAuth
 app.get("/shopify/auth", async (req, res) => {
