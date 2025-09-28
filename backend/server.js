@@ -973,19 +973,18 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.get("/shopify/install", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Top-level redirect page so cookies are stored correctly
   res.set("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8"><title>Redirecting...</title></head>
       <body>
         <script>
-          // top-level redirect to /auth with shop
+          // Top-level redirect is required for OAuth cookie
           window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
         </script>
       </body>
@@ -993,7 +992,7 @@ app.get("/shopify/install", (req, res) => {
   `);
 });
 
-// STEP 2: Start OAuth
+// --- STEP 2: Begin OAuth
 app.get("/shopify/auth", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1012,7 +1011,8 @@ app.get("/shopify/auth", async (req, res) => {
   }
 });
 
-app.get('/shopify/callback', async (req, res) => {
+// --- STEP 3: OAuth callback
+app.get("/shopify/callback", async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
       rawRequest: req,
@@ -1021,22 +1021,23 @@ app.get('/shopify/callback', async (req, res) => {
     });
 
     if (!session?.shop || !session?.accessToken) {
-      return res.status(400).send('Session missing required data.');
+      return res.status(400).send("Session missing required data.");
     }
 
     const shop = session.shop;
-    const host = req.query.host || '';
+    const host = req.query.host || "";
 
-    // Fetch shop info
+    // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
-    const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
+    const shopInfo = (await client.get({ path: "shop" })).body.shop || {};
     const email = shopInfo.email || shop;
     const username = shopInfo.name || shop;
 
-    // Upsert user
+    // --- Upsert user in DB
     let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
-    if (existing.length) {
+
+    if (existing.length > 0) {
       user = existing[0];
       await pool.query(
         `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
@@ -1058,7 +1059,7 @@ app.get('/shopify/callback', async (req, res) => {
       user = newUserResult[0];
     }
 
-    // Log user in
+    // --- Log user in (Passport)
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1071,7 +1072,7 @@ app.get('/shopify/callback', async (req, res) => {
 
     console.log(`✅ User ${user.email} logged in`);
 
-    // Save install info
+    // --- Save Shopify install
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
        VALUES (?, ?, ?, NOW())
@@ -1079,12 +1080,37 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // 🔑 IMPORTANT: Redirect back into the embedded app
+    // --- Async post-install setup
+    (async () => {
+      try {
+        const { storeCallback } = require("./sessionStorage");
+        await storeCallback(session);
+        await registerGdprWebhooks(session, shop);
+
+        const scriptClient = new shopify.clients.Rest({ session });
+        await scriptClient.post({
+          path: "script_tags",
+          data: {
+            script_tag: {
+              event: "onload",
+              src: `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`,
+            },
+          },
+          type: "application/json",
+        });
+
+        console.log(`✅ ScriptTag installed for ${shop}`);
+      } catch (err) {
+        console.error("❌ Post-install setup error:", err);
+      }
+    })();
+
+    // --- Redirect user back into embedded app via App Bridge
     res.set("Content-Type", "text/html");
-    res.status(200).send(`
+    res.send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8"><title>Redirecting...</title></head>
+        <head><meta charset="utf-8" /><title>Redirecting...</title></head>
         <body>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
           <script>
@@ -1098,20 +1124,17 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-               '/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
             );
           </script>
         </body>
       </html>
     `);
   } catch (err) {
-    console.error('❌ Shopify callback error:', err);
-    if (!res.headersSent) res.status(500).send('OAuth callback failed.');
+    console.error("❌ Shopify callback error:", err);
+    if (!res.headersSent) res.status(500).send("OAuth callback failed.");
   }
 });
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 
 
