@@ -975,12 +975,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
+// TOP-LEVEL AUTH ROUTE (escapes iframe)
+app.get("/auth/toplevel", (req, res) => {
+  const { shop } = req.query;
+  res.set("Content-Type", "text/html");
+  res.send(`
+    <script type="text/javascript">
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+      window.location.href = "/shopify/install?shop=${shop}";
+    </script>
+  `);
+});
+
+// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    // Redirect to top-level first
+    // 🔑 Ensure we always go through top-level first
     return res.redirect(`/auth/toplevel?shop=${shop}`);
   }
 
@@ -997,18 +1010,6 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
-
-app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
-  res.set("Content-Type", "text/html");
-  res.send(`
-    <script type="text/javascript">
-      document.cookie = "shopify_toplevel=true; path=/";
-      window.location.href = "/shopify/install?shop=${shop}";
-    </script>
-  `);
-});
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1113,13 +1114,13 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
     // --- Redirect via App Bridge
-    res.set('Content-Type', 'text/html');
+    res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Installing...</title>
+          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
         </head>
         <body>
