@@ -122,9 +122,6 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    // Abort if no user or user_id
-    if (!user?.user_id) return;
-  
     let canceled = false;
   
     const fetchShopifyUser = async () => {
@@ -149,7 +146,7 @@ const Dashboard = () => {
     return () => {
       canceled = true;
     };
-  }, [user?.user_id]); // dependency is user.user_id
+  }, []); // dependency is user.user_id
   
   
 
