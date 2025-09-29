@@ -358,11 +358,11 @@ const [shopifyUser, setShopifyUser] = useState(false)
 
   {shopifyUser && !membership ? (
         <div onClick={activatePlan} className='upgrade-div'>
-        <Link>Upgrade Plan To See More</Link>
+        <span>Upgrade Plan To See More</span>
        </div>
 ) : (
 <div className='upgrade-div'>
-     <Link style={{marginLeft: "20px"}} to={`/${user?.username}/upgrade-plan`}>Upgrade Plan To See More</Link>
+     <span style={{marginLeft: "20px"}} to={`/${user?.username}/upgrade-plan`}>Upgrade Plan To See More</span>
     </div>
 )}
  

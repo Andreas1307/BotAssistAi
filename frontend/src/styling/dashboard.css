@@ -253,6 +253,21 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
   }
+  .upgrade-section button {
+    background: linear-gradient(90deg, #0077ff, #8a2be2);
+    color: white;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 20px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
   .upgrade-section button:hover {
     background: rgba(230, 81, 0, 0.137)gradient(90deg, #0077ff, #8a2be2);
     transform: scale(1.01);
