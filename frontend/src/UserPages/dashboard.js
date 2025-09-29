@@ -120,33 +120,6 @@ const Dashboard = () => {
     await handleBilling(user.user_id);
   };
 
-
-  useEffect(() => {
-    let canceled = false;
-  
-    const fetchShopifyUser = async () => {
-      try {
-        const { data } = await axios.get(`/check-shopify-user`, {
-          params: { id: user.user_id },
-        });
-  
-        if (!canceled) setShopifyUser(data.data);
-      } catch (err) {
-        console.error("Error checking Shopify user:", err);
-        // you can safely call toast here
-        toast.error("Failed to fetch Shopify user.");
-      }
-    };
-  
-    // Use a microtask to avoid blocking render (important for Toasts)
-    setTimeout(() => {
-      fetchShopifyUser();
-    }, 0);
-  
-    return () => {
-      canceled = true;
-    };
-  }, []); // dependency is user.user_id
   
   
 
@@ -325,7 +298,19 @@ const Dashboard = () => {
   }, [user]); 
 
 
+  useEffect(() => {   
 
+    const fetchShopifyUser = async () => {
+      try {
+        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
+        setShopifyUser(response.data.data)
+      } catch(e) {
+        console.log("An error occured checking the shopify user", e)
+      }
+    } 
+    fetchShopifyUser()
+
+  }, [user])
 
 
 
