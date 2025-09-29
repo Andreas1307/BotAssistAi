@@ -28,6 +28,7 @@ import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
 import { handleBilling } from "../utils/billing";
 
+
 const Dashboard = () => {
   const [activeChats, setActiveChats] = useState(0);
   const [topQuestions, setTopQuestions] = useState([]);
@@ -115,8 +116,15 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
 
+  const activatePlan = async () => {
+    await handleBilling(user.user_id);
+  };
 
+
+
+ 
   useEffect(() => {   
+
     const fetchShopifyUser = async () => {
       try {
         const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
@@ -129,14 +137,6 @@ const Dashboard = () => {
 
   }, [user])
 
-
-
-
-  
-const activatePlan = async () => {
-  await handleBilling(user.user_id);
-};
- 
   /*
   useShopifyInstallRedirect();
 
@@ -811,8 +811,7 @@ if (loading) {
   <Link to={`/${user?.username}/upgrade-plan`}>
   <button className="upgrade-btn">Upgrade Plan</button>
 </Link>
-)}
-</aside>
+)}</aside>
 
 <div className="main-content">  
 
@@ -923,6 +922,7 @@ if (loading) {
         <li>📁 More configuartion options</li>
       </ul>
       </div>
+
       {shopifyUser ? (
       <button onClick={activatePlan}>
         Activate Plan
@@ -934,6 +934,7 @@ if (loading) {
         </button>
         </Link>
       )}
+
     </div>
 )}
         
@@ -1141,11 +1142,11 @@ if (loading) {
           <FaProjectDiagram  /> Integrations
         </h1>
         {!shopifyUser && (
-             <button className="integrate-btn" onClick={() => setIntegration(true)}>
+            <button className="integrate-btn" onClick={() => setIntegration(true)}>
           How To Integrate
         </button>
         )}
-     
+      
       </span>
     
         <Integration />
