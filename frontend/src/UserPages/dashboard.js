@@ -122,28 +122,35 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    if (!user?.user_id) return; // only run when userId exists
+    // Abort if no user or user_id
+    if (!user?.user_id) return;
   
-    let isMounted = true; // flag to prevent state updates after unmount
+    let canceled = false;
   
     const fetchShopifyUser = async () => {
       try {
-        const response = await axios.get(`/check-shopify-user`, {
+        const { data } = await axios.get(`/check-shopify-user`, {
           params: { id: user.user_id },
         });
   
-        if (isMounted) setShopifyUser(response.data.data);
-      } catch (e) {
-        console.log("An error occurred checking the Shopify user", e);
+        if (!canceled) setShopifyUser(data.data);
+      } catch (err) {
+        console.error("Error checking Shopify user:", err);
+        // you can safely call toast here
+        toast.error("Failed to fetch Shopify user.");
       }
     };
   
-    fetchShopifyUser();
+    // Use a microtask to avoid blocking render (important for Toasts)
+    setTimeout(() => {
+      fetchShopifyUser();
+    }, 0);
   
     return () => {
-      isMounted = false;
+      canceled = true;
     };
-  }, [user?.user_id]);
+  }, [user?.user_id]); // dependency is user.user_id
+  
   
 
   /*
