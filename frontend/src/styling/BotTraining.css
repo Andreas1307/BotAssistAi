@@ -138,7 +138,29 @@
   text-decoration: none;
   transition: .4s ease;
 }
+.upgrade-div a {
+  max-width: 260px;
+  font-size: 16px;
+  background: linear-gradient(90deg, #0077ff, #9b00ff, #ff007a);
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  padding: 12px 20px 11px;
+  border-radius: 13px;
+  margin: 7px 0 5px;
+  display: block;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 2px 4px rgba(155, 0, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  font-family: "Space Grotesk", sans-serif;
+  text-decoration: none;
+  transition: .4s ease;
+}
 .upgrade-div span:hover {
+  scale: 1.02;
+}
+.upgrade-div a:hover {
   scale: 1.02;
 }
 @media(max-width: 1000px) {

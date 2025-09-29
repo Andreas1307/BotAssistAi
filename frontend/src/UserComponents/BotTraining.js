@@ -309,9 +309,9 @@ shopifyUser ? (
   </div>
 ) : (
   <div className='upgrade-div'>
-    <span to={`/${user?.username}/upgrade-plan`}>
+    <Link to={`/${user?.username}/upgrade-plan`}>
       Upgrade Plan To See More
-    </span>
+    </Link>
   </div>
 )
     ) : (
