@@ -1140,9 +1140,12 @@ if (loading) {
         <h1 className="dashboard-title">
           <FaProjectDiagram  /> Integrations
         </h1>
-        <button className="integrate-btn" onClick={() => setIntegration(true)}>
+        {!shopifyUser && (
+             <button className="integrate-btn" onClick={() => setIntegration(true)}>
           How To Integrate
         </button>
+        )}
+     
       </span>
     
         <Integration />
