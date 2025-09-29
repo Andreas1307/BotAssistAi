@@ -266,6 +266,7 @@ const Dashboard = () => {
       try {
         const res = await axios.get(`/auth-check`, { withCredentials: true });
         setUser(res.data.user);
+        console.log("USER", res.data.user)
         setRenew(res.data.showRenewalModal)
       } catch (error) {
         setUser(null);
@@ -298,19 +299,7 @@ const Dashboard = () => {
   }, [user]); 
 
 
-  useEffect(() => {   
 
-    const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-
-  }, [user])
 
 
 
