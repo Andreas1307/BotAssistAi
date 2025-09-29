@@ -19,6 +19,8 @@ import axios from "../utils/axiosShopify";
 import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
+import { initShopifyAppBridge } from "../utils/initShopifyAppBridge";
+
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -57,7 +59,7 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getAppBridgeInstance();
+    initShopifyAppBridge();
   }, []);
   
 
@@ -109,7 +111,7 @@ const Homepage = () => {
     };
   
     checkShop();
-  }, [colors]); // depend on colors since it's used inside
+  }, []); 
   
   
   
