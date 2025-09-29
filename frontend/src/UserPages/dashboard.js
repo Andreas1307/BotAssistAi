@@ -26,7 +26,6 @@ import {
 } from "react-icons/fa";
 import Footer from "../UserComponents/footer";
 import BookingSettings from "../UserComponents/BookingSettings";
-import { handleBilling } from "../utils/billing";
 
 
 const Dashboard = () => {
@@ -117,7 +116,7 @@ const Dashboard = () => {
 
 
   const activatePlan = async () => {
-    await handleBilling(user.user_id);
+   alert("hello")
   };
 
 
