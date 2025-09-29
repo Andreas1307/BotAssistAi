@@ -122,7 +122,6 @@ const Dashboard = () => {
 
 
   useEffect(() => {   
-    if (!user?.user_id) return;
     const fetchShopifyUser = async () => {
       try {
         const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
@@ -133,7 +132,7 @@ const Dashboard = () => {
     } 
     fetchShopifyUser()
 
-  }, [user])
+  }, [])
 
 
   /*
