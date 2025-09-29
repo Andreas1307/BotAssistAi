@@ -121,8 +121,6 @@ const Dashboard = () => {
       try {
         const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
         setShopifyUser(response.data.data)
-
-        console.log("TYPE OF USER", response.data.data)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
       }
@@ -787,7 +785,7 @@ if (loading) {
     { name: "Conversations", icon: <FaComments />, hash: "#conversations" },
     { name: "Integrations", icon: <FaPlug />, hash: "#integrations" },
     // Conditionally include Bookings
-    ...(shopifyUser
+    ...(!shopifyUser
       ? [{ name: "Bookings", icon: <FaCalendarCheck />, hash: "#bookings" }]
       : []),
     { name: "Bot Training", icon: <FaRobot />, hash: "#botTraining" },
@@ -1229,7 +1227,7 @@ if (loading) {
 
 
 
-{shopifyUser && (
+{!shopifyUser && (
 
   <main className="dashboard-bookings" id="bookings">
   <div className="booking-dash">
