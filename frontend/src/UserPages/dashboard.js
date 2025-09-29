@@ -121,20 +121,30 @@ const Dashboard = () => {
   };
 
 
-  useEffect(() => {   
-    if (!user.user_id) return;
+  useEffect(() => {
+    if (!user?.user_id) return; // only run when userId exists
+  
+    let isMounted = true; // flag to prevent state updates after unmount
+  
     const fetchShopifyUser = async () => {
       try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
+        const response = await axios.get(`/check-shopify-user`, {
+          params: { id: user.user_id },
+        });
+  
+        if (isMounted) setShopifyUser(response.data.data);
+      } catch (e) {
+        console.log("An error occurred checking the Shopify user", e);
       }
-    } 
-    fetchShopifyUser()
-
-  }, [user?.user_id])
-
+    };
+  
+    fetchShopifyUser();
+  
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.user_id]);
+  
 
   /*
   useShopifyInstallRedirect();
