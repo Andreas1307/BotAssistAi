@@ -266,7 +266,11 @@ const Dashboard = () => {
       try {
         const res = await axios.get(`/auth-check`, { withCredentials: true });
         setUser(res.data.user);
-        console.log("USER", res.data.user)
+        if(res.data.user.shopify_access_token) {
+          setShopifyUser(true)
+        } else {
+          setShopifyUser(false)
+        }
         setRenew(res.data.showRenewalModal)
       } catch (error) {
         setUser(null);
