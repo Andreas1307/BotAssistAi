@@ -28,7 +28,7 @@ export async function initShopifyAppBridge() {
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
-      forceRedirect: true,
+      forceRedirect: false,
     });
 
     window.appBridge = app;
@@ -62,6 +62,16 @@ export function getAppBridgeInstance() {
  */
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
+
+  if (!url.includes("host=") && host) {
+    url += (url.includes("?") ? "&" : "?") + `host=${encodeURIComponent(host)}`;
+  }
+  if (!url.includes("shop=") && shop) {
+    url += (url.includes("?") ? "&" : "?") + `shop=${encodeURIComponent(shop)}`;
+  }
 
   if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
@@ -70,6 +80,7 @@ export function safeRedirect(url) {
     window.top.location.href = url;
   }
 }
+
 
 /**
  * Fetch with App Bridge auth token if inside Shopify
