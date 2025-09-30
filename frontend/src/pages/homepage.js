@@ -59,11 +59,8 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (window.top !== window.self) {
-      initShopifyAppBridge();
-    }
+    initShopifyAppBridge();
   }, []);
-  
   
 
   useEffect(() => {
@@ -95,7 +92,7 @@ const Homepage = () => {
             colors,
           });
   
-          return; 
+          return; // ✅ Prevents continuing flow before install
         }
   
         if (!data.hasBilling) {
