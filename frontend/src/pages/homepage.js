@@ -16,10 +16,9 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
+import { safeRedirect } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
-import { initShopifyAppBridge } from "../utils/initShopifyAppBridge";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -58,11 +57,9 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (window.top !== window.self) {
-      initShopifyAppBridge();
-    }
-  }, []);
+
+
+    
   
 
   useEffect(() => {
@@ -85,10 +82,8 @@ const Homepage = () => {
         });
   
         if (!data.installed) {
-          // 🔐 Force OAuth flow before anything else
-          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
+          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}&host=${encodeURIComponent(hostParam)}`);
   
-          // Save chatbot config once OAuth completes
           await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
             colors,
@@ -102,7 +97,7 @@ const Homepage = () => {
           return;
         }
   
-        console.log("✅ Shopify store ready");
+        console.log("✅ Shopify store ready");   
         setInstalled(true);
       } catch (err) {
         console.error("❌ Shopify flow failed:", err);
@@ -136,7 +131,7 @@ const Homepage = () => {
   };
   */
   
-  
+
   useEffect(() => {
     const fetchUser = async () => {
       try {

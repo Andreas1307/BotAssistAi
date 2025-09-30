@@ -13,18 +13,17 @@ function isEmbedded() {
  * - Skips if not embedded or missing params
  * - Avoids noisy Web Vitals errors
  */
-export async function initShopifyAppBridge() {
+export function initShopifyAppBridge() {
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
+
+  if (!shop || !host) {
+    console.warn("⚠️ Missing shop/host params, not initializing App Bridge.");
+    return null;
+  }
+
   try {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
-
-    if (!isEmbedded() || !shop || !host) {
-      // Running standalone (outside Shopify)
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
-      return null;
-    }
-
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -32,17 +31,7 @@ export async function initShopifyAppBridge() {
     });
 
     window.appBridge = app;
-
-    // Silently try to initialize Web Vitals
-    try {
-      if (typeof app.initializeWebVitals === "function") {
-        app.initializeWebVitals();
-      }
-    } catch {
-      // ignore
-    }
-
-    console.log("✅ Shopify App Bridge initialized");
+    console.log("✅ Shopify App Bridge initialized", { shop, host });
     return app;
   } catch (err) {
     console.error("❌ Failed to init App Bridge:", err);
