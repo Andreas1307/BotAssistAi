@@ -975,18 +975,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
   res.set("Content-Type", "text/html");
+
+  const redirectUrl = host
+    ? `/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+    : `/shopify/install?shop=${encodeURIComponent(shop)}`;
+
   res.send(`
     <script type="text/javascript">
       document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+      window.location.href = "${redirectUrl}";
     </script>
   `);
-  
 });
+
 
 // INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
@@ -999,11 +1003,15 @@ app.get("/shopify/install", async (req, res) => {
   
 
   try {
+    const host = req.query.host;
+
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
-      callbackPath: "/shopify/callback",
+      callbackPath: host
+        ? `/shopify/callback?host=${encodeURIComponent(host)}`
+        : "/shopify/callback",
       isOnline: true,
     });
   } catch (err) {
