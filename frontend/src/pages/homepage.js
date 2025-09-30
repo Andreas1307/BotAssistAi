@@ -82,7 +82,10 @@ const Homepage = () => {
         });
   
         if (!data.installed) {
-          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
+          safeRedirect(
+            `${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}&host=${encodeURIComponent(hostParam)}`
+          );
+          
   
           await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,

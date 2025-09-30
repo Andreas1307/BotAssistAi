@@ -32,8 +32,6 @@ export async function initShopifyAppBridge() {
 
     window.appBridge = app;
 
-    
-
     console.log("✅ Shopify App Bridge initialized");
     return app;
   } catch (err) {
