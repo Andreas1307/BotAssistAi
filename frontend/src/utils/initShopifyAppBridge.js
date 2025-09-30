@@ -27,11 +27,11 @@ export async function initShopifyAppBridge() {
 
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: new URLSearchParams(window.location.search).get("host"),
+      host,
       forceRedirect: true,
     });
+
     window.appBridge = app;
-    
 
     // Silently try to initialize Web Vitals
     try {
