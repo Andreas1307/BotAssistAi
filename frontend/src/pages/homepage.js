@@ -59,8 +59,11 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    initShopifyAppBridge();
+    if (window.top !== window.self) {
+      initShopifyAppBridge();
+    }
   }, []);
+  
   
 
   useEffect(() => {
