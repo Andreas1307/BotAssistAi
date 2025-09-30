@@ -977,26 +977,26 @@ app.use(express.urlencoded({ extended: true }));
 
 // TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
   res.set("Content-Type", "text/html");
   res.send(`
     <script type="text/javascript">
       document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
     </script>
   `);
-  
 });
+
 
 // INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
-  const shop = req.query.shop;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    // Preserve host when redirecting back to /auth/toplevel
+    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
-  
 
   try {
     await shopify.auth.begin({
@@ -1011,6 +1011,7 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {

@@ -79,7 +79,8 @@ const Homepage = () => {
   
         if (!data.installed) {
           // 🔐 Force OAuth flow before anything else
-          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
+          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}&host=${encodeURIComponent(hostParam)}`);
+
   
           // Save chatbot config once OAuth completes
           await axios.post(`/chatbot-config-shopify`, {
