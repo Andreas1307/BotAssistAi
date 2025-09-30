@@ -19,7 +19,7 @@ export async function initShopifyAppBridge() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (!isEmbedded() || !shop || !host) {
+    if (!shop || !host) {
       console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
@@ -31,8 +31,6 @@ export async function initShopifyAppBridge() {
     });
 
     window.appBridge = app;
-
-    
 
     console.log("✅ Shopify App Bridge initialized");
     return app;

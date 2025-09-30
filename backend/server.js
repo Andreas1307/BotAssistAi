@@ -982,7 +982,7 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <script type="text/javascript">
       document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=" + encodeURIComponent(new URLSearchParams(window.location.search).get("host"));
     </script>
   `);
   
@@ -1003,9 +1003,10 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
       shop,
-      callbackPath: "/shopify/callback",
+      callbackPath: "/shopify/callback?host=" + encodeURIComponent(req.query.host),
       isOnline: true,
     });
+    
   } catch (err) {
     console.error("❌ Shopify install error:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
