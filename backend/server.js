@@ -977,12 +977,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
   res.set("Content-Type", "text/html");
   res.send(`
     <script type="text/javascript">
       document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-        window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
     </script>
   `);
   
