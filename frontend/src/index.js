@@ -38,13 +38,14 @@ const router = createBrowserRouter([
   { path: "*", element: <Error /> }
 ]);
 
+// Initialize App Bridge only when needed — but render either way
 initShopifyAppBridge().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <RouterProvider router={router} />
       <ToastContainer 
         position="top-center"
-        portalTarget={document.body}
+        portalTarget={document.body} // ensures Shopify iframe doesn’t block it
       />
     </React.StrictMode>
   );
