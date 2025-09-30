@@ -19,7 +19,7 @@ import axios from "../utils/axiosShopify";
 import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
-//    import { initShopifyAppBridge } from "../utils/initShopifyAppBridge";
+import { initShopifyAppBridge } from "../utils/initShopifyAppBridge";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -57,13 +57,12 @@ const Homepage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-/*
+
   useEffect(() => {
     if (window.top !== window.self) {
       initShopifyAppBridge();
     }
   }, []);
-  */
   
 
   useEffect(() => {
@@ -138,12 +137,6 @@ const Homepage = () => {
   */
   
   
-
-
-
-  
-
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
