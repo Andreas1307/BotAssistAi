@@ -1122,7 +1122,8 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-         </head>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
         <body>
           <script>
             const AppBridge = window['app-bridge'].default;
@@ -1133,8 +1134,10 @@ app.get('/shopify/callback', async (req, res) => {
               forceRedirect: true
             });
             const redirect = actions.Redirect.create(app);
-          redirect.dispatch(Redirect.Action.REMOTE, '/?shop=${shop}&host=${host}');
-
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
           </script>
         </body>
       </html>
