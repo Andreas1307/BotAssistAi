@@ -988,7 +988,6 @@ app.get("/auth/toplevel", (req, res) => {
   
 });
 
-// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
