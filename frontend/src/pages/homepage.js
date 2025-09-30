@@ -56,9 +56,6 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    getAppBridgeInstance();
-  }, []);
   
 
   useEffect(() => {
