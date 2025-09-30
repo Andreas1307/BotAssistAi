@@ -82,7 +82,7 @@ const Homepage = () => {
         });
   
         if (!data.installed) {
-          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}&host=${encodeURIComponent(hostParam)}`);
+          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
   
           await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
@@ -97,7 +97,7 @@ const Homepage = () => {
           return;
         }
   
-        console.log("✅ Shopify store ready");   
+        console.log("✅ Shopify store ready");
         setInstalled(true);
       } catch (err) {
         console.error("❌ Shopify flow failed:", err);
