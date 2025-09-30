@@ -19,7 +19,6 @@ import axios from "../utils/axiosShopify";
 import { safeRedirect } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
-
 const Homepage = () => {
   const [stars, setStars] = useState([]);
   const [showModal, setShowModal] = useState(false)
@@ -57,9 +56,9 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-
-
-    
+  useEffect(() => {
+    getAppBridgeInstance();
+  }, []);
   
 
   useEffect(() => {
@@ -82,8 +81,10 @@ const Homepage = () => {
         });
   
         if (!data.installed) {
+          // 🔐 Force OAuth flow before anything else
           safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
   
+          // Save chatbot config once OAuth completes
           await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
             colors,
@@ -131,6 +132,12 @@ const Homepage = () => {
   };
   */
   
+  
+
+
+
+  
+
 
   useEffect(() => {
     const fetchUser = async () => {
