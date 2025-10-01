@@ -1112,23 +1112,34 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    res.set("Content-Type", "text/html");
-    res.send(`
+  // --- Redirect via App Bridge
+  res.set("Content-Type", "text/html");
+  res.send(`
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8" />
         <title>Redirecting...</title>
-        <script>
-          // ✅ Do a safe top-level redirect
-          window.top.location.href = "${process.env.REACT_APP_APP_URL}/${username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
-        </script>
+        <script src="https://unpkg.com/@shopify/app-bridge"></script>
       </head>
       <body>
-        Redirecting...
+        <script>
+          const AppBridge = window['app-bridge'].default;
+          const actions = window['app-bridge'].actions;
+          const app = AppBridge({
+            apiKey: '${process.env.SHOPIFY_API_KEY}',
+            host: '${host}',
+            forceRedirect: true
+          });
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(
+            actions.Redirect.Action.APP,
+            '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+          );
+        </script>
       </body>
     </html>
-    `);
+  `);
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
