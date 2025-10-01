@@ -1113,45 +1113,44 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
     res.set("Content-Type", "text/html");
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Redirecting...</title>
-        <!-- Use the correct App Bridge CDN -->
-        <script src="https://unpkg.com/@shopify/app-bridge@latest"></script>
+res.send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <!-- ✅ Use Shopify's official CDN -->
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+    <script>
+      (function() {
+        var AppBridge = window['app-bridge'];
+        if (!AppBridge) {
+          console.error('❌ Shopify App Bridge failed to load.');
+          return;
+        }
 
-        <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            var AppBridge = window['AppBridge'];
-            if (!AppBridge) {
-              console.error('❌ Shopify App Bridge failed to load.');
-              return;
-            }
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
-    
-            var app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true
-            });
-    
-            var redirect = Redirect.create(app);
-    
-            // Redirect to embedded app dashboard route
-            redirect.dispatch(
-              Redirect.Action.APP,
-              '/${username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
-          });
-        </script>
-      </head>
-      <body></body>
-    </html>
-    `);
-    
+        var createApp = AppBridge.default;
+        var Redirect = AppBridge.actions.Redirect;
+
+        var app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${host}",
+          forceRedirect: true
+        });
+
+        var redirect = Redirect.create(app);
+
+        redirect.dispatch(
+          Redirect.Action.APP,
+          "/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+        );
+      })();
+    </script>
+  </body>
+</html>
+`);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
