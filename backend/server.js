@@ -987,8 +987,6 @@ app.get("/auth/toplevel", (req, res) => {
   `);
 });
 
-
-// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1131,10 +1129,12 @@ app.get('/shopify/callback', async (req, res) => {
             const actions = window['app-bridge'].actions;
             const app = AppBridge({
               apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
+              host: '${encodeURIComponent(host)}',
               forceRedirect: true
             });
             const redirect = actions.Redirect.create(app);
+    
+            // ✅ Use APP redirect with relative path inside embedded app
             redirect.dispatch(
               actions.Redirect.Action.APP,
               '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
@@ -1143,6 +1143,7 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
+    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);

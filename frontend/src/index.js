@@ -42,15 +42,15 @@ const params = new URLSearchParams(window.location.search);
 const shop = params.get("shop");
 const host = params.get("host");
 
-(async () => {
-  if (shop && host) {
-    await initShopifyAppBridge();
-  }
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <RouterProvider router={router} />
-      <ToastContainer position="top-center" portalTarget={document.body} />
-    </React.StrictMode>
-  );
-})();
+// ✅ Initialize first
+let appBridge;
+if (shop && host) {
+  appBridge = await initShopifyAppBridge();
+}
 
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+    <ToastContainer position="top-center" portalTarget={document.body} />
+  </React.StrictMode>
+);
