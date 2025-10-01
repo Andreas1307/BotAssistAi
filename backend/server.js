@@ -1119,33 +1119,43 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
+          <!-- Load App Bridge first -->
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
+            // Wait until App Bridge is loaded
+            (function() {
+              var AppBridge = window['app-bridge'];
+              if (!AppBridge) {
+                console.error('❌ Shopify App Bridge failed to load.');
+                return;
+              }
     
-            var app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",   // ✅ injected by Node before sending
-              host: "${host}",        // ✅ actual query param
-              forceRedirect: true
-            });
+              var createApp = AppBridge.default;
+              var Redirect = AppBridge.actions.Redirect;
     
-            var redirect = Redirect.create(app);
+              // Initialize the app
+              var app = createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}", // injected by Node
+                host: "${host}",                             // actual query param
+                forceRedirect: true
+              });
     
-        redirect.dispatch(
-  Redirect.Action.APP,
-  '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-);
-
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+              // Create redirect action
+              var redirect = Redirect.create(app);
+    
+              // Redirect to embedded dashboard
+              redirect.dispatch(
+                Redirect.Action.APP,
+                '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              );
+            })();
           </script>
         </body>
       </html>
     `);
-    
-  
+ 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
