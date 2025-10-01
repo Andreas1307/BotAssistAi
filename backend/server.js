@@ -1119,8 +1119,7 @@ app.get('/shopify/callback', async (req, res) => {
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>Redirecting...</title>
-        <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        <title>Redirecting...</title>  
       </head>
       <body>
         <script>
