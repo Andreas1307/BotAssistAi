@@ -1119,7 +1119,6 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
@@ -1135,10 +1134,12 @@ app.get('/shopify/callback', async (req, res) => {
     
             var redirect = Redirect.create(app);
     
-            redirect.dispatch(
-              Redirect.Action.APP,
-              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
+        redirect.dispatch(
+  Redirect.Action.APP,
+  '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+);
+
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
           </script>
         </body>
       </html>
