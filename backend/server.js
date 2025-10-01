@@ -1128,7 +1128,7 @@ app.get('/shopify/callback', async (req, res) => {
             var Redirect = AppBridge.actions.Redirect;
     
             var app = createApp({
-              apiKey: "${process.env.REACT_APP_SHOPIFY_API_KEY}",   // ✅ injected by Node before sending
+              apiKey: "${process.env.SHOPIFY_API_KEY}",   // ✅ injected by Node before sending
               host: "${host}",        // ✅ actual query param
               forceRedirect: true
             });
@@ -1137,7 +1137,7 @@ app.get('/shopify/callback', async (req, res) => {
     
             redirect.dispatch(
               Redirect.Action.APP,
-              '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
             );
           </script>
         </body>
