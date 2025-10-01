@@ -1113,45 +1113,43 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
     res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <script>
-            (function() {
-              var AppBridge = window['app-bridge'];
-              if (!AppBridge) {
-                console.error('❌ Shopify App Bridge failed to load.');
-                return;
-              }
-              var createApp = AppBridge.default;
-              var Redirect = AppBridge.actions.Redirect;
-    
-              // Initialize App Bridge
-              var app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
-                forceRedirect: true
-              });
-    
-              var redirect = Redirect.create(app);
-    
-              // Redirect to your app's full URL with host and shop
-              var appUrl = "${process.env.REACT_APP_APP_URL}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
-    
-              redirect.dispatch(Redirect.Action.REMOTE, appUrl);
-            })();
-          </script>
-        </body>
-      </html>
-    `);
-    
-    
+res.send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var AppBridge = window['app-bridge'];
+        if (!AppBridge) {
+          console.error('❌ Shopify App Bridge failed to load.');
+          return;
+        }
+        var createApp = AppBridge.default;
+        var Redirect = AppBridge.actions.Redirect;
+
+        var app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${host}",
+          forceRedirect: true
+        });
+
+        var redirect = Redirect.create(app);
+
+        // Redirect to embedded app dashboard route
+        redirect.dispatch(
+          Redirect.Action.APP,
+          '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+        );
+      });
+    </script>
+  </head>
+  <body></body>
+</html>
+`);
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
