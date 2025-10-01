@@ -1119,22 +1119,24 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
-            const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${encodeURIComponent(host)}',
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var Redirect = AppBridge.actions.Redirect;
+    
+            var app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",   // ✅ injected by Node before sending
+              host: "${encodeURIComponent(host)}",        // ✅ actual query param
               forceRedirect: true
             });
-            const redirect = actions.Redirect.create(app);
     
-            // ✅ Use APP redirect with relative path inside embedded app
+            var redirect = Redirect.create(app);
+    
             redirect.dispatch(
-              actions.Redirect.Action.APP,
+              Redirect.Action.APP,
               '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
             );
           </script>
@@ -1142,7 +1144,7 @@ app.get('/shopify/callback', async (req, res) => {
       </html>
     `);
     
-
+  
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
