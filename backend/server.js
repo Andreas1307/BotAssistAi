@@ -1119,36 +1119,13 @@ app.get('/shopify/callback', async (req, res) => {
       <head>
         <meta charset="utf-8" />
         <title>Redirecting...</title>
-        <!-- ✅ Load App Bridge first -->
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+        <script>
+          // ✅ Do a safe top-level redirect
+          window.top.location.href = "${process.env.REACT_APP_APP_URL}/${username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
+        </script>
       </head>
       <body>
-        <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            var AppBridge = window['app-bridge'];
-            if (!AppBridge) {
-              console.error("❌ Shopify App Bridge failed to load.");
-              return;
-            }
-    
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
-    
-            var app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",   // required by Shopify
-              forceRedirect: true
-            });
-    
-            var redirect = Redirect.create(app);
-    
-            // ✅ Full redirect inside the embedded iframe
-            redirect.dispatch(
-              Redirect.Action.APP,
-              "/${username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-            );
-          });
-        </script>
+        Redirecting...
       </body>
     </html>
     `);
