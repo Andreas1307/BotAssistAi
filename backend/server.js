@@ -1111,47 +1111,49 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-  // --- Redirect via App Bridge
-  res.set("Content-Type", "text/html");
-res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <title>Redirecting...</title>
-      <!-- ✅ Official Shopify App Bridge -->
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    </head>
-    <body>
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          // ✅ Shopify CDN exposes 'window.appBridge'
-          if (!window.appBridge || !window.appBridge.default) {
-            console.error("❌ Shopify App Bridge failed to load");
-            return;
-          }
-
-          const createApp = window.appBridge.default;
-          const Redirect = window.appBridge.actions.Redirect;
-
-          const app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
+    const username2 = user?.username || "";
+    const shopParam = encodeURIComponent(shop);
+    const hostParam = encodeURIComponent(host);
+    
+    res.set("Content-Type", "text/html");
+    res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Redirecting...</title>
+        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      </head>
+      <body>
+        <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            if (!window.appBridge || !window.appBridge.default) {
+              console.error("❌ Shopify App Bridge failed to load");
+              return;
+            }
+    
+            const createApp = window.appBridge.default;
+            const Redirect = window.appBridge.actions.Redirect;
+    
+            const app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${hostParam}",
+              forceRedirect: true
+            });
+    
+            const redirect = Redirect.create(app);
+    
+            redirect.dispatch(
+              Redirect.Action.APP,
+              "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
+            );
           });
-
-          const redirect = Redirect.create(app);
-
-          redirect.dispatch(
-            Redirect.Action.APP,
-            "/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-          );
-        });
-      </script>
-    </body>
-  </html>
-`);
-
+        </script>
+      </body>
+    </html>
+    `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
