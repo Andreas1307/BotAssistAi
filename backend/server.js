@@ -1119,42 +1119,44 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <!-- Load App Bridge first -->
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
-            // Wait until App Bridge is loaded
-            (function() {
-              var AppBridge = window['app-bridge'];
-              if (!AppBridge) {
-                console.error('❌ Shopify App Bridge failed to load.');
-                return;
-              }
+            // Dynamically load App Bridge
+            function loadAppBridge(callback) {
+              var script = document.createElement('script');
+              script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+              script.onload = callback;
+              script.onerror = function() {
+                console.error('❌ Failed to load Shopify App Bridge.');
+              };
+              document.head.appendChild(script);
+            }
     
+            loadAppBridge(function() {
+              var AppBridge = window['app-bridge'];
               var createApp = AppBridge.default;
               var Redirect = AppBridge.actions.Redirect;
     
-              // Initialize the app
+              // Initialize App Bridge
               var app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}", // injected by Node
-                host: "${host}",                             // actual query param
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}",
                 forceRedirect: true
               });
     
-              // Create redirect action
+              // Redirect into your embedded app
               var redirect = Redirect.create(app);
-    
-              // Redirect to embedded dashboard
               redirect.dispatch(
                 Redirect.Action.APP,
                 '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
               );
-            })();
+            });
           </script>
         </body>
       </html>
     `);
+    
  
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
