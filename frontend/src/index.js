@@ -42,10 +42,9 @@ const params = new URLSearchParams(window.location.search);
 const shop = params.get("shop");
 const host = params.get("host");
 
-// ✅ Initialize first
-let appBridge;
+
 if (shop && host) {
-  appBridge = await initShopifyAppBridge();
+  await initShopifyAppBridge();
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

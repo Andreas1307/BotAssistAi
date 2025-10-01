@@ -975,7 +975,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   res.set("Content-Type", "text/html");
@@ -1113,7 +1112,6 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Redirect via App Bridge
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -1121,7 +1119,7 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
