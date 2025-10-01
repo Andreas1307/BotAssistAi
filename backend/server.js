@@ -1125,7 +1125,7 @@ res.send(`
     <body>
       <script>
         document.addEventListener("DOMContentLoaded", function() {
-          // ✅ Shopify CDN exposes `window.appBridge`
+          // ✅ Shopify CDN exposes 'window.appBridge'
           if (!window.appBridge || !window.appBridge.default) {
             console.error("❌ Shopify App Bridge failed to load");
             return;
