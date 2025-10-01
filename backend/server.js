@@ -1119,22 +1119,16 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
-            // Dynamically load App Bridge
-            function loadAppBridge(callback) {
-              var script = document.createElement('script');
-              script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-              script.onload = callback;
-              script.onerror = function() {
-                console.error('❌ Failed to load Shopify App Bridge.');
-              };
-              document.head.appendChild(script);
-            }
-    
-            loadAppBridge(function() {
+            (function() {
               var AppBridge = window['app-bridge'];
+              if (!AppBridge) {
+                console.error('❌ Shopify App Bridge failed to load.');
+                return;
+              }
               var createApp = AppBridge.default;
               var Redirect = AppBridge.actions.Redirect;
     
@@ -1145,19 +1139,19 @@ app.get('/shopify/callback', async (req, res) => {
                 forceRedirect: true
               });
     
-              // Redirect into your embedded app
               var redirect = Redirect.create(app);
-              redirect.dispatch(
-                Redirect.Action.APP,
-                '/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-              );
-            });
+    
+              // Redirect to your app's full URL with host and shop
+              var appUrl = "${process.env.REACT_APP_APP_URL}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
+    
+              redirect.dispatch(Redirect.Action.REMOTE, appUrl);
+            })();
           </script>
         </body>
       </html>
     `);
     
- 
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
