@@ -75,7 +75,7 @@ export function safeRedirect(url) {
 
   if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.APP, url);
+    redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
     window.top.location.href = url;
   }
