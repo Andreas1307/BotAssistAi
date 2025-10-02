@@ -1117,49 +1117,42 @@ app.get('/shopify/callback', async (req, res) => {
     
     res.set("Content-Type", "text/html");
     res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <!-- ✅ Shopify official CDN -->
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <script>
-            document.addEventListener("DOMContentLoaded", function() {
-              try {
-                if (!window.appBridge || !window.appBridge.default) {
-                  console.error("❌ App Bridge not available");
-                  window.top.location.href = "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}";
-                  return;
-                }
-    
-                // ✅ Use Shopify CDN global
-                var createApp = window.appBridge.default;
-                var Redirect = window.appBridge.actions.Redirect;
-    
-                var app = createApp({
-                  apiKey: "${process.env.SHOPIFY_API_KEY}",
-                  host: "${hostParam}",
-                  forceRedirect: true
-                });
-    
-                var redirect = Redirect.create(app);
-    
-                redirect.dispatch(
-                  Redirect.Action.APP,
-                  "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
-                );
-              } catch (err) {
-                console.error("❌ Redirect failed", err);
-                window.top.location.href = "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}";
-              }
-            });
-          </script>
-        </body>
-      </html>
+     <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+    <script>
+      (function() {
+        const shop = "${shopParam}";
+        const host = "${hostParam}";
+        const redirectUrl = "/${username2}/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+
+        if (!window.appBridge) {
+          console.error("❌ App Bridge not available");
+          window.top.location.href = redirectUrl;
+          return;
+        }
+
+        const app = window.appBridge({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: host,
+          forceRedirect: true
+        });
+
+        const Redirect = window.appBridge.actions.Redirect;
+        const redirect = Redirect.create(app);
+
+        redirect.dispatch(Redirect.Action.APP, redirectUrl);
+      })();
+    </script>
+  </body>
+</html>
+
     `);
       
   } catch (err) {
