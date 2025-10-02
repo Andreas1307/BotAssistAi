@@ -1116,40 +1116,49 @@ app.get('/shopify/callback', async (req, res) => {
     const hostParam = encodeURIComponent(host);
     
     res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <script>
-            document.addEventListener("DOMContentLoaded", function() {
-              if (!window.shopify || !window.shopify.createApp) {
-                console.error("❌ Shopify App Bridge failed to load");
-                return;
-              }
-    
-              const app = window.shopify.createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${hostParam}",
-                forceRedirect: true
-              });
-    
-              const redirect = window.shopify.actions.Redirect.create(app);
-    
-              redirect.dispatch(
-                window.shopify.actions.Redirect.Action.APP,
-                "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
-              );
+res.send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Redirecting...</title>
+      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    </head>
+    <body>
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          try {
+            if (!window.shopify || !window.shopify.createApp) {
+              console.error("❌ App Bridge failed to load from CDN");
+              window.top.location.href = "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}";
+              return;
+            }
+
+            // ✅ Initialize App Bridge via Shopify CDN global
+            const app = window.shopify.createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${hostParam}",
+              forceRedirect: true
             });
-          </script>
-        </body>
-      </html>
-    `);
+
+            const redirect = window.shopify.actions.Redirect.create(app);
+
+            // ✅ Redirect to your embedded app
+            redirect.dispatch(
+              window.shopify.actions.Redirect.Action.APP,
+              "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
+            );
+          } catch (err) {
+            console.error("❌ Redirect failed", err);
+            window.top.location.href = "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}";
+          }
+        });
+      </script>
+    </body>
+  </html>
+`);
+
     
     
     
