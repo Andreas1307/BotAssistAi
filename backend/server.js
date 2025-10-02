@@ -1123,22 +1123,22 @@ app.get('/shopify/callback', async (req, res) => {
           <meta charset="utf-8" />
           <title>Redirecting...</title>
           <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <!-- ✅ Shopify official CDN -->
           <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
             document.addEventListener("DOMContentLoaded", function() {
               try {
-                var AppBridge = window['app-bridge'];
-                if (!AppBridge || !AppBridge.default) {
-                  console.error("❌ App Bridge failed to load from CDN");
+                if (!window.appBridge || !window.appBridge.default) {
+                  console.error("❌ App Bridge not available");
                   window.top.location.href = "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}";
                   return;
                 }
     
-                // ✅ Initialize App Bridge via CDN
-                var createApp = AppBridge.default;
-                var Redirect = AppBridge.actions.Redirect;
+                // ✅ Use Shopify CDN global
+                var createApp = window.appBridge.default;
+                var Redirect = window.appBridge.actions.Redirect;
     
                 var app = createApp({
                   apiKey: "${process.env.SHOPIFY_API_KEY}",
@@ -1148,7 +1148,6 @@ app.get('/shopify/callback', async (req, res) => {
     
                 var redirect = Redirect.create(app);
     
-                // ✅ Redirect into embedded app
                 redirect.dispatch(
                   Redirect.Action.APP,
                   "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
@@ -1162,15 +1161,12 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
-    
+      
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
 
 
 
