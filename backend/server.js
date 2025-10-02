@@ -1117,42 +1117,40 @@ app.get('/shopify/callback', async (req, res) => {
     
     res.set("Content-Type", "text/html");
     res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Redirecting...</title>
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            if (!window.appBridge || !window.appBridge.default) {
-              console.error("❌ Shopify App Bridge failed to load");
-              return;
-            }
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+        </head>
+        <body>
+          <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              if (!window.shopify || !window.shopify.createApp) {
+                console.error("❌ Shopify App Bridge failed to load");
+                return;
+              }
     
-            const createApp = window.appBridge.default;
-            const Redirect = window.appBridge.actions.Redirect;
+              const app = window.shopify.createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${hostParam}",
+                forceRedirect: true
+              });
     
-            const app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${hostParam}",
-              forceRedirect: true
+              const redirect = window.shopify.actions.Redirect.create(app);
+    
+              redirect.dispatch(
+                window.shopify.actions.Redirect.Action.APP,
+                "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
+              );
             });
-    
-            const redirect = Redirect.create(app);
-    
-            redirect.dispatch(
-              Redirect.Action.APP,
-              "/${username2}/dashboard?shop=${shopParam}&host=${hostParam}"
-            );
-          });
-        </script>
-      </body>
-    </html>
+          </script>
+        </body>
+      </html>
     `);
+    
     
     
   } catch (err) {
