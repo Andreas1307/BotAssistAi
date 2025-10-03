@@ -1127,20 +1127,14 @@ app.get('/shopify/callback', async (req, res) => {
       </head>
       <body>
         <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            var shop = "${shopParam}";
-            var host = "${hostParam}";
-            var redirectUrl = "https://botassistai.com/${username2}/dashboard?shop=" 
-              + encodeURIComponent(shop) 
-              + "&host=" + encodeURIComponent(host);
+          var shop = "${shopParam}";
+          var host = "${hostParam}";
+          var redirectUrl = "https://botassistai.com/${username2}/dashboard?shop=" 
+            + encodeURIComponent(shop) 
+            + "&host=" + encodeURIComponent(host);
     
-            var AppBridge = window["app-bridge"];
-            if (!AppBridge) {
-              console.error("❌ App Bridge not loaded, fallback redirect");
-              window.top.location.href = redirectUrl;
-              return;
-            }
-    
+          var AppBridge = window["app-bridge"];
+          if (AppBridge) {
             var createApp = AppBridge.default;
             var Redirect = AppBridge.actions.Redirect;
     
@@ -1152,13 +1146,11 @@ app.get('/shopify/callback', async (req, res) => {
     
             var redirect = Redirect.create(app);
             redirect.dispatch(Redirect.Action.APP, redirectUrl);
-          });
+          }
         </script>
       </body>
     </html>
     `);
-    
-
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
