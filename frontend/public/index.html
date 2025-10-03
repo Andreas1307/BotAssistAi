@@ -28,10 +28,6 @@
       Learn how to configure a non-root public URL by running `npm run build`.
   -->
 
- 
-
-  
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
@@ -60,7 +56,27 @@
       src="https://www.facebook.com/tr?id=1885771515529090&ev=PageView&noscript=1"
     /></noscript>
     
-    
+    <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<script>
+  (function() {
+    var AppBridge = window["app-bridge"];
+    if (!AppBridge) return; // let frontend handle gracefully
+
+    var params = new URLSearchParams(window.location.search);
+    var host = params.get("host");
+
+    if (!host) return;
+
+    var createApp = AppBridge.default;
+    var app = createApp({
+      apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+      host: host,
+      forceRedirect: true
+    });
+  })();
+</script>
+
 
   </head>
   <body>
