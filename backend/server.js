@@ -1116,44 +1116,42 @@ app.get('/shopify/callback', async (req, res) => {
     const hostParam = encodeURIComponent(host);
     
     res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <script>
-            var shop = "${shopParam}";
-            var host = "${hostParam}";
-            var redirectUrl = "https://botassistai.com/${username2}/dashboard?shop="
-              + encodeURIComponent(shop)
-              + "&host=" + encodeURIComponent(host);
-    
-            var AppBridge = window["app-bridge"];
-            if (AppBridge) {
-              var createApp = AppBridge.default;
-              var Redirect = AppBridge.actions.Redirect;
-    
-              var app = createApp({
-                apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-                host: host,
-                forceRedirect: true
-              });
-    
-              var redirect = Redirect.create(app);
-              redirect.dispatch(Redirect.Action.APP, redirectUrl);
-            } else {
-              // Fallback in case App Bridge is not available
-              window.top.location.href = redirectUrl;
-            }
-          </script>
-        </body>
-      </html>
-    `);
+res.send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Redirecting...</title>
+      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    </head>
+    <body>
+      <script>
+        var shop = "${shopParam}";
+        var host = "${hostParam}";
+        var redirectUrl = "https://botassistai.com/${username2}/dashboard?shop="
+          + encodeURIComponent(shop)
+          + "&host=" + encodeURIComponent(host);
+
+        var AppBridge = window["app-bridge"];
+        if (AppBridge) {
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
+          var app = createApp({
+            apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+            host: host,
+            forceRedirect: true
+          });
+          var redirect = Redirect.create(app);
+          redirect.dispatch(Redirect.Action.APP, redirectUrl);
+        } else {
+          window.top.location.href = redirectUrl;
+        }
+      </script>
+    </body>
+  </html>
+`);
+
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
