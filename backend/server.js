@@ -1116,45 +1116,45 @@ app.get('/shopify/callback', async (req, res) => {
     const hostParam = encodeURIComponent(host);
     
     res.set("Content-Type", "text/html");
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Redirecting...</title>
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <script>
-          (function() {
-            var shop = "${shopParam}";
-            var host = "${hostParam}";
-            var redirectUrl = "/${username2}/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
-    
-            var AppBridge = window['app-bridge'];
-            if (!AppBridge) {
-              console.error("❌ App Bridge not available, falling back");
-              window.top.location.href = redirectUrl;
-              return;
-            }
-    
-            var createApp = AppBridge.default;
-            var actions = AppBridge.actions;
-    
-            var app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: host,
-              forceRedirect: true
-            });
-    
-            var redirect = actions.Redirect.create(app);
-            redirect.dispatch(actions.Redirect.Action.APP, redirectUrl);
-          })();
-        </script>
-      </body>
-    </html>
-    `);
+res.send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var shop = "${shopParam}";
+        var host = "${hostParam}";
+        var redirectUrl = "/${username2}/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+
+        if (!window.appBridge) {
+          console.error("❌ App Bridge not loaded, fallback redirect");
+          window.top.location.href = redirectUrl;
+          return;
+        }
+
+        var createApp = window.appBridge.default;
+        var Redirect = window.appBridge.actions.Redirect;
+
+        var app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: host,
+          forceRedirect: true
+        });
+
+        var redirect = Redirect.create(app);
+        redirect.dispatch(Redirect.Action.APP, redirectUrl);
+      });
+    </script>
+  </body>
+</html>
+`);
+
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
