@@ -1114,6 +1114,10 @@ app.get('/shopify/callback', async (req, res) => {
     const username2 = user?.username || "";
     const shopParam = encodeURIComponent(shop);
     const hostParam = encodeURIComponent(host);
+
+    console.log("U*SEr2", username2)
+    console.log("shopParam: ", shopParam)
+    console.log("hostParam: ", hostParam)
     
     res.set("Content-Type", "text/html");
     res.send(`
