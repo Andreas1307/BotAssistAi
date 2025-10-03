@@ -57,25 +57,29 @@
     /></noscript>
     
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-<script>
-  (function() {
-    var AppBridge = window["app-bridge"];
-    if (!AppBridge) return; // let frontend handle gracefully
-
-    var params = new URLSearchParams(window.location.search);
-    var host = params.get("host");
-
-    if (!host) return;
-
-    var createApp = AppBridge.default;
-    var app = createApp({
-      apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-      host: host,
-      forceRedirect: true
-    });
-  })();
-</script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      (function() {
+        var AppBridge = window["app-bridge"];
+        if (!AppBridge) return;
+    
+        var params = new URLSearchParams(window.location.search);
+        var host = params.get("host");
+        if (!host) {
+          // No host → means app opened outside Shopify → skip App Bridge
+          console.warn("No host param, skipping App Bridge init");
+          return;
+        }
+    
+        var createApp = AppBridge.default;
+        var app = createApp({
+          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+          host: host,
+          forceRedirect: true
+        });
+      })();
+    </script>
+    
 
 
   </head>
