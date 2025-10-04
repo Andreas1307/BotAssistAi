@@ -1123,6 +1123,7 @@ app.get('/shopify/callback', async (req, res) => {
           <meta charset="utf-8" />
           <title>Redirecting...</title>
           <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <!-- ✅ Must load from Shopify CDN -->
           <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
@@ -1139,15 +1140,16 @@ app.get('/shopify/callback', async (req, res) => {
     
             var redirect = Redirect.create(app);
     
-            // ✅ Always redirect inside embedded Admin iframe
+            // ✅ Use relative path, App Bridge handles /apps/... prefix automatically
             redirect.dispatch(
               Redirect.Action.APP,
-              "/apps/botassistai/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              "/dashboard?shop=${shopParam}&host=${hostParam}"
             );
           </script>
         </body>
       </html>
     `);
+    
     
     
   } catch (err) {
