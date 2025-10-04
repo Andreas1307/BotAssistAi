@@ -1139,15 +1139,16 @@ app.get('/shopify/callback', async (req, res) => {
     
             var redirect = Redirect.create(app);
     
-            // ✅ Always redirect back into embedded iframe with shop + host
+            // ✅ Always redirect inside embedded Admin iframe
             redirect.dispatch(
               Redirect.Action.APP,
-              "/${username2}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              "/apps/botassistai/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
       </html>
     `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
