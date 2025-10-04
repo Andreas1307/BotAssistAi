@@ -1123,7 +1123,6 @@ app.get('/shopify/callback', async (req, res) => {
           <meta charset="utf-8" />
           <title>Redirecting...</title>
           <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <!-- ✅ Shopify sees this -->
           <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
@@ -1134,17 +1133,22 @@ app.get('/shopify/callback', async (req, res) => {
     
             var app = createApp({
               apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-              host: "${host}",
+              host: "${hostParam}",
               forceRedirect: true
             });
     
             var redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.APP, "/dashboard");
+    
+            // ✅ Always redirect back into embedded iframe with shop + host
+            redirect.dispatch(
+              Redirect.Action.APP,
+              "/${username2}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+            );
           </script>
         </body>
       </html>
     `);
-
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
