@@ -979,10 +979,19 @@ app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   res.set("Content-Type", "text/html");
   res.send(`
-    <script type="text/javascript">
-      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}";
-    </script>
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(
+            shop
+          )}&host=${encodeURIComponent(host)}";
+        </script>
+      </head>
+      <body></body>
+    </html>
   `);
 });
 
@@ -991,8 +1000,12 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    // Preserve host when redirecting back to /auth/toplevel
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
+    // Force top-level redirect to set cookie first
+    return res.redirect(
+      `/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(
+        host || ""
+      )}`
+    );
   }
 
   try {
@@ -1114,42 +1127,42 @@ app.get('/shopify/callback', async (req, res) => {
     const username2 = user?.username || "";
     const shopParam = encodeURIComponent(shop);
     const hostParam = encodeURIComponent(host);
-    
+
     res.set("Content-Type", "text/html");
     res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Redirecting...</title>
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <script>
-          (function() {
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
-    
-            var app = createApp({
-              apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-              host: "${hostParam}",
-              forceRedirect: true
-            });
-    
-            var redirect = Redirect.create(app);
-    
-            // ✅ Redirect to embedded dashboard (relative path)
-            redirect.dispatch(
-              Redirect.Action.APP,
-              "/dashboard?shop=${shopParam}&host=${hostParam}"
-            );
-          })();
-        </script>
-      </body>
-    </html>
-    `);    
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+        </head>
+        <body>
+          <script>
+            (function() {
+              var AppBridge = window["app-bridge"];
+              var createApp = AppBridge.default;
+              var Redirect = AppBridge.actions.Redirect;
+
+              var app = createApp({
+                apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+                host: "${hostParam}",
+                forceRedirect: true
+              });
+
+              var redirect = Redirect.create(app);
+
+              // ✅ Always relative path, Shopify prefixes it
+              redirect.dispatch(
+                Redirect.Action.APP,
+                "/dashboard?shop=${shopParam}&host=${hostParam}"
+              );
+            })();
+          </script>
+        </body>
+      </html>
+    `);
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
