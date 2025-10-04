@@ -1116,40 +1116,34 @@ app.get('/shopify/callback', async (req, res) => {
     const hostParam = encodeURIComponent(host);
     
     res.set("Content-Type", "text/html");
-res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <title>Redirecting...</title>
-      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    </head>
-    <body>
-      <script>
-        var shop = "${shop}";
-        var host = "${host}";
-        var redirectUrl = "https://botassistai.com/${username2}/dashboard?shop=" 
-          + encodeURIComponent(shop) 
-          + "&host=" + encodeURIComponent(host);
-
-        var AppBridge = window["app-bridge"];
-        var createApp = AppBridge.default;
-        var Redirect = AppBridge.actions.Redirect;
-
-        var app = createApp({
-          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-          host: host,
-          forceRedirect: true
-        });
-
-        // ✅ Shopify sometimes requires REMOTE if outside embedded app URL
-        var redirect = Redirect.create(app);
-        redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
-      </script>
-    </body>
-  </html>
-`);
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <!-- ✅ Shopify sees this -->
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+        </head>
+        <body>
+          <script>
+            var AppBridge = window["app-bridge"];
+            var createApp = AppBridge.default;
+            var Redirect = AppBridge.actions.Redirect;
+    
+            var app = createApp({
+              apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+              host: "${host}",
+              forceRedirect: true
+            });
+    
+            var redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.APP, "/dashboard");
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
