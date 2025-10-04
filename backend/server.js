@@ -974,33 +974,40 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
-  res.set("Content-Type", "text/html");
+  res.setHeader("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head>
-        <meta charset="utf-8" />
+      <head><meta charset="utf-8"></head>
+      <body>
         <script>
+          // Set top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(
-            shop
-          )}&host=${encodeURIComponent(host)}";
+
+          // Redirect top-level to install
+          if (window.top === window.self) {
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(
+              shop
+            )}&host=${encodeURIComponent(host)}";
+          } else {
+            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(
+              shop
+            )}&host=${encodeURIComponent(host)}";
+          }
         </script>
-      </head>
-      <body></body>
+      </body>
     </html>
   `);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
+
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    // Force top-level redirect to set cookie first
     return res.redirect(
       `/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(
         host || ""
@@ -1125,10 +1132,11 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
     const username2 = user?.username || "";
+   
     const shopParam = encodeURIComponent(shop);
     const hostParam = encodeURIComponent(host);
 
-    res.set("Content-Type", "text/html");
+    res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
       <html>
@@ -1153,7 +1161,7 @@ app.get('/shopify/callback', async (req, res) => {
 
               var redirect = Redirect.create(app);
 
-              // ✅ Always relative path, Shopify prefixes it
+              // Redirect into embedded app safely
               redirect.dispatch(
                 Redirect.Action.APP,
                 "/dashboard?shop=${shopParam}&host=${hostParam}"
