@@ -1117,18 +1117,18 @@ app.get('/shopify/callback', async (req, res) => {
     
     res.set("Content-Type", "text/html");
     res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <!-- ✅ Must load from Shopify CDN -->
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <script>
-            var AppBridge = window["app-bridge"];
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Redirecting...</title>
+        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      </head>
+      <body>
+        <script>
+          (function() {
+            var AppBridge = window['app-bridge'];
             var createApp = AppBridge.default;
             var Redirect = AppBridge.actions.Redirect;
     
@@ -1140,17 +1140,16 @@ app.get('/shopify/callback', async (req, res) => {
     
             var redirect = Redirect.create(app);
     
-            // ✅ Use relative path, App Bridge handles /apps/... prefix automatically
+            // ✅ Redirect to embedded dashboard (relative path)
             redirect.dispatch(
               Redirect.Action.APP,
               "/dashboard?shop=${shopParam}&host=${hostParam}"
             );
-          </script>
-        </body>
-      </html>
-    `);
-    
-    
+          })();
+        </script>
+      </body>
+    </html>
+    `);    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
