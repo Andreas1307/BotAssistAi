@@ -57,7 +57,8 @@ const sessionStore = new MySQLStore({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE
 });
-
+const { shopifyAuth } = require("@shopify/shopify-express")
+const { validateAuthenticatedSession } = shopifyAuth(shopify);
 
 app.set('trust proxy', 1);
 app.use(cookieParser());
@@ -974,7 +975,7 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/ping", shopify.validateAuthenticatedSession(), async (req, res) => {
+app.get("/api/ping", validateAuthenticatedSession(), async (req, res) => {
   res.status(200).json({ ok: true, shop: res.locals.shopify.session.shop });
 });
 
