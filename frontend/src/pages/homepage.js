@@ -114,7 +114,6 @@ const Homepage = () => {
     const app = initShopifyAppBridge();
   
     if (app) {
-      // This ping ensures Shopify sees a valid session
       (async () => {
         try {
           const res = await fetchWithAuth("/api/ping", { method: "GET" });
