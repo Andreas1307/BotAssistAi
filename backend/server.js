@@ -1170,7 +1170,7 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
           <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
