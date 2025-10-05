@@ -14,7 +14,11 @@ import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 
+
+import { Helmet } from "react-helmet";
 import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
+
+
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
@@ -66,7 +70,7 @@ const Dashboard = () => {
   const [shopifyUser, setShopifyUser] = useState(false)
 
 
-
+  const [host, setHost] = useState(null);
 
   let toastId;
   const showNotification = (m) => {
