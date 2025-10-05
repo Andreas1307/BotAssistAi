@@ -16,7 +16,7 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { safeRedirect } from "../utils/initShopifyAppBridge";
+import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
 const Homepage = () => {
@@ -108,6 +108,26 @@ const Homepage = () => {
   
     checkShop();
   }, []); 
+
+
+  useEffect(() => {
+    (async () => {
+      const app = await initShopifyAppBridge();
+
+      if (app) {
+        try {
+          const res = await fetchWithAuth("/api/ping", { method: "GET" });
+          if (!res.ok) {
+            console.error("Ping failed", await res.text());
+          } else {
+            console.log("✅ Embedded app session confirmed");
+          }
+        } catch (err) {
+          console.error("❌ Error pinging backend:", err);
+        }
+      }
+    })();
+  }, []);
   
   
   

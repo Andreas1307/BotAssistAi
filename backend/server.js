@@ -974,6 +974,10 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/api/ping", shopify.validateAuthenticatedSession(), async (req, res) => {
+  res.status(200).json({ ok: true, shop: res.locals.shopify.session.shop });
+});
+
 app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   res.setHeader("Content-Type", "text/html");
