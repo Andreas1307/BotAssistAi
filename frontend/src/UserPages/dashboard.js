@@ -14,7 +14,7 @@ import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 
-
+import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import {
@@ -121,7 +121,11 @@ const Dashboard = () => {
   };
 
   
-  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setHost(params.get("host"));
+    initShopifyAppBridge();
+  }, []);
 
   /*
   useShopifyInstallRedirect();
@@ -754,7 +758,15 @@ if (loading) {
     return <h2>Loading...</h2>
   }
   return (
-    <div className="dashboard-container">
+    <>
+        <Helmet>
+        <meta
+          name="shopify-api-key"
+          content={process.env.REACT_APP_SHOPIFY_API_KEY}
+        />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      </Helmet>
+       <div className="dashboard-container">
       <aside className="collap-sidebar">
         <FaBars onClick={() => setCollap(!collap)} className="side-bar"/>
         <div className="sidebar-icons">
@@ -1333,6 +1345,8 @@ if (loading) {
       </div>
       
     </div>
+    </>
+ 
   );
 };
 
