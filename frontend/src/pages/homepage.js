@@ -111,22 +111,20 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    (async () => {
-      const app = await initShopifyAppBridge();
-
-      if (app) {
+    const app = initShopifyAppBridge();
+  
+    if (app) {
+      // This ping ensures Shopify sees a valid session
+      (async () => {
         try {
           const res = await fetchWithAuth("/api/ping", { method: "GET" });
-          if (!res.ok) {
-            console.error("Ping failed", await res.text());
-          } else {
-            console.log("✅ Embedded app session confirmed");
-          }
+          if (!res.ok) console.error("Ping failed", await res.text());
+          else console.log("✅ Embedded app session confirmed");
         } catch (err) {
           console.error("❌ Error pinging backend:", err);
         }
-      }
-    })();
+      })();
+    }
   }, []);
   
   

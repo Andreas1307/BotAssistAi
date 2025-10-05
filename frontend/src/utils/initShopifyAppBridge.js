@@ -5,49 +5,33 @@ import { Redirect } from "@shopify/app-bridge/actions";
 /**
  * Detect if running inside Shopify iframe
  */
-function isEmbedded() {
+export function isEmbedded() {
   return window.top !== window.self;
 }
+
 /**
- * Initializes Shopify App Bridge safely.
- * - Skips if not embedded or missing params
- * - Avoids noisy Web Vitals errors
+ * Initializes Shopify App Bridge safely
  */
-export async function initShopifyAppBridge() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
+export function initShopifyAppBridge() {
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
 
-    if (!isEmbedded() || !shop || !host) {
-      // Running standalone (outside Shopify)
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
-      return null;
-    }
-
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-
-    window.appBridge = app;
-
-    // Silently try to initialize Web Vitals
-    try {
-      if (typeof app.initializeWebVitals === "function") {
-        app.initializeWebVitals();
-      }
-    } catch {
-      // ignore
-    }
-
-    console.log("✅ Shopify App Bridge initialized");
-    return app;
-  } catch (err) {
-    console.error("❌ Failed to init App Bridge:", err);
+  if (!isEmbedded() || !shop || !host) {
+    console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
     return null;
   }
+
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
+
+  window.appBridge = app;
+
+  console.log("✅ Shopify App Bridge initialized");
+  return app;
 }
 
 /**
@@ -66,12 +50,8 @@ export function safeRedirect(url) {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  if (!url.includes("host=") && host) {
-    url += (url.includes("?") ? "&" : "?") + `host=${encodeURIComponent(host)}`;
-  }
-  if (!url.includes("shop=") && shop) {
-    url += (url.includes("?") ? "&" : "?") + `shop=${encodeURIComponent(shop)}`;
-  }
+  if (!url.includes("host=") && host) url += `${url.includes("?") ? "&" : "?"}host=${encodeURIComponent(host)}`;
+  if (!url.includes("shop=") && shop) url += `${url.includes("?") ? "&" : "?"}shop=${encodeURIComponent(shop)}`;
 
   if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
@@ -81,15 +61,12 @@ export function safeRedirect(url) {
   }
 }
 
-
 /**
  * Fetch with App Bridge auth token if inside Shopify
- * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
 
-  // Running outside Shopify → plain fetch
   if (!isEmbedded() || !app) {
     return fetch(url, {
       ...options,
@@ -100,19 +77,13 @@ export async function fetchWithAuth(url, options = {}) {
     });
   }
 
-  // Running inside Shopify → fetch with token
-  try {
-    const token = await getSessionToken(app);
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
-    });
-  } catch (err) {
-    console.error("❌ Token error:", err);
-    return new Response(null, { status: 401 });
-  }
+  const token = await getSessionToken(app);
+  return fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {}),
+    },
+  });
 }
