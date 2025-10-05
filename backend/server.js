@@ -57,8 +57,7 @@ const sessionStore = new MySQLStore({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE
 });
-const { shopifyAuth } = require("@shopify/shopify-express")
-const { validateAuthenticatedSession } = shopifyAuth(shopify);
+
 
 app.set('trust proxy', 1);
 app.use(cookieParser());
@@ -975,9 +974,32 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/ping", validateAuthenticatedSession(), async (req, res) => {
-  res.status(200).json({ ok: true, shop: res.locals.shopify.session.shop });
+app.get("/api/ping", async (req, res) => {
+  try {
+    // Validate session token
+    const sessionId = await shopify.auth.session.getCurrentId({
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    if (!sessionId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const session = await shopify.sessionStorage.loadSession(sessionId);
+
+    if (!session) {
+      return res.status(401).json({ error: "Session not found" });
+    }
+
+    res.status(200).json({ ok: true, shop: session.shop });
+  } catch (err) {
+    console.error("❌ Auth check failed:", err);
+    res.status(401).json({ error: "Unauthorized" });
+  }
 });
+
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
