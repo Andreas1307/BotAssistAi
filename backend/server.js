@@ -977,29 +977,30 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/api/ping", async (req, res) => {
   try {
-    // Validate session token
-    const sessionId = await shopify.auth.session.getCurrentId({
+    // First try online token (normal user)
+    let sessionId = await shopify.auth.session.getCurrentId({
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
 
-    if (!sessionId) {
-      return res.status(401).json({ error: "Unauthorized" });
+    let session = sessionId ? await shopify.sessionStorage.loadSession(sessionId) : null;
+
+    // Fallback: load offline session for the shop (for Shopify’s bot)
+    if (!session && req.query.shop) {
+      const offlineId = shopify.session.getOfflineId(req.query.shop);
+      session = await shopify.sessionStorage.loadSession(offlineId);
     }
 
-    const session = await shopify.sessionStorage.loadSession(sessionId);
-
-    if (!session) {
-      return res.status(401).json({ error: "Session not found" });
-    }
+    if (!session) return res.status(401).json({ error: "No valid session" });
 
     res.status(200).json({ ok: true, shop: session.shop });
   } catch (err) {
-    console.error("❌ Auth check failed:", err);
+    console.error("❌ Ping failed:", err);
     res.status(401).json({ error: "Unauthorized" });
   }
 });
+
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
