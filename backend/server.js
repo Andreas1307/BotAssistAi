@@ -1212,28 +1212,45 @@ app.get("/dashboard", (req, res) => {
 
   if (!shop || !host) return res.status(400).send("Missing shop or host");
 
-  // Serve a minimal HTML that Shopify bot can parse
+  const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+  // Serve minimal HTML with Shopify App Bridge CDN
+  res.setHeader("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>Dashboard</title>
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <title>Redirecting...</title>
+        <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
         <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
       </head>
       <body>
-        <div id="root"></div>
-        <!-- Mount your frontend bundle -->
         <script>
-          window.SHOPIFY_HOST = "${host}";
-          window.SHOPIFY_SHOP = "${shop}";
+          (function() {
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var Redirect = AppBridge.actions.Redirect;
+
+            var app = createApp({
+              apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+              host: "${host}",
+              forceRedirect: true
+            });
+
+            var redirect = Redirect.create(app);
+
+            // Redirect into your actual React frontend
+            redirect.dispatch(Redirect.Action.APP, "${frontendUrl}");
+          })();
         </script>
-        <script src="https://www.botassistai.com/static/js/main.js"></script>
       </body>
     </html>
   `);
 });
+
+
+
 
 
 

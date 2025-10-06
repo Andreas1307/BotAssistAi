@@ -116,7 +116,7 @@ const Homepage = () => {
     if (app) {
       (async () => {
         try {
-          const res = await fetchWithAuth("/api/ping", { method: "GET" });
+          const res = await fetchWithAuth("https://www.api.botassistai.com/api/ping");
           if (!res.ok) console.error("Ping failed", await res.text());
           else console.log("✅ Embedded app session confirmed");
         } catch (err) {
@@ -125,6 +125,7 @@ const Homepage = () => {
       })();
     }
   }, []);
+  
   
   
   

@@ -17,11 +17,12 @@ export function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  if (!isEmbedded() || !shop || !host) {
-    console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
+  if (!shop || !host || !window["app-bridge"]) {
+    console.warn("⚠️ App Bridge not ready or missing params");
     return null;
   }
 
+  const createApp = window["app-bridge"].default;
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -29,7 +30,6 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-
   console.log("✅ Shopify App Bridge initialized");
   return app;
 }

@@ -15,7 +15,6 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify.js"
 
 
-import { Helmet } from "react-helmet";
 import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
 
 
@@ -128,8 +127,11 @@ const Dashboard = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setHost(params.get("host"));
+  
+    // Optional: re-init App Bridge if someone lands here manually
     initShopifyAppBridge();
   }, []);
+  
 
   /*
   useShopifyInstallRedirect();
