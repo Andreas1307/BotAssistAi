@@ -1169,44 +1169,17 @@ app.get('/shopify/callback', async (req, res) => {
     res.send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-          <script>
-            function redirectEmbedded() {
-              if (!window['app-bridge'] || !window['app-bridge'].default) {
-                return setTimeout(redirectEmbedded, 200);
-              }
-    
-              const AppBridge = window['app-bridge'];
-              const createApp = AppBridge.default;
-              const Redirect = AppBridge.actions.Redirect;
-    
-              const app = createApp({
-                apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-                host: "${hostParam}", // must be from Shopify query param
-                forceRedirect: true
-              });
-    
-              const redirect = Redirect.create(app);
-    
-              // ⚠️ IMPORTANT: Use a relative URL inside your embedded app
-              redirect.dispatch(
-                Redirect.Action.APP,
-                "/embedded?shop=${shopParam}&host=${hostParam}"
-              );
-            }
-    
-            redirectEmbedded();
-          </script>
-        </head>
+        <head><meta charset="utf-8"></head>
         <body>
+          <script>
+            // ✅ Redirect top-level window back into Shopify Admin embedded iframe
+            window.top.location.href = "/embedded?shop=${shopParam}&host=${hostParam}";
+          </script>
           <h3>Redirecting to embedded app…</h3>
         </body>
       </html>
     `);
+    
     
     
   } catch (err) {
