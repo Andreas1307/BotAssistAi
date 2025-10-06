@@ -1223,7 +1223,7 @@ app.get("/dashboard", (req, res) => {
         <meta charset="utf-8" />
         <title>BotAssist Dashboard</title>
         <!-- ✅ Required by Shopify validator -->
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
         <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         <style>
           body {
