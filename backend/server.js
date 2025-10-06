@@ -1173,17 +1173,25 @@ app.get('/shopify/callback', async (req, res) => {
       <body>
         <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         <script>
-          const AppBridge = window['app-bridge'].default;
-          const Redirect = AppBridge.actions.Redirect;
+          function initAndRedirect() {
+            if (!window['app-bridge'] || !window['app-bridge'].default) {
+              return setTimeout(initAndRedirect, 100);
+            }
     
-          const app = AppBridge.default({
-            apiKey: "${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}",
-            host: "${hostParam}",
-            forceRedirect: true
-          });
+            const AppBridge = window['app-bridge'].default;
+            const Redirect = AppBridge.actions.Redirect;
     
-          const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
+            const app = AppBridge.default({
+              apiKey: "${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}",
+              host: "${hostParam}",
+              forceRedirect: true
+            });
+    
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
+          }
+    
+          initAndRedirect();
         </script>
       </body>
     </html>
@@ -1206,44 +1214,43 @@ app.get("/embedded", (req, res) => {
   const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
-res.send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Loading BotAssist Dashboard</title>
-    <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <script>
-      function redirectToFrontend() {
-        if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(redirectToFrontend, 200);
+  res.send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Loading BotAssist Dashboard</title>
+      <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      <script>
+        function redirectToFrontend() {
+          if (!window['app-bridge'] || !window['app-bridge'].default) {
+            return setTimeout(redirectToFrontend, 100);
+          }
+  
+          const AppBridge = window['app-bridge'].default;
+          const createApp = AppBridge.default;
+          const Redirect = AppBridge.actions.Redirect;
+  
+          const app = createApp({
+            apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+            host: "${host}",
+            forceRedirect: true
+          });
+  
+          const redirect = Redirect.create(app);
+          redirect.dispatch(
+            Redirect.Action.REMOTE, 
+            "https://www.botassistai.com/dashboard?shop=${shop}&host=${host}"
+          );
         }
-
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default;
-        const Redirect = AppBridge.actions.Redirect;
-
-        const app = createApp({
-          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-          host: "${host}", // must match Shopify host param
-          forceRedirect: true
-        });
-
-        const redirect = Redirect.create(app);
-
-      redirect.dispatch(
-  Redirect.Action.REMOTE, // correct because dashboard is external
-  "https://www.botassistai.com/dashboard?shop=${shop}&host=${host}"
-);
-
-      }
-
-      redirectToFrontend();
-    </script>
-  </body>
-</html>
-`);
+  
+        redirectToFrontend();
+      </script>
+    </body>
+  </html>
+  `);
+  
 
 });
 
