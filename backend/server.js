@@ -1191,9 +1191,9 @@ app.get('/shopify/callback', async (req, res) => {
               var redirect = Redirect.create(app);
     
               // ✅ Use absolute backend URL here
-             redirect.dispatch(
+     redirect.dispatch(
   Redirect.Action.APP,
-  '/embedded?shop=${shopParam}&host=${hostParam}'
+  'https://api.botassistai.com/embedded?shop=${shopParam}&host=${hostParam}'
 );
 
             })();
