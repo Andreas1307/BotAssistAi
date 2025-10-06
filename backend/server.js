@@ -1192,7 +1192,7 @@ app.get('/shopify/callback', async (req, res) => {
               // Redirect into embedded app safely
               redirect.dispatch(
                 Redirect.Action.APP,
-                "/dashboard?shop=${shopParam}&host=${hostParam}"
+                "https://api.botassistai.com/dashboard?shop=${shopParam}&host=${hostParam}"
               );
             })();
           </script>
