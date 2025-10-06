@@ -1190,7 +1190,7 @@ app.get('/shopify/callback', async (req, res) => {
 
 app.get("/embedded", (req, res) => {
   const { shop, host } = req.query;
-  console.log("HELLO< HELLO CHIQUITA")
+  console.log("HELLO< HELLO CHIQUITA", shop, host)
   if (!shop || !host) return res.status(400).send("Missing shop or host");
 
   const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
