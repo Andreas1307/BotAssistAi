@@ -1207,47 +1207,59 @@ app.get('/shopify/callback', async (req, res) => {
 });
 
 app.get("/dashboard", (req, res) => {
-  const shop = req.query.shop;
-  const host = req.query.host;
-
+  const { shop, host } = req.query;
+  console.log("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
   if (!shop || !host) return res.status(400).send("Missing shop or host");
 
-  const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+  const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(
+    shop
+  )}&host=${encodeURIComponent(host)}`;
 
-  // Serve minimal HTML with Shopify App Bridge CDN
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <title>Redirecting...</title>
-        <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+        <title>BotAssist Dashboard</title>
+        <!-- ✅ Required by Shopify validator -->
+        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
         <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+        <style>
+          body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background: #fafafa;
+            color: #333;
+          }
+        </style>
       </head>
       <body>
+        <h3>Loading BotAssist dashboard…</h3>
         <script>
-          (function() {
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
+          // Wait until App Bridge is fully available
+          document.addEventListener("DOMContentLoaded", function() {
+            var AppBridge = window["app-bridge"];
+            if (!AppBridge || !AppBridge.default) return;
 
-            var app = createApp({
+            var app = AppBridge.default({
               apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
               host: "${host}",
               forceRedirect: true
             });
 
-            var redirect = Redirect.create(app);
-
-            // Redirect into your actual React frontend
-            redirect.dispatch(Redirect.Action.APP, "${frontendUrl}");
-          })();
+            var Redirect = AppBridge.actions.Redirect.create(app);
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "${frontendUrl}");
+          });
         </script>
       </body>
     </html>
   `);
 });
+
 
 
 
