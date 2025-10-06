@@ -1180,16 +1180,16 @@ app.get('/shopify/callback', async (req, res) => {
               var AppBridge = window["app-bridge"];
               var createApp = AppBridge.default;
               var Redirect = AppBridge.actions.Redirect;
-
+    
               var app = createApp({
                 apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
                 host: "${hostParam}",
                 forceRedirect: true
               });
-
+    
               var redirect = Redirect.create(app);
-
-              // Redirect into embedded app safely
+    
+              // ✅ Use absolute backend URL here
               redirect.dispatch(
                 Redirect.Action.APP,
                 "https://api.botassistai.com/dashboard?shop=${shopParam}&host=${hostParam}"
@@ -1200,6 +1200,7 @@ app.get('/shopify/callback', async (req, res) => {
       </html>
     `);
     
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1208,7 +1209,8 @@ app.get('/shopify/callback', async (req, res) => {
 
 app.get("/dashboard", (req, res) => {
   const { shop, host } = req.query;
-  console.log("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+  console.log("✅ /dashboard route hit with:", shop, host);
+
   if (!shop || !host) return res.status(400).send("Missing shop or host");
 
   const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(
@@ -1222,9 +1224,11 @@ app.get("/dashboard", (req, res) => {
       <head>
         <meta charset="utf-8" />
         <title>BotAssist Dashboard</title>
-        <!-- ✅ Required by Shopify validator -->
+
+        <!-- ✅ Required by Shopify Validator -->
         <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
         <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+
         <style>
           body {
             display: flex;
@@ -1239,11 +1243,14 @@ app.get("/dashboard", (req, res) => {
       </head>
       <body>
         <h3>Loading BotAssist dashboard…</h3>
+
         <script>
-          // Wait until App Bridge is fully available
           document.addEventListener("DOMContentLoaded", function() {
             var AppBridge = window["app-bridge"];
-            if (!AppBridge || !AppBridge.default) return;
+            if (!AppBridge || !AppBridge.default) {
+              console.error("AppBridge not loaded");
+              return;
+            }
 
             var app = AppBridge.default({
               apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
@@ -1252,13 +1259,19 @@ app.get("/dashboard", (req, res) => {
             });
 
             var Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "${frontendUrl}");
+
+            // ✅ Redirect to frontend dashboard (public site)
+            Redirect.dispatch(
+              AppBridge.actions.Redirect.Action.REMOTE,
+              "${frontendUrl}"
+            );
           });
         </script>
       </body>
     </html>
   `);
 });
+
 
 
 
