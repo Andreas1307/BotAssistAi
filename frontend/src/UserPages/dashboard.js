@@ -763,13 +763,7 @@ if (loading) {
   }
   return (
     <>
-        <Helmet>
-        <meta
-          name="shopify-api-key"
-          content={process.env.REACT_APP_SHOPIFY_API_KEY}
-        />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </Helmet>
+        
        <div className="dashboard-container">
       <aside className="collap-sidebar">
         <FaBars onClick={() => setCollap(!collap)} className="side-bar"/>

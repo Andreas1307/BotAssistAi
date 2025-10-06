@@ -1206,6 +1206,35 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
+app.get("/dashboard", (req, res) => {
+  const shop = req.query.shop;
+  const host = req.query.host;
+
+  if (!shop || !host) return res.status(400).send("Missing shop or host");
+
+  // Serve a minimal HTML that Shopify bot can parse
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Dashboard</title>
+        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      </head>
+      <body>
+        <div id="root"></div>
+        <!-- Mount your frontend bundle -->
+        <script>
+          window.SHOPIFY_HOST = "${host}";
+          window.SHOPIFY_SHOP = "${shop}";
+        </script>
+        <script src="https://www.botassistai.com/static/js/main.js"></script>
+      </body>
+    </html>
+  `);
+});
+
 
 
 
