@@ -1164,6 +1164,7 @@ app.get('/shopify/callback', async (req, res) => {
     const shopParam = encodeURIComponent(shop);
     const hostParam = encodeURIComponent(host);
 
+    console.log("INside callbackKKKKKK")
     res.setHeader("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -1190,10 +1191,11 @@ app.get('/shopify/callback', async (req, res) => {
               var redirect = Redirect.create(app);
     
               // ✅ Use absolute backend URL here
-              redirect.dispatch(
-                Redirect.Action.APP,
-                "https://api.botassistai.com/dashboard?shop=${shopParam}&host=${hostParam}"
-              );
+             redirect.dispatch(
+  Redirect.Action.APP,
+  '/embedded?shop=${shopParam}&host=${hostParam}'
+);
+
             })();
           </script>
         </body>
@@ -1207,50 +1209,29 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
-app.get("/dashboard", (req, res) => {
+app.get("/embedded", (req, res) => {
   const { shop, host } = req.query;
-  console.log("✅ /dashboard route hit with:", shop, host);
-
+  console.log("HELLO< HELLO CHIQUITA")
   if (!shop || !host) return res.status(400).send("Missing shop or host");
 
-  const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(
-    shop
-  )}&host=${encodeURIComponent(host)}`;
+  const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
-    <html lang="en">
+    <html>
       <head>
         <meta charset="utf-8" />
-        <title>BotAssist Dashboard</title>
-
-        <!-- ✅ Required by Shopify Validator -->
+        <title>Loading BotAssist...</title>
         <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
         <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-
-        <style>
-          body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: sans-serif;
-            background: #fafafa;
-            color: #333;
-          }
-        </style>
       </head>
       <body>
         <h3>Loading BotAssist dashboard…</h3>
-
         <script>
           document.addEventListener("DOMContentLoaded", function() {
             var AppBridge = window["app-bridge"];
-            if (!AppBridge || !AppBridge.default) {
-              console.error("AppBridge not loaded");
-              return;
-            }
+            if (!AppBridge || !AppBridge.default) return;
 
             var app = AppBridge.default({
               apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
@@ -1259,18 +1240,14 @@ app.get("/dashboard", (req, res) => {
             });
 
             var Redirect = AppBridge.actions.Redirect.create(app);
-
-            // ✅ Redirect to frontend dashboard (public site)
-            Redirect.dispatch(
-              AppBridge.actions.Redirect.Action.REMOTE,
-              "${frontendUrl}"
-            );
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.REMOTE, "${frontendUrl}");
           });
         </script>
       </body>
     </html>
   `);
 });
+
 
 
 
