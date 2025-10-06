@@ -1173,39 +1173,41 @@ app.get('/shopify/callback', async (req, res) => {
           <meta charset="utf-8" />
           <title>Redirecting...</title>
           <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
           <script>
-            // Wait until App Bridge is actually loaded before redirect
-            function initAppBridge() {
+            function redirectEmbedded() {
               if (!window['app-bridge'] || !window['app-bridge'].default) {
-                console.log("⏳ App Bridge not ready yet...");
-                return setTimeout(initAppBridge, 200);
+                return setTimeout(redirectEmbedded, 200);
               }
     
-              console.log("✅ App Bridge ready — redirecting...");
-              var AppBridge = window["app-bridge"];
-              var createApp = AppBridge.default;
-              var Redirect = AppBridge.actions.Redirect;
+              const AppBridge = window['app-bridge'];
+              const createApp = AppBridge.default;
+              const Redirect = AppBridge.actions.Redirect;
     
-              var app = createApp({
+              const app = createApp({
                 apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-                host: "${hostParam}",
+                host: "${hostParam}", // must be from Shopify query param
                 forceRedirect: true
               });
     
-              var redirect = Redirect.create(app);
+              const redirect = Redirect.create(app);
+    
+              // ⚠️ IMPORTANT: Use a relative URL inside your embedded app
               redirect.dispatch(
                 Redirect.Action.APP,
-                "https://api.botassistai.com/embedded?shop=${shopParam}&host=${hostParam}"
+                "/embedded?shop=${shopParam}&host=${hostParam}"
               );
             }
+    
+            redirectEmbedded();
           </script>
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" onload="initAppBridge()"></script>
         </head>
         <body>
-          <h3>Redirecting to embedded...</h3>
+          <h3>Redirecting to embedded app…</h3>
         </body>
       </html>
     `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1221,35 +1223,44 @@ app.get("/embedded", (req, res) => {
   const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Loading BotAssist...</title>
-        <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <h3>Loading BotAssist dashboard…</h3>
-        <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            var AppBridge = window["app-bridge"];
-            if (!AppBridge || !AppBridge.default) return;
+res.send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Loading BotAssist Dashboard</title>
+    <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      function redirectToFrontend() {
+        if (!window['app-bridge'] || !window['app-bridge'].default) {
+          return setTimeout(redirectToFrontend, 200);
+        }
 
-            var app = AppBridge.default({
-              apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-              host: "${host}",
-              forceRedirect: true
-            });
+        const AppBridge = window['app-bridge'];
+        const createApp = AppBridge.default;
+        const Redirect = AppBridge.actions.Redirect;
 
-            var Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.REMOTE, "${frontendUrl}");
-          });
-        </script>
-      </body>
-    </html>
-  `);
+        const app = createApp({
+          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+          host: "${host}", // must match Shopify host param
+          forceRedirect: true
+        });
+
+        const redirect = Redirect.create(app);
+
+        redirect.dispatch(
+          Redirect.Action.REMOTE,
+          "https://www.botassistai.com/dashboard?shop=${shop}&host=${host}"
+        );
+      }
+
+      redirectToFrontend();
+    </script>
+  </body>
+</html>
+`);
+
 });
 
 
