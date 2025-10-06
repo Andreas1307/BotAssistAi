@@ -1173,11 +1173,15 @@ app.get('/shopify/callback', async (req, res) => {
           <meta charset="utf-8" />
           <title>Redirecting...</title>
           <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
           <script>
-            (function() {
+            // Wait until App Bridge is actually loaded before redirect
+            function initAppBridge() {
+              if (!window['app-bridge'] || !window['app-bridge'].default) {
+                console.log("⏳ App Bridge not ready yet...");
+                return setTimeout(initAppBridge, 200);
+              }
+    
+              console.log("✅ App Bridge ready — redirecting...");
               var AppBridge = window["app-bridge"];
               var createApp = AppBridge.default;
               var Redirect = AppBridge.actions.Redirect;
@@ -1189,19 +1193,19 @@ app.get('/shopify/callback', async (req, res) => {
               });
     
               var redirect = Redirect.create(app);
-    
-              // ✅ Use absolute backend URL here
-     redirect.dispatch(
-  Redirect.Action.APP,
-  'https://api.botassistai.com/embedded?shop=${shopParam}&host=${hostParam}'
-);
-
-            })();
+              redirect.dispatch(
+                Redirect.Action.APP,
+                "https://api.botassistai.com/embedded?shop=${shopParam}&host=${hostParam}"
+              );
+            }
           </script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" onload="initAppBridge()"></script>
+        </head>
+        <body>
+          <h3>Redirecting to embedded...</h3>
         </body>
       </html>
     `);
-    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
