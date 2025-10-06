@@ -1167,39 +1167,36 @@ app.get('/shopify/callback', async (req, res) => {
     console.log("INside callbackKKKKKK")
     res.setHeader("Content-Type", "text/html");
     res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head><meta charset="utf-8"></head>
-      <body>
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        <script>
-          function initAndRedirect() {
-            if (!window['app-bridge'] || !window['app-bridge'].default) {
-              return setTimeout(initAndRedirect, 100);
-            }
-    
-            const AppBridge = window['app-bridge'].default;
-            const Redirect = AppBridge.actions.Redirect;
-    
-            const app = AppBridge.default({
-              apiKey: "${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}",
-              host: "${hostParam}",
-              forceRedirect: true
-            });
-    
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
-          }
-    
-          initAndRedirect();
-        </script>
-      </body>
-    </html>
+<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8"></head>
+  <body>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      function initAndRedirect() {
+        if (!window['app-bridge'] || !window['app-bridge'].default) {
+          return setTimeout(initAndRedirect, 50);
+        }
+
+        const createApp = window['app-bridge'].default;
+        const AppBridge = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}",
+          host: "${hostParam}",
+          forceRedirect: true
+        });
+
+        const Redirect = window['app-bridge'].actions.Redirect;
+        const redirect = Redirect.create(AppBridge);
+
+        // Use Action.APP to redirect to your internal embedded route
+        redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
+      }
+
+      initAndRedirect();
+    </script>
+  </body>
+</html>
     `);
-    
-    
-    
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1208,51 +1205,46 @@ app.get('/shopify/callback', async (req, res) => {
 
 app.get("/embedded", (req, res) => {
   const { shop, host } = req.query;
-  console.log("HELLO< HELLO CHIQUITA", shop, host)
   if (!shop || !host) return res.status(400).send("Missing shop or host");
 
-  const frontendUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+  const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
   res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Loading BotAssist Dashboard</title>
-      <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      <script>
-        function redirectToFrontend() {
-          if (!window['app-bridge'] || !window['app-bridge'].default) {
-            return setTimeout(redirectToFrontend, 100);
-          }
-  
-          const AppBridge = window['app-bridge'].default;
-          const createApp = AppBridge.default;
-          const Redirect = AppBridge.actions.Redirect;
-  
-          const app = createApp({
-            apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-            host: "${host}",
-            forceRedirect: true
-          });
-  
-          const redirect = Redirect.create(app);
-          redirect.dispatch(
-            Redirect.Action.REMOTE, 
-            "https://www.botassistai.com/dashboard?shop=${shop}&host=${host}"
-          );
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Loading BotAssist Dashboard</title>
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      function initAndRedirect() {
+        if (!window['app-bridge'] || !window['app-bridge'].default) {
+          return setTimeout(initAndRedirect, 50);
         }
-  
-        redirectToFrontend();
-      </script>
-    </body>
-  </html>
-  `);
-  
 
+        const createApp = window['app-bridge'].default;
+        const app = createApp({
+          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+          host: "${host}",
+          forceRedirect: true
+        });
+
+        const Redirect = window['app-bridge'].actions.Redirect;
+        const redirect = Redirect.create(app);
+
+        // Use Action.REMOTE because dashboard is an external URL
+        redirect.dispatch(Redirect.Action.REMOTE, "${dashboardUrl}");
+      }
+
+      initAndRedirect();
+    </script>
+  </body>
+</html>
+  `);
 });
+
 
 
 
