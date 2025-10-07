@@ -975,72 +975,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get("/api/ping", async (req, res) => {
-  try {
-    // First try online token (normal user)
-    let sessionId = await shopify.auth.session.getCurrentId({
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    let session = sessionId ? await shopify.sessionStorage.loadSession(sessionId) : null;
-
-    // Fallback: load offline session for the shop (for Shopify’s bot)
-    if (!session && req.query.shop) {
-      const offlineId = shopify.session.getOfflineId(req.query.shop);
-      session = await shopify.sessionStorage.loadSession(offlineId);
-    }
-
-    if (!session) return res.status(401).json({ error: "No valid session" });
-
-    res.status(200).json({ ok: true, shop: session.shop });
-  } catch (err) {
-    console.error("❌ Ping failed:", err);
-    res.status(401).json({ error: "Unauthorized" });
-  }
-});
-
+// TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
-  const { shop, host } = req.query;
-  res.setHeader("Content-Type", "text/html");
+  const { shop } = req.query;
+  res.set("Content-Type", "text/html");
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head><meta charset="utf-8"></head>
-      <body>
-        <script>
-          // Set top-level cookie
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-
-          // Redirect top-level to install
-          if (window.top === window.self) {
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(
-              shop
-            )}&host=${encodeURIComponent(host)}";
-          } else {
-            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(
-              shop
-            )}&host=${encodeURIComponent(host)}";
-          }
-        </script>
-      </body>
-    </html>
+    <script type="text/javascript">
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+    </script>
   `);
+  
 });
 
+// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host } = req.query;
-
+  const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(
-      `/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(
-        host || ""
-      )}`
-    );
+    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
+  
 
   try {
     await shopify.auth.begin({
@@ -1158,111 +1114,40 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const username2 = user?.username || "";
-   
-const shopParam = encodeURIComponent(shop);
-const hostParam = encodeURIComponent(host);
-
-res.setHeader("Content-Type", "text/html");
-res.send(`<!doctype html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Redirecting to App...</title>
-<meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-</head>
-<body>
-<script>
-  (function redirectToEmbedded() {
-    if (!window['app-bridge'] || !window['app-bridge'].default) return setTimeout(redirectToEmbedded, 50);
-
-    const createApp = window['app-bridge'].default;
-    const app = createApp({
-      apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-      host: "${hostParam}",
-      forceRedirect: true
-    });
-
-    const Redirect = window['app-bridge'].actions.Redirect;
-    const redirect = Redirect.create(app);
-
-    // ✅ Redirect into embedded route (for validator + App Bridge flow)
-    redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
-  })();
-</script>
-</body>
-</html>`);
+    // --- Redirect via App Bridge
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
+          <script>
+            const AppBridge = window['app-bridge'].default;
+            const actions = window['app-bridge'].actions;
+            const app = AppBridge({
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              host: '${host}',
+              forceRedirect: true
+            });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-app.get("/embedded", (req, res) => {
-  const shop = req.query.shop || "";
-  const host = req.query.host || "";
-
-  const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-  res.setHeader("Content-Type", "text/html");
-  res.send(`<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>BotAssist Embedded App</title>
-
-    <!-- ✅ These two lines are REQUIRED for Shopify's automated validator -->
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-  </head>
-  <body>
-    <p>Loading BotAssist...</p>
-    <script>
-      // ✅ Only initialize App Bridge if host is present (Shopify context)
-      (function init() {
-        const metaKey = document.querySelector('meta[name="shopify-api-key"]').content;
-
-        if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(init, 50);
-        }
-
-        // If Shopify is validating (no host param), don't run redirects.
-        const params = new URLSearchParams(window.location.search);
-        const host = params.get("host");
-        const shop = params.get("shop");
-
-        if (!host) {
-          console.log("Shopify validator mode — no host param, skipping redirect.");
-          return;
-        }
-
-        const createApp = window['app-bridge'].default;
-        const app = createApp({
-          apiKey: metaKey,
-          host: host,
-          forceRedirect: true,
-        });
-
-        const Redirect = window['app-bridge'].actions.Redirect;
-        const redirect = Redirect.create(app);
-
-        redirect.dispatch(
-          Redirect.Action.REMOTE,
-          "https://www.botassistai.com/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
-        );
-      })();
-    </script>
-  </body>
-</html>`);
-});
-
-
-
-
-
-
 
 
 
