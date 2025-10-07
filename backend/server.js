@@ -1001,7 +1001,6 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-
 app.get("/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   res.setHeader("Content-Type", "text/html");
@@ -1210,46 +1209,42 @@ res.send(`<!doctype html>
   }
 });
 
+
 app.get('/embedded', (req, res) => {
-  // shop and host may be absent when Shopify validator loads App URL => still serve HTML
   const shop = req.query.shop || "";
-  const host = req.query.host || ""; // may be empty when validator hits App URL
+  const host = req.query.host || "";
   const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
+
+  // --- If validator or top-level request (no host param)
+  if (!host) {
+    return res.send(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>BotAssist Embedded App</title>
+    <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+    <p>Shopify validator: App Bridge script and meta tag loaded successfully.</p>
+  </body>
+</html>`);
+  }
+
   res.send(`<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>BotAssist embedded loader</title>
-
-    <!-- IMPORTANT: validator looks for this meta + this exact CDN script -->
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
+    <title>Loading BotAssist…</title>
+    <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <style>
-      body { font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
-      .notice { text-align:center; color:#333 }
-    </style>
   </head>
   <body>
-    <div class="notice">
-      <h3>Loading BotAssist…</h3>
-      <p>If you see this outside Shopify, open the app from the Shopify admin.</p>
-    </div>
-
     <script>
       (function init() {
-        // If host is missing we *do not* attempt redirect — but page still contains CDN script
-        if (!${JSON.stringify(host)}) {
-          // No host present (Shopify validator or someone opened this URL directly).
-          // We're done: the page includes the CDN script which the validator requires.
-          return;
-        }
-
-        // Wait for CDN to be available
-        if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(init, 50);
-        }
+        if (!window['app-bridge'] || !window['app-bridge'].default) return setTimeout(init, 50);
 
         const createApp = window['app-bridge'].default;
         const app = createApp({
@@ -1260,8 +1255,6 @@ app.get('/embedded', (req, res) => {
 
         const Redirect = window['app-bridge'].actions.Redirect;
         const redirect = Redirect.create(app);
-
-        // This is an EXTERNAL frontend URL — use REMOTE
         redirect.dispatch(Redirect.Action.REMOTE, ${JSON.stringify(dashboardUrl)});
       })();
     </script>
