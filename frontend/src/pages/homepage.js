@@ -57,6 +57,10 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   
+  useEffect(() => {
+    initShopifyAppBridge();
+  }, []);
+  
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -79,8 +83,7 @@ const Homepage = () => {
   
         if (!data.installed) {
           // 🔐 Force OAuth flow before anything else
-          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}&host=${encodeURIComponent(hostParam)}`);
-
+          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
   
           // Save chatbot config once OAuth completes
           await axios.post(`/chatbot-config-shopify`, {
@@ -108,23 +111,6 @@ const Homepage = () => {
   
     checkShop();
   }, []); 
-
-
-  useEffect(() => {
-    const app = initShopifyAppBridge();
-  
-    if (app) {
-      (async () => {
-        try {
-          const res = await fetchWithAuth("https://www.api.botassistai.com/api/ping");
-          if (!res.ok) console.error("Ping failed", await res.text());
-          else console.log("✅ Embedded app session confirmed");
-        } catch (err) {
-          console.error("❌ Error pinging backend:", err);
-        }
-      })();
-    }
-  }, []);
   
   
   
