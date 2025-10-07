@@ -1161,89 +1161,114 @@ app.get('/shopify/callback', async (req, res) => {
 
     const username2 = user?.username || "";
    
-    const shopParam = encodeURIComponent(shop);
-    const hostParam = encodeURIComponent(host);
+const shopParam = encodeURIComponent(shop);
+const hostParam = encodeURIComponent(host);
 
-    console.log("INside callbackKKKKKK")
-    res.setHeader("Content-Type", "text/html");
-    res.send(`
-<!DOCTYPE html>
-<html>
-  <head><meta charset="utf-8"></head>
-  <body>
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <script>
-      function initAndRedirect() {
-        if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(initAndRedirect, 50);
-        }
-
-        const createApp = window['app-bridge'].default;
-        const AppBridge = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}",
-          host: "${hostParam}",
-          forceRedirect: true
-        });
-
-        const Redirect = window['app-bridge'].actions.Redirect;
-        const redirect = Redirect.create(AppBridge);
-
-        // Use Action.APP to redirect to your internal embedded route
-        redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
-      }
-
-      initAndRedirect();
-    </script>
-  </body>
-</html>
-    `);
-  } catch (err) {
-    console.error('❌ Shopify callback error:', err);
-    if (!res.headersSent) res.status(500).send('OAuth callback failed.');
-  }
-});
-
-app.get("/embedded", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop || !host) return res.status(400).send("Missing shop or host");
-
-  const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-  res.setHeader("Content-Type", "text/html");
-  res.send(`
-<!DOCTYPE html>
+res.setHeader("Content-Type", "text/html");
+res.send(`<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Loading BotAssist Dashboard</title>
+    <title>Redirecting…</title>
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
+  </head>
+  <body>
+    <p>Redirecting into your Shopify admin…</p>
+
+    <!-- Load App Bridge (required by Shopify validator) -->
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+
     <script>
-      function initAndRedirect() {
+      // Wait for the CDN to be available then use App Bridge to tell Shopify admin
+      // to load the embedded route on your backend (same origin as this callback).
+      (function tryInit() {
         if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(initAndRedirect, 50);
+          return setTimeout(tryInit, 50);
         }
 
         const createApp = window['app-bridge'].default;
         const app = createApp({
-          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-          host: "${host}",
+          apiKey: ${JSON.stringify(process.env.SHOPIFY_API_KEY)},
+          host: ${JSON.stringify(hostParam)},
           forceRedirect: true
         });
 
         const Redirect = window['app-bridge'].actions.Redirect;
         const redirect = Redirect.create(app);
 
-        // Use Action.REMOTE because dashboard is an external URL
-        redirect.dispatch(Redirect.Action.REMOTE, "${dashboardUrl}");
-      }
-
-      initAndRedirect();
+        // Redirect inside Shopify admin to the backend route /embedded (same host),
+        // which in turn will use App Bridge to redirect to the external frontend.
+        redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
+      })();
     </script>
   </body>
-</html>
-  `);
+</html>`);
+
+  } catch (err) {
+    console.error('❌ Shopify callback error:', err);
+    if (!res.headersSent) res.status(500).send('OAuth callback failed.');
+  }
 });
+
+app.get('/embedded', (req, res) => {
+  // shop and host may be absent when Shopify validator loads App URL => still serve HTML
+  const shop = req.query.shop || "";
+  const host = req.query.host || ""; // may be empty when validator hits App URL
+  const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+  res.setHeader("Content-Type", "text/html");
+  res.send(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>BotAssist embedded loader</title>
+
+    <!-- IMPORTANT: validator looks for this meta + this exact CDN script -->
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <style>
+      body { font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+      .notice { text-align:center; color:#333 }
+    </style>
+  </head>
+  <body>
+    <div class="notice">
+      <h3>Loading BotAssist…</h3>
+      <p>If you see this outside Shopify, open the app from the Shopify admin.</p>
+    </div>
+
+    <script>
+      (function init() {
+        // If host is missing we *do not* attempt redirect — but page still contains CDN script
+        if (!${JSON.stringify(host)}) {
+          // No host present (Shopify validator or someone opened this URL directly).
+          // We're done: the page includes the CDN script which the validator requires.
+          return;
+        }
+
+        // Wait for CDN to be available
+        if (!window['app-bridge'] || !window['app-bridge'].default) {
+          return setTimeout(init, 50);
+        }
+
+        const createApp = window['app-bridge'].default;
+        const app = createApp({
+          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+          host: ${JSON.stringify(host)},
+          forceRedirect: true
+        });
+
+        const Redirect = window['app-bridge'].actions.Redirect;
+        const redirect = Redirect.create(app);
+
+        // This is an EXTERNAL frontend URL — use REMOTE
+        redirect.dispatch(Redirect.Action.REMOTE, ${JSON.stringify(dashboardUrl)});
+      })();
+    </script>
+  </body>
+</html>`);
+});
+
 
 
 
