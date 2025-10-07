@@ -1166,41 +1166,32 @@ const hostParam = encodeURIComponent(host);
 res.setHeader("Content-Type", "text/html");
 res.send(`<!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Redirecting…</title>
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
-  </head>
-  <body>
-    <p>Redirecting into your Shopify admin…</p>
+<head>
+<meta charset="utf-8" />
+<title>Redirecting to App...</title>
+<meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+</head>
+<body>
+<script>
+  (function redirectToEmbedded() {
+    if (!window['app-bridge'] || !window['app-bridge'].default) return setTimeout(redirectToEmbedded, 50);
 
-    <!-- Load App Bridge (required by Shopify validator) -->
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    const createApp = window['app-bridge'].default;
+    const app = createApp({
+      apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
+      host: "${hostParam}",
+      forceRedirect: true
+    });
 
-    <script>
-      // Wait for the CDN to be available then use App Bridge to tell Shopify admin
-      // to load the embedded route on your backend (same origin as this callback).
-      (function tryInit() {
-        if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(tryInit, 50);
-        }
+    const Redirect = window['app-bridge'].actions.Redirect;
+    const redirect = Redirect.create(app);
 
-        const createApp = window['app-bridge'].default;
-        const app = createApp({
-          apiKey: ${JSON.stringify(process.env.SHOPIFY_API_KEY)},
-          host: ${JSON.stringify(hostParam)},
-          forceRedirect: true
-        });
-
-        const Redirect = window['app-bridge'].actions.Redirect;
-        const redirect = Redirect.create(app);
-
-        // Redirect inside Shopify admin to the backend route /embedded (same host),
-        // which in turn will use App Bridge to redirect to the external frontend.
-        redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
-      })();
-    </script>
-  </body>
+    // ✅ Redirect into embedded route (for validator + App Bridge flow)
+    redirect.dispatch(Redirect.Action.APP, "/embedded?shop=${shopParam}&host=${hostParam}");
+  })();
+</script>
+</body>
 </html>`);
 
   } catch (err) {
@@ -1209,7 +1200,7 @@ res.send(`<!doctype html>
   }
 });
 
-app.get('/embedded', (req, res) => {
+app.get("/embedded", (req, res) => {
   const shop = req.query.shop || "";
   const host = req.query.host || "";
   const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
@@ -1221,33 +1212,33 @@ app.get('/embedded', (req, res) => {
     <meta charset="utf-8">
     <title>BotAssist Embedded App</title>
     <!-- ✅ Required by Shopify validator -->
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
+    <p>Loading BotAssist...</p>
     <script>
       (function init() {
-        if (!window['app-bridge'] || !window['app-bridge'].default) {
-          return setTimeout(init, 50);
-        }
+        if (!window['app-bridge'] || !window['app-bridge'].default) return setTimeout(init, 50);
 
         const createApp = window['app-bridge'].default;
         const app = createApp({
           apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-          host: ${JSON.stringify(host)},
+          host: "${host}",
           forceRedirect: true
         });
 
         const Redirect = window['app-bridge'].actions.Redirect;
         const redirect = Redirect.create(app);
 
-        // ✅ Use REMOTE redirect to your frontend dashboard
-        redirect.dispatch(Redirect.Action.REMOTE, ${JSON.stringify(dashboardUrl)});
+        // ✅ Shopify iframe-safe redirect to your dashboard
+        redirect.dispatch(Redirect.Action.REMOTE, "${dashboardUrl}");
       })();
     </script>
   </body>
 </html>`);
 });
+
 
 
 
