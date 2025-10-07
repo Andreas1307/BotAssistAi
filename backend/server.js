@@ -1209,42 +1209,27 @@ res.send(`<!doctype html>
   }
 });
 
-
 app.get('/embedded', (req, res) => {
   const shop = req.query.shop || "";
   const host = req.query.host || "";
   const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
-
-  // --- If validator or top-level request (no host param)
-  if (!host) {
-    return res.send(`<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>BotAssist Embedded App</title>
-    <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-  </head>
-  <body>
-    <p>Shopify validator: App Bridge script and meta tag loaded successfully.</p>
-  </body>
-</html>`);
-  }
-
   res.send(`<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Loading BotAssist…</title>
-    <meta name="shopify-api-key" content="f6248b498ce7ac6b85e6c87d01154377" />
+    <title>BotAssist Embedded App</title>
+    <!-- ✅ Required by Shopify validator -->
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || 'f6248b498ce7ac6b85e6c87d01154377'}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
     <script>
       (function init() {
-        if (!window['app-bridge'] || !window['app-bridge'].default) return setTimeout(init, 50);
+        if (!window['app-bridge'] || !window['app-bridge'].default) {
+          return setTimeout(init, 50);
+        }
 
         const createApp = window['app-bridge'].default;
         const app = createApp({
@@ -1255,14 +1240,14 @@ app.get('/embedded', (req, res) => {
 
         const Redirect = window['app-bridge'].actions.Redirect;
         const redirect = Redirect.create(app);
+
+        // ✅ Use REMOTE redirect to your frontend dashboard
         redirect.dispatch(Redirect.Action.REMOTE, ${JSON.stringify(dashboardUrl)});
       })();
     </script>
   </body>
 </html>`);
 });
-
-
 
 
 
