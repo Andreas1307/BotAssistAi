@@ -1203,6 +1203,7 @@ res.send(`<!doctype html>
 app.get("/embedded", (req, res) => {
   const shop = req.query.shop || "";
   const host = req.query.host || "";
+
   const dashboardUrl = `https://www.botassistai.com/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
   res.setHeader("Content-Type", "text/html");
@@ -1211,33 +1212,52 @@ app.get("/embedded", (req, res) => {
   <head>
     <meta charset="utf-8">
     <title>BotAssist Embedded App</title>
-    <!-- ✅ Required by Shopify validator -->
+
+    <!-- ✅ These two lines are REQUIRED for Shopify's automated validator -->
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
     <p>Loading BotAssist...</p>
     <script>
+      // ✅ Only initialize App Bridge if host is present (Shopify context)
       (function init() {
-        if (!window['app-bridge'] || !window['app-bridge'].default) return setTimeout(init, 50);
+        const metaKey = document.querySelector('meta[name="shopify-api-key"]').content;
+
+        if (!window['app-bridge'] || !window['app-bridge'].default) {
+          return setTimeout(init, 50);
+        }
+
+        // If Shopify is validating (no host param), don't run redirects.
+        const params = new URLSearchParams(window.location.search);
+        const host = params.get("host");
+        const shop = params.get("shop");
+
+        if (!host) {
+          console.log("Shopify validator mode — no host param, skipping redirect.");
+          return;
+        }
 
         const createApp = window['app-bridge'].default;
         const app = createApp({
-          apiKey: document.querySelector('meta[name="shopify-api-key"]').content,
-          host: "${host}",
-          forceRedirect: true
+          apiKey: metaKey,
+          host: host,
+          forceRedirect: true,
         });
 
         const Redirect = window['app-bridge'].actions.Redirect;
         const redirect = Redirect.create(app);
 
-        // ✅ Shopify iframe-safe redirect to your dashboard
-        redirect.dispatch(Redirect.Action.REMOTE, "${dashboardUrl}");
+        redirect.dispatch(
+          Redirect.Action.REMOTE,
+          "https://www.botassistai.com/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
+        );
       })();
     </script>
   </body>
 </html>`);
 });
+
 
 
 
