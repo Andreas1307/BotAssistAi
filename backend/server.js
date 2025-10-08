@@ -1142,7 +1142,7 @@ app.get('/shopify/callback', async (req, res) => {
     */
 
     // in /shopify/callback:
-return res.redirect(`/auth/embedded?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`);
+return res.redirect(`/auth/embedded?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&username=${encodeURIComponent(user.username)}`);
 
 
   } catch (err) {
@@ -1153,6 +1153,10 @@ return res.redirect(`/auth/embedded?shop=${encodeURIComponent(shop)}&host=${enco
 
 app.get("/auth/embedded", (req, res) => {
   const { shop, host, username } = req.query;
+
+  if (!shop || !host || !username) {
+    return res.status(400).send("Missing required parameters");
+  }
 
   res.set("Content-Type", "text/html");
   res.send(`
@@ -1185,6 +1189,7 @@ app.get("/auth/embedded", (req, res) => {
     </html>
   `);
 });
+
 
 
 
