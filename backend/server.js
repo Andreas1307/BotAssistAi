@@ -976,34 +976,26 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.get("/auth/toplevel", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
+  const { shop } = req.query;
   res.set("Content-Type", "text/html");
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          const params = new URLSearchParams({
-            shop: "${shop}",
-            ${host ? `host: "${host}",` : ""}
-          });
-          window.location.href = "/shopify/install?" + params.toString();
-        </script>
-      </body>
-    </html>
+    <script type="text/javascript">
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+    </script>
   `);
+  
 });
 
+// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host } = req.query;
+  const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}${host ? `&host=${encodeURIComponent(host)}` : ""}`);
+    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
+  
 
   try {
     await shopify.auth.begin({
@@ -1120,57 +1112,41 @@ app.get('/shopify/callback', async (req, res) => {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
-// --- after you finish storing the session etc. ---
-const appUrl = "https://api.botassistai.com/shopify"; // embedded root
 
-res.set("Content-Type", "text/html");
-res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <title>Redirecting...</title>
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge/actions.js"></script>
-    </head>
-    <body>
-      <script>
-        (function() {
-          var apiKey = "${process.env.SHOPIFY_API_KEY}";
-          var host = "${host}";
-          var shop = "${shop}";
-          var redirectUrl = "${appUrl}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
-
-          if (window.top === window.self) {
-            // Not in an iframe → open embedded app in admin
-            window.top.location.href = redirectUrl;
-            return;
-          }
-
-          var AppBridge = window["app-bridge"]?.default;
-          var actions = window["app-bridge"]?.actions;
-
-          if (!AppBridge || !actions) {
-            window.top.location.href = redirectUrl;
-            return;
-          }
-
-          var app = AppBridge({ apiKey: apiKey, host: host, forceRedirect: true });
-          var redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.REMOTE, redirectUrl);
-        })();
-      </script>
-    </body>
-  </html>
-`);
+    // --- Redirect via App Bridge
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
+          <script>
+            const AppBridge = window['app-bridge'].default;
+            const actions = window['app-bridge'].actions;
+            const app = AppBridge({
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              host: '${host}',
+              forceRedirect: true
+            });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-// sa fac update
 
 
 
