@@ -123,16 +123,6 @@ const Dashboard = () => {
     await handleBilling(user.user_id);
   };
 
-  
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setHost(params.get("host"));
-  
-    // Optional: re-init App Bridge if someone lands here manually
-    initShopifyAppBridge();
-  }, []);
-  
-
   /*
   useShopifyInstallRedirect();
 

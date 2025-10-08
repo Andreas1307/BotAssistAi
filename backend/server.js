@@ -1114,7 +1114,6 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Redirect via App Bridge
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -1126,18 +1125,26 @@ app.get('/shopify/callback', async (req, res) => {
         </head>
         <body>
           <script>
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
-            const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
+            const hostParam = "${host}";
+            const shopParam = "${shop}";
+            
+            if (!hostParam) {
+              // Fallback for Shopify validator or missing host
+              window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shopParam);
+            } else {
+              const AppBridge = window['app-bridge'].default;
+              const actions = window['app-bridge'].actions;
+              const app = AppBridge({
+                apiKey: '${process.env.SHOPIFY_API_KEY}',
+                host: hostParam,
+                forceRedirect: true
+              });
+              const redirect = actions.Redirect.create(app);
+              redirect.dispatch(
+                actions.Redirect.Action.APP,
+                "/${username}/dashboard?shop=" + encodeURIComponent(shopParam) + "&host=" + encodeURIComponent(hostParam)
+              );
+            }
           </script>
         </body>
       </html>
