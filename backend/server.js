@@ -1122,40 +1122,45 @@ app.get('/shopify/callback', async (req, res) => {
           <meta charset="utf-8" />
           <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
         </head>
         <body>
           <script>
-            const hostParam = "${host}";
-            const shopParam = "${shop}";
-            
-            if (!hostParam) {
-              // Fallback for Shopify validator or missing host
-              window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shopParam);
-            } else {
+            (function() {
+              const hostParam = "${host}";
+              const shopParam = "${shop}";
+              const apiKey = "${process.env.SHOPIFY_API_KEY}";
+              const appUrl = "https://api.botassistai.com/${encodeURIComponent("${username}")}/dashboard";
+    
+              if (!hostParam) {
+                // Missing host (common during validation) → restart OAuth safely
+                window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shopParam);
+                return;
+              }
+    
               const AppBridge = window['app-bridge'].default;
               const actions = window['app-bridge'].actions;
-              const app = AppBridge({
-                apiKey: '${process.env.SHOPIFY_API_KEY}',
-                host: hostParam,
-                forceRedirect: true
-              });
+              const app = AppBridge({ apiKey, host: hostParam, forceRedirect: true });
               const redirect = actions.Redirect.create(app);
+    
+              // Immediately open embedded app URL
               redirect.dispatch(
                 actions.Redirect.Action.REMOTE,
-                "/${username}/dashboard?shop=" + encodeURIComponent(shopParam) + "&host=" + encodeURIComponent(hostParam)
+                appUrl + "?shop=" + encodeURIComponent(shopParam) + "&host=" + encodeURIComponent(hostParam)
               );
-            }
+            })();
           </script>
         </body>
       </html>
     `);
+    
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
 
 
 
