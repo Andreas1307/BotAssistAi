@@ -987,6 +987,7 @@ app.get("/auth/toplevel", (req, res) => {
   
 });
 
+// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1112,16 +1113,8 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const redirectPath = `/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-    // JSON.stringify to safely inject strings into the inline script
-    const apiKeySafe = JSON.stringify(process.env.SHOPIFY_API_KEY || '');
-    const hostSafe = JSON.stringify(host);
-    const redirectSafe = JSON.stringify(redirectPath);
-
-    // --- Respond with 200 HTML that loads App Bridge from Shopify CDN and uses it to redirect
     res.status(200).set("Content-Type", "text/html").send(`
-      <!doctype html>
+      <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
@@ -1129,33 +1122,32 @@ app.get('/shopify/callback', async (req, res) => {
           <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
-          <h1>Redirecting to your app…</h1>
+          <h1>Redirecting to your app...</h1>
           <script>
-            (function() {
+            document.addEventListener('DOMContentLoaded', function() {
               try {
                 const AppBridge = window['app-bridge'].default;
                 const actions = window['app-bridge'].actions;
-                const apiKey = ${apiKeySafe};
-                const host = ${hostSafe};
-                const redirectTo = ${redirectSafe};
-
                 const app = AppBridge({
-                  apiKey: apiKey,
-                  host: host,
+                  apiKey: '${process.env.SHOPIFY_API_KEY}',
+                  host: '${host}',
                   forceRedirect: true
                 });
-
                 const redirect = actions.Redirect.create(app);
-                redirect.dispatch(actions.Redirect.Action.APP, redirectTo);
+                redirect.dispatch(
+                  actions.Redirect.Action.APP,
+                  '/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+                );
               } catch (err) {
-                console.error('App Bridge init/redirect failed', err);
-                document.body.innerHTML = '<p>There was a problem loading the app. Please open the app from Shopify admin.</p>';
+                console.error('App Bridge redirect failed', err);
+                document.body.innerHTML = '<p>There was a problem loading the app. Please open it from Shopify admin.</p>';
               }
-            })();
+            });
           </script>
         </body>
       </html>
     `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
