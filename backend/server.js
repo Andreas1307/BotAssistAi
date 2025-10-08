@@ -975,28 +975,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
   res.set("Content-Type", "text/html");
   res.send(`
-    <script type="text/javascript">
-      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-    </script>
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          const params = new URLSearchParams({
+            shop: "${shop}",
+            ${host ? `host: "${host}",` : ""}
+          });
+          window.location.href = "/shopify/install?" + params.toString();
+        </script>
+      </body>
+    </html>
   `);
-  
 });
 
-// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
-  const shop = req.query.shop;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}${host ? `&host=${encodeURIComponent(host)}` : ""}`);
   }
-  
 
   try {
     await shopify.auth.begin({
@@ -1114,6 +1121,8 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
+    const appUrl = `https://api.botassistai.com/${encodeURIComponent(shop)}/dashboard`;
+
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -1121,41 +1130,35 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge/actions.js"></script>
         </head>
         <body>
           <script>
             (function() {
-              const hostParam = "${host}";
-              const shopParam = "${shop}";
               const apiKey = "${process.env.SHOPIFY_API_KEY}";
-              const appUrl = "https://api.botassistai.com/${encodeURIComponent("${username}")}/dashboard";
-    
-              if (!hostParam) {
-                // Missing host (common during validation) → restart OAuth safely
-                window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shopParam);
+              const host = "${host}";
+              const shop = "${shop}";
+              const AppBridge = window["app-bridge"].default;
+              const actions = window["app-bridge"].actions;
+
+              if (!AppBridge || !actions) {
+                window.top.location.href = "${appUrl}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
                 return;
               }
-    
-              const AppBridge = window['app-bridge'].default;
-              const actions = window['app-bridge'].actions;
-              const app = AppBridge({ apiKey, host: hostParam, forceRedirect: true });
+
+              const app = AppBridge({ apiKey, host, forceRedirect: true });
               const redirect = actions.Redirect.create(app);
-    
-              // Immediately open embedded app URL
+
               redirect.dispatch(
                 actions.Redirect.Action.REMOTE,
-                appUrl + "?shop=" + encodeURIComponent(shopParam) + "&host=" + encodeURIComponent(hostParam)
+                "${appUrl}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
               );
             })();
           </script>
         </body>
       </html>
     `);
-    
-
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
