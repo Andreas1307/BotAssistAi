@@ -1136,24 +1136,28 @@ res.send(`
     <body>
       <script>
         (function() {
-          const apiKey = "${process.env.SHOPIFY_API_KEY}";
-          const host = "${host}";
-          const shop = "${shop}";
-          const AppBridge = window["app-bridge"].default;
-          const actions = window["app-bridge"].actions;
+          var apiKey = "${process.env.SHOPIFY_API_KEY}";
+          var host = "${host}";
+          var shop = "${shop}";
+          var redirectUrl = "${appUrl}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
 
-          if (!AppBridge || !actions) {
-            window.top.location.href = "${appUrl}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+          if (window.top === window.self) {
+            // Not in an iframe → open embedded app in admin
+            window.top.location.href = redirectUrl;
             return;
           }
 
-          const app = AppBridge({ apiKey, host, forceRedirect: true });
-          const redirect = actions.Redirect.create(app);
+          var AppBridge = window["app-bridge"]?.default;
+          var actions = window["app-bridge"]?.actions;
 
-          redirect.dispatch(
-            actions.Redirect.Action.REMOTE,
-            "${appUrl}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
-          );
+          if (!AppBridge || !actions) {
+            window.top.location.href = redirectUrl;
+            return;
+          }
+
+          var app = AppBridge({ apiKey: apiKey, host: host, forceRedirect: true });
+          var redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, redirectUrl);
         })();
       </script>
     </body>
@@ -1166,7 +1170,7 @@ res.send(`
   }
 });
 
-
+// sa fac update
 
 
 
