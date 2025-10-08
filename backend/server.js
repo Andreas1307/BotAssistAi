@@ -1088,42 +1088,6 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-
-
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
-        </head>
-        <body>
-          <script>
-            const hostParam = "${host}";
-            const shopParam = "${shop}";
-            if (!hostParam) {
-              window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shopParam);
-            } else {
-              const AppBridge = window['app-bridge'].default;
-              const actions = window['app-bridge'].actions;
-              const app = AppBridge({
-                apiKey: '${process.env.SHOPIFY_API_KEY}',
-                host: hostParam,
-                forceRedirect: true
-              });
-              const redirect = actions.Redirect.create(app);
-              redirect.dispatch(actions.Redirect.Action.APP, "/embedded?shop=" + encodeURIComponent(shopParam) + "&host=" + encodeURIComponent(hostParam));
-            }
-          </script>
-        </body>
-      </html>
-    `);
-
-
-
-
     // --- Async background tasks
     (async () => {
       try {
@@ -1150,43 +1114,47 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
+          <script>
+            const hostParam = "${host}";
+            const shopParam = "${shop}";
+            
+            if (!hostParam) {
+              // Fallback for Shopify validator or missing host
+              window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shopParam);
+            } else {
+              const AppBridge = window['app-bridge'].default;
+              const actions = window['app-bridge'].actions;
+              const app = AppBridge({
+                apiKey: '${process.env.SHOPIFY_API_KEY}',
+                host: hostParam,
+                forceRedirect: true
+              });
+              const redirect = actions.Redirect.create(app);
+              redirect.dispatch(
+                actions.Redirect.Action.REMOTE,
+                "/${username}/dashboard?shop=" + encodeURIComponent(shopParam) + "&host=" + encodeURIComponent(hostParam)
+              );
+            }
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
-app.get("/embedded", (req, res) => {
-  const { shop, host } = req.query;
-  res.set("Content-Type", "text/html");
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Loading...</title>
-        <script src="https://unpkg.com/@shopify/app-bridge"></script>
-      </head>
-      <body>
-        <script>
-          const AppBridge = window['app-bridge'].default;
-          const actions = window['app-bridge'].actions;
-          const app = AppBridge({
-            apiKey: '${process.env.SHOPIFY_API_KEY}',
-            host: '${host}',
-            forceRedirect: true
-          });
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.APP, "/${shop}/dashboard?shop=${shop}&host=${host}");
-        </script>
-      </body>
-    </html>
-  `);
-});
-
 
 
 

@@ -1,7 +1,7 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
-
+import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
  */
@@ -21,6 +21,7 @@ export async function initShopifyAppBridge() {
 
     if (!isEmbedded() || !shop || !host) {
       // Running standalone (outside Shopify)
+      window.top.location.href = `${directory}/auth/toplevel?shop=${encodeURIComponent(shop)}`;
       console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
