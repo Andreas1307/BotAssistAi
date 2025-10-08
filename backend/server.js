@@ -1086,6 +1086,7 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
+    // --- Async background tasks
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
@@ -1111,7 +1112,7 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    /*
+    // --- Redirect via App Bridge
     res.set("Content-Type", "text/html");
     res.send(`
       <!DOCTYPE html>
@@ -1139,55 +1140,11 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
-    */
-
-    // in /shopify/callback:
-return res.redirect(`/auth/embedded?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&username=${encodeURIComponent(user.username)}`);
-
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
-});
-
-app.get("/auth/embedded", (req, res) => {
-  const { shop, host, username } = req.query;
-
-  if (!shop || !host || !username) {
-    return res.status(400).send("Missing required parameters");
-  }
-
-  res.set("Content-Type", "text/html");
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Loading...</title>
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
-
-            const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
-            });
-
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              '/${username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
-          });
-        </script>
-      </head>
-      <body></body>
-    </html>
-  `);
 });
 
 
