@@ -1112,35 +1112,50 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Redirect via App Bridge
-    res.set("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
+    const redirectPath = `/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+    // JSON.stringify to safely inject strings into the inline script
+    const apiKeySafe = JSON.stringify(process.env.SHOPIFY_API_KEY || '');
+    const hostSafe = JSON.stringify(host);
+    const redirectSafe = JSON.stringify(redirectPath);
+
+    // --- Respond with 200 HTML that loads App Bridge from Shopify CDN and uses it to redirect
+    res.status(200).set("Content-Type", "text/html").send(`
+      <!doctype html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+          <title>Loading your app...</title>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
+          <h1>Redirecting to your app…</h1>
           <script>
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
-            const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
+            (function() {
+              try {
+                const AppBridge = window['app-bridge'].default;
+                const actions = window['app-bridge'].actions;
+                const apiKey = ${apiKeySafe};
+                const host = ${hostSafe};
+                const redirectTo = ${redirectSafe};
+
+                const app = AppBridge({
+                  apiKey: apiKey,
+                  host: host,
+                  forceRedirect: true
+                });
+
+                const redirect = actions.Redirect.create(app);
+                redirect.dispatch(actions.Redirect.Action.APP, redirectTo);
+              } catch (err) {
+                console.error('App Bridge init/redirect failed', err);
+                document.body.innerHTML = '<p>There was a problem loading the app. Please open the app from Shopify admin.</p>';
+              }
+            })();
           </script>
         </body>
       </html>
     `);
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
