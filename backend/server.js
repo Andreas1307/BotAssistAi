@@ -1106,30 +1106,29 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
+    const dashboardUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+  
+
     res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
         <head>
-          <meta charset="utf-8" />
+          <meta charset="utf-8">
           <title>Redirecting...</title>
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge@2"></script>
         </head>
         <body>
-          <script type="text/javascript">
+          <p>Redirecting to your app...</p>
+          <script>
             document.addEventListener("DOMContentLoaded", function() {
-              const AppBridge = window["app-bridge"].default;
-              const actions = window["app-bridge"].actions;
-              const app = AppBridge({
+              const AppBridge = window["app-bridge"];
+              const actions = AppBridge.actions;
+              const app = AppBridge.createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
                 host: "${host}",
-                forceRedirect: true
               });
               const redirect = actions.Redirect.create(app);
-              // ✅ Redirect to a real route
-              redirect.dispatch(
-                actions.Redirect.Action.APP,
-                "/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-              );
+              redirect.dispatch(actions.Redirect.Action.APP, "${dashboardUrl}");
             });
           </script>
         </body>
@@ -1141,7 +1140,6 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
 
 
 
