@@ -977,30 +977,34 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
+
   res
     .status(200)
     .set("Content-Type", "text/html")
     .send(`
-      <script type="text/javascript">
-        document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-        window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-      </script>
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <script type="text/javascript">
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          </script>
+        </body>
+      </html>
     `);
 });
 
-
 app.get("/shopify/install", async (req, res) => {
-  const shop = req.query.shop;
-  if (!shop) return res.status(400).send("Missing shop");
+  const { shop } = req.query;
 
-  // 🔹 Step 1: Ensure top-level cookie is set
+  if (!shop) return res.status(400).send("Missing shop param");
+
   if (!req.cookies["shopify_toplevel"]) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
-    // 🔹 Step 2: Begin OAuth after top-level cookie is set
-    return await shopify.auth.begin({
+    await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
@@ -1014,7 +1018,6 @@ app.get("/shopify/install", async (req, res) => {
     }
   }
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1122,34 +1125,25 @@ app.get('/shopify/callback', async (req, res) => {
       <!DOCTYPE html>
       <html>
         <head>
-          <meta charset="utf-8" />
-          <title>Loading your app...</title>
-            <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-  <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
-          <h1>Redirecting to your app...</h1>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              const AppBridge = window['app-bridge'].default;
-              const actions = window['app-bridge'].actions;
+          <script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function() {
+              const AppBridge = window["app-bridge"].default;
+              const actions = window["app-bridge"].actions;
               const app = AppBridge({
-                apiKey: '${process.env.SHOPIFY_API_KEY}',
-                host: '${host}',
-                forceRedirect: true
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}",
               });
               const redirect = actions.Redirect.create(app);
-              redirect.dispatch(
-                actions.Redirect.Action.APP,
-                '/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-              );
+              redirect.dispatch(actions.Redirect.Action.APP, "/?shop=${shop}&host=${host}");
             });
           </script>
         </body>
       </html>
     `);
-    
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
