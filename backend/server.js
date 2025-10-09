@@ -60,7 +60,7 @@ const sessionStore = new MySQLStore({
 
 
 app.set('trust proxy', 1);
-app.use(cookieParser());
+app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 
 app.use(['/ping-client', '/ask-ai'], cors({
@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: 'api.botassistai.com' 
+    //domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -969,7 +969,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 });
 
 
-app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -977,46 +976,32 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-
   res
     .status(200)
     .set("Content-Type", "text/html")
     .send(`
-      <!DOCTYPE html>
-      <html>
-        <body>
-          <script type="text/javascript">
-            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          </script>
-        </body>
-      </html>
+      <script>
+        document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+        window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+      </script>
     `);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-
   if (!shop) return res.status(400).send("Missing shop param");
 
   if (!req.cookies["shopify_toplevel"]) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  try {
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ Shopify install error:", err);
-    if (!res.headersSent) {
-      res.status(500).send("Failed to start OAuth");
-    }
-  }
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.get('/shopify/callback', async (req, res) => {
