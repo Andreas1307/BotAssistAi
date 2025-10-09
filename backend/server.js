@@ -974,34 +974,42 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
+
+// TOP-LEVEL AUTH ROUTE (escapes iframe)
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  res
-    .status(200)
-    .set("Content-Type", "text/html")
-    .send(`
-      <script>
-        document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-        window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-      </script>
-    `);
+  res.set("Content-Type", "text/html");
+  res.send(`
+    <script type="text/javascript">
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+    </script>
+  `);
+  
 });
 
+// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop param");
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
+  
 
-  await shopify.auth.begin({
-    shop,
-    callbackPath: "/shopify/callback",
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
+  try {
+    await shopify.auth.begin({
+      rawRequest: req,
+      rawResponse: res,
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+    });
+  } catch (err) {
+    console.error("❌ Shopify install error:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+  }
 });
 
 app.get('/shopify/callback', async (req, res) => {
