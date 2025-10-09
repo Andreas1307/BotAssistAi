@@ -1106,31 +1106,34 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-   // Force top-level redirect to your real app
-const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
-  user.username
-)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-res.status(200).set("Content-Type", "text/html").send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <title>Redirecting...</title>
-    </head>
-    <body>
-      <p>Redirecting to your app...</p>
-      <script>
-        // Force top-level navigation (break out of Shopify iframe)
-        if (window.top === window.self) {
-          window.location.href = "${dashboardUrl}";
-        } else {
-          window.top.location.href = "${dashboardUrl}";
-        }
-      </script>
-    </body>
-  </html>
-`);
+    // --- Redirect via App Bridge
+    res.set("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
+        </head>
+        <body>
+          <script>
+            const AppBridge = window['app-bridge'].default;
+            const actions = window['app-bridge'].actions;
+            const app = AppBridge({
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              host: '${host}',
+              forceRedirect: true
+            });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+            );
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
