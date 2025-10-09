@@ -1107,27 +1107,17 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
     res.status(200).set("Content-Type", "text/html").send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <script type="text/javascript">
-            document.addEventListener("DOMContentLoaded", function() {
-              const AppBridge = window["app-bridge"].default;
-              const actions = window["app-bridge"].actions;
-              const app = AppBridge({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
-              });
-              const redirect = actions.Redirect.create(app);
-              redirect.dispatch(actions.Redirect.Action.APP, "/?shop=${shop}&host=${host}");
-            });
-          </script>
-        </body>
-      </html>
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      <script>
+        const AppBridge = window["app-bridge"].default;
+        const actions = window["app-bridge"].actions;
+        const app = AppBridge({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${host}"
+        });
+        const redirect = actions.Redirect.create(app);
+        redirect.dispatch(actions.Redirect.Action.APP, "/?shop=${shop}&host=${host}");
+      </script>
     `);
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
