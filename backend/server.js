@@ -1106,73 +1106,32 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const destination = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    const destSafe = JSON.stringify(destination);
-    const apiKeySafe = JSON.stringify(process.env.SHOPIFY_API_KEY || '');
-    const hostSafe = JSON.stringify(host || '');
-    
-    res.status(200).set("Content-Type", "text/html").send(`
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting…</title>
-          <!-- Shopify CDN (use this) -->
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-        </head>
-        <body>
-          <p>Redirecting to your app…</p>
-          <script>
-            (function(){
-              const DEST = ${destSafe};
-              const API_KEY = ${apiKeySafe};
-              const HOST = ${hostSafe};
-    
-              function topFallback() {
-                try {
-                  // Try top-level navigation first (break out of iframe)
-                  window.top.location.href = DEST;
-                } catch (e) {
-                  // If cross-origin blocks top, try normal navigation
-                  window.location.href = DEST;
-                }
-              }
-    
-              document.addEventListener('DOMContentLoaded', function () {
-                try {
-                  // App Bridge may be available at window['app-bridge'] or window['app-bridge'].default
-                  const AB = window['app-bridge']?.default || window['app-bridge'];
-                  if (!AB) { topFallback(); return; }
-    
-                  // createApp location varies by bundle; prefer createApp factory
-                  const createApp = AB.createApp || (AB.default && AB.default.createApp) || AB;
-                  const app = (typeof createApp === 'function') ? createApp({ apiKey: API_KEY, host: HOST, forceRedirect: true }) : null;
-    
-                  const RedirectAction = AB.actions && AB.actions.Redirect;
-                  if (!app || !RedirectAction) { topFallback(); return; }
-    
-                  const redirect = RedirectAction.create(app);
-    
-                  // If DEST is absolute (starts with http), use REMOTE; otherwise APP
-                  if (/^https?:\\/\\//i.test(DEST)) {
-                    redirect.dispatch(RedirectAction.Action.REMOTE, DEST);
-                  } else {
-                    redirect.dispatch(RedirectAction.Action.APP, DEST);
-                  }
-    
-                  // Safety fallback in 1.5s if App Bridge redirect doesn't happen
-                  setTimeout(topFallback, 1500);
-                } catch (err) {
-                  // any error -> fallback
-                  console.error('App Bridge redirect failed', err);
-                  topFallback();
-                }
-              });
-            })();
-          </script>
-        </body>
-      </html>
-    `);
+   // Force top-level redirect to your real app
+const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
+  user.username
+)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+res.status(200).set("Content-Type", "text/html").send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Redirecting...</title>
+    </head>
+    <body>
+      <p>Redirecting to your app...</p>
+      <script>
+        // Force top-level navigation (break out of Shopify iframe)
+        if (window.top === window.self) {
+          window.location.href = "${dashboardUrl}";
+        } else {
+          window.top.location.href = "${dashboardUrl}";
+        }
+      </script>
+    </body>
+  </html>
+`);
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
