@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: 'api.botassistai.com' 
+    domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -974,17 +974,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  res.set("Content-Type", "text/html");
-  res.send(`
-    <script type="text/javascript">
-      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-    </script>
+
+  res.status(200).set("Content-Type", "text/html").send(`
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8" /></head>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body>
+    </html>
   `);
-  
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -992,9 +996,8 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    return res.redirect(`https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
-  
 
   try {
     await shopify.auth.begin({
@@ -1112,34 +1115,30 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    // --- Redirect via App Bridge
-    res.set("Content-Type", "text/html");
-    res.send(`
+    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
+      user.username
+    )}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    
+    res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge"></script>
         </head>
         <body>
+          <p>Redirecting to your dashboard...</p>
           <script>
-            const AppBridge = window['app-bridge'].default;
-            const actions = window['app-bridge'].actions;
-            const app = AppBridge({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              '/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-            );
+            if (window.top === window.self) {
+              window.location.href = "${dashboardUrl}";
+            } else {
+              window.top.location.href = "${dashboardUrl}";
+            }
           </script>
         </body>
       </html>
     `);
+    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
