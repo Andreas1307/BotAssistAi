@@ -1106,34 +1106,34 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const dashboardUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-  
+    const dashboardUrl = `https://www.botassistai.com/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    res.status(200).set("Content-Type", "text/html").send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@2"></script>
-        </head>
-        <body>
-          <p>Redirecting to your app...</p>
-          <script>
-            document.addEventListener("DOMContentLoaded", function() {
-              const AppBridge = window["app-bridge"];
-              const actions = AppBridge.actions;
-              const app = AppBridge.createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
-              });
-              const redirect = actions.Redirect.create(app);
-              redirect.dispatch(actions.Redirect.Action.APP, "${dashboardUrl}");
-            });
-          </script>
-        </body>
-      </html>
-    `);
+res.status(200).set("Content-Type", "text/html").send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Redirecting...</title>
+      <script src="https://unpkg.com/@shopify/app-bridge@2"></script>
+    </head>
+    <body>
+      <p>Redirecting to your app...</p>
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          const AppBridge = window["app-bridge"];
+          const actions = AppBridge.actions;
+          const app = AppBridge.createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+          });
+          const redirect = actions.Redirect.create(app);
+          redirect.dispatch(actions.Redirect.Action.REMOTE, "${dashboardUrl}");
+        });
+      </script>
+    </body>
+  </html>
+`);
+
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
