@@ -974,21 +974,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
+app.get("/shopify/auth", async (req, res) => {
+  const shop = req.query.shop;
 
-  res.status(200).set("Content-Type", "text/html").send(`
-    <!DOCTYPE html>
-    <html>
-      <head><meta charset="utf-8" /></head>
-      <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-        </script>
-      </body>
-    </html>
-  `);
+  // 1️⃣ If inside an iframe → redirect to top-level
+  if (!req.query.embedded) {
+    return res.redirect(`/shopify/auth/toplevel?shop=${shop}`);
+  }
+
+  // 2️⃣ Start Shopify OAuth
+  const authRoute = await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
+
+  return res.redirect(authRoute);
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1115,11 +1118,8 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-   const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&username=${encodeURIComponent(
-      user.username
-    )}`;
+    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    // --- Send App Bridge redirect script
     res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
@@ -1135,12 +1135,12 @@ app.get('/shopify/callback', async (req, res) => {
               const createApp = AppBridge.default;
               const actions = AppBridge.actions;
               const Redirect = actions.Redirect;
-
+    
               const app = createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
+                host: "${host}"
               });
-
+    
               const redirect = Redirect.create(app);
               redirect.dispatch(Redirect.Action.APP, "${embeddedUrl}");
             });
@@ -1148,6 +1148,7 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
