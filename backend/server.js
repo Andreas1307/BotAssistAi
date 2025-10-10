@@ -997,31 +997,13 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // ✅ Prevent redirect loops inside iframe
-  const isEmbedded = req.query.embedded === "1";
-  if (isEmbedded) {
+  // --- If not in top-level, escape iframe first
+  if (req.query.embedded === "1" || !req.cookies["shopify_toplevel"]) {
     return res.status(200).send(`
       <html>
         <body>
           <script>
-            // Escape the iframe to top window for top-level OAuth
-            if (window.top === window.self) {
-              window.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-            } else {
-              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-            }
-          </script>
-        </body>
-      </html>
-    `);
-  }
-
-  // ✅ Cookie check
-  if (!req.cookies["shopify_toplevel"]) {
-    return res.status(200).send(`
-      <html>
-        <body>
-          <script>
+            // ✅ Escape to top window to set SameSite=None cookie
             window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           </script>
         </body>
@@ -1030,6 +1012,7 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
+    // ✅ This sets the OAuth cookie successfully
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
