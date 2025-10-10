@@ -1144,29 +1144,39 @@ app.get('/shopify/callback', async (req, res) => {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
+    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    const embeddedUrl = `/apps/${process.env.SHOPIFY_APP_HANDLE || "botassistai"}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-    res
-      .status(200)
-      .set("Content-Type", "text/html")
-      .send(`
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-          </head>
-          <body>
-            <script>
-              const app = shopify.createApp({
+    res.status(200).set("Content-Type", "text/html").send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        </head>
+        <body>
+          <script>
+            document.addEventListener("DOMContentLoaded", async () => {
+              const AppBridge = window["app-bridge"];
+              const actions = AppBridge.actions;
+    
+              const app = AppBridge.createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}"
+                host: "${host}",
               });
-              shopify.redirect.toApp("${embeddedUrl}");
-            </script>
-          </body>
-        </html>
-      `);
+    
+              const redirect = actions.Redirect.create(app);
+    
+              // ✅ Use REMOTE redirect for your external dashboard
+              redirect.dispatch(
+                actions.Redirect.Action.REMOTE,
+                "https://www.botassistai.com/${encodeURIComponent(username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              );
+            });
+          </script>
+        </body>
+      </html>
+    `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
