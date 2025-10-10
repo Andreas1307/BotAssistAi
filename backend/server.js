@@ -982,7 +982,9 @@ app.get("/auth/toplevel", (req, res) => {
     <html>
       <body>
         <script>
+          // Must be top-level to set cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          // Force top-level navigation
           window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
         </script>
       </body>
@@ -993,20 +995,20 @@ app.get("/auth/toplevel", (req, res) => {
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
+
+  // Prevent duplicate OAuth flows
   if (req.session.oauthInProgress) {
     return res.status(200).send("OAuth already in progress");
   }
   req.session.oauthInProgress = true;
-  
 
-  // --- If not in top-level, escape iframe first
-  if (req.query.embedded === "1" || !req.cookies["shopify_toplevel"]) {
+  // Redirect to top-level if cookie missing
+  if (!req.cookies["shopify_toplevel"] || req.query.embedded === "1") {
     return res.status(200).send(`
       <html>
         <body>
           <script>
-            // ✅ Escape to top window to set SameSite=None cookie
-            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            window.top.location.assign("/auth/toplevel?shop=${encodeURIComponent(shop)}");
           </script>
         </body>
       </html>
@@ -1014,7 +1016,6 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
-    // ✅ This sets the OAuth cookie successfully
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1035,6 +1036,7 @@ app.get('/shopify/callback', async (req, res) => {
       rawResponse: res,
       isOnline: true,
     });
+    delete req.session.oauthInProgress; 
 
     if (!session?.shop || !session?.accessToken) {
       return res.status(400).send('Session missing required data.');
@@ -1129,8 +1131,7 @@ app.get('/shopify/callback', async (req, res) => {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
-    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
+    
     res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
@@ -1140,29 +1141,24 @@ app.get('/shopify/callback', async (req, res) => {
         </head>
         <body>
           <script>
-            document.addEventListener("DOMContentLoaded", async () => {
+            document.addEventListener("DOMContentLoaded", () => {
               const AppBridge = window["app-bridge"];
               const actions = AppBridge.actions;
-    
               const app = AppBridge.createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
+                host: "${req.query.host}",
               });
-    
               const redirect = actions.Redirect.create(app);
-    
-              // ✅ Use REMOTE redirect for your external dashboard
+
               redirect.dispatch(
                 actions.Redirect.Action.REMOTE,
-                "https://www.botassistai.com/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+                "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(req.query.host)}"
               );
             });
           </script>
         </body>
       </html>
     `);
-    
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
