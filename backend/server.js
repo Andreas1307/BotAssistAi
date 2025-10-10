@@ -1001,11 +1001,11 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     await shopify.auth.begin({
-      rawRequest: req,
-      rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
     });
   } catch (err) {
     console.error("❌ Shopify install error:", err);
@@ -1115,31 +1115,39 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
+    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&username=${encodeURIComponent(
       user.username
-    )}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    
+    )}`;
+
+    // --- Send App Bridge redirect script
     res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Redirecting...</title>
+          <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" defer ></script>
         </head>
         <body>
-          <p>Redirecting to your dashboard...</p>
           <script>
-            if (window.top === window.self) {
-              window.location.href = "${dashboardUrl}";
-            } else {
-              window.top.location.href = "${dashboardUrl}";
-            }
+            document.addEventListener("DOMContentLoaded", function() {
+              const AppBridge = window["app-bridge"];
+              const createApp = AppBridge.default;
+              const actions = AppBridge.actions;
+              const Redirect = actions.Redirect;
+
+              const app = createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}",
+              });
+
+              const redirect = Redirect.create(app);
+              redirect.dispatch(Redirect.Action.APP, "${embeddedUrl}");
+            });
           </script>
         </body>
       </html>
     `);
-    
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
