@@ -73,8 +73,8 @@ const Homepage = () => {
       return;
     }
 
-    if (shop && host) {
-      window.location.href = `https://www.botassistai.com/${user?.username}/dashboard?shop=${shop}&host=${host}`;
+    if (shopParam && hostParam) {
+      window.location.href = `https://www.botassistai.com/${user?.username}/dashboard?shop=${shopParam}&host=${hostParam}`;
     }
   
     setShop(shopParam);
