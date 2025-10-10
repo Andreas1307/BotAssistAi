@@ -984,7 +984,7 @@ app.get("/auth/toplevel", (req, res) => {
       <html>
         <body>
           <script>
-            // ✅ Must be top-level (not inside iframe)
+            // ✅ Must be top-level to set cookie
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
           </script>
@@ -998,28 +998,30 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   if (!req.cookies["shopify_toplevel"]) {
-    // 🔁 Redirect to top-level auth
-    return res
-      .status(200)
-      .send(`
-        <html>
-          <body>
-            <script>
-              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-            </script>
-          </body>
-        </html>
-      `);
+    return res.status(200).send(`
+      <html>
+        <body>
+          <script>
+            // ✅ Pop out of iframe to set the cookie properly
+            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+          </script>
+        </body>
+      </html>
+    `);
   }
 
-  // ✅ Begin OAuth (this sets the cookie that Shopify looks for)
-  await shopify.auth.begin({
-    shop,
-    callbackPath: "/shopify/callback",
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
+  try {
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+  } catch (err) {
+    console.error("❌ Shopify install error:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+  }
 });
 
 app.get('/shopify/callback', async (req, res) => {
@@ -1124,27 +1126,32 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-     const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-     res.status(200).set("Content-Type", "text/html").send(`
-       <html>
-         <head>
-           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-         </head>
-         <body>
-           <script>
-             const AppBridge = window["app-bridge"];
-             const actions = AppBridge.actions;
-             const app = AppBridge.createApp({
-               apiKey: "${process.env.SHOPIFY_API_KEY}",
-               host: "${host}"
-             });
-             const redirect = actions.Redirect.create(app);
-             redirect.dispatch(actions.Redirect.Action.APP, "${embeddedUrl}");
-           </script>
-         </body>
-       </html>
-     `);
+    res
+      .status(200)
+      .set("Content-Type", "text/html")
+      .send(`
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          </head>
+          <body>
+            <script>
+              const AppBridge = window["app-bridge"];
+              const actions = AppBridge.actions;
+              const app = AppBridge.createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}"
+              });
+              const redirect = actions.Redirect.create(app);
+              redirect.dispatch(actions.Redirect.Action.APP, "${embeddedUrl}");
+            </script>
+          </body>
+        </html>
+      `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
