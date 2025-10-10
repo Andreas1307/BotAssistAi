@@ -981,12 +981,13 @@ app.get("/auth/toplevel", (req, res) => {
     .status(200)
     .set("Content-Type", "text/html")
     .send(`
+      <!DOCTYPE html>
       <html>
         <body>
           <script>
-            // ✅ Must be top-level to set cookie
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+            // ✅ Force top-level navigation to reset cookies
+            window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
           </script>
         </body>
       </html>
@@ -996,6 +997,11 @@ app.get("/auth/toplevel", (req, res) => {
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
+  if (req.session.oauthInProgress) {
+    return res.status(200).send("OAuth already in progress");
+  }
+  req.session.oauthInProgress = true;
+  
 
   // --- If not in top-level, escape iframe first
   if (req.query.embedded === "1" || !req.cookies["shopify_toplevel"]) {
