@@ -978,44 +978,39 @@ app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res
-    .status(200)
-    .set("Content-Type", "text/html")
-    .send(`
-      <!DOCTYPE html>
-      <html>
-        <head><meta charset="utf-8" /></head>
-        <body>
-          <script>
-            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          </script>
-        </body>
-      </html>
-    `);
+  res.status(200).set("Content-Type", "text/html").send(`
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8" /></head>
+      <body>
+        <script>
+          // ✅ Set cookie at top-level (not inside iframe)
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          // ✅ Redirect back into app to begin OAuth
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const shop = req.query.shop;
+  const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // ✅ Must come after /auth/toplevel sets cookie
+  // If the cookie is missing, redirect to toplevel first
   if (!req.cookies["shopify_toplevel"]) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  try {
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ Shopify install error:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
-  }
+  // Begin OAuth (writes the real cookie Shopify needs)
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.get('/shopify/callback', async (req, res) => {
