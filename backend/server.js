@@ -1145,7 +1145,7 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const embeddedUrl = `/apps/${process.env.SHOPIFY_APP_HANDLE || "botassistai"}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
     res
       .status(200)
