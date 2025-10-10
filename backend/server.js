@@ -1001,11 +1001,11 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     await shopify.auth.begin({
+      rawRequest: req,
+      rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
     });
   } catch (err) {
     console.error("❌ Shopify install error:", err);
@@ -1115,7 +1115,7 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&username=${encodeURIComponent(
+   const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&username=${encodeURIComponent(
       user.username
     )}`;
 
@@ -1126,7 +1126,7 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" defer ></script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
@@ -1153,9 +1153,6 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
 
 
 
