@@ -977,21 +977,17 @@ app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res
-    .status(200)
-    .set("Content-Type", "text/html")
-    .send(`
-      <!DOCTYPE html>
-      <html>
-        <body>
-          <script>
-            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            // ✅ Force top-level navigation to reset cookies
-            window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
-          </script>
-        </body>
-      </html>
-    `);
+  res.set("Content-Type", "text/html").send(`
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
