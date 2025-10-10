@@ -997,12 +997,31 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
+  // ✅ Prevent redirect loops inside iframe
+  const isEmbedded = req.query.embedded === "1";
+  if (isEmbedded) {
+    return res.status(200).send(`
+      <html>
+        <body>
+          <script>
+            // Escape the iframe to top window for top-level OAuth
+            if (window.top === window.self) {
+              window.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            } else {
+              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            }
+          </script>
+        </body>
+      </html>
+    `);
+  }
+
+  // ✅ Cookie check
   if (!req.cookies["shopify_toplevel"]) {
     return res.status(200).send(`
       <html>
         <body>
           <script>
-            // ✅ Pop out of iframe to set the cookie properly
             window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           </script>
         </body>
@@ -1135,18 +1154,15 @@ app.get('/shopify/callback', async (req, res) => {
         <html>
           <head>
             <meta charset="utf-8" />
-            <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+            <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
           </head>
           <body>
             <script>
-              const AppBridge = window["app-bridge"];
-              const actions = AppBridge.actions;
-              const app = AppBridge.createApp({
+              const app = shopify.createApp({
                 apiKey: "${process.env.SHOPIFY_API_KEY}",
                 host: "${host}"
               });
-              const redirect = actions.Redirect.create(app);
-              redirect.dispatch(actions.Redirect.Action.APP, "${embeddedUrl}");
+              shopify.redirect.toApp("${embeddedUrl}");
             </script>
           </body>
         </html>
