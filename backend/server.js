@@ -973,7 +973,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- STEP 1: TOPLEVEL (sets cookie) ---
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
@@ -981,51 +980,46 @@ app.get("/auth/toplevel", (req, res) => {
   res
     .status(200)
     .set("Content-Type", "text/html")
-    .send(`<!DOCTYPE html>
+    .send(`
       <html>
-        <head><meta charset="utf-8" /></head>
         <body>
-          <script type="text/javascript">
-            // ✅ This happens at top-level (outside iframe)
+          <script>
+            // ✅ Must be top-level (not inside iframe)
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            // ✅ Now restart the install flow
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          </script>
-        </body>
-      </html>`);
-});
-
-// --- STEP 2: INSTALL (begins OAuth) ---
-app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
-
-  // ✅ If cookie not set → redirect to /auth/toplevel at TOP-LEVEL
-  if (!req.cookies["shopify_toplevel"]) {
-    return res.status(200).send(`
-      <html>
-        <body>
-          <script type="text/javascript">
-            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           </script>
         </body>
       </html>
     `);
+});
+
+app.get("/shopify/install", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop parameter");
+
+  if (!req.cookies["shopify_toplevel"]) {
+    // 🔁 Redirect to top-level auth
+    return res
+      .status(200)
+      .send(`
+        <html>
+          <body>
+            <script>
+              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            </script>
+          </body>
+        </html>
+      `);
   }
 
-  try {
-    // ✅ Start OAuth
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ Shopify install error:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
-  }
+  // ✅ Begin OAuth (this sets the cookie that Shopify looks for)
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.get('/shopify/callback', async (req, res) => {
@@ -1130,26 +1124,27 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
+     const embeddedUrl = `/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    res.status(200).send(`
-      <html>
-        <head>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
-        <body>
-          <script>
-            const AppBridge = window['app-bridge'];
-            const actions = AppBridge.actions;
-            const app = AppBridge.createApp({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}'
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(actions.Redirect.Action.APP, '/?shop=${shop}&host=${host}');
-          </script>
-        </body>
-      </html>
-    `);
+     res.status(200).set("Content-Type", "text/html").send(`
+       <html>
+         <head>
+           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+         </head>
+         <body>
+           <script>
+             const AppBridge = window["app-bridge"];
+             const actions = AppBridge.actions;
+             const app = AppBridge.createApp({
+               apiKey: "${process.env.SHOPIFY_API_KEY}",
+               host: "${host}"
+             });
+             const redirect = actions.Redirect.create(app);
+             redirect.dispatch(actions.Redirect.Action.APP, "${embeddedUrl}");
+           </script>
+         </body>
+       </html>
+     `);
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
