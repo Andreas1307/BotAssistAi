@@ -968,31 +968,40 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
   res.sendStatus(200);
 });
 
-
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  res.set("Content-Type", "text/html");
+  if (!shop) return res.status(400).send("Missing shop");
+
+  res.set({
+    "Content-Type": "text/html",
+    "Content-Security-Policy": "frame-ancestors 'none';"
+  });
+
   res.send(`
-    <script type="text/javascript">
-      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-    </script>
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><title>Redirecting...</title></head>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body>
+    </html>
   `);
-  
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const shop = req.query.shop;
+  const { shop, embedded } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  if (!req.cookies["shopify_toplevel"]) {
+  // Bounce to top-level if cookie missing
+  if (!req.cookies.shopify_toplevel) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
-  
 
   try {
     await shopify.auth.begin({
@@ -1109,49 +1118,38 @@ app.get('/shopify/callback', async (req, res) => {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
-    res.status(200).set("Content-Type", "text/html").send(`
+    res.send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Loading BotAssist AI...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
+        <head><meta charset="utf-8"><title>Loading...</title></head>
         <body>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
             const host = "${host}";
             const shop = "${session.shop}";
-            const username = "${user.username}";
-    
-            // Wait for AppBridge to be ready
-            document.addEventListener("DOMContentLoaded", () => {
-              if (window.self === window.top) {
-                // Not embedded → direct redirect
-                window.location.href = "https://www.botassistai.com/" + username + "/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
-                return;
-              }
-    
-              const AppBridge = window["app-bridge"];
+            const appBridge = window["app-bridge"];
+            const isEmbedded = window.self !== window.top;
+
+            if (!isEmbedded) {
+              window.location.href = "https://www.botassistai.com/dashboard?shop=" + encodeURIComponent(shop);
+            } else {
+              const AppBridge = appBridge;
               const actions = AppBridge.actions;
-              const app = AppBridge.createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host,
-              });
+              const app = AppBridge.createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host });
               const redirect = actions.Redirect.create(app);
-    
-              // Use the recommended APP redirect action (not REMOTE)
+
               redirect.dispatch(
                 actions.Redirect.Action.APP,
                 "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
               );
-    
-              // Once embedded app reloads inside Shopify, it can then show your dashboard
-              // or redirect internally to your domain via AppBridge
-            });
+            }
           </script>
         </body>
       </html>
     `);
+
+
+    // sa fac update
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
