@@ -975,19 +975,18 @@ app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  res.set({
-    "Content-Type": "text/html",
-    "Content-Security-Policy": "frame-ancestors 'none';"
-  });
-
+  res.set("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8"><title>Redirecting...</title></head>
+      <head>
+        <meta charset="utf-8">
+        <title>BotAssist AI Auth</title>
+      </head>
       <body>
         <script>
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
         </script>
       </body>
     </html>
@@ -995,21 +994,21 @@ app.get("/auth/toplevel", (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop, embedded } = req.query;
+  const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Bounce to top-level if cookie missing
   if (!req.cookies.shopify_toplevel) {
+    // No top-level cookie → bounce up
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
     await shopify.auth.begin({
-      rawRequest: req,
-      rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
     });
   } catch (err) {
     console.error("❌ Shopify install error:", err);
@@ -1120,11 +1119,11 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
 
-   res.status(200).set("Content-Type", "text/html").send(`
+    res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
         <head>
-          <meta charset="utf-8">
+          <meta charset="utf-8" />
           <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
@@ -1145,6 +1144,7 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
