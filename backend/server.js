@@ -1011,7 +1011,7 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
-    await Shopify.Auth.begin({
+    await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
@@ -1023,6 +1023,7 @@ app.get("/shopify/install", async (req, res) => {
     res.status(500).send("Failed to start OAuth");
   }
 });
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1145,7 +1146,7 @@ app.get('/shopify/callback', async (req, res) => {
                 const actions = window["app-bridge"].actions;
                 const redirect = actions.Redirect.create(app);
                 redirect.dispatch(actions.Redirect.Action.REMOTE, 
-                  "https://www.botassistai.com/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}"
+                  "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}"
                 );
               });
             </script>
