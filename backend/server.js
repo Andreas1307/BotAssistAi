@@ -979,7 +979,10 @@ app.get("/auth/toplevel", (req, res) => {
 
   res
     .status(200)
-    .set("Content-Type", "text/html")
+    .set({
+      "Content-Type": "text/html",
+      "Content-Security-Policy": "frame-ancestors 'none';",
+    })
     .send(`
       <!DOCTYPE html>
       <html>
@@ -989,9 +992,9 @@ app.get("/auth/toplevel", (req, res) => {
         </head>
         <body>
           <script>
-            // This runs in a *top-level* context (no iframe)
+            // this page is top-level only
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+            window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
           </script>
         </body>
       </html>
@@ -1000,28 +1003,24 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop, embedded } = req.query;
-
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // If running in an iframe OR missing cookie → bounce to top-level first
+  // If inside iframe or cookie missing → go top-level first
   if (embedded === "1" || !req.cookies["shopify_toplevel"]) {
-    return res
-      .status(200)
-      .set("Content-Type", "text/html")
-      .send(`
-        <!DOCTYPE html>
-        <html>
-          <body>
-            <script>
-              // Force a full top-level navigation out of the iframe
-              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-            </script>
-          </body>
-        </html>
-      `);
+    res.status(200).set("Content-Type", "text/html").send(`
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <script>
+            window.top.location.assign("/auth/toplevel?shop=${encodeURIComponent(shop)}");
+          </script>
+        </body>
+      </html>
+    `);
+    return; // <-- critical: stop execution
   }
 
-  // Otherwise begin OAuth
+  // Begin OAuth normally
   try {
     await shopify.auth.begin({
       shop,
