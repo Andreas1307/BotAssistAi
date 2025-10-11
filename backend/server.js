@@ -1024,7 +1024,6 @@ app.get("/shopify/install", async (req, res) => {
   }
 });
 
-
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
@@ -1127,32 +1126,41 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
     
-    res
-      .status(200)
-      .set("Content-Type", "text/html")
-      .send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-          </head>
-          <body>
-            <script>
-              document.addEventListener("DOMContentLoaded", function() {
-                const app = window["app-bridge"].createApp({
-                  apiKey: "${process.env.SHOPIFY_API_KEY}",
-                  host: "${host}"
-                });
-                const actions = window["app-bridge"].actions;
-                const redirect = actions.Redirect.create(app);
-                redirect.dispatch(actions.Redirect.Action.REMOTE, 
-                  "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}"
-                );
+    res.status(200).set("Content-Type", "text/html").send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Redirecting...</title>
+        </head>
+        <body>
+          <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              // App Bridge is already available inside Shopify Admin iframe
+              const AppBridge = window["app-bridge"] || window.shopify?.app;
+              if (!AppBridge) {
+                // Fallback for direct installs (outside admin)
+                window.top.location.href = "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}";
+                return;
+              }
+    
+              const actions = AppBridge.actions;
+              const app = AppBridge.createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: "${host}",
               });
-            </script>
-          </body>
-        </html>
-      `);
+              const redirect = actions.Redirect.create(app);
+    
+              redirect.dispatch(
+                actions.Redirect.Action.REMOTE,
+                "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}"
+              );
+            });
+          </script>
+        </body>
+      </html>
+    `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
