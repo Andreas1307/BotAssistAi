@@ -981,11 +981,17 @@ app.get("/auth/toplevel", (req, res) => {
     .status(200)
     .set("Content-Type", "text/html")
     .send(`
+      <!DOCTYPE html>
       <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+        </head>
         <body>
           <script>
+            // This runs in a *top-level* context (no iframe)
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
           </script>
         </body>
       </html>
@@ -993,23 +999,29 @@ app.get("/auth/toplevel", (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
+  const { shop, embedded } = req.query;
 
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Ensure we’re top-level first
-  if (!req.cookies["shopify_toplevel"] || req.query.embedded === "1") {
-    return res.status(200).send(`
-      <html>
-        <body>
-          <script>
-            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-          </script>
-        </body>
-      </html>
-    `);
+  // If running in an iframe OR missing cookie → bounce to top-level first
+  if (embedded === "1" || !req.cookies["shopify_toplevel"]) {
+    return res
+      .status(200)
+      .set("Content-Type", "text/html")
+      .send(`
+        <!DOCTYPE html>
+        <html>
+          <body>
+            <script>
+              // Force a full top-level navigation out of the iframe
+              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            </script>
+          </body>
+        </html>
+      `);
   }
 
+  // Otherwise begin OAuth
   try {
     await shopify.auth.begin({
       shop,
@@ -1020,7 +1032,7 @@ app.get("/shopify/install", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ OAuth Begin Failed:", err);
-    res.status(500).send("Failed to start OAuth");
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
 
