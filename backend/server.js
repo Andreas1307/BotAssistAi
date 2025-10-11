@@ -1118,39 +1118,33 @@ app.get('/shopify/callback', async (req, res) => {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
-    res.send(`
+
+
+   res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8"><title>Loading...</title></head>
-        <body>
+        <head>
+          <meta charset="utf-8">
+          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        </head>
+        <body>
           <script>
-            const host = "${host}";
-            const shop = "${session.shop}";
-            const appBridge = window["app-bridge"];
-            const isEmbedded = window.self !== window.top;
-
-            if (!isEmbedded) {
-              window.location.href = "https://www.botassistai.com/dashboard?shop=" + encodeURIComponent(shop);
-            } else {
-              const AppBridge = appBridge;
-              const actions = AppBridge.actions;
-              const app = AppBridge.createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host });
-              const redirect = actions.Redirect.create(app);
-
-              redirect.dispatch(
-                actions.Redirect.Action.APP,
-                "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
-              );
-            }
+            const AppBridge = window["app-bridge"];
+            const actions = AppBridge.actions;
+            const app = AppBridge.createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${host}"
+            });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+            );
           </script>
         </body>
       </html>
     `);
-
-
-    // sa fac update
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
