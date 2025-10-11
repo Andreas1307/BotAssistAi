@@ -986,13 +986,9 @@ app.get("/auth/toplevel", (req, res) => {
     .send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-        </head>
+        <head><meta charset="utf-8" /><title>Redirecting...</title></head>
         <body>
           <script>
-            // this page is top-level only
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
             window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
           </script>
@@ -1005,10 +1001,8 @@ app.get("/shopify/install", async (req, res) => {
   const { shop, embedded } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // If inside iframe or cookie missing → go top-level first
   if (embedded === "1" || !req.cookies["shopify_toplevel"]) {
-    res.status(200).set("Content-Type", "text/html").send(`
-      <!DOCTYPE html>
+    res.status(200).send(`
       <html>
         <body>
           <script>
@@ -1017,10 +1011,9 @@ app.get("/shopify/install", async (req, res) => {
         </body>
       </html>
     `);
-    return; // <-- critical: stop execution
+    return;
   }
 
-  // Begin OAuth normally
   try {
     await shopify.auth.begin({
       shop,
@@ -1031,7 +1024,7 @@ app.get("/shopify/install", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ OAuth Begin Failed:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+    res.status(500).send("OAuth start failed.");
   }
 });
 
@@ -1136,39 +1129,50 @@ app.get('/shopify/callback', async (req, res) => {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
+    res.status(200).set("Content-Type", "text/html").send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Loading BotAssist AI...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        </head>
+        <body>
+          <script>
+            const host = "${host}";
+            const shop = "${session.shop}";
+            const username = "${user.username}";
     
-    const isEmbedded = req.query.embedded === "1";
-
-if (isEmbedded) {
-  // Inside Shopify iframe
-  res.status(200).set("Content-Type", "text/html").send(`
-    <html>
-      <body>
-        <script src="https://unpkg.com/@shopify/app-bridge@2"></script>
-        <script>
-          const AppBridge = window["app-bridge"];
-          const actions = AppBridge.actions;
-          const app = AppBridge.createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${host}" });
-          const redirect = actions.Redirect.create(app);
-          redirect.dispatch(actions.Redirect.Action.APP, "/embedded-page");
-        </script>
-      </body>
-    </html>
-  `);
-} else {
-  // Redirect to external site (non-embedded)
-  res.status(200).set({
-    "Content-Type": "text/html",
-    "Content-Security-Policy": "frame-ancestors 'none';",
-  }).send(`
-    <html><body>
-      <script>
-        window.top.location.href = "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}";
-      </script>
-    </body></html>
-  `);
-}
-
+            // Wait for AppBridge to be ready
+            document.addEventListener("DOMContentLoaded", () => {
+              if (window.self === window.top) {
+                // Not embedded → direct redirect
+                window.location.href = "https://www.botassistai.com/" + username + "/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+                return;
+              }
+    
+              const AppBridge = window["app-bridge"];
+              const actions = AppBridge.actions;
+              const app = AppBridge.createApp({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host,
+              });
+              const redirect = actions.Redirect.create(app);
+    
+              // Use the recommended APP redirect action (not REMOTE)
+              redirect.dispatch(
+                actions.Redirect.Action.APP,
+                "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)
+              );
+    
+              // Once embedded app reloads inside Shopify, it can then show your dashboard
+              // or redirect internally to your domain via AppBridge
+            });
+          </script>
+        </body>
+      </html>
+    `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
