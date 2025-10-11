@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: 'api.botassistai.com' 
+   // domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -985,7 +985,6 @@ app.get("/auth/toplevel", (req, res) => {
   
 });
 
-// INSTALL ROUTE
 app.get("/shopify/install", async (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
