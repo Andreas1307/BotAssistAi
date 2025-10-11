@@ -977,38 +977,33 @@ app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res.set("Content-Type", "text/html").send(`
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <script>
-          // Must be top-level to set cookie
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          // Force top-level navigation
-          window.top.location.assign("/shopify/install?shop=${encodeURIComponent(shop)}");
-        </script>
-      </body>
-    </html>
-  `);
+  res
+    .status(200)
+    .set("Content-Type", "text/html")
+    .send(`
+      <html>
+        <body>
+          <script>
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          </script>
+        </body>
+      </html>
+    `);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
+
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Prevent duplicate OAuth flows
-  if (req.session.oauthInProgress) {
-    return res.status(200).send("OAuth already in progress");
-  }
-  req.session.oauthInProgress = true;
-
-  // Redirect to top-level if cookie missing
+  // Ensure we’re top-level first
   if (!req.cookies["shopify_toplevel"] || req.query.embedded === "1") {
     return res.status(200).send(`
       <html>
         <body>
           <script>
-            window.top.location.assign("/auth/toplevel?shop=${encodeURIComponent(shop)}");
+            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           </script>
         </body>
       </html>
@@ -1016,7 +1011,7 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
-    await shopify.auth.begin({
+    await Shopify.Auth.begin({
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
@@ -1024,8 +1019,8 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
   } catch (err) {
-    console.error("❌ Shopify install error:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+    console.error("❌ OAuth Begin Failed:", err);
+    res.status(500).send("Failed to start OAuth");
   }
 });
 
@@ -1036,7 +1031,6 @@ app.get('/shopify/callback', async (req, res) => {
       rawResponse: res,
       isOnline: true,
     });
-    delete req.session.oauthInProgress; 
 
     if (!session?.shop || !session?.accessToken) {
       return res.status(400).send('Session missing required data.');
@@ -1132,33 +1126,32 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
     
-    res.status(200).set("Content-Type", "text/html").send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
-        <body>
-          <script>
-            document.addEventListener("DOMContentLoaded", () => {
-              const AppBridge = window["app-bridge"];
-              const actions = AppBridge.actions;
-              const app = AppBridge.createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${req.query.host}",
+    res
+      .status(200)
+      .set("Content-Type", "text/html")
+      .send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+          </head>
+          <body>
+            <script>
+              document.addEventListener("DOMContentLoaded", function() {
+                const app = window["app-bridge"].createApp({
+                  apiKey: "${process.env.SHOPIFY_API_KEY}",
+                  host: "${host}"
+                });
+                const actions = window["app-bridge"].actions;
+                const redirect = actions.Redirect.create(app);
+                redirect.dispatch(actions.Redirect.Action.REMOTE, 
+                  "https://www.botassistai.com/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host)}"
+                );
               });
-              const redirect = actions.Redirect.create(app);
-
-              redirect.dispatch(
-                actions.Redirect.Action.REMOTE,
-                "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(req.query.host)}"
-              );
-            });
-          </script>
-        </body>
-      </html>
-    `);
+            </script>
+          </body>
+        </html>
+      `);
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
