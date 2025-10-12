@@ -997,13 +997,17 @@ app.get("/auth/toplevel", (req, res) => {
     return res.status(400).send("Invalid shop");
   }
 
-  res.status(200).set("Content-Type", "text/html").send(`
+  // Set cookie for top-level OAuth
+  res.setHeader("Set-Cookie", [
+    `shopify_toplevel=true; Path=/; SameSite=None; Secure; HttpOnly`
+  ]);
+
+  res.send(`
     <!DOCTYPE html>
     <html>
       <head><meta charset="utf-8"><title>Authorize</title></head>
       <body>
         <script>
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
           window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
         </script>
       </body>
