@@ -1030,6 +1030,7 @@ app.use((req, res, next) => {
   next();
 });
 
+
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
@@ -1133,50 +1134,39 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
 
-    res.status(200).set("Content-Type", "text/html").send(`
+    res
+    .status(200)
+    .set("Content-Type", "text/html")
+    .send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
         <body>
-          <script type="text/javascript">
-            const shop = "${shop}";
-            const host = "${host}";
-            const target = "/?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
-    
-            // If inside an iframe, tell Shopify Admin to load your app inside Admin UI
-            if (window.top === window.self) {
-              // Top-level redirect (first install)
-              window.location.href = target;
-            } else {
-              // Embedded redirect (installed app opened inside Shopify Admin)
-              window.parent.postMessage({
-                message: "Shopify.API.AppBridge.redirect",
-                data: { path: target }
-              }, "*");
-            }
+          <script>
+            const AppBridge = window["app-bridge"];
+            const actions = AppBridge.actions;
+            const app = AppBridge.createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${host}"
+            });
+            const redirect = actions.Redirect.create(app);
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+            );
           </script>
         </body>
       </html>
     `);
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
-
-
-
-
-
-
-
 
 
 
