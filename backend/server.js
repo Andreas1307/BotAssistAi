@@ -979,20 +979,13 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Authorize BotAssist AI</title>
-      </head>
+      <head><meta charset="utf-8" /><title>Authorize BotAssist AI</title></head>
       <body>
         <script>
+          // Set top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-
-          // Always break out of iframe once
-          if (window.top !== window.self) {
-            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-          } else {
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          }
+          // Continue straight to install
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
         </script>
       </body>
     </html>
@@ -1003,14 +996,14 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Bounce to toplevel first if cookie missing
   if (!req.cookies.shopify_toplevel) {
-    console.log("🔁 Redirecting to /auth/toplevel for cookie bounce");
+    console.log("🔁 Redirecting to /auth/toplevel to set cookie");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
     console.log(`🚀 Starting OAuth for ${shop}`);
-
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1018,7 +1011,6 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-
   } catch (err) {
     console.error("❌ Shopify install error:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
@@ -1029,7 +1021,6 @@ app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
   next();
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1133,31 +1124,26 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-
-    res
-    .status(200)
-    .set("Content-Type", "text/html")
-    .send(`
+    res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
+        <head><meta charset="utf-8" /><title>Redirecting...</title></head>
         <body>
           <script>
-            const AppBridge = window["app-bridge"];
-            const actions = AppBridge.actions;
-            const app = AppBridge.createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}"
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-            );
+            const shop = "${shop}";
+            const host = "${host}";
+            const target = "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+
+            // Top-level load → go directly
+            if (window.top === window.self) {
+              window.location.href = target;
+            } else {
+              // Inside Shopify admin iframe → use postMessage to redirect inside Admin
+              window.parent.postMessage({
+                message: "Shopify.API.AppBridge.redirect",
+                data: { path: target }
+              }, "*");
+            }
           </script>
         </body>
       </html>
