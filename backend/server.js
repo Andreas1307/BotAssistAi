@@ -984,16 +984,21 @@ app.get("/auth/toplevel", (req, res) => {
         <title>Authorize BotAssist AI</title>
       </head>
       <body>
+        <p>Authorizing your store...</p>
+        <button id="continue">Continue</button>
         <script>
-          const shop = "${shop}";
-          // If inside an iframe, break out to top-level
-          if (window.top !== window.self) {
-            window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
-          } else {
-            // At top-level: set cookie, then redirect to /shopify/install
-            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
-          }
+          // Set top-level cookie
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+          
+          // Option 1: Wait a short delay then redirect
+          setTimeout(() => {
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          }, 250);
+
+          // Option 2: Manual button fallback
+          document.getElementById("continue").onclick = () => {
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          };
         </script>
       </body>
     </html>
@@ -1155,7 +1160,7 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              "www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
@@ -1166,12 +1171,6 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
-
-
-
-
-
 
 
 
