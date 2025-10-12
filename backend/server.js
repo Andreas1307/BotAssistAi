@@ -63,7 +63,41 @@ app.set('trust proxy', 1);
 app.use(cookieParser());
 //process.env.SHOPIFY_API_SECRET
 
+app.use(['/ping-client', '/ask-ai'], cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false // ⚠️ NO cookies allowed here
+}));
 
+const allowedOrigins = [
+  'https://www.botassistai.com',
+  'https://botassistai.com',
+  'https://admin.shopify.com',
+  /\.myshopify\.com$/,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  "https://shop-ease2.netlify.app",
+  "http://127.0.0.1:5501"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow no-origin requests (e.g., curl or same-origin SSR)
+    
+    const isAllowed = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
+
+    if (isAllowed || true) {
+      callback(null, true);
+    } else {
+      console.warn(`❌ Blocked by CORS: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -1146,41 +1180,7 @@ app.post('/shopify/session-attach', (req, res) => {
   return res.status(200).json({ success: true });
 });
 
-app.use(['/ping-client', '/ask-ai'], cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false // ⚠️ NO cookies allowed here
-}));
 
-const allowedOrigins = [
-  'https://www.botassistai.com',
-  'https://botassistai.com',
-  'https://admin.shopify.com',
-  /\.myshopify\.com$/,
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  "https://shop-ease2.netlify.app",
-  "http://127.0.0.1:5501"
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow no-origin requests (e.g., curl or same-origin SSR)
-    
-    const isAllowed = allowedOrigins.some(o =>
-      o instanceof RegExp ? o.test(origin) : o === origin
-    );
-
-    if (isAllowed || true) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ Blocked by CORS: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
 
 
 app.post("/paypal/webhook", async (req, res) => {
