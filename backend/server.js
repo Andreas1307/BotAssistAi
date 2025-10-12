@@ -982,10 +982,11 @@ app.get("/auth/toplevel", (req, res) => {
       <head><meta charset="utf-8" /><title>Authorize BotAssist AI</title></head>
       <body>
         <script>
-          // Set top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          // Continue straight to install
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          // Wait a tick to ensure cookie is set, then redirect
+          setTimeout(() => {
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          }, 50);
         </script>
       </body>
     </html>
