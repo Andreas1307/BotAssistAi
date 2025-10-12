@@ -953,8 +953,8 @@ app.get("/auth/toplevel", (req, res) => {
           // ✅ top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
 
-         window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${shop}";
-
+          // ✅ redirect to *your own backend domain* (must match where auth.begin runs)
+          window.top.location.href = "https://${req.hostname}/shopify/install?shop=${shop}";
         </script>
       </body>
     </html>
