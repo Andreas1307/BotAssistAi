@@ -971,9 +971,12 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid or missing shop parameter");
+  }
 
   res.set("Content-Type", "text/html");
   res.send(`
@@ -984,21 +987,10 @@ app.get("/auth/toplevel", (req, res) => {
         <title>Authorize BotAssist AI</title>
       </head>
       <body>
-        <p>Authorizing your store...</p>
-        <button id="continue">Continue</button>
+        <p>Preparing authorization...</p>
         <script>
-          // Set top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          
-          // Option 1: Wait a short delay then redirect
-          setTimeout(() => {
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          }, 250);
-
-          // Option 2: Manual button fallback
-          document.getElementById("continue").onclick = () => {
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          };
+          window.top.location.href = "/shopify/install?shop=" + encodeURIComponent("${shop}");
         </script>
       </body>
     </html>
@@ -1007,14 +999,19 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
 
-  // Bounce to toplevel first if cookie missing
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    console.error("❌ Invalid shop param:", shop);
+    return res.status(400).send("Invalid shop parameter.");
+  }
+
+  // Step 1: Ensure top-level cookie exists
   if (!req.cookies.shopify_toplevel) {
     console.log("🔁 Redirecting to /auth/toplevel to set cookie");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
+  // Step 2: Begin OAuth
   try {
     console.log(`🚀 Starting OAuth for ${shop}`);
     await shopify.auth.begin({
@@ -1137,20 +1134,15 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-
-    res
-    .status(200)
-    .set("Content-Type", "text/html")
-    .send(`
+    res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
         <body>
-          <script>
+          <script type="text/javascript">
             const AppBridge = window["app-bridge"];
             const actions = AppBridge.actions;
             const app = AppBridge.createApp({
@@ -1160,7 +1152,7 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              "/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
