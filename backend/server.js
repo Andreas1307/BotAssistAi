@@ -973,21 +973,21 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
 
-  res.set("Content-Type", "text/html");
-  res.send(`
+  res.status(200).set("Content-Type", "text/html").send(`
     <!DOCTYPE html>
     <html>
       <head><meta charset="utf-8"><title>Authorize</title></head>
       <body>
         <script>
-          // top-level cookie MUST have Secure and SameSite=None
+          // ✅ must include SameSite=None; Secure for Shopify
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
 
-          // redirect to /shopify/install after setting cookie
-          window.top.location.href = "https://${req.hostname}/shopify/install?shop=${shop}";
-
+          // ✅ use absolute HTTPS URL (your actual app domain)
+          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${shop}";
         </script>
       </body>
     </html>
@@ -998,11 +998,12 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // If top-level cookie missing, go back to toplevel
   if (!req.cookies.shopify_toplevel) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  // ✅ explicitly set again (helps Chrome/Safari retain it)
+  // ✅ Ensure cookie is set again securely
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
@@ -1022,7 +1023,6 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
-
 
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
@@ -1149,10 +1149,11 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             
             // ✅ redirect inside Shopify iframe
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-            );
+           redirect.dispatch(
+  actions.Redirect.Action.REMOTE,
+  "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+);
+
           </script>
         </body>
       </html>
