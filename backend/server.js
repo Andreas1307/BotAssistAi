@@ -971,26 +971,22 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    return res.status(400).send("Invalid or missing shop parameter");
-  }
+  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
 
   res.set("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Authorize BotAssist AI</title>
-      </head>
+      <head><meta charset="utf-8"><title>Authorize</title></head>
       <body>
-        <p>Preparing authorization...</p>
         <script>
+          // top-level cookie MUST have Secure and SameSite=None
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          window.top.location.href = "/shopify/install?shop=" + encodeURIComponent("${shop}");
+
+          // redirect to /shopify/install after setting cookie
+          window.top.location.href = "/shopify/install?shop=${shop}";
         </script>
       </body>
     </html>
@@ -999,21 +995,14 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
 
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    console.error("❌ Invalid shop param:", shop);
-    return res.status(400).send("Invalid shop parameter.");
-  }
-
-  // Step 1: Ensure top-level cookie exists
+  // If top-level cookie missing, go back to toplevel
   if (!req.cookies.shopify_toplevel) {
-    console.log("🔁 Redirecting to /auth/toplevel to set cookie");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  // Step 2: Begin OAuth
   try {
-    console.log(`🚀 Starting OAuth for ${shop}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1027,11 +1016,12 @@ app.get("/shopify/install", async (req, res) => {
   }
 });
 
+/*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
   next();
 });
-
+*/
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
