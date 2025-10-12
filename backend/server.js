@@ -81,23 +81,12 @@ const allowedOrigins = [
   "http://127.0.0.1:5501"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow no-origin requests (e.g., curl or same-origin SSR)
-    
-    const isAllowed = allowedOrigins.some(o =>
-      o instanceof RegExp ? o.test(origin) : o === origin
-    );
 
-    if (isAllowed || true) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ Blocked by CORS: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+app.use(cors({
+  origin: allowedOrigins,
   credentials: true,
 }));
+
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -110,7 +99,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-   // domain: 'api.botassistai.com' 
+    domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -1132,40 +1121,37 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-
     res
     .status(200)
     .set("Content-Type", "text/html")
     .send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
+        <head><meta charset="utf-8" /></head>
         <body>
           <script>
-            const AppBridge = window["app-bridge"];
-            const actions = AppBridge.actions;
-            const app = AppBridge.createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}"
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              "www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-            );
+            const target = "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent("${shop}")}&host=${encodeURIComponent("${host}")}";
+            if (window.top === window.self) {
+              window.location.href = target;
+            } else {
+              window.parent.postMessage({ message: "Shopify.API.AppBridge.redirect", data: { path: target } }, "*");
+            }
           </script>
         </body>
       </html>
     `);
+  
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
+
+
+
+
+
 
 
 
