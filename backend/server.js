@@ -975,11 +975,9 @@ app.get("/auth/toplevel", (req, res) => {
       <body>
         <script>
           const shop = "${shop}";
-          // If inside an iframe, break out to top-level
           if (window.top !== window.self) {
             window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
           } else {
-            // At top-level: set cookie, then redirect to /shopify/install
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
             window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
           }
