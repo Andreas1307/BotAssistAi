@@ -60,8 +60,8 @@ const sessionStore = new MySQLStore({
 
 
 app.set('trust proxy', 1);
-app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
-
+app.use(cookieParser());
+//process.env.SHOPIFY_API_SECRET
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -982,15 +982,15 @@ app.get("/auth/toplevel", (req, res) => {
       <head>
         <meta charset="utf-8" />
         <title>Authorize BotAssist AI</title>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       </head>
       <body>
-        <script type="text/javascript">
-          // If we're inside the Shopify iframe, break out to top-level
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+
+          // Always break out of iframe once
           if (window.top !== window.self) {
             window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           } else {
-            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
           }
         </script>
@@ -1003,7 +1003,6 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Must be top-level to persist cookies
   if (!req.cookies.shopify_toplevel) {
     console.log("🔁 Redirecting to /auth/toplevel for cookie bounce");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
@@ -1011,6 +1010,7 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log(`🚀 Starting OAuth for ${shop}`);
+
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1018,6 +1018,7 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+
   } catch (err) {
     console.error("❌ Shopify install error:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
@@ -1028,7 +1029,6 @@ app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
   next();
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1133,16 +1133,13 @@ app.get('/shopify/callback', async (req, res) => {
     })();
 
 
-    res
-    .status(200)
-    .set("Content-Type", "text/html")
-    .send(`
+    res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
@@ -1155,17 +1152,31 @@ app.get('/shopify/callback', async (req, res) => {
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
               actions.Redirect.Action.APP,
-              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              "/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
       </html>
     `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
