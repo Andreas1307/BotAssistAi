@@ -1140,9 +1140,11 @@ app.get('/shopify/callback', async (req, res) => {
               host: "${host}"
             });
             const redirect = actions.Redirect.create(app);
+    
+            // Redirect to your external dashboard
             redirect.dispatch(
-              actions.Redirect.Action.APP,
-              "www.botassistai.com/${user?.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              actions.Redirect.Action.REMOTE,
+              "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
