@@ -977,16 +977,17 @@ app.get("/auth/toplevel", (req, res) => {
     return res.status(400).send("Invalid shop");
   }
 
+  // ✅ Top-level page must be HTTPS and same domain as your backend
   res.status(200).set("Content-Type", "text/html").send(`
     <!DOCTYPE html>
     <html>
       <head><meta charset="utf-8"><title>Authorize</title></head>
       <body>
         <script>
-          // ✅ must include SameSite=None; Secure for Shopify
+          // ✅ top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
 
-          // ✅ redirect to your *same domain* (not cross-domain!)
+          // ✅ redirect to *your own backend domain* (must match where auth.begin runs)
           window.top.location.href = "https://${req.hostname}/shopify/install?shop=${shop}";
         </script>
       </body>
@@ -998,12 +999,12 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // If top-level cookie missing, go back to toplevel
+  // redirect to toplevel if cookie missing
   if (!req.cookies.shopify_toplevel) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  // ✅ Set again explicitly
+  // ✅ ensure top-level cookie is set again
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
@@ -1134,11 +1135,9 @@ app.get('/shopify/callback', async (req, res) => {
     res.status(200).set("Content-Type", "text/html").send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8" />
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
+        <head><meta charset="utf-8" /></head>
         <body>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
             const AppBridge = window["app-bridge"];
             const actions = AppBridge.actions;
@@ -1147,8 +1146,8 @@ app.get('/shopify/callback', async (req, res) => {
               host: "${host}",
             });
             const redirect = actions.Redirect.create(app);
-    
-            // ✅ redirect inside Shopify admin iframe
+
+            // ✅ Always use APP redirect for embedded apps
             redirect.dispatch(
               actions.Redirect.Action.APP,
               "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
@@ -1157,7 +1156,7 @@ app.get('/shopify/callback', async (req, res) => {
         </body>
       </html>
     `);
-    
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
