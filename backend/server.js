@@ -980,13 +980,20 @@ app.get("/auth/toplevel", (req, res) => {
     <!DOCTYPE html>
     <html>
       <head>
-        <meta charset="utf-8">
-        <title>BotAssist AI Auth</title>
+        <meta charset="utf-8" />
+        <title>Redirecting...</title>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       </head>
       <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        <script type="text/javascript">
+          // Ensure we're at top-level
+          if (window.top === window.self) {
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          } else {
+            // If we're in an iframe, ask Shopify to break out to top level
+            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+          }
         </script>
       </body>
     </html>
@@ -997,12 +1004,13 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Bounce to toplevel if needed
   if (!req.cookies.shopify_toplevel) {
-    // No top-level cookie → bounce up
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
+    console.log(`🚀 Starting OAuth for ${shop}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1015,6 +1023,12 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
+
+app.use((req, res, next) => {
+  console.log("🔍 Cookies received:", req.cookies);
+  next();
+});
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
