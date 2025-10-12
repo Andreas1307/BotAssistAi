@@ -979,14 +979,26 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8" /><title>Authorize BotAssist AI</title></head>
+      <head>
+        <meta charset="utf-8" />
+        <title>Authorize BotAssist AI</title>
+      </head>
       <body>
+        <p>Authorizing your store...</p>
+        <button id="continue">Continue</button>
         <script>
+          // Set top-level cookie
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          // Wait a tick to ensure cookie is set, then redirect
+          
+          // Option 1: Wait a short delay then redirect
           setTimeout(() => {
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          }, 50);
+          }, 250);
+
+          // Option 2: Manual button fallback
+          document.getElementById("continue").onclick = () => {
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          };
         </script>
       </body>
     </html>
