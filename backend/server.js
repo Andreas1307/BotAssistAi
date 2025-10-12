@@ -1024,12 +1024,12 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
-
+/*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
   next();
 });
-
+*/
 app.get('/shopify/callback', async (req, res) => {
   try {
     const { session } = await shopify.auth.callback({
