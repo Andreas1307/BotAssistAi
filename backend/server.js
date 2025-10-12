@@ -986,8 +986,8 @@ app.get("/auth/toplevel", (req, res) => {
           // ✅ must include SameSite=None; Secure for Shopify
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
 
-          // ✅ use absolute HTTPS URL (your actual app domain)
-          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${shop}";
+          // ✅ redirect to your *same domain* (not cross-domain!)
+          window.top.location.href = "https://${req.hostname}/shopify/install?shop=${shop}";
         </script>
       </body>
     </html>
@@ -1003,7 +1003,7 @@ app.get("/shopify/install", async (req, res) => {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  // ✅ Ensure cookie is set again securely
+  // ✅ Set again explicitly
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
@@ -1147,13 +1147,12 @@ app.get('/shopify/callback', async (req, res) => {
               host: "${host}",
             });
             const redirect = actions.Redirect.create(app);
-            
-            // ✅ redirect inside Shopify iframe
-           redirect.dispatch(
-  actions.Redirect.Action.REMOTE,
-  "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-);
-
+    
+            // ✅ redirect inside Shopify admin iframe
+            redirect.dispatch(
+              actions.Redirect.Action.APP,
+              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+            );
           </script>
         </body>
       </html>
