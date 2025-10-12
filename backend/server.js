@@ -986,7 +986,8 @@ app.get("/auth/toplevel", (req, res) => {
           document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
 
           // redirect to /shopify/install after setting cookie
-          window.top.location.href = "/shopify/install?shop=${shop}";
+          window.top.location.href = "https://${req.hostname}/shopify/install?shop=${shop}";
+
         </script>
       </body>
     </html>
@@ -997,10 +998,16 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // If top-level cookie missing, go back to toplevel
   if (!req.cookies.shopify_toplevel) {
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
+
+  // ✅ explicitly set again (helps Chrome/Safari retain it)
+  res.cookie("shopify_toplevel", "true", {
+    httpOnly: false,
+    secure: true,
+    sameSite: "none",
+  });
 
   try {
     await shopify.auth.begin({
