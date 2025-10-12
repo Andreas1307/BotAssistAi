@@ -81,12 +81,23 @@ const allowedOrigins = [
   "http://127.0.0.1:5501"
 ];
 
-
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow no-origin requests (e.g., curl or same-origin SSR)
+    
+    const isAllowed = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
+
+    if (isAllowed || true) {
+      callback(null, true);
+    } else {
+      console.warn(`❌ Blocked by CORS: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
-
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -99,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: 'api.botassistai.com' 
+   // domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -962,17 +973,27 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
+  if (!shop) return res.status(400).send("Missing shop");
 
   res.set("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8"><title>Redirecting...</title></head>
+      <head>
+        <meta charset="utf-8" />
+        <title>Authorize BotAssist AI</title>
+      </head>
       <body>
-        <script type="text/javascript">
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          window.location.href = "/shopify/install?shop=" + encodeURIComponent("${shop}");
+        <script>
+          const shop = "${shop}";
+          // If inside an iframe, break out to top-level
+          if (window.top !== window.self) {
+            window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
+          } else {
+            // At top-level: set cookie, then redirect to /shopify/install
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
+          }
         </script>
       </body>
     </html>
@@ -981,15 +1002,13 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    console.error("❌ Invalid or missing shop param:", shop);
-    return res.status(400).send("Missing or invalid shop parameter.");
-  }
+  if (!shop) return res.status(400).send("Missing shop");
+
+  // Bounce to toplevel first if cookie missing
   if (!req.cookies.shopify_toplevel) {
     console.log("🔁 Redirecting to /auth/toplevel to set cookie");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
-  
 
   try {
     console.log(`🚀 Starting OAuth for ${shop}`);
@@ -1113,32 +1132,35 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
-    res.status(200).send(`
+
+    res
+    .status(200)
+    .set("Content-Type", "text/html")
+    .send(`
       <!DOCTYPE html>
       <html>
         <head>
-          <meta charset="utf-8">
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
         <body>
-          <script type="text/javascript">
+          <script>
             const AppBridge = window["app-bridge"];
             const actions = AppBridge.actions;
             const app = AppBridge.createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${host}"
             });
-    
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
-              actions.Redirect.Action.REMOTE,
-              "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              actions.Redirect.Action.APP,
+              "www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
       </html>
     `);
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
