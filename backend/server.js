@@ -1139,19 +1139,19 @@ app.get('/shopify/callback', async (req, res) => {
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
         <body>
-          <script type="text/javascript">
+          <script>
             const AppBridge = window["app-bridge"];
             const actions = AppBridge.actions;
             const app = AppBridge.createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}"
+              host: "${host}",
             });
             const redirect = actions.Redirect.create(app);
-    
-            // Redirect to your external dashboard
+            
+            // ✅ redirect inside Shopify iframe
             redirect.dispatch(
-              actions.Redirect.Action.REMOTE,
-              "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              actions.Redirect.Action.APP,
+              "/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
