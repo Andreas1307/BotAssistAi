@@ -1118,6 +1118,7 @@ app.get('/shopify/callback', async (req, res) => {
       <html>
         <head>
           <meta charset="utf-8">
+          <title>Redirecting...</title>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
         <body>
@@ -1131,8 +1132,8 @@ app.get('/shopify/callback', async (req, res) => {
     
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(
-              actions.Redirect.Action.REMOTE,
-              "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+              actions.Redirect.Action.APP,
+              "/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
             );
           </script>
         </body>
