@@ -961,8 +961,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
+  const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
+
+  // Ensure the shop is properly escaped for embedding in HTML
+  const safeShop = shop.replace(/"/g, "&quot;");
 
   res.set("Content-Type", "text/html");
   res.send(`
@@ -974,8 +977,9 @@ app.get("/auth/toplevel", (req, res) => {
       </head>
       <body>
         <script>
-          const shop = "${shop}";
+          const shop = "${safeShop}";
           if (window.top !== window.self) {
+            // ensure we’re always at the top level
             window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
           } else {
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
@@ -989,9 +993,12 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    console.error("❌ Invalid or missing shop param:", shop);
+    return res.status(400).send("Missing or invalid shop parameter.");
+  }
 
-  // Bounce to toplevel first if cookie missing
+  // Bounce to top-level auth if cookie missing
   if (!req.cookies.shopify_toplevel) {
     console.log("🔁 Redirecting to /auth/toplevel to set cookie");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
@@ -1119,6 +1126,9 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
 
+    const target = `https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+
     res
     .status(200)
     .set("Content-Type", "text/html")
@@ -1128,7 +1138,7 @@ app.get('/shopify/callback', async (req, res) => {
         <head><meta charset="utf-8" /></head>
         <body>
           <script>
-            const target = "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent("${shop}")}&host=${encodeURIComponent("${host}")}";
+            const target = "${target}";
             if (window.top === window.self) {
               window.location.href = target;
             } else {
