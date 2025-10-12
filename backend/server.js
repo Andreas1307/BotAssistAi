@@ -971,6 +971,26 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/api/ping", async (req, res) => {
+  try {
+    const sessionId = await shopify.auth.session.getCurrentId({
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    if (!sessionId) return res.status(401).json({ error: "Unauthorized" });
+
+    const session = await shopify.sessionStorage.loadSession(sessionId);
+    if (!session) return res.status(401).json({ error: "Session not found" });
+
+    res.status(200).json({ ok: true, shop: session.shop });
+  } catch (err) {
+    console.error("❌ Auth check failed:", err);
+    res.status(401).json({ error: "Unauthorized" });
+  }
+});
+
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop || !shop.endsWith(".myshopify.com")) {
@@ -992,26 +1012,31 @@ app.get("/auth/toplevel", (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
 
-  if (!req.cookies.shopify_toplevel) {
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+  // Redirect to top-level OAuth if cookie not present
+  if (!req.cookies["shopify_toplevel"]) {
+    return res.redirect(
+      `/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+    );
   }
 
   try {
     await shopify.auth.begin({
+      rawRequest: req,
+      rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
+      setTopLevelOAuthCookie: true, // ✅ Add this flag
     });
   } catch (err) {
     console.error("❌ Shopify install error:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
+
 /*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
@@ -1144,6 +1169,11 @@ app.get('/shopify/callback', async (req, res) => {
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
+
+
+
+
+
 
 
 

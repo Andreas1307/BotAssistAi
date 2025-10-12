@@ -56,10 +56,30 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  
   useEffect(() => {
-    initShopifyAppBridge();
+    (async () => {
+      const app = await initShopifyAppBridge();
+      if (!app) return;
+  
+      try {
+        const res = await fetchWithAuth("/api/ping");
+        if (!res.ok) {
+          console.warn("⚠️ No active session, redirecting to OAuth");
+          const params = new URLSearchParams(window.location.search);
+          const shopParam = params.get("shop");
+          const hostParam = params.get("host");
+          safeRedirect(`/auth/toplevel?shop=${shopParam}&host=${hostParam}`);
+          return;
+        }
+  
+        console.log("✅ Embedded app session confirmed");
+      } catch (err) {
+        console.error("❌ Error pinging backend:", err);
+      }
+    })();
   }, []);
+  
+
   
 
   useEffect(() => {
@@ -71,10 +91,6 @@ const Homepage = () => {
       console.warn("❌ Not running inside Shopify context.");
       setLoading(false);
       return;
-    }
-
-    if (shopParam && hostParam) {
-      window.location.href = `https://www.botassistai.com/${user?.username}/dashboard?shop=${shopParam}&host=${hostParam}`;
     }
   
     setShop(shopParam);
@@ -105,6 +121,11 @@ const Homepage = () => {
   
         console.log("✅ Shopify store ready");
         setInstalled(true);
+
+        if (user?.username) {
+          safeRedirect(`https://www.botassistai.com/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+        }
+  
       } catch (err) {
         console.error("❌ Shopify flow failed:", err);
         setInstalled(false);
