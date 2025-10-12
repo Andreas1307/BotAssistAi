@@ -28,7 +28,7 @@ const Homepage = () => {
     background: '#f2f2f2',
     chatbotBackground: '#092032',
     chatBoxBackground: '#112B3C',
-    chatInputBackground: '#ffffff',
+    chatInputBackground: '#ffffff',        
     chatInputTextColor: '#000000',
     chatBtn: '#00F5D4',
     websiteChatBtn: '#00F5D4',

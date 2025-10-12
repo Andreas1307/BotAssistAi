@@ -984,21 +984,16 @@ app.get("/auth/toplevel", (req, res) => {
         <title>Authorize BotAssist AI</title>
       </head>
       <body>
-        <p>Authorizing your store...</p>
-        <button id="continue">Continue</button>
         <script>
-          // Set top-level cookie
-          document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-          
-          // Option 1: Wait a short delay then redirect
-          setTimeout(() => {
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          }, 250);
-
-          // Option 2: Manual button fallback
-          document.getElementById("continue").onclick = () => {
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-          };
+          const shop = "${shop}";
+          // If inside an iframe, break out to top-level
+          if (window.top !== window.self) {
+            window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
+          } else {
+            // At top-level: set cookie, then redirect to /shopify/install
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
+          }
         </script>
       </body>
     </html>
@@ -1147,25 +1142,28 @@ app.get('/shopify/callback', async (req, res) => {
         <head>
           <meta charset="utf-8" />
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
         </head>
         <body>
-          <script>
-            const AppBridge = window["app-bridge"];
-            const actions = AppBridge.actions;
-            const app = AppBridge.createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}"
-            });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(
-              actions.Redirect.Action.APP,
-              "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-            );
+          <script type="text/javascript">
+            const shop = "${shop}";
+            const host = "${host}";
+            const target = "/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+            
+            if (window.top === window.self) {
+              // First-time install (top-level)
+              window.location.href = target;
+            } else {
+              // Embedded redirect after OAuth
+              window.parent.postMessage({
+                message: "Shopify.API.AppBridge.redirect",
+                data: { path: target }
+              }, "*");
+            }
           </script>
         </body>
       </html>
     `);
+  
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
