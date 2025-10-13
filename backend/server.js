@@ -1010,8 +1010,8 @@ app.get("/auth/toplevel", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
+    domain: ".botassistai.com", // ✅ include leading dot for subdomains
     path: "/",
-    domain: "botassistai.com",
     maxAge: 5 * 60 * 1000
   });
 
@@ -1163,7 +1163,7 @@ app.get('/shopify/callback', async (req, res) => {
           host: "${req.query.host}"
         });
         const redirect = actions.Redirect.create(app);
-        redirect.dispatch(actions.Redirect.Action.REMOTE, "https://www.botassistai.com/${encodeURIComponent(session.shop)}/dashboard");
+        redirect.dispatch(actions.Redirect.Action.APP, "/${encodeURIComponent(session.shop)}/dashboard");
       </script>
     `);
     
