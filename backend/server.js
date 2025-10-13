@@ -1002,20 +1002,17 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    return res.status(400).send("Invalid shop");
-  }
+  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
 
-  // ✅ Top-level cookie for Shopify OAuth
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
-    secure: true,       // MUST be HTTPS
+    httpOnly: false, // must be readable by browser
+    secure: true,    // must be HTTPS
     sameSite: "none",
     path: "/",
     maxAge: 5 * 60 * 1000,
   });
 
-  // ✅ Server-side redirect to /shopify/install
+  // ✅ Server-side redirect is mandatory
   return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
@@ -1023,9 +1020,8 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // ✅ Check top-level cookie
   if (!req.cookies["shopify_toplevel"]) {
-    console.log("🧭 No top-level cookie, redirecting to /auth/toplevel");
+    console.log("🧭 No top-level cookie, redirecting back to /auth/toplevel");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
