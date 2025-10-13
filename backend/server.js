@@ -1024,7 +1024,6 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  console.log("🔍 Cookies on install:", req.cookies);
 
   if (!shop) return res.status(400).send("Missing shop");
   if (!req.cookies["shopify_toplevel"]) {
