@@ -1010,7 +1010,7 @@ app.get("/auth/toplevel", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
-    domain: "api.botassistai.com", // ✅ include leading dot for subdomains
+    domain: "www.api.botassistai.com", // ✅ include leading dot for subdomains
     path: "/",
     maxAge: 5 * 60 * 1000
   });
@@ -1176,7 +1176,6 @@ redirect.dispatch(actions.Redirect.Action.REMOTE, dashboardUrl);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
   }
 });
-
 
 
 
