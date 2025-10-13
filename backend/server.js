@@ -1010,7 +1010,7 @@ app.get("/auth/toplevel", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
-    domain: "www.api.botassistai.com", // ✅ include leading dot for subdomains
+    domain: ".api.botassistai.com", // ✅ include leading dot for subdomains
     path: "/",
     maxAge: 5 * 60 * 1000
   });
