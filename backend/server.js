@@ -1010,33 +1010,34 @@ app.get("/auth/toplevel", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
-    domain: ".api.botassistai.com", // ✅ include leading dot for subdomains
+    domain: ".api.botassistai.com",
     path: "/",
     maxAge: 5 * 60 * 1000
   });
 
   res.send(`
     <script>
-     window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+      window.top.location.href = "https://www.api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
     </script>
   `);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-
   if (!shop) return res.status(400).send("Missing shop");
+
+  // if cookie missing → go top-level again
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    return res.redirect(`https://www.api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
     await shopify.auth.begin({
-      rawRequest: req,
-      rawResponse: res,
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
     });
   } catch (err) {
     console.error("❌ Shopify install error:", err);
