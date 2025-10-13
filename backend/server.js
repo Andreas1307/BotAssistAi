@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: '.api.botassistai.com' 
+    domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -1010,7 +1010,7 @@ app.get("/auth/toplevel", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
-    domain: ".api.botassistai.com", // ✅ include leading dot for subdomains
+    domain: "api.botassistai.com", // ✅ include leading dot for subdomains
     path: "/",
     maxAge: 5 * 60 * 1000
   });
