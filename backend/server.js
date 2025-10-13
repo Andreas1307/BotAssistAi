@@ -1010,14 +1010,14 @@ app.get("/auth/toplevel", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
-    domain: ".botassistai.com", // ✅ include leading dot for subdomains
+    domain: "api.botassistai.com", // ✅ include leading dot for subdomains
     path: "/",
     maxAge: 5 * 60 * 1000
   });
 
   res.send(`
     <script>
-      window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
+     window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
     </script>
   `);
 });
@@ -1164,9 +1164,10 @@ app.get('/shopify/callback', async (req, res) => {
         });
         const redirect = actions.Redirect.create(app);
     
-        const dashboardUrl = "/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(req.query.host)}";
-    
-        redirect.dispatch(actions.Redirect.Action.APP, dashboardUrl);
+        const dashboardUrl = 'https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(req.query.host)}';
+
+redirect.dispatch(actions.Redirect.Action.REMOTE, dashboardUrl);
+
       </script>
     `);
     
