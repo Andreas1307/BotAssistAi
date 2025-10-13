@@ -1002,18 +1002,32 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
 
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false, // must be readable by browser
-    secure: true,    // must be HTTPS
-    sameSite: "none",
-    path: "/",
-    maxAge: 5 * 60 * 1000,
-  });
-
-  // ✅ Server-side redirect is mandatory
-  return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+  // Send an HTML file that breaks out of iframe, THEN sets cookie + redirect
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <script type="text/javascript">
+          document.addEventListener('DOMContentLoaded', function() {
+            // Break out of the iframe to top-level window
+            if (window.top === window.self) {
+              // We’re already top-level
+              document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+              window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+            } else {
+              // Ask top window to redirect (Shopify requirement)
+              window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            }
+          });
+        </script>
+      </head>
+      <body>Redirecting to top level...</body>
+    </html>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
