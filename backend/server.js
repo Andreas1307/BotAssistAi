@@ -1002,26 +1002,30 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
+
   if (!shop || !shop.endsWith(".myshopify.com")) {
     return res.status(400).send("Invalid shop");
   }
 
-  // Send an HTML file that breaks out of iframe, THEN sets cookie + redirect
+  // ✅ Render HTML that breaks out of iframe & sets cookie at top level
   res.send(`
     <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="utf-8" />
         <script type="text/javascript">
           document.addEventListener('DOMContentLoaded', function() {
-            // Break out of the iframe to top-level window
-            if (window.top === window.self) {
-              // We’re already top-level
-              document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-              window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-            } else {
-              // Ask top window to redirect (Shopify requirement)
+            // If inside iframe, force top window redirect
+            if (window.top !== window.self) {
               window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+              return;
             }
+
+            // ✅ Set cookie in top-level context
+            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+
+            // ✅ Redirect to OAuth start route
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
           });
         </script>
       </head>
@@ -1032,14 +1036,19 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
 
-  if (!req.cookies["shopify_toplevel"]) {
-    console.log("🧭 No top-level cookie, redirecting back to /auth/toplevel");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
+
+  // ✅ Cookie check before starting OAuth
+  if (!req.headers.cookie?.includes("shopify_toplevel=true")) {
+    console.log("🧭 Missing top-level cookie, redirecting to /auth/toplevel");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
+    console.log(`🛠️ Beginning OAuth for shop ${shop}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1062,6 +1071,8 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
+    res.setHeader("Set-Cookie", "shopify_toplevel=true; path=/; Secure; SameSite=None");
+
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
