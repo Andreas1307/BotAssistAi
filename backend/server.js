@@ -1163,7 +1163,10 @@ app.get('/shopify/callback', async (req, res) => {
           host: "${req.query.host}"
         });
         const redirect = actions.Redirect.create(app);
-        redirect.dispatch(actions.Redirect.Action.APP, "/${encodeURIComponent(session.shop)}/dashboard");
+    
+        const dashboardUrl = "/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(req.query.host)}";
+    
+        redirect.dispatch(actions.Redirect.Action.APP, dashboardUrl);
       </script>
     `);
     
