@@ -1013,12 +1013,11 @@ app.get("/auth/toplevel", (req, res) => {
       <head><meta charset="utf-8" /></head>
       <body>
         <script>
+          // Always execute top-level to set cookie properly
           if (window.top === window.self) {
-            // ✅ Must NOT include domain so cookie is scoped to api.botassistai.com
             document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
           } else {
-            // ✅ Forces top-level execution (this is where cookie gets stored)
             window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           }
         </script>
@@ -1034,11 +1033,9 @@ app.get("/shopify/install", async (req, res) => {
     return res.status(400).send("Invalid shop");
   }
 
-  // 🧠 Shopify’s OAuth cookie is domain-sensitive, so check carefully:
+  // 🧠 Ensure cookie present
   const cookieHeader = req.headers.cookie || "";
   console.log("🔍 install cookies:", cookieHeader);
-
-  // If the top-level cookie isn’t there, go set it
   if (!cookieHeader.includes("shopify_toplevel=true")) {
     console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
@@ -1046,9 +1043,6 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log(`🛠️ Starting OAuth for ${shop}`);
-
-    // ✅ FIX: Do NOT set `setTopLevelOAuthCookie: true` manually
-    // Let Shopify handle cookie creation internally
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1057,7 +1051,7 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
   } catch (err) {
-    console.error("❌ shopify.auth.begin failed", err);
+    console.error("❌ shopify.auth.begin failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
