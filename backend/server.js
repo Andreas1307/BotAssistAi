@@ -63,6 +63,17 @@ app.set('trust proxy', 1);
 app.use(cookieParser());
 //process.env.SHOPIFY_API_SECRET
 
+app.use((req, res, next) => {
+  if (req.headers.host !== "api.botassistai.com") {
+    return res.redirect(`https://api.botassistai.com${req.originalUrl}`);
+  }
+  if (req.protocol !== "https") {
+    return res.redirect(`https://${req.headers.host}${req.originalUrl}`);
+  }
+  next();
+});
+
+
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -971,13 +982,7 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Fix cookies for Shopify OAuth
-app.use((req, res, next) => {
-  res.setHeader("P3P", 'CP="Not used"');
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  next();
-});
+
 
 
 app.get("/api/ping", async (req, res) => {
@@ -1048,6 +1053,7 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+    return
   } catch (err) {
     console.error("❌ shopify.auth.begin failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
@@ -1211,7 +1217,13 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
-
+// Fix cookies for Shopify OAuth
+app.use((req, res, next) => {
+  res.setHeader("P3P", 'CP="Not used"');
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  next();
+});
 
 
 
