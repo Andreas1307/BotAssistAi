@@ -1031,16 +1031,18 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
-    const installUrl = await shopify.auth.generateAuthUrl({
+    console.log(`🛠️ Starting OAuth for ${shop}`);
+    await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
     });
-
-    res.redirect(installUrl); // ✅ Redirect instead of inline begin()
+    // No need to redirect manually — begin() handles the redirect
   } catch (err) {
-    console.error("❌ shopify.auth.generateAuthUrl failed:", err);
-    res.status(500).send("Failed to start OAuth");
+    console.error("❌ shopify.auth.begin failed:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
 
