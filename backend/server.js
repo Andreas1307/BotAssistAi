@@ -64,16 +64,10 @@ app.use(cookieParser());
 //process.env.SHOPIFY_API_SECRET
 
 app.use((req, res, next) => {
-  const expectedHost = "api.botassistai.com";
-
+  // Only redirect to HTTPS, not force host
   if (req.protocol !== "https") {
-    return res.redirect(`https://${expectedHost}${req.originalUrl}`);
+    return res.redirect(`https://${req.headers.host}${req.originalUrl}`);
   }
-
-  if (req.headers.host !== expectedHost) {
-    return res.redirect(`https://${expectedHost}${req.originalUrl}`);
-  }
-
   next();
 });
 
@@ -1021,12 +1015,14 @@ app.get("/auth/toplevel", (req, res) => {
     <html>
       <head><meta charset="utf-8" /></head>
       <body>
-        <script type="text/javascript">
+        <script>
           if (window.top === window.self) {
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+            // 🔧 Set cookie properly for your main backend domain
+            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
+            window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
           } else {
-            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
+            // Force out of iframe to toplevel auth
+            window.top.location.href = "https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}";
           }
         </script>
       </body>
