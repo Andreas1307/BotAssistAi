@@ -1002,26 +1002,27 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
 
-  // Serve a tiny top-level page that sets the cookie in top-level context, then redirects to install
+  res.setHeader("Content-Type", "text/html");
   res.send(`
-    <!doctype html>
+    <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8"></head>
+      <head><meta charset="utf-8" /></head>
       <body>
         <script>
-          // If we're in an iframe, force the top window to reload this same URL so it runs top-level
-          if (window.top !== window.self) {
-            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
-          } else {
-            // Set cookie at top level (no domain attribute: cookie is tied to this origin)
+          if (window.top === window.self) {
+            // ✅ Must NOT include domain so cookie is scoped to api.botassistai.com
             document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            // Navigate to the install route (same origin)
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          } else {
+            // ✅ Forces top-level execution (this is where cookie gets stored)
+            window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           }
         </script>
-        <div>Redirecting…</div>
+        Redirecting...
       </body>
     </html>
   `);
@@ -1029,27 +1030,31 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
 
-  // Log cookies so you can debug easily in logs
-  console.log("🔍 /shopify/install cookies header:", req.headers.cookie);
+  // 🧠 Shopify’s OAuth cookie is domain-sensitive, so check carefully:
+  const cookieHeader = req.headers.cookie || "";
+  console.log("🔍 install cookies:", cookieHeader);
 
-  // If top-level cookie missing, go back to /auth/toplevel to set it
-  if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel=true")) {
+  // If the top-level cookie isn’t there, go set it
+  if (!cookieHeader.includes("shopify_toplevel=true")) {
     console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
     console.log(`🛠️ Starting OAuth for ${shop}`);
-    // Let SDK set the OAuth cookie as well, this helps some browser cases
+
+    // ✅ FIX: Do NOT set `setTopLevelOAuthCookie: true` manually
+    // Let Shopify handle cookie creation internally
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
-      setTopLevelOAuthCookie: true, // ensure SDK writes its cookie
     });
   } catch (err) {
     console.error("❌ shopify.auth.begin failed", err);
