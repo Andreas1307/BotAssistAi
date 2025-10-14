@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-   // domain: '.api.botassistai.com' 
+    domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -1012,8 +1012,7 @@ app.get("/auth/toplevel", (req, res) => {
     <html>
       <head><meta charset="utf-8" /></head>
       <body>
-        <script>
-          // Always execute top-level to set cookie properly
+        <script type="text/javascript">
           if (window.top === window.self) {
             document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
@@ -1021,7 +1020,6 @@ app.get("/auth/toplevel", (req, res) => {
             window.top.location.href = "/auth/toplevel?shop=${encodeURIComponent(shop)}";
           }
         </script>
-        Redirecting...
       </body>
     </html>
   `);
@@ -1056,12 +1054,12 @@ app.get("/shopify/install", async (req, res) => {
   }
 });
 
-/*
+
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
   next();
 });
-*/
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
