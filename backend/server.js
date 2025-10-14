@@ -994,26 +994,24 @@ app.get("/api/ping", async (req, res) => {
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop || !shop.endsWith(".myshopify.com")) {
-    return res.status(400).send("Invalid shop");
+    return res.status(400).send("Invalid shop parameter.");
   }
 
   res.setHeader("Content-Type", "text/html");
+
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8" /></head>
+      <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
       <body>
-        <script>
+        <script type="text/javascript">
           const shop = "${shop}";
-          // Check if we're inside an iframe
+          // If already top-level (not inside iframe)
           if (window.top === window.self) {
-            // ✅ Set cookie directly for api.botassistai.com
             document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-
-            // ✅ Redirect to backend install endpoint
             window.location.href = "https://api.botassistai.com/shopify/install?shop=" + encodeURIComponent(shop);
           } else {
-            // ✅ Force redirect out of iframe to top-level auth
+            // Break out of iframe to top-level
             window.top.location.href = "https://api.botassistai.com/auth/toplevel?shop=" + encodeURIComponent(shop);
           }
         </script>
@@ -1023,22 +1021,24 @@ app.get("/auth/toplevel", (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    return res.status(400).send("Invalid shop");
-  }
-
-  const cookieHeader = req.headers.cookie || "";
-  console.log("🔍 install cookies:", cookieHeader);
-
-  // ✅ Correct cookie check
-  if (!cookieHeader.includes("shopify_toplevel=true")) {
-    console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
-  }
-
   try {
+    const { shop } = req.query;
+
+    if (!shop || !shop.endsWith(".myshopify.com")) {
+      return res.status(400).send("Invalid shop parameter.");
+    }
+
+    const cookieHeader = req.headers.cookie || "";
+    console.log("🔍 install cookies:", cookieHeader);
+
+    // if the cookie is missing, go through toplevel again
+    if (!cookieHeader.includes("shopify_toplevel=true")) {
+      console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
+      return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    }
+
     console.log(`🛠️ Starting OAuth for ${shop}`);
+
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1046,12 +1046,12 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+
   } catch (err) {
     console.error("❌ shopify.auth.begin failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
-
 /*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
@@ -1163,46 +1163,36 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
     
-    const encodedHost = host || "";
+    // --- App Bridge redirect back into Admin ---
     const appBridgeRedirectScript = `
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
         (function(){
-          function safeTopRedirect(url) { try { window.top.location.href = url; } catch(e) { window.location.href = url; } }
+          function safeTopRedirect(url){ try { window.top.location.href = url } catch(e){ window.location.href = url } }
 
-          // If host param exists, try App Bridge redirect into Admin iframe
-          if ("${encodedHost}") {
+          const shop = "${shop}";
+          const host = "${host}";
+          const username = "${encodeURIComponent(user.username)}";
+
+          if (host) {
             try {
-              const AppBridge = window['app-bridge'];
-              if (!AppBridge) {
-                // initialize minimal App Bridge object if needed
-                var createApp = window["app-bridge"]?.default || window["app-bridge"];
-              }
-              const app = AppBridge.createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${encodedHost}" });
-              const actions = AppBridge.actions;
-              const Redirect = actions.Redirect;
-              const redirect = Redirect.create(app);
-              // Redirect into embedded app path
-              redirect.dispatch(Redirect.Action.APP, "/dashboard");
+              const AppBridge = window["app-bridge"];
+              const createApp = AppBridge.default || AppBridge;
+              const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host });
+              const Redirect = AppBridge.actions.Redirect.create(app);
+              Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/dashboard");
               return;
-            } catch (e) {
-              console.error("App Bridge redirect failed:", e);
+            } catch(e) {
+              console.error("AppBridge redirect failed", e);
             }
           }
 
-          // Fallback to top-level external dashboard
-          safeTopRedirect("https://www.botassistai.com/${encodeURIComponent(/* user username should be inserted server-side */"REPLACE_USERNAME")}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(encodedHost)}");
+          safeTopRedirect("https://www.botassistai.com/" + username + "/dashboard?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host));
         })();
       </script>
     `;
 
-    // IMPORTANT: replace REPLACE_USERNAME with server-side username variable before sending
-    // e.g. if you have user.username:
-    // const html = appBridgeRedirectScript.replace("REPLACE_USERNAME", encodeURIComponent(user.username))
-    // then send that html.
-
-    // send the final redirect script (server must replace username)
-    res.status(200).send(appBridgeRedirectScript.replace("REPLACE_USERNAME", encodeURIComponent(user?.username)));
+    res.status(200).send(appBridgeRedirectScript);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
