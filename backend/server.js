@@ -1002,17 +1002,16 @@ app.get("/auth/toplevel", (req, res) => {
     <html>
       <head><meta charset="utf-8"></head>
       <body>
-        <script>
-          const shop = "${shop}";
-          if (window.top === window.self) {
-            // ✅ MUST set Secure and SameSite=None
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
-          } else {
-            // Force top-level redirect
-            window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
-          }
-        </script>
+    <script>
+const shop = "${shop}";
+if (window.top === window.self) {
+  document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+  window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
+} else {
+  window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
+}
+</script>
+
       </body>
     </html>
   `);
@@ -1025,6 +1024,7 @@ app.get("/shopify/install", async (req, res) => {
   const cookies = req.headers.cookie || "";
   console.log("🔍 install cookies:", cookies);
 
+  // Redirect to /auth/toplevel if the cookie is missing
   if (!cookies.includes("shopify_toplevel=true")) {
     console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
@@ -1039,7 +1039,6 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    // No need to redirect manually — begin() handles the redirect
   } catch (err) {
     console.error("❌ shopify.auth.begin failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
