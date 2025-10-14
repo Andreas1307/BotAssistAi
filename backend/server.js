@@ -1060,12 +1060,12 @@ app.get("/shopify/install", async (req, res) => {
   }
 });
 
-
+/*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
   next();
 });
-
+*/
 
 app.get('/shopify/callback', async (req, res) => {
   try {
