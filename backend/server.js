@@ -64,12 +64,16 @@ app.use(cookieParser());
 //process.env.SHOPIFY_API_SECRET
 
 app.use((req, res, next) => {
-  if (req.headers.host !== "api.botassistai.com") {
-    return res.redirect(`https://api.botassistai.com${req.originalUrl}`);
-  }
+  const expectedHost = "api.botassistai.com";
+
   if (req.protocol !== "https") {
-    return res.redirect(`https://${req.headers.host}${req.originalUrl}`);
+    return res.redirect(`https://${expectedHost}${req.originalUrl}`);
   }
+
+  if (req.headers.host !== expectedHost) {
+    return res.redirect(`https://${expectedHost}${req.originalUrl}`);
+  }
+
   next();
 });
 
@@ -121,7 +125,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: 'api.botassistai.com' 
+    //domain: 'api.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
