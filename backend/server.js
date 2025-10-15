@@ -1173,7 +1173,7 @@ app.get('/shopify/callback', async (req, res) => {
             Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/dashboard");
           } catch(e){
             console.error("AppBridge redirect failed", e);
-            safeTopRedirect("https://www.botassistai.com/dashboard?shop="+encodeURIComponent(shop));
+            safeTopRedirect("https://www.botassistai.com/${user.username}/dashboard?shop="+encodeURIComponent(shop));
           }
         })();
       </script>
