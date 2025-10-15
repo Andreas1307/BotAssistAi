@@ -63,19 +63,18 @@ app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use((req, res, next) => {
-  const setHeader = res.setHeader;
-  res.setHeader = function (name, value) {
+  const originalSetHeader = res.setHeader.bind(res);
+  res.setHeader = (name, value) => {
     if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
-      value = value.map(cookie => {
-        cookie = cookie
-          .replace(/Domain=[^;]+/i, 'Domain=.botassistai.com') // ✅ apply your base domain
-          .replace(/;?\s*Secure/i, '') // remove duplicate Secure flags
-          .replace(/;?\s*SameSite=None/i, '') // remove duplicates
-          + '; Domain=.botassistai.com; Path=/; Secure; SameSite=None';
-        return cookie;
+      value = value.map(v => {
+        // Remove any old SameSite/Domain attributes first
+        v = v.replace(/;?\s*SameSite=[^;]+/gi, '')
+             .replace(/;?\s*Domain=[^;]+/gi, '');
+        // Force correct values
+        return `${v}; Domain=.botassistai.com; Path=/; Secure; SameSite=None`;
       });
     }
-    return setHeader.call(this, name, value);
+    return originalSetHeader(name, value);
   };
   next();
 });
@@ -1032,24 +1031,28 @@ app.get("/shopify/install", async (req, res) => {
 
   console.log("🔍 install cookies:", cookies);
 
-  // Redirect to toplevel if no cookie yet
   if (!cookies.includes("shopify_toplevel=true")) {
-    console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
-    return res.redirect(`https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    console.log("🧭 Redirecting to toplevel...");
+    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  try {
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ shopify.auth.begin failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start failed.");
-  }
+  // ✅ Explicitly set top-level cookie again to ensure SameSite=None survives
+  res.cookie("shopify_toplevel", "true", {
+    path: "/",
+    secure: true,
+    httpOnly: false,
+    sameSite: "none",
+    domain: ".botassistai.com"
+  });
+
+  // 💡 BEGIN the OAuth process — after headers are ready
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.use((req, res, next) => {
