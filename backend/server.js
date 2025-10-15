@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: 'api.botassistai.com' 
+    domain: '.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -1004,9 +1004,9 @@ app.get("/auth/toplevel", (req, res) => {
       <head><meta charset="utf-8"></head>
       <body>
         <script>
-          // Write top-level cookie in browser context
-          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-          window.location.href = "/shopify/install?shop=${shop}";
+          // Write cookie for parent domain
+          document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
+          window.location.href = "https://api.botassistai.com/shopify/install?shop=${shop}";
         </script>
       </body>
     </html>
