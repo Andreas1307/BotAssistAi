@@ -68,11 +68,10 @@ app.use((req, res, next) => {
   res.setHeader = function (name, value) {
     if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
       value = value.map(cookie => {
-        if (!/Domain=/i.test(cookie)) {
-          cookie += '; Domain=.botassistai.com';
-        } else {
-          cookie = cookie.replace(/Domain=[^;]+/i, 'Domain=.botassistai.com');
-        }
+        cookie = cookie.replace(/Domain=[^;]+/i, 'Domain=.botassistai.com');
+        if (!/Domain=/i.test(cookie)) cookie += '; Domain=.botassistai.com';
+        if (!/SameSite=/i.test(cookie)) cookie += '; SameSite=None';
+        if (!/Secure/i.test(cookie)) cookie += '; Secure';
         return cookie;
       });
     }
@@ -80,7 +79,6 @@ app.use((req, res, next) => {
   };
   next();
 });
-
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -1019,8 +1017,8 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <html>
       <script>
-        document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-        window.location.href = "https://api.botassistai.com/shopify/install?shop=${shop}";
+        document.cookie = "shopify_toplevel=true; Path=/; Domain=.botassistai.com; Secure; SameSite=None";
+        window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
       </script>
     </html>
   `);
@@ -1036,7 +1034,7 @@ app.get("/shopify/install", async (req, res) => {
 
   if (!cookies.includes("shopify_toplevel=true")) {
     console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
-    return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    return res.redirect(`https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
