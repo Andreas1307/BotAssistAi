@@ -993,24 +993,21 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop parameter.");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop parameter.");
+  }
 
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head><meta charset="utf-8"></head>
+      <head>
+        <meta charset="utf-8">
+      </head>
       <body>
-        <script>
-          const shop = "${shop}";
-          if (window.top === window.self) {
-            // ✅ MUST set Secure + SameSite=None in the browser
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            window.location.href = "/shopify/install?shop=" + encodeURIComponent(shop);
-          } else {
-            // Force top-level redirect
-            window.top.location.href = "/auth/toplevel?shop=" + encodeURIComponent(shop);
-          }
+        <script type="text/javascript">
+          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+          window.location.href = "/shopify/install?shop=${shop}";
         </script>
       </body>
     </html>
@@ -1019,12 +1016,13 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop parameter.");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop parameter.");
+  }
 
   const cookies = req.headers.cookie || "";
   console.log("🔍 install cookies:", cookies);
 
-  // If top-level cookie is missing, redirect to /auth/toplevel
   if (!cookies.includes("shopify_toplevel=true")) {
     console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
@@ -1032,7 +1030,6 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log(`🛠️ Starting OAuth for ${shop}`);
-    // Begin OAuth flow
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1040,10 +1037,9 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    // No manual redirect needed — begin() handles it
   } catch (err) {
     console.error("❌ shopify.auth.begin failed:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
+    if (!res.headersSent) res.status(500).send("OAuth start failed.");
   }
 });
 
@@ -1056,12 +1052,12 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-    res.cookie("shopify_toplevel", "true", { 
-      path: "/", 
-      httpOnly: false, 
-      secure: true, 
-      sameSite: "none" 
-    });
+    res.cookie("shopify_toplevel", "true", {
+      path: "/",
+      secure: true,
+      httpOnly: false,
+      sameSite: "none",
+    });    
 
     const { session } = await shopify.auth.callback({
       rawRequest: req,
@@ -1188,11 +1184,12 @@ app.get('/shopify/callback', async (req, res) => {
   }
 });
 
-// Fix cookies for Shopify OAuth
 app.use((req, res, next) => {
-  res.setHeader("P3P", 'CP="Not used"');
-  res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("P3P", 'CP="Not used"');
   next();
 });
 
