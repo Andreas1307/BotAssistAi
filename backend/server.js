@@ -1009,16 +1009,20 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com"))
-    return res.status(400).send("Invalid shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
 
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <html>
       <body>
         <script type="text/javascript">
-          document.cookie = "shopify_toplevel=true; Path=/; Domain=.botassistai.com; Secure; SameSite=None";
-          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
+          // ✅ Step 1: Set cookie in top-level context
+          document.cookie = "shopify_toplevel=true; Path=/; Secure; SameSite=None";
+
+          // ✅ Step 2: Small delay to ensure cookie persists
+          setTimeout(() => {
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
+          }, 250);
         </script>
       </body>
     </html>
@@ -1068,7 +1072,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 
 /*
 app.use((req, res, next) => {
