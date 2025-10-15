@@ -64,21 +64,23 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 
 app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
+  const setHeader = res.setHeader;
   res.setHeader = function (name, value) {
     if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
       value = value.map(cookie => {
-        cookie = cookie.replace(/Domain=[^;]+/i, 'Domain=.botassistai.com');
+        // Ensure cookie domain and flags
         if (!/Domain=/i.test(cookie)) cookie += '; Domain=.botassistai.com';
+        cookie = cookie.replace(/Domain=[^;]+/i, 'Domain=.botassistai.com');
         if (!/SameSite=/i.test(cookie)) cookie += '; SameSite=None';
         if (!/Secure/i.test(cookie)) cookie += '; Secure';
         return cookie;
       });
     }
-    return originalSetHeader.call(this, name, value);
+    return setHeader.call(this, name, value);
   };
   next();
 });
+
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -1026,6 +1028,7 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
+  console.log("🔍 Incoming cookies:", req.headers.cookie);
   if (!shop || !shop.endsWith(".myshopify.com"))
     return res.status(400).send("Invalid shop parameter.");
 
