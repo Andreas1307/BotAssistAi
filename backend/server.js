@@ -1019,7 +1019,7 @@ app.get("/auth/toplevel", (req, res) => {
       <body>
         <script type="text/javascript">
           document.cookie = "shopify_toplevel=true; Path=/; Domain=.botassistai.com; Secure; SameSite=None";
-          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
+        window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
         </script>
       </body>
     </html>
@@ -1028,26 +1028,20 @@ app.get("/auth/toplevel", (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
+
   const cookies = req.headers.cookie || "";
-  console.log("🔍 install cookies:", cookies);
-
   if (!cookies.includes("shopify_toplevel=true")) {
-    console.log("🧭 Missing top-level cookie — redirecting to /auth/toplevel");
-    return res.redirect(`https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}`);
+    // 👇 Send user to top-level auth first
+    const redirectUrl = `https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}`;
+    console.log("🧭 Missing top-level cookie — redirecting to", redirectUrl);
+    return res.redirect(redirectUrl);
   }
 
-  try {
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ shopify.auth.begin failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start failed.");
-  }
+  // 👇 This no longer starts OAuth directly
+  return res.redirect(`https://api.botassistai.com/auth/redirect?shop=${encodeURIComponent(shop)}`);
 });
 
 app.use((req, res, next) => {
