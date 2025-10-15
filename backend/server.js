@@ -62,22 +62,6 @@ const sessionStore = new MySQLStore({
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader.bind(res);
-  res.setHeader = (name, value) => {
-    if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
-      value = value.map(v => {
-        // Remove any old SameSite/Domain attributes first
-        v = v.replace(/;?\s*SameSite=[^;]+/gi, '')
-             .replace(/;?\s*Domain=[^;]+/gi, '');
-        // Force correct values
-        return `${v}; Domain=.botassistai.com; Path=/; Secure; SameSite=None`;
-      });
-    }
-    return originalSetHeader(name, value);
-  };
-  next();
-});
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -1016,10 +1000,10 @@ app.get("/auth/toplevel", (req, res) => {
     <html>
       <body>
         <script type="text/javascript">
-          // 1️⃣ Set cookie without domain (important!)
+          // Set top-level cookie without domain
           document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
 
-          // 2️⃣ Delay to ensure cookie is stored before redirect
+          // Small delay before redirect
           setTimeout(() => {
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
           }, 100);
@@ -1032,6 +1016,7 @@ app.get("/auth/toplevel", (req, res) => {
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   const cookies = req.headers.cookie || "";
+  console.log("🧁 Cookies received at /shopify/install:", req.headers.cookie);
 
   console.log("🔍 install cookies:", cookies);
 
