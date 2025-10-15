@@ -1001,11 +1001,10 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head>
-        <meta charset="utf-8">
-      </head>
+      <head><meta charset="utf-8"></head>
       <body>
-        <script type="text/javascript">
+        <script>
+          // Write top-level cookie in browser context
           document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
           window.location.href = "/shopify/install?shop=${shop}";
         </script>
