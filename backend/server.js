@@ -1016,13 +1016,13 @@ app.get("/auth/toplevel", (req, res) => {
     <html>
       <body>
         <script type="text/javascript">
-          // ✅ Step 1: Set cookie in top-level context
-          document.cookie = "shopify_toplevel=true; Path=/; Secure; SameSite=None";
+          // 1️⃣ Set cookie without domain (important!)
+          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
 
-          // ✅ Step 2: Small delay to ensure cookie persists
+          // 2️⃣ Delay to ensure cookie is stored before redirect
           setTimeout(() => {
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
-          }, 250);
+          }, 100);
         </script>
       </body>
     </html>
@@ -1045,8 +1045,7 @@ app.get("/shopify/install", async (req, res) => {
     path: "/",
     secure: true,
     httpOnly: false,
-    sameSite: "none",
-    domain: ".botassistai.com"
+    sameSite: "none"
   });
 
   // 💡 BEGIN the OAuth process — after headers are ready
