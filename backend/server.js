@@ -62,17 +62,16 @@ const sessionStore = new MySQLStore({
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
-
 app.use((req, res, next) => {
   const setHeader = res.setHeader;
   res.setHeader = function (name, value) {
     if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
       value = value.map(cookie => {
-        // Ensure cookie domain and flags
-        if (!/Domain=/i.test(cookie)) cookie += '; Domain=.botassistai.com';
-        cookie = cookie.replace(/Domain=[^;]+/i, 'Domain=.botassistai.com');
-        if (!/SameSite=/i.test(cookie)) cookie += '; SameSite=None';
-        if (!/Secure/i.test(cookie)) cookie += '; Secure';
+        cookie = cookie
+          .replace(/Domain=[^;]+/i, 'Domain=.botassistai.com') // ✅ apply your base domain
+          .replace(/;?\s*Secure/i, '') // remove duplicate Secure flags
+          .replace(/;?\s*SameSite=None/i, '') // remove duplicates
+          + '; Domain=.botassistai.com; Path=/; Secure; SameSite=None';
         return cookie;
       });
     }
@@ -80,7 +79,6 @@ app.use((req, res, next) => {
   };
   next();
 });
-
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -1018,20 +1016,18 @@ app.get("/auth/toplevel", (req, res) => {
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <html>
-      <script>
-        document.cookie = "shopify_toplevel=true; Path=/; Domain=.botassistai.com; Secure; SameSite=None";
-        window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
-      </script>
+      <body>
+        <script type="text/javascript">
+          document.cookie = "shopify_toplevel=true; Path=/; Domain=.botassistai.com; Secure; SameSite=None";
+          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body>
     </html>
   `);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
-  console.log("🔍 Incoming cookies:", req.headers.cookie);
-  if (!shop || !shop.endsWith(".myshopify.com"))
-    return res.status(400).send("Invalid shop parameter.");
-
   const cookies = req.headers.cookie || "";
   console.log("🔍 install cookies:", cookies);
 
