@@ -991,12 +991,41 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+  res.setHeader = function (name, value) {
+    if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
+      value = value.map((cookie) => {
+        // force Shopify cookies (shopify_app_state, etc.) to share across subdomains
+        if (/shopify_app_state/i.test(cookie)) {
+          cookie = cookie
+            .replace(/; Secure/gi, '') // prevent duplicates
+            .replace(/; SameSite=[^;]+/gi, '')
+            .replace(/; Domain=[^;]+/gi, '');
+          cookie += '; Domain=.botassistai.com; Secure; SameSite=None';
+        }
+        return cookie;
+      });
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+  next();
+});
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
   if (!shop || !shop.endsWith(".myshopify.com"))
     return res.status(400).send("Invalid shop");
 
+  res.cookie("shopify_toplevel", "true", {
+    path: "/",
+    domain: ".botassistai.com",
+    secure: true,
+    httpOnly: false,
+    sameSite: "none",
+  });
+
+  
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <html>
@@ -1027,7 +1056,7 @@ app.get("/shopify/install", async (req, res) => {
     httpOnly: false,
     sameSite: "none",
   });
-
+  
   await shopify.auth.begin({
     shop,
     callbackPath: "/shopify/callback",
