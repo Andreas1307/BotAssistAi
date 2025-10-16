@@ -992,60 +992,36 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    return res.status(400).send("Invalid shop");
-  }
-
-  // Set top-level cookie for cross-domain access
-  res.cookie("shopify_toplevel", "true", {
-    path: "/",
-    domain: ".botassistai.com",
-    secure: true,
-    httpOnly: false,
-    sameSite: "none",
-  });
-
-  // Force top-level redirect to /shopify/install
-  res.setHeader("Content-Type", "text/html");
-  res.send(`
-    <html>
-      <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
-          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
-        </script>
-      </body>
-    </html>
-  `);
-});
-
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   const cookies = req.headers.cookie || "";
   console.log("🧁 Cookies received at /shopify/install:", cookies);
 
-  // --- Force top-level context if inside iframe
-  res.setHeader("Content-Type", "text/html");
-  res.send(`
-    <html>
-      <body>
-        <script>
-          if (window.top !== window.self) {
-            // inside iframe → relaunch in top-level
-            window.top.location.href = "https://api.botassistai.com/auth/toplevel?shop=${encodeURIComponent(shop)}";
-          } else {
-            window.location.href = "/shopify/install/start?shop=${encodeURIComponent(shop)}";
-          }
-        </script>
-      </body>
-    </html>
-  `);
-});
+  // --- Validate shop
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
 
-app.get("/shopify/install/start", async (req, res) => {
-  const { shop } = req.query;
+  // --- If we're inside an iframe, bounce to top-level
+  if (!req.query.toplevel) {
+    console.log("🪟 Inside iframe → redirecting to top-level context");
+    res.setHeader("Content-Type", "text/html");
+    return res.send(`
+      <html>
+        <body>
+          <script type="text/javascript">
+            // Create top-level cookie
+            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+            // Relaunch this same route in top-level
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+          </script>
+        </body>
+      </html>
+    `);
+  }
+
+  // --- We're now in top-level context → begin OAuth
+  console.log("🚀 Beginning OAuth for", shop);
   await shopify.auth.begin({
     shop,
     callbackPath: "/shopify/callback",
