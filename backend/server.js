@@ -78,7 +78,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   "https://shop-ease2.netlify.app",
-  "http://127.0.0.1:5501"
+  "http://127.0.0.1:5501",
+  "https://uvszh1-m5.myshopify.com"
 ];
 
 app.use(cors({
@@ -991,32 +992,13 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
-  res.setHeader = function (name, value) {
-    if (name.toLowerCase() === 'set-cookie' && Array.isArray(value)) {
-      value = value.map((cookie) => {
-        // force Shopify cookies (shopify_app_state, etc.) to share across subdomains
-        if (/shopify_app_state/i.test(cookie)) {
-          cookie = cookie
-            .replace(/; Secure/gi, '') // prevent duplicates
-            .replace(/; SameSite=[^;]+/gi, '')
-            .replace(/; Domain=[^;]+/gi, '');
-          cookie += '; Domain=.botassistai.com; Secure; SameSite=None';
-        }
-        return cookie;
-      });
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-  next();
-});
-
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com"))
+  if (!shop || !shop.endsWith(".myshopify.com")) {
     return res.status(400).send("Invalid shop");
+  }
 
+  // Set top-level cookie for cross-domain access
   res.cookie("shopify_toplevel", "true", {
     path: "/",
     domain: ".botassistai.com",
@@ -1025,7 +1007,7 @@ app.get("/auth/toplevel", (req, res) => {
     sameSite: "none",
   });
 
-  
+  // Force top-level redirect to /shopify/install
   res.setHeader("Content-Type", "text/html");
   res.send(`
     <html>
@@ -1044,11 +1026,13 @@ app.get("/shopify/install", async (req, res) => {
   const cookies = req.headers.cookie || "";
   console.log("🧁 Cookies received at /shopify/install:", cookies);
 
+  // If not in top-level context, redirect to /auth/toplevel
   if (!cookies.includes("shopify_toplevel=true")) {
-    console.log("🧭 Redirecting to toplevel...");
+    console.log("🧭 Redirecting to /auth/toplevel...");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
+  // Set top-level cookie (again, for good measure)
   res.cookie("shopify_toplevel", "true", {
     path: "/",
     domain: ".botassistai.com",
@@ -1056,7 +1040,8 @@ app.get("/shopify/install", async (req, res) => {
     httpOnly: false,
     sameSite: "none",
   });
-  
+
+  // Begin OAuth
   await shopify.auth.begin({
     shop,
     callbackPath: "/shopify/callback",
@@ -1064,6 +1049,27 @@ app.get("/shopify/install", async (req, res) => {
     rawRequest: req,
     rawResponse: res,
   });
+});
+
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+  res.setHeader = function (name, value) {
+    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
+      value = value.map((cookie) => {
+        // Force .botassistai.com for shopify_app_state cookies
+        if (/shopify_app_state/i.test(cookie)) {
+          cookie = cookie
+            .replace(/; Secure/gi, "")
+            .replace(/; SameSite=[^;]+/gi, "")
+            .replace(/; Domain=[^;]+/gi, "");
+          cookie += "; Domain=.botassistai.com; Secure; SameSite=None";
+        }
+        return cookie;
+      });
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+  next();
 });
 
 app.use((req, res, next) => {
@@ -1196,15 +1202,11 @@ app.get('/shopify/callback', async (req, res) => {
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
         (function() {
-          function redirectToApp() {
-            const shop = "${shop}", host = "${host}";
-            const AppBridge = window["app-bridge"];
-            const createApp = AppBridge.default || AppBridge;
-            const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host });
-            const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/dashboard");
-          }
-          redirectToApp();
+          const AppBridge = window["app-bridge"];
+          const createApp = AppBridge.default || AppBridge;
+          const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${host}" });
+          const Redirect = AppBridge.actions.Redirect.create(app);
+          Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/dashboard");
         })();
       </script>
     `);
