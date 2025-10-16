@@ -20,10 +20,11 @@ export async function initShopifyAppBridge() {
     const host = params.get("host");
 
     if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `${directory}/auth/toplevel?shop=${encodeURIComponent(shop)}`;
+      window.top.location.href = `${directory}/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
       console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
+    
 
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
