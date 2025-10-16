@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: '.botassistai.com' 
+    domain: '.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -990,6 +990,7 @@ app.get("/api/ping", async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
   }
 });
+
 
 app.get("/auth/toplevel", (req, res) => {
   const { shop } = req.query;
