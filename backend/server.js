@@ -1001,9 +1001,7 @@ app.get("/auth/toplevel", (req, res) => {
       <body>
         <script>
           document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-          setTimeout(() => {
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
-          }, 100);
+          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
         </script>
       </body>
     </html>
@@ -1059,6 +1057,7 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
+    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie); 
     res.cookie("shopify_toplevel", "true", {
       path: "/",
       secure: true,
