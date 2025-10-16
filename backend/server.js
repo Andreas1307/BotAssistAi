@@ -110,7 +110,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: '.botassistai.com' 
+    //domain: '.botassistai.com' 
   }
 }));
 app.use(shopifySessionMiddleware);
@@ -999,11 +999,8 @@ app.get("/auth/toplevel", (req, res) => {
   res.send(`
     <html>
       <body>
-        <script type="text/javascript">
-          // Set top-level cookie without domain
+        <script>
           document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-
-          // Small delay before redirect
           setTimeout(() => {
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}";
           }, 100);
@@ -1016,16 +1013,13 @@ app.get("/auth/toplevel", (req, res) => {
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   const cookies = req.headers.cookie || "";
-  console.log("🧁 Cookies received at /shopify/install:", req.headers.cookie);
-
-  console.log("🔍 install cookies:", cookies);
+  console.log("🧁 Cookies received at /shopify/install:", cookies);
 
   if (!cookies.includes("shopify_toplevel=true")) {
     console.log("🧭 Redirecting to toplevel...");
     return res.redirect(`/auth/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
-  // ✅ Explicitly set top-level cookie again to ensure SameSite=None survives
   res.cookie("shopify_toplevel", "true", {
     path: "/",
     secure: true,
@@ -1033,7 +1027,6 @@ app.get("/shopify/install", async (req, res) => {
     sameSite: "none"
   });
 
-  // 💡 BEGIN the OAuth process — after headers are ready
   await shopify.auth.begin({
     shop,
     callbackPath: "/shopify/callback",
