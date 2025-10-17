@@ -62,42 +62,6 @@ const sessionStore = new MySQLStore({
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
-
-  res.setHeader = function (name, value) {
-    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
-      console.log("🍪 [DEBUG] Set-Cookie before rewrite:", value);
-
-      value = value.map((cookie) => {
-        // Handle both shopify_app_state and its .sig
-        if (/^shopify_app_state/i.test(cookie) || /^shopify_app_state\.sig/i.test(cookie)) {
-          console.log("🧠 [DEBUG] Rewriting cookie:", cookie);
-
-          // Remove any Domain / Path / SameSite / Secure / HttpOnly fragments to avoid duplication
-          cookie = cookie
-            .replace(/;\s*Domain=[^;]+/gi, "")
-            .replace(/;\s*Path=[^;]+/gi, "")
-            .replace(/;\s*SameSite=[^;]+/gi, "")
-            .replace(/;\s*Secure/gi, "")
-            .replace(/;\s*HttpOnly/gi, "")
-            .replace(/;\s*Expires=[^;]+/gi, "")
-            .trim();
-
-          // Ensure the cookie value is preserved and then append canonical attributes
-          // NOTE: use Path=/ so it will be sent for the callback and any subpath during redirects
-          cookie += `; Domain=.botassistai.com; Path=/; Secure; SameSite=None; HttpOnly`;
-
-          console.log("✅ [DEBUG] After rewrite:", cookie);
-        }
-        return cookie;
-      });
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-
-  next();
-});
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
