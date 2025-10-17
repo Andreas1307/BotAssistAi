@@ -62,7 +62,6 @@ const sessionStore = new MySQLStore({
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
-
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -1010,22 +1009,22 @@ app.get("/shopify/install", async (req, res) => {
   const cookies = req.headers.cookie || "";
   console.log("🧁 Cookies received at /shopify/install:", cookies);
 
-  // --- Validate shop
   if (!shop || !shop.endsWith(".myshopify.com")) {
     return res.status(400).send("Invalid shop");
   }
 
-  // --- If we're inside an iframe, bounce to top-level
-  if (!req.query.toplevel) {
-    console.log("🪟 Inside iframe → redirecting to top-level context");
+  // ✅ Always bounce to top-level context for every *new* shop
+  const topLevelCookieExists = cookies.includes("shopify_toplevel=true");
+  const isIframe = !req.query.toplevel;
+
+  if (isIframe || !topLevelCookieExists) {
+    console.log("🪟 Inside iframe or missing toplevel → redirecting to top-level context");
     res.setHeader("Content-Type", "text/html");
     return res.send(`
       <html>
         <body>
           <script type="text/javascript">
-            // Create top-level cookie
             document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            // Relaunch this same route in top-level
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
         </body>
@@ -1033,7 +1032,7 @@ app.get("/shopify/install", async (req, res) => {
     `);
   }
 
-  // --- We're now in top-level context → begin OAuth
+  // --- Begin OAuth flow at top level
   console.log("🚀 Beginning OAuth for", shop);
   await shopify.auth.begin({
     shop,
@@ -1042,9 +1041,8 @@ app.get("/shopify/install", async (req, res) => {
     rawRequest: req,
     rawResponse: res,
   });
-  
+
   console.log("📦 [DEBUG] /shopify/install → after auth.begin() headers:", res.getHeaders()["set-cookie"]);
-  
 });
 
 app.use((req, res, next) => {
