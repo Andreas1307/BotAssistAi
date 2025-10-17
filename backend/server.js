@@ -1061,8 +1061,8 @@ app.get("/shopify/install", async (req, res) => {
         <body>
           <script type="text/javascript">
             document.cookie = "shopify_toplevel=true; domain=.botassistai.com; path=/; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=...&toplevel=1";
-          </script>
+          window.top.location.href = 'https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1';
+</script>
         </body>
       </html>
     `);
