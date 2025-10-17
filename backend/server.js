@@ -339,24 +339,23 @@ app.get('/clear-cookies', (req, res) => {
   ];
 
   const domains = [
-    undefined,                // no domain (default)
-    'api.botassistai.com',    // subdomain
-    '.botassistai.com'        // root domain (covers all subdomains)
+    'api.botassistai.com',
+    '.botassistai.com',
+    undefined
   ];
 
-  const options = {
-    path: '/',
-    secure: true,
-    sameSite: 'none'
-  };
+  cookieNames.forEach(name => {
+    domains.forEach(domain => {
+      res.clearCookie(name, {
+        path: '/',
+        secure: true,
+        sameSite: 'none',
+        domain
+      });
+    });
+  });
 
-  for (const name of cookieNames) {
-    for (const domain of domains) {
-      res.clearCookie(name, { ...options, domain });
-    }
-  }
-
-  res.send('✅ All Shopify + session cookies cleared across domains');
+  res.status(200).send('✅ All session and OAuth cookies cleared');
 });
 
 
@@ -1060,9 +1059,11 @@ app.get("/shopify/install", async (req, res) => {
       <html>
         <body>
           <script type="text/javascript">
-            document.cookie = "shopify_toplevel=true; domain=.botassistai.com; path=/; Secure; SameSite=None";
-          window.top.location.href = 'https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1';
-</script>
+            // Create top-level cookie
+            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+            // Relaunch this same route in top-level
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+          </script>
         </body>
       </html>
     `);
@@ -1088,7 +1089,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 /*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
