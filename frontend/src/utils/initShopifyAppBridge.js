@@ -20,7 +20,7 @@ export async function initShopifyAppBridge() {
     const host = params.get("host");
 
     if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1`;
       console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
