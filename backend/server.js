@@ -972,26 +972,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/ping", async (req, res) => {
-  try {
-    const sessionId = await shopify.auth.session.getCurrentId({
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    if (!sessionId) return res.status(401).json({ error: "Unauthorized" });
-
-    const session = await shopify.sessionStorage.loadSession(sessionId);
-    if (!session) return res.status(401).json({ error: "Session not found" });
-
-    res.status(200).json({ ok: true, shop: session.shop });
-  } catch (err) {
-    console.error("❌ Auth check failed:", err);
-    res.status(401).json({ error: "Unauthorized" });
-  }
-});
-
 app.use((req, res, next) => {
   const originalSetHeader = res.setHeader;
   res.setHeader = function (name, value) {
@@ -1010,6 +990,26 @@ app.use((req, res, next) => {
     return originalSetHeader.call(this, name, value);
   };
   next();
+});
+
+app.get("/api/ping", async (req, res) => {
+  try {
+    const sessionId = await shopify.auth.session.getCurrentId({
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    if (!sessionId) return res.status(401).json({ error: "Unauthorized" });
+
+    const session = await shopify.sessionStorage.loadSession(sessionId);
+    if (!session) return res.status(401).json({ error: "Session not found" });
+
+    res.status(200).json({ ok: true, shop: session.shop });
+  } catch (err) {
+    console.error("❌ Auth check failed:", err);
+    res.status(401).json({ error: "Unauthorized" });
+  }
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1049,28 +1049,6 @@ app.get("/shopify/install", async (req, res) => {
     rawRequest: req,
     rawResponse: res,
   });
-});
-
-
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
-  res.setHeader = function (name, value) {
-    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
-      value = value.map((cookie) => {
-        // Force .botassistai.com for shopify_app_state cookies
-        if (/shopify_app_state/i.test(cookie)) {
-          cookie = cookie
-            .replace(/; Secure/gi, "")
-            .replace(/; SameSite=[^;]+/gi, "")
-            .replace(/; Domain=[^;]+/gi, "");
-          cookie += "; Domain=.botassistai.com; Secure; SameSite=None";
-        }
-        return cookie;
-      });
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-  next();
 });
 
 app.use((req, res, next) => {
@@ -1199,7 +1177,7 @@ app.get('/shopify/callback', async (req, res) => {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const userDashboardUrl = `https://www.api.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`;
+    const userDashboardUrl = `https://www.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`;
 
     res.status(200).send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
