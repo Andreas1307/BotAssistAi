@@ -1067,12 +1067,6 @@ app.use((req, res, next) => {
   next();
 });
 
-console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
-if (!req.headers.cookie?.includes("shopify_app_state")) {
-  console.warn("⚠️ Missing OAuth cookie — forcing to top-level restart");
-  return res.redirect(`/shopify/install?shop=${encodeURIComponent(req.query.shop)}`);
-}
-
 /*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
