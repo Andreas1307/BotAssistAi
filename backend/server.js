@@ -63,6 +63,33 @@ app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+
+  res.setHeader = function (name, value) {
+    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
+      console.log("🍪 [DEBUG] Set-Cookie before rewrite:", value);
+
+      value = value.map((cookie) => {
+        if (/shopify_app_state/i.test(cookie)) {
+          console.log("🧠 [DEBUG] Rewriting shopify_app_state cookie:", cookie);
+          cookie = cookie
+            .replace(/; Secure/gi, "")
+            .replace(/; SameSite=[^;]+/gi, "")
+            .replace(/; Domain=[^;]+/gi, "");
+
+          cookie += "; Domain=.botassistai.com; Secure; SameSite=None";
+          console.log("✅ [DEBUG] After rewrite:", cookie);
+        }
+        return cookie;
+      });
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+
+  next();
+})
+
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -972,26 +999,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
-  res.setHeader = function (name, value) {
-    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
-      value = value.map((cookie) => {
-        if (/shopify_app_state/i.test(cookie)) {
-          cookie = cookie
-            .replace(/; Secure/gi, "")
-            .replace(/; SameSite=[^;]+/gi, "")
-            .replace(/; Domain=[^;]+/gi, "");
-          cookie += "; Domain=.botassistai.com; Secure; SameSite=None";
-        }
-        return cookie;
-      });
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-  next();
-});
-
 app.get("/api/ping", async (req, res) => {
   try {
     const sessionId = await shopify.auth.session.getCurrentId({
@@ -1049,6 +1056,9 @@ app.get("/shopify/install", async (req, res) => {
     rawRequest: req,
     rawResponse: res,
   });
+  
+  console.log("📦 [DEBUG] /shopify/install → after auth.begin() headers:", res.getHeaders()["set-cookie"]);
+  
 });
 
 app.use((req, res, next) => {
@@ -1075,7 +1085,10 @@ app.get('/shopify/callback', async (req, res) => {
       sameSite: "none",
     });
     
-
+    console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
+    console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
+    console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
+    
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
