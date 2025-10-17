@@ -70,16 +70,24 @@ app.use((req, res, next) => {
       console.log("🍪 [DEBUG] Set-Cookie before rewrite:", value);
 
       value = value.map((cookie) => {
-        if (/shopify_app_state/i.test(cookie)) {
-          console.log("🧠 [DEBUG] Rewriting shopify_app_state cookie:", cookie);
-          // Remove conflicting attributes
-          cookie = cookie
-            .replace(/;\s?Secure/gi, "")
-            .replace(/;\s?SameSite=[^;]+/gi, "")
-            .replace(/;\s?Domain=[^;]+/gi, "");
+        // Handle both shopify_app_state and its .sig
+        if (/^shopify_app_state/i.test(cookie) || /^shopify_app_state\.sig/i.test(cookie)) {
+          console.log("🧠 [DEBUG] Rewriting cookie:", cookie);
 
-          // Append correct attributes
-          cookie += "; Domain=.botassistai.com; Path=/shopify/callback; Secure; SameSite=None; HttpOnly";
+          // Remove any Domain / Path / SameSite / Secure / HttpOnly fragments to avoid duplication
+          cookie = cookie
+            .replace(/;\s*Domain=[^;]+/gi, "")
+            .replace(/;\s*Path=[^;]+/gi, "")
+            .replace(/;\s*SameSite=[^;]+/gi, "")
+            .replace(/;\s*Secure/gi, "")
+            .replace(/;\s*HttpOnly/gi, "")
+            .replace(/;\s*Expires=[^;]+/gi, "")
+            .trim();
+
+          // Ensure the cookie value is preserved and then append canonical attributes
+          // NOTE: use Path=/ so it will be sent for the callback and any subpath during redirects
+          cookie += `; Domain=.botassistai.com; Path=/; Secure; SameSite=None; HttpOnly`;
+
           console.log("✅ [DEBUG] After rewrite:", cookie);
         }
         return cookie;
@@ -323,18 +331,32 @@ app.use((req, res, next) => {
  
 
 app.get('/clear-cookies', (req, res) => {
+  const cookieNames = [
+    'connect.sid',
+    'shopify_app_state',
+    'shopify_app_state.sig',
+    'shopify_toplevel'
+  ];
+
+  const domains = [
+    undefined,                // no domain (default)
+    'api.botassistai.com',    // subdomain
+    '.botassistai.com'        // root domain (covers all subdomains)
+  ];
+
   const options = {
     path: '/',
     secure: true,
-    sameSite: 'none',
+    sameSite: 'none'
   };
 
-  // Clear variants that may exist
-  res.clearCookie('connect.sid', { ...options, domain: 'api.botassistai.com' });
-  res.clearCookie('connect.sid', { ...options, domain: '.botassistai.com' });
-  res.clearCookie('connect.sid', { ...options }); // no domain
+  for (const name of cookieNames) {
+    for (const domain of domains) {
+      res.clearCookie(name, { ...options, domain });
+    }
+  }
 
-  res.send('✅ All session cookies cleared');
+  res.send('✅ All Shopify + session cookies cleared across domains');
 });
 
 
@@ -1038,10 +1060,8 @@ app.get("/shopify/install", async (req, res) => {
       <html>
         <body>
           <script type="text/javascript">
-            // Create top-level cookie
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            // Relaunch this same route in top-level
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+            document.cookie = "shopify_toplevel=true; domain=.botassistai.com; path=/; Secure; SameSite=None";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=...&toplevel=1";
           </script>
         </body>
       </html>
@@ -1068,6 +1088,7 @@ app.use((req, res, next) => {
   }
   next();
 });
+
 /*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
