@@ -62,6 +62,30 @@ const sessionStore = new MySQLStore({
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+  res.setHeader = function (name, value) {
+    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
+      value = value.map((cookie) => {
+        if (/^shopify_app_state/i.test(cookie) || /^shopify_app_state\.sig/i.test(cookie)) {
+          cookie = cookie
+            .replace(/;\s*SameSite=[^;]+/gi, "")
+            .replace(/;\s*Path=[^;]+/gi, "")
+            .replace(/;\s*Domain=[^;]+/gi, "")
+            .trim();
+
+          // ✅ Ensure these are cross-site compatible
+          cookie += "; Domain=.botassistai.com; Path=/; Secure; SameSite=None; HttpOnly";
+        }
+        return cookie;
+      });
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+  next();
+});
+
+
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
