@@ -1013,26 +1013,38 @@ app.get("/shopify/install", async (req, res) => {
     return res.status(400).send("Invalid shop");
   }
 
-  // ✅ Always bounce to top-level context for every *new* shop
   const topLevelCookieExists = cookies.includes("shopify_toplevel=true");
   const isIframe = !req.query.toplevel;
 
+  // 🧠 Step 1 — Bounce to top-level if not already
   if (isIframe || !topLevelCookieExists) {
     console.log("🪟 Inside iframe or missing toplevel → redirecting to top-level context");
+
     res.setHeader("Content-Type", "text/html");
     return res.send(`
       <html>
         <body>
-          <script type="text/javascript">
+          <script>
             document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
+              shop
+            )}&toplevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
-  // --- Begin OAuth flow at top level
+  // 🧠 Step 2 — Force cookies to be set for the whole domain
+  res.cookie("shopify_toplevel", "true", {
+    path: "/",
+    domain: ".botassistai.com",
+    secure: true,
+    httpOnly: false,
+    sameSite: "none",
+  });
+
+  // 🧠 Step 3 — Begin OAuth
   console.log("🚀 Beginning OAuth for", shop);
   await shopify.auth.begin({
     shop,
@@ -1042,7 +1054,10 @@ app.get("/shopify/install", async (req, res) => {
     rawResponse: res,
   });
 
-  console.log("📦 [DEBUG] /shopify/install → after auth.begin() headers:", res.getHeaders()["set-cookie"]);
+  console.log(
+    "📦 [DEBUG] /shopify/install → after auth.begin() headers:",
+    res.getHeaders()["set-cookie"]
+  );
 });
 
 app.use((req, res, next) => {
@@ -1051,6 +1066,13 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
+if (!req.headers.cookie?.includes("shopify_app_state")) {
+  console.warn("⚠️ Missing OAuth cookie — forcing to top-level restart");
+  return res.redirect(`/shopify/install?shop=${encodeURIComponent(req.query.shop)}`);
+}
+
 /*
 app.use((req, res, next) => {
   console.log("🔍 Cookies received:", req.cookies);
