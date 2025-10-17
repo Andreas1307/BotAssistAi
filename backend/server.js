@@ -992,6 +992,26 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+  res.setHeader = function (name, value) {
+    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
+      value = value.map((cookie) => {
+        if (/shopify_app_state/i.test(cookie)) {
+          cookie = cookie
+            .replace(/; Secure/gi, "")
+            .replace(/; SameSite=[^;]+/gi, "")
+            .replace(/; Domain=[^;]+/gi, "");
+          cookie += "; Domain=.botassistai.com; Secure; SameSite=None";
+        }
+        return cookie;
+      });
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+  next();
+});
+
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   const cookies = req.headers.cookie || "";
@@ -1178,7 +1198,7 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
-    
+
     const userDashboardUrl = `https://www.api.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`;
 
     res.status(200).send(`
