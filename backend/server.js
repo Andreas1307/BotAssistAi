@@ -1006,29 +1006,34 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop, toplevel } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).send("Invalid shop");
+  if (!shop || !shop.endsWith(".myshopify.com")) {
+    return res.status(400).send("Invalid shop");
+  }
 
+  // 1️⃣ Handle top-level redirect bounce (so cookies can be set)
   if (!toplevel) {
-    // Force top-level redirect
     return res.send(`
       <html>
         <body>
           <script>
-         document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; secure; samesite=None";
-window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
-</script>
+            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+          </script>
         </body>
       </html>
     `);
   }
 
+  // 2️⃣ Now we are at top-level, can safely set cookies
   res.cookie("shopify_toplevel", "true", {
     path: "/",
+    domain: ".botassistai.com",
     secure: true,
-    sameSite: "none"
+    sameSite: "none",
   });
 
   try {
+    // 3️⃣ Begin Shopify OAuth (this call sets the shopify_app_state cookie)
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
