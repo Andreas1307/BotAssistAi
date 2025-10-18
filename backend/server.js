@@ -83,6 +83,14 @@ app.use(['/ping-client', '/ask-ai'], cors({
   credentials: true // ⚠️ NO cookies allowed here
 }));
 
+app.use(['/shopify/install', '/shopify/callback'], cors({
+  origin: [
+    'https://www.botassistai.com',
+    /\.myshopify\.com$/,
+  ],
+  credentials: true,
+}));
+
 const allowedOrigins = [
   'https://www.botassistai.com',
   'https://botassistai.com',
@@ -1174,19 +1182,9 @@ app.get('/shopify/callback', async (req, res) => {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const userDashboardUrl = `https://www.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`;
-    res.status(200).send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        (function() {
-          const AppBridge = window["app-bridge"];
-          const createApp = AppBridge.default || AppBridge;
-          const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${host}" });
-          const Redirect = AppBridge.actions.Redirect.create(app);
-          Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "${userDashboardUrl}");
-        })();
-      </script>
-    `);
+    await req.session.save();
+res.redirect(`https://www.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`);
+
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
