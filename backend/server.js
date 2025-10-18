@@ -68,13 +68,11 @@ app.use((req, res, next) => {
   res.setHeader = function (name, value) {
     if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
       value = value.map((cookie) => {
-        // Only fix Shopify cookies
         if (
           /^shopify_app_state/i.test(cookie) ||
           /^shopify_app_state\.sig/i.test(cookie) ||
           /^shopify_toplevel/i.test(cookie)
         ) {
-          // Remove bad / duplicate attributes first
           cookie = cookie
             .replace(/;\s*SameSite=[^;]+/gi, "")
             .replace(/;\s*Path=[^;]+/gi, "")
@@ -82,20 +80,15 @@ app.use((req, res, next) => {
             .replace(/;\s*Secure=[^;]*/gi, "")
             .trim();
 
-          // ✅ Re-add clean, valid attributes
-          cookie +=
-            "; Domain=.botassistai.com; Path=/; Secure; SameSite=None";
+          cookie += "; Domain=.botassistai.com; Path=/; Secure; SameSite=None";
 
-          // HttpOnly only for non-browser cookies
           if (!/^shopify_toplevel/i.test(cookie)) {
             cookie += "; HttpOnly";
           }
         }
-
         return cookie;
       });
     }
-
     return originalSetHeader.call(this, name, value);
   };
 
@@ -1053,31 +1046,26 @@ app.get("/shopify/install", async (req, res) => {
     return res.status(400).send("Invalid shop");
   }
 
-  const topLevelCookieExists = cookies.includes("shopify_toplevel=true");
-  const isIframe = !req.query.toplevel;
-
-  // 🧠 Step 1 — Bounce to top-level if not already
-  if (isIframe || !topLevelCookieExists) {
-    console.log("🪟 Inside iframe or missing toplevel → redirecting to top-level context");
+  // 🧠 Step 1 — Check if we are inside an iframe (no toplevel)
+  if (!req.query.toplevel) {
+    console.log("🪟 Inside iframe → redirecting to top-level context");
 
     res.setHeader("Content-Type", "text/html");
     return res.send(`
       <html>
         <body>
           <script>
-            // ✅ Explicitly set domain to .botassistai.com so it's shared across subdomains
+            // ✅ Create a cookie in the top-level domain (not in iframe)
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-              shop
-            )}&toplevel=1";
+            // 🔁 Relaunch outside the iframe
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
         </body>
       </html>
     `);
-    
   }
 
-  // 🧠 Step 2 — Force cookies to be set for the whole domain
+  // 🧠 Step 2 — We are in top-level context → set cookie + start OAuth
   res.cookie("shopify_toplevel", "true", {
     path: "/",
     domain: ".botassistai.com",
@@ -1086,7 +1074,6 @@ app.get("/shopify/install", async (req, res) => {
     sameSite: "none",
   });
 
-  // 🧠 Step 3 — Begin OAuth
   console.log("🚀 Beginning OAuth for", shop);
   await shopify.auth.begin({
     shop,
@@ -1096,11 +1083,7 @@ app.get("/shopify/install", async (req, res) => {
     rawResponse: res,
   });
 
-  console.log(
-    "📦 [DEBUG] /shopify/install → after auth.begin() headers:",
-    res.getHeaders()["set-cookie"]
-  );
-  res.flushHeaders();
+  console.log("📦 [DEBUG] /shopify/install → after auth.begin() headers:", res.getHeaders()["set-cookie"]);
 });
 
 app.use((req, res, next) => {
