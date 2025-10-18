@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: '.botassistai.com' 
+    //domain: '.botassistai.com' 
   }
 }));
 
@@ -1016,22 +1016,20 @@ app.get("/shopify/install", async (req, res) => {
       <html>
         <body>
           <script>
-            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+ window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
-  // 2️⃣ Now we are at top-level, can safely set cookies
   res.cookie("shopify_toplevel", "true", {
     path: "/",
-    domain: ".botassistai.com",
     secure: true,
     sameSite: "none",
   });
-
+  
   try {
     // 3️⃣ Begin Shopify OAuth (this call sets the shopify_app_state cookie)
     await shopify.auth.begin({
@@ -1048,11 +1046,12 @@ app.get("/shopify/install", async (req, res) => {
 });
 
 app.use((req, res, next) => {
-  if (req.path.includes("/shopify/install") || req.path.includes("/shopify/callback")) {
-    console.log("🧁 Cookies seen by Express:", req.headers.cookie);
+  if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
+    console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
   }
   next();
 });
+
 
 app.get('/shopify/callback', async (req, res) => {
   try {
