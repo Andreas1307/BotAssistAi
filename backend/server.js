@@ -60,40 +60,20 @@ const sessionStore = new MySQLStore({
 
 
 app.set('trust proxy', 1);
-
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
-
-  res.setHeader = function (name, value) {
-    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
-      value = value.map((cookie) => {
-        if (
-          /^shopify_app_state/i.test(cookie) ||
-          /^shopify_app_state\.sig/i.test(cookie) ||
-          /^shopify_toplevel/i.test(cookie)
-        ) {
-          cookie = cookie
-            .replace(/;\s*SameSite=[^;]+/gi, "")
-            .replace(/;\s*Path=[^;]+/gi, "")
-            .replace(/;\s*Domain=[^;]+/gi, "")
-            .replace(/;\s*Secure[^\s;]*/gi, "")
-            .trim();
-
-          cookie += "; Domain=.botassistai.com; Path=/; Secure; SameSite=None";
-
-          if (!/^shopify_toplevel/i.test(cookie)) {
-            cookie += "; HttpOnly";
-          }
-        }
-        return cookie;
-      });
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-
-  next();
-});
-
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore, 
+  proxy: true,
+  cookie: {
+    httpOnly: true,
+    secure: true,      
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000,
+    domain: '.botassistai.com' 
+  }
+}));
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use(['/ping-client', '/ask-ai'], cors({
@@ -133,20 +113,6 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: sessionStore, 
-  proxy: true,
-  cookie: {
-    httpOnly: true,
-    secure: true,      
-    sameSite: 'none',
-    maxAge: 24 * 60 * 60 * 1000,
-    domain: '.botassistai.com' 
-  }
-}));
 app.use(shopifySessionMiddleware);
 
 
@@ -1039,26 +1005,18 @@ app.get("/api/ping", async (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  const cookies = req.headers.cookie || "";
-  console.log("🧁 Cookies received at /shopify/install:", cookies);
-
+  const { shop, toplevel } = req.query;
   if (!shop || !shop.endsWith(".myshopify.com")) {
     return res.status(400).send("Invalid shop");
   }
 
-  // 🧠 Step 1 — Check if we are inside an iframe (no toplevel)
-  if (!req.query.toplevel) {
-    console.log("🪟 Inside iframe → redirecting to top-level context");
-
-    res.setHeader("Content-Type", "text/html");
+  if (!toplevel) {
+    // Inside iframe → bounce out
     return res.send(`
       <html>
         <body>
           <script>
-            // ✅ Create a cookie in the top-level domain (not in iframe)
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-            // 🔁 Relaunch outside the iframe
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
         </body>
@@ -1066,25 +1024,26 @@ app.get("/shopify/install", async (req, res) => {
     `);
   }
 
-  // 🧠 Step 2 — We are in top-level context → set cookie + start OAuth
+  // Top-level → begin OAuth
   res.cookie("shopify_toplevel", "true", {
-    path: "/",
     domain: ".botassistai.com",
+    path: "/",
     secure: true,
-    httpOnly: false,
     sameSite: "none",
   });
 
-  console.log("🚀 Beginning OAuth for", shop);
-  await shopify.auth.begin({
-    shop,
-    callbackPath: "/shopify/callback",
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
-
-  console.log("📦 [DEBUG] /shopify/install → after auth.begin() headers:", res.getHeaders()["set-cookie"]);
+  try {
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+  } catch (e) {
+    console.error("❌ Error in install route:", e);
+    res.status(500).send("OAuth start failed.");
+  }
 });
 
 app.use((req, res, next) => {
@@ -1097,13 +1056,6 @@ app.use((req, res, next) => {
 app.get('/shopify/callback', async (req, res) => {
   try {
     console.log("🍪 CALLBACK COOKIES:", req.headers.cookie); 
-    res.cookie("shopify_toplevel", "true", {
-      path: "/",
-      domain: ".botassistai.com",
-      secure: true,
-      httpOnly: false,
-      sameSite: "none",
-    });
     
     console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
     console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
