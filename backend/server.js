@@ -1011,7 +1011,7 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   if (!toplevel) {
-    // Inside iframe → bounce out
+    // Bounce out of iframe → top-level
     return res.send(`
       <html>
         <body>
@@ -1031,6 +1031,7 @@ app.get("/shopify/install", async (req, res) => {
     secure: true,
     sameSite: "none",
   });
+  console.log("🧁 Cookies before redirect:", req.headers.cookie);
 
   try {
     await shopify.auth.begin({
@@ -1040,8 +1041,8 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-  } catch (e) {
-    console.error("❌ Error in install route:", e);
+  } catch (err) {
+    console.error("❌ Error in install route:", err);
     res.status(500).send("OAuth start failed.");
   }
 });
