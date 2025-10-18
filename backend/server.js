@@ -1049,7 +1049,8 @@ app.get("/shopify/install", async (req, res) => {
       <html>
         <body>
           <script>
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+            // ✅ Explicitly set domain to .botassistai.com so it's shared across subdomains
+            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
               shop
             )}&toplevel=1";
@@ -1057,6 +1058,7 @@ app.get("/shopify/install", async (req, res) => {
         </body>
       </html>
     `);
+    
   }
 
   // 🧠 Step 2 — Force cookies to be set for the whole domain
