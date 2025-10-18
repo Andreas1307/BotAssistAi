@@ -74,8 +74,22 @@ app.use((req, res, next) => {
             .replace(/;\s*Domain=[^;]+/gi, "")
             .trim();
 
-          // ✅ Ensure these are cross-site compatible
-          cookie += "; Domain=.botassistai.com; Path=/; Secure; SameSite=None; HttpOnly";
+            if (!/;\s*Secure\b/i.test(cookie)) {
+              cookie += "; Secure";
+            }
+            if (!/;\s*SameSite\b/i.test(cookie)) {
+              cookie += "; SameSite=None";
+            }
+            if (!/;\s*HttpOnly\b/i.test(cookie)) {
+              cookie += "; HttpOnly";
+            }
+            if (!/;\s*Domain\b/i.test(cookie)) {
+              cookie += "; Domain=.botassistai.com";
+            }
+            if (!/;\s*Path\b/i.test(cookie)) {
+              cookie += "; Path=/";
+            }
+            
         }
         return cookie;
       });
@@ -1084,6 +1098,7 @@ app.get("/shopify/install", async (req, res) => {
     "📦 [DEBUG] /shopify/install → after auth.begin() headers:",
     res.getHeaders()["set-cookie"]
   );
+  res.flushHeaders();
 });
 
 app.use((req, res, next) => {
