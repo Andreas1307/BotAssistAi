@@ -80,7 +80,7 @@ app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false // ⚠️ NO cookies allowed here
+  credentials: true // ⚠️ NO cookies allowed here
 }));
 
 const allowedOrigins = [
