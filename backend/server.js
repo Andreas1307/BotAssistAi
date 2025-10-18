@@ -97,18 +97,11 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow no-origin requests (e.g., curl or same-origin SSR)
-    
+    if (!origin) return callback(null, true); // allow no-origin requests (curl/SSR)
     const isAllowed = allowedOrigins.some(o =>
       o instanceof RegExp ? o.test(origin) : o === origin
     );
-
-    if (isAllowed || true) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ Blocked by CORS: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
+    callback(null, isAllowed);
   },
   credentials: true,
 }));
