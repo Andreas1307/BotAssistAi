@@ -64,41 +64,43 @@ app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use((req, res, next) => {
   const originalSetHeader = res.setHeader;
+
   res.setHeader = function (name, value) {
     if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
       value = value.map((cookie) => {
-        if (/^shopify_app_state/i.test(cookie) || /^shopify_app_state\.sig/i.test(cookie)) {
+        // Only fix Shopify cookies
+        if (
+          /^shopify_app_state/i.test(cookie) ||
+          /^shopify_app_state\.sig/i.test(cookie) ||
+          /^shopify_toplevel/i.test(cookie)
+        ) {
+          // Remove bad / duplicate attributes first
           cookie = cookie
             .replace(/;\s*SameSite=[^;]+/gi, "")
             .replace(/;\s*Path=[^;]+/gi, "")
             .replace(/;\s*Domain=[^;]+/gi, "")
+            .replace(/;\s*Secure=[^;]*/gi, "")
             .trim();
 
-            if (!/;\s*Secure\b/i.test(cookie)) {
-              cookie += "; Secure";
-            }
-            if (!/;\s*SameSite\b/i.test(cookie)) {
-              cookie += "; SameSite=None";
-            }
-            if (!/;\s*HttpOnly\b/i.test(cookie)) {
-              cookie += "; HttpOnly";
-            }
-            if (!/;\s*Domain\b/i.test(cookie)) {
-              cookie += "; Domain=.botassistai.com";
-            }
-            if (!/;\s*Path\b/i.test(cookie)) {
-              cookie += "; Path=/";
-            }
-            
+          // ✅ Re-add clean, valid attributes
+          cookie +=
+            "; Domain=.botassistai.com; Path=/; Secure; SameSite=None";
+
+          // HttpOnly only for non-browser cookies
+          if (!/^shopify_toplevel/i.test(cookie)) {
+            cookie += "; HttpOnly";
+          }
         }
+
         return cookie;
       });
     }
+
     return originalSetHeader.call(this, name, value);
   };
+
   next();
 });
-
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -1107,13 +1109,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-/*
-app.use((req, res, next) => {
-  console.log("🔍 Cookies received:", req.cookies);
-  next();
-});
-*/
 
 app.get('/shopify/callback', async (req, res) => {
   try {
