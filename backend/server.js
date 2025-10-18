@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: '.botassistai.com' 
+    domain: '.botassistai.com' 
   }
 }));
 
@@ -115,7 +115,12 @@ app.use(cors({
 
 app.use(shopifySessionMiddleware);
 
-
+app.use((req, res, next) => {
+  if (req.path.includes("/shopify/install") || req.path.includes("/shopify/callback")) {
+    console.log("🍪 [DEBUG] Incoming cookies:", req.headers.cookie);
+  }
+  next();
+});
 
 app.get("/auth", async (req, res) => {
   console.log("IN AUTH");
@@ -1010,28 +1015,31 @@ app.get("/shopify/install", async (req, res) => {
     return res.status(400).send("Invalid shop");
   }
 
-  // 1️⃣ Handle top-level redirect bounce (so cookies can be set)
+  // --- STEP 1: top-level cookie redirect ---
   if (!toplevel) {
     return res.send(`
       <html>
         <body>
           <script>
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
- window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+            // Set top-level cookie under your API domain
+            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
+  // --- STEP 2: now at top-level, safe to start OAuth ---
   res.cookie("shopify_toplevel", "true", {
     path: "/",
+    domain: ".botassistai.com",
     secure: true,
     sameSite: "none",
   });
-  
+
   try {
-    // 3️⃣ Begin Shopify OAuth (this call sets the shopify_app_state cookie)
+    console.log(`[shopify-api/INFO] Beginning OAuth | {shop: ${shop}, isOnline: true}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1051,7 +1059,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
@@ -1176,7 +1183,6 @@ app.get('/shopify/callback', async (req, res) => {
         })();
       </script>
     `);
-    
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
