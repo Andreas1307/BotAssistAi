@@ -113,14 +113,24 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(shopifySessionMiddleware);
-
 app.use((req, res, next) => {
-  if (req.path.includes("/shopify/install") || req.path.includes("/shopify/callback")) {
-    console.log("🍪 [DEBUG] Incoming cookies:", req.headers.cookie);
+  if (
+    req.path.includes('/shopify/install') ||
+    req.path.includes('/shopify/callback')
+  ) {
+    console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
   }
   next();
 });
+
+app.use(shopifySessionMiddleware);
+
+
+
+
+
+
+
 
 app.get("/auth", async (req, res) => {
   console.log("IN AUTH");
@@ -1009,47 +1019,49 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", async (req, res) => {
+app.get('/shopify/install', async (req, res) => {
   const { shop, toplevel } = req.query;
-  if (!shop || !shop.endsWith(".myshopify.com")) {
-    return res.status(400).send("Invalid shop");
+
+  if (!shop || !shop.endsWith('.myshopify.com')) {
+    return res.status(400).send('Invalid shop');
   }
 
-  // --- STEP 1: top-level cookie redirect ---
+  // --- STEP 1: Bounce to top-level if needed ---
   if (!toplevel) {
     return res.send(`
       <html>
         <body>
           <script>
-            // Set top-level cookie under your API domain
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
+              shop
+            )}&toplevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
-  // --- STEP 2: now at top-level, safe to start OAuth ---
-  res.cookie("shopify_toplevel", "true", {
-    path: "/",
-    domain: ".botassistai.com",
+  // --- STEP 2: Set cookie and begin OAuth ---
+  res.cookie('shopify_toplevel', 'true', {
+    path: '/',
+    domain: '.botassistai.com',
     secure: true,
-    sameSite: "none",
+    sameSite: 'none',
   });
 
   try {
     console.log(`[shopify-api/INFO] Beginning OAuth | {shop: ${shop}, isOnline: true}`);
     await shopify.auth.begin({
       shop,
-      callbackPath: "/shopify/callback",
+      callbackPath: '/shopify/callback',
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
   } catch (err) {
-    console.error("❌ Error in install route:", err);
-    res.status(500).send("OAuth start failed.");
+    console.error('❌ Error in install route:', err);
+    res.status(500).send('OAuth start failed.');
   }
 });
 
@@ -1170,7 +1182,6 @@ app.get('/shopify/callback', async (req, res) => {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     const userDashboardUrl = `https://www.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`;
-
     res.status(200).send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
