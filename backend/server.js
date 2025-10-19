@@ -75,7 +75,7 @@ app.use(session({
     domain: '.botassistai.com' 
   }
 }));
-
+/*
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -90,7 +90,7 @@ app.use(['/shopify/install', '/shopify/callback'], cors({
   ],
   credentials: true,
 }));
-
+*/
 const allowedOrigins = [
   'https://www.botassistai.com',
   'https://botassistai.com',
@@ -1027,22 +1027,22 @@ app.get('/shopify/install', async (req, res) => {
     return res.status(400).send('Invalid shop');
   }
 
-  // --- STEP 1: Bounce to top-level if needed ---
+  // 👇 Force top-level load if inside an iframe
   if (!toplevel) {
     return res.send(`
       <html>
         <body>
           <script>
+            // Must set a cookie in a first-party context
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-              shop
-            )}&toplevel=1";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
+  // 👇 Ensure browser already trusts this domain with a first-party cookie
   res.cookie('shopify_app_state', Math.random().toString(36).substring(2), {
     path: '/',
     domain: '.botassistai.com',
@@ -1050,21 +1050,15 @@ app.get('/shopify/install', async (req, res) => {
     httpOnly: false,
     sameSite: 'none',
   });
-  
 
-  try {
-    console.log(`[shopify-api/INFO] Beginning OAuth | {shop: ${shop}, isOnline: true}`);
-    await shopify.auth.begin({
-      shop,
-      callbackPath: '/shopify/callback',
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error('❌ Error in install route:', err);
-    res.status(500).send('OAuth start failed.');
-  }
+  console.log(`[shopify-api/INFO] Beginning OAuth | {shop: ${shop}, isOnline: true}`);
+  await shopify.auth.begin({
+    shop,
+    callbackPath: '/shopify/callback',
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.use((req, res, next) => {
@@ -1081,7 +1075,8 @@ app.get('/shopify/callback', async (req, res) => {
     console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
     console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
     console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
-    
+    console.log('🍪 CALLBACK COOKIES:', req.headers.cookie || '(none)');
+
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
