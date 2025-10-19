@@ -1023,12 +1023,13 @@ app.get("/api/ping", async (req, res) => {
 app.get('/shopify/toplevel', (req, res) => {
   const { shop, host } = req.query;
 
+  // Set top-level cookie for OAuth
   res.send(`
     <html>
       <body>
         <script>
           document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
         </script>
       </body>
     </html>
@@ -1036,13 +1037,13 @@ app.get('/shopify/toplevel', (req, res) => {
 });
 
 app.get('/shopify/install', async (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  // --- ensure top-level cookie exists
+  // If top-level cookie missing, redirect to /toplevel
   if (!req.cookies.shopify_toplevel) {
     console.log('🍪 No top-level cookie found, redirecting to /toplevel');
-    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}`);
+    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`);
   }
 
   try {
@@ -1051,7 +1052,7 @@ app.get('/shopify/install', async (req, res) => {
       rawResponse: res,
       shop,
       callbackPath: '/shopify/callback',
-      isOnline: true,
+      isOnline: true, // use true for online sessions
     });
   } catch (err) {
     console.error('❌ Shopify install error:', err);
@@ -1174,21 +1175,20 @@ app.get('/shopify/callback', async (req, res) => {
       }
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
-
-    res.status(200).send(`
+    res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
         const AppBridge = window["app-bridge"];
         const createApp = AppBridge.default || AppBridge;
         const app = createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}"
+          host: "${host}",
+          forceRedirect: true
         });
         const Redirect = AppBridge.actions.Redirect.create(app);
         Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
       </script>
     `);
-    
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     if (!res.headersSent) res.status(500).send('OAuth callback failed.');
