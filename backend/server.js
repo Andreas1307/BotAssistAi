@@ -1039,8 +1039,9 @@ app.get('/shopify/install', async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  // if top-level cookie not set, redirect to top-level
+  // --- ensure top-level cookie exists
   if (!req.cookies.shopify_toplevel) {
+    console.log('🍪 No top-level cookie found, redirecting to /toplevel');
     return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}`);
   }
 
