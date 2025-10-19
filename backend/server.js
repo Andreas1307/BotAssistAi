@@ -1020,49 +1020,42 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get('/shopify/install', async (req, res) => {
-  const { shop, host, toplevel } = req.query;
-
-  if (!shop || !shop.endsWith('.myshopify.com')) {
-    return res.status(400).send('Invalid shop');
-  }
-
-  // 1️⃣ Step 1: inside iframe? -> redirect top-level
-  if (!toplevel) {
-    return res.send(`
-      <html>
-        <body>
-          <script>
-            window.top.location.href =
-              "https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-          </script>
-        </body>
-      </html>
-    `);
-  }
-
-  // 2️⃣ Step 2: already at top-level
-  return shopify.auth.begin({
-    shop,
-    callbackPath: '/shopify/callback',
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
-});
-
 app.get('/shopify/toplevel', (req, res) => {
   const { shop, host } = req.query;
+
   res.send(`
     <html>
       <body>
         <script>
           document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
-          window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&toplevel=1";
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
         </script>
       </body>
     </html>
   `);
+});
+
+app.get('/shopify/install', async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send('Missing shop');
+
+  // if top-level cookie not set, redirect to top-level
+  if (!req.cookies.shopify_toplevel) {
+    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}`);
+  }
+
+  try {
+    await shopify.auth.begin({
+      rawRequest: req,
+      rawResponse: res,
+      shop,
+      callbackPath: '/shopify/callback',
+      isOnline: true,
+    });
+  } catch (err) {
+    console.error('❌ Shopify install error:', err);
+    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
+  }
 });
 
 app.use((req, res, next) => {
