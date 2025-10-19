@@ -1020,39 +1020,33 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get('/shopify/toplevel', (req, res) => {
-  const { shop, host } = req.query;
-
-  // Set top-level cookie for OAuth
-  res.send(`
-    <html>
-      <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-        </script>
-      </body>
-    </html>
-  `);
-});
-
 app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  // If top-level cookie missing, redirect to /toplevel
+  // --- If top-level cookie missing, set it first
   if (!req.cookies.shopify_toplevel) {
-    console.log('🍪 No top-level cookie found, redirecting to /toplevel');
-    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`);
+    console.log('🍪 No top-level cookie found, setting it inline before OAuth');
+    return res.send(`
+      <html>
+        <body>
+          <script>
+            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+          </script>
+        </body>
+      </html>
+    `);
   }
 
   try {
+    // --- Begin OAuth
     await shopify.auth.begin({
       rawRequest: req,
       rawResponse: res,
       shop,
       callbackPath: '/shopify/callback',
-      isOnline: true, // use true for online sessions
+      isOnline: true,
     });
   } catch (err) {
     console.error('❌ Shopify install error:', err);
