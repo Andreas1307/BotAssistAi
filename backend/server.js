@@ -1021,7 +1021,7 @@ app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  const isHttps = req.protocol === 'https';
+  const isHttps = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https';
   const secureFlag = isHttps ? 'Secure;' : '';
 
   if (!req.cookies.shopify_toplevel) {
@@ -1031,7 +1031,7 @@ app.get('/shopify/install', async (req, res) => {
         <body>
           <script>
             document.cookie = "shopify_toplevel=true; path=/; ${secureFlag} SameSite=None";
-            window.top.location.href = "${req.originalUrl}";
+            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
           </script>
         </body>
       </html>
