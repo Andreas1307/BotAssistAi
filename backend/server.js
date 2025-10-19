@@ -1043,13 +1043,14 @@ app.get('/shopify/install', async (req, res) => {
     `);
   }
 
-  // --- STEP 2: Set cookie and begin OAuth ---
-  res.cookie('shopify_toplevel', 'true', {
+  res.cookie('shopify_app_state', Math.random().toString(36).substring(2), {
     path: '/',
     domain: '.botassistai.com',
     secure: true,
+    httpOnly: false,
     sameSite: 'none',
   });
+  
 
   try {
     console.log(`[shopify-api/INFO] Beginning OAuth | {shop: ${shop}, isOnline: true}`);
@@ -1155,7 +1156,6 @@ app.get('/shopify/callback', async (req, res) => {
       [shop, session.accessToken, user.user_id]
     );
 
-    // --- Async background tasks
     (async () => {
       try {
         const { storeCallback } = require('./sessionStorage');
@@ -1192,10 +1192,9 @@ app.get('/shopify/callback', async (req, res) => {
           host: "${host}"
         });
         const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/?shop=${shop}");
+        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
       </script>
     `);
-
     
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
