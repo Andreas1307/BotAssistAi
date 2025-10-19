@@ -91,6 +91,34 @@ app.use(['/shopify/install', '/shopify/callback'], cors({
   credentials: true,
 }));
 */
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+
+  res.setHeader = function (name, value) {
+    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
+      value = value.map((cookie) => {
+        // Rewrite only Shopify OAuth cookies
+        if (/^shopify_app_state/i.test(cookie) || /^shopify_app_state\.sig/i.test(cookie)) {
+          cookie = cookie
+            .replace(/;\s*Domain=[^;]+/gi, "")
+            .replace(/;\s*Path=[^;]+/gi, "")
+            .replace(/;\s*SameSite=[^;]+/gi, "")
+            .replace(/;\s*Secure/gi, "")
+            .replace(/;\s*HttpOnly/gi, "")
+            .replace(/;\s*Expires=[^;]+/gi, "")
+            .trim();
+
+          // ✅ Make the cookie valid for your API subdomain
+          cookie += "; Domain=.botassistai.com; Path=/; Secure; SameSite=None; HttpOnly";
+        }
+        return cookie;
+      });
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+
+  next();
+});
 
 const allowedOrigins = [
   'https://www.botassistai.com',
@@ -128,34 +156,7 @@ app.use((req, res, next) => {
 app.use(shopifySessionMiddleware);
 
 
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
 
-  res.setHeader = function (name, value) {
-    if (name.toLowerCase() === "set-cookie" && Array.isArray(value)) {
-      value = value.map((cookie) => {
-        // Rewrite only Shopify OAuth cookies
-        if (/^shopify_app_state/i.test(cookie) || /^shopify_app_state\.sig/i.test(cookie)) {
-          cookie = cookie
-            .replace(/;\s*Domain=[^;]+/gi, "")
-            .replace(/;\s*Path=[^;]+/gi, "")
-            .replace(/;\s*SameSite=[^;]+/gi, "")
-            .replace(/;\s*Secure/gi, "")
-            .replace(/;\s*HttpOnly/gi, "")
-            .replace(/;\s*Expires=[^;]+/gi, "")
-            .trim();
-
-          // ✅ Make the cookie valid for your API subdomain
-          cookie += "; Domain=.botassistai.com; Path=/; Secure; SameSite=None; HttpOnly";
-        }
-        return cookie;
-      });
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-
-  next();
-});
 
 
 
