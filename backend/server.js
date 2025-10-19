@@ -98,18 +98,15 @@ const allowedOrigins = [
   /\.myshopify\.com$/,
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  "https://shop-ease2.netlify.app",
-  "http://127.0.0.1:5501",
-  "https://uvszh1-m5.myshopify.com"
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow no-origin requests (curl/SSR)
-    const isAllowed = allowedOrigins.some(o =>
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some(o =>
       o instanceof RegExp ? o.test(origin) : o === origin
     );
-    callback(null, isAllowed);
+    callback(null, allowed);
   },
   credentials: true,
 }));
@@ -1024,10 +1021,11 @@ app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  // 1️⃣ Set top-level cookie if missing
+  const isHttps = req.protocol === 'https';
+  const secureFlag = isHttps ? 'Secure;' : ''; // ✅ only on HTTPS
+
   if (!req.cookies.shopify_toplevel) {
     console.log('⚠️ No top-level cookie found — setting it now');
-    const secureFlag = req.protocol === 'https' ? 'Secure;' : '';
     return res.send(`
       <html>
         <body>
