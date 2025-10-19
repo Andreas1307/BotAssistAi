@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-   // domain: '.botassistai.com' 
+    domain: '.botassistai.com' 
   }
 }));
 /*
@@ -1022,7 +1022,7 @@ app.get('/shopify/install', async (req, res) => {
   if (!shop) return res.status(400).send('Missing shop');
 
   const isHttps = req.protocol === 'https';
-  const secureFlag = isHttps ? 'Secure;' : ''; // ✅ only on HTTPS
+  const secureFlag = isHttps ? 'Secure;' : '';
 
   if (!req.cookies.shopify_toplevel) {
     console.log('⚠️ No top-level cookie found — setting it now');
@@ -1031,7 +1031,7 @@ app.get('/shopify/install', async (req, res) => {
         <body>
           <script>
             document.cookie = "shopify_toplevel=true; path=/; ${secureFlag} SameSite=None";
-            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+            window.top.location.href = "${req.originalUrl}";
           </script>
         </body>
       </html>
@@ -1179,7 +1179,7 @@ app.get('/shopify/callback', async (req, res) => {
           forceRedirect: true,
         });
         const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/dashboard?shop=${shop}");
+        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
       </script>
     `);
  } catch (err) {
