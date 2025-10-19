@@ -1024,21 +1024,21 @@ app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  // --- If top-level cookie missing, set it first
   if (!req.cookies.shopify_toplevel) {
-    console.log('🍪 No top-level cookie found, setting it inline before OAuth');
+    const secure = req.protocol === 'https' ? 'Secure;' : '';
     return res.send(`
       <html>
         <body>
           <script>
-            document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
+            document.cookie = "shopify_toplevel=true; path=/; ${secure} SameSite=None";
             window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
           </script>
         </body>
       </html>
     `);
   }
-
+  
+  
   try {
     // --- Begin OAuth
     await shopify.auth.begin({
@@ -1170,18 +1170,19 @@ app.get('/shopify/callback', async (req, res) => {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
     res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        const AppBridge = window["app-bridge"];
-        const createApp = AppBridge.default || AppBridge;
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true
-        });
-        const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
-      </script>
+     <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+<script>
+  const AppBridge = window["app-bridge"];
+  const createApp = AppBridge.default || AppBridge;
+  const app = createApp({
+    apiKey: "${process.env.SHOPIFY_API_KEY}",
+    host: "${host}",
+    forceRedirect: true
+  });
+  const Redirect = AppBridge.actions.Redirect.create(app);
+  Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
+</script>
+
     `);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
