@@ -1027,13 +1027,13 @@ app.get('/shopify/install', async (req, res) => {
     return res.status(400).send('Invalid shop');
   }
 
-  // 👇 Force top-level load if inside an iframe
+  // If still inside Shopify iframe → bounce to top-level
   if (!toplevel) {
     return res.send(`
       <html>
         <body>
           <script>
-            // Must set a cookie in a first-party context
+            // ✅ First-party cookie in top-level context
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
             window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
           </script>
@@ -1042,10 +1042,10 @@ app.get('/shopify/install', async (req, res) => {
     `);
   }
 
-  // 👇 Ensure browser already trusts this domain with a first-party cookie
+  // ✅ Set our own state cookie before starting OAuth
   res.cookie('shopify_app_state', Math.random().toString(36).substring(2), {
-    path: '/',
     domain: '.botassistai.com',
+    path: '/',
     secure: true,
     httpOnly: false,
     sameSite: 'none',
