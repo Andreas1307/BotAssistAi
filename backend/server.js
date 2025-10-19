@@ -1021,42 +1021,27 @@ app.get("/api/ping", async (req, res) => {
 });
 
 app.get('/shopify/install', async (req, res) => {
-  const { shop, host, embedded, toplevel } = req.query;
+  const { shop, host, toplevel } = req.query;
 
   if (!shop || !shop.endsWith('.myshopify.com')) {
     return res.status(400).send('Invalid shop');
   }
 
-  // STEP 1: If inside an iframe, bounce to top-level first
+  // 1️⃣ Step 1: inside iframe? -> redirect top-level
   if (!toplevel) {
     return res.send(`
       <html>
         <body>
           <script>
-            // Set the toplevel cookie (first-party)
-            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-
-            // ✅ Bounce to top-level so cookies are allowed
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&toplevel=1";
+            window.top.location.href =
+              "https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
           </script>
         </body>
       </html>
     `);
   }
 
-  // STEP 2: Set the OAuth state cookie manually in top-level context
-  const state = Math.random().toString(36).substring(2);
-  res.cookie('shopify_app_state', state, {
-    domain: '.botassistai.com',
-    path: '/',
-    secure: true,
-    httpOnly: false,
-    sameSite: 'none',
-  });
-
-  console.log(`🍪 [DEBUG] Set shopify_app_state cookie for ${shop} = ${state}`);
-
-  // ✅ Begin OAuth now that cookies are set in a top-level context
+  // 2️⃣ Step 2: already at top-level
   return shopify.auth.begin({
     shop,
     callbackPath: '/shopify/callback',
@@ -1064,6 +1049,20 @@ app.get('/shopify/install', async (req, res) => {
     rawRequest: req,
     rawResponse: res,
   });
+});
+
+app.get('/shopify/toplevel', (req, res) => {
+  const { shop, host } = req.query;
+  res.send(`
+    <html>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None; domain=.botassistai.com";
+          window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&toplevel=1";
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.use((req, res, next) => {
