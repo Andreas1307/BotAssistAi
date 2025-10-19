@@ -1021,29 +1021,32 @@ app.get("/api/ping", async (req, res) => {
 });
 
 app.get('/shopify/install', async (req, res) => {
-  const { shop, toplevel } = req.query;
+  const { shop, host, embedded, toplevel } = req.query;
 
   if (!shop || !shop.endsWith('.myshopify.com')) {
     return res.status(400).send('Invalid shop');
   }
 
-  // If still inside Shopify iframe → bounce to top-level
+  // STEP 1: If inside an iframe, bounce to top-level first
   if (!toplevel) {
     return res.send(`
       <html>
         <body>
           <script>
-            // ✅ First-party cookie in top-level context
+            // Set the toplevel cookie (first-party)
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; Secure; SameSite=None";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&toplevel=1";
+
+            // ✅ Bounce to top-level so cookies are allowed
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&toplevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
-  // ✅ Set our own state cookie before starting OAuth
-  res.cookie('shopify_app_state', Math.random().toString(36).substring(2), {
+  // STEP 2: Set the OAuth state cookie manually in top-level context
+  const state = Math.random().toString(36).substring(2);
+  res.cookie('shopify_app_state', state, {
     domain: '.botassistai.com',
     path: '/',
     secure: true,
@@ -1051,8 +1054,10 @@ app.get('/shopify/install', async (req, res) => {
     sameSite: 'none',
   });
 
-  console.log(`[shopify-api/INFO] Beginning OAuth | {shop: ${shop}, isOnline: true}`);
-  await shopify.auth.begin({
+  console.log(`🍪 [DEBUG] Set shopify_app_state cookie for ${shop} = ${state}`);
+
+  // ✅ Begin OAuth now that cookies are set in a top-level context
+  return shopify.auth.begin({
     shop,
     callbackPath: '/shopify/callback',
     isOnline: true,
