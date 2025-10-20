@@ -1022,8 +1022,6 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   const topLevelCookie = req.cookies["shopify_toplevel"];
-  const isSecure = req.protocol === "https" || req.get("x-forwarded-proto") === "https";
-
   if (!topLevelCookie) {
     console.log("⚠️ No top-level cookie found — setting it now");
     return res.send(`
@@ -1031,7 +1029,7 @@ app.get("/shopify/install", async (req, res) => {
         <body>
           <script>
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
           </script>
         </body>
       </html>
