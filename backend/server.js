@@ -1017,30 +1017,27 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-
 app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // 🔹 Check if top-level cookie exists
-  if (!req.cookies["shopify_toplevel"]) {
-    console.log("⚠️ No top-level cookie found — setting it now");
-    const isSecure = req.protocol === "https" || req.get("x-forwarded-proto") === "https";
-    const cookieAttrs = `path=/; ${isSecure ? "Secure;" : ""} SameSite=None`;
+  const topLevelCookie = req.cookies["shopify_toplevel"];
+  const isSecure = req.protocol === "https" || req.get("x-forwarded-proto") === "https";
 
+  if (!topLevelCookie) {
+    console.log("⚠️ No top-level cookie found — setting it now");
     return res.send(`
       <html>
         <body>
           <script>
-            document.cookie = "shopify_toplevel=true; ${cookieAttrs}";
-            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
+            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
           </script>
         </body>
       </html>
     `);
   }
 
-  // 🔹 Begin OAuth
   try {
     console.log("🚀 Beginning Shopify OAuth for", shop);
     await shopify.auth.begin({
@@ -1055,7 +1052,6 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("OAuth start failed");
   }
 });
-
 
 app.get('/shopify/callback', async (req, res) => {
   try {
