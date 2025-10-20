@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: '.botassistai.com' 
+    domain: '.botassistai.com' 
   }
 }));
 /*
@@ -1021,9 +1021,10 @@ app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  const isHttps = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https';
+  const isHttps = req.get('x-forwarded-proto') === 'https' || req.protocol === 'https';
   const secureFlag = isHttps ? 'Secure;' : '';
 
+  // Step 1: ensure top-level cookie
   if (!req.cookies.shopify_toplevel) {
     console.log('⚠️ No top-level cookie found — setting it now');
     return res.send(`
@@ -1038,6 +1039,7 @@ app.get('/shopify/install', async (req, res) => {
     `);
   }
 
+  // Step 2: begin OAuth
   try {
     console.log('🚀 Beginning Shopify OAuth for', shop);
     await shopify.auth.begin({
