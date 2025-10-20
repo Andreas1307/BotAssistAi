@@ -72,6 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
+    domain: ".botassistai.com"
   }
 }));
 /*
@@ -1191,7 +1192,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 
 
 
