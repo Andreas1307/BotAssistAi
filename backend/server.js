@@ -1016,6 +1016,21 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.get("/shopify/auth/toplevel", (req, res) => {
+  const { shop, host } = req.query;
+  res.send(`
+    <html>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; path=/; Secure; SameSite=None";
+          window.location.href = "/shopify/install?shop=${shop}&host=${host}";
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+
 app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
@@ -1023,22 +1038,10 @@ app.get('/shopify/install', async (req, res) => {
   const isHttps = req.get('x-forwarded-proto') === 'https' || req.protocol === 'https';
   const secureFlag = isHttps ? 'Secure;' : '';
 
-  // 1️⃣ Ensure top-level cookie exists
   if (!req.cookies.shopify_toplevel) {
-    console.log('⚠️ No top-level cookie found — setting it now');
-    return res.send(`
-      <html>
-        <body>
-          <script>
-            document.cookie = "shopify_toplevel=true; path=/; ${secureFlag} SameSite=None";
-            window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-          </script>
-        </body>
-      </html>
-    `);
+    return res.redirect(`/shopify/auth/toplevel?shop=${shop}&host=${host}`);
   }
-
-  // 2️⃣ Begin OAuth
+  
   try {
     console.log('🚀 Beginning Shopify OAuth for', shop);
     await shopify.auth.begin({
