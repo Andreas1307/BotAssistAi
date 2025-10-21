@@ -1036,12 +1036,12 @@ app.get("/shopify/escape", (req, res) => {
 
 app.get("/shopify/install", (req, res) => {
   const { shop, host, embedded } = req.query;
-
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   res.send(`
     <!DOCTYPE html>
     <html>
+      <head><meta charset="utf-8"><title>Shopify Install</title></head>
       <body>
         <script>
           const shop = "${shop}";
@@ -1049,21 +1049,17 @@ app.get("/shopify/install", (req, res) => {
           const embedded = ${embedded ? "true" : "false"};
           const inIframe = window.self !== window.top;
 
-          // 🧩 Step 1: Escape iframe if embedded
           if (inIframe && !embedded) {
-            console.log('🔁 Exiting iframe for install...');
+            // 🧭 Step 1: Get out of the iframe first
             window.top.location.href =
               "https://api.botassistai.com/shopify/install?shop=" +
               encodeURIComponent(shop) +
               "&host=" +
               encodeURIComponent(host) +
               "&embedded=1";
-          }
-          // 🧩 Step 2: Top-level – set cookie + begin OAuth
-          else {
-            console.log('🚀 Top-level install, setting cookie...');
-            document.cookie =
-              "shopify_toplevel=true; Path=/; SameSite=None; Secure";
+          } else {
+            // 🍪 Step 2: Now top-level → set cookie + start OAuth
+            document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
             window.location.href =
               "https://api.botassistai.com/shopify/auth-start?shop=" +
               encodeURIComponent(shop) +
@@ -1077,19 +1073,18 @@ app.get("/shopify/install", (req, res) => {
 });
 
 app.get("/shopify/auth-start", async (req, res) => {
-  // Detect if this is still running in an iframe
-  const inIframe =
-    req.get("Sec-Fetch-Dest") === "iframe" ||
-    req.get("Sec-Fetch-Site") === "cross-site";
-
-  if (inIframe) {
-    console.log("🚫 Auth-start called from iframe, redirecting to install");
-    return res.redirect(
-      `/shopify/install?${new URLSearchParams(req.query).toString()}`
-    );
-  }
-
   try {
+    const inIframe =
+      req.get("Sec-Fetch-Dest") === "iframe" ||
+      req.get("Sec-Fetch-Site") === "cross-site";
+
+    if (inIframe) {
+      console.log("🚫 Auth-start inside iframe → bounce to install");
+      return res.redirect(
+        `/shopify/install?${new URLSearchParams(req.query).toString()}`
+      );
+    }
+
     const { shop } = req.query;
     console.log(`🔑 Starting OAuth for ${shop}`);
 
@@ -1226,7 +1221,7 @@ app.get('/shopify/callback', async (req, res) => {
           forceRedirect: true,
         });
         const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${session.shop}");
+        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
       </script>
     `);
  } catch (err) {
