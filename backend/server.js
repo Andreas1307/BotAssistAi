@@ -1017,6 +1017,23 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.get("/shopify/escape", (req, res) => {
+  const { shop, host } = req.query;
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head><title>Shopify Install Redirect</title></head>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
+          window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 app.get("/shopify/install", async (req, res) => {
   const { shop, host, embedded } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
@@ -1025,13 +1042,13 @@ app.get("/shopify/install", async (req, res) => {
     console.log(`🧩 Escaping iframe for ${shop}`);
     return res.send(`
       <script>
-        window.top.location.href = "https://www.botassistai.com/escape.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        window.top.location.href = "https://api.botassistai.com/shopify/escape?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
       </script>
     `);
   }
 
-  // If already top-level
-  return res.redirect(`https://www.botassistai.com/escape.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
+  // Already top-level
+  return res.redirect(`https://api.botassistai.com/shopify/escape?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
 });
 
 app.get("/shopify/auth-start", async (req, res) => {
