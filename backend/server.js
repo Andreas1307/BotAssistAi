@@ -1018,39 +1018,63 @@ app.get("/api/ping", async (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host, embedded, topLevel } = req.query;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Step 1: escape iframe once
-  if (embedded === '1' && !topLevel) {
+  const isEmbedded = req.query.embedded === "1";
+  const isTopLevel = req.query.topLevel === "1";
+
+  // 1️⃣ If still inside the Shopify Admin iframe → escape it
+  if (isEmbedded && !isTopLevel) {
+    console.log(`🧩 Escaping iframe for ${shop}`);
     return res.send(`
       <html>
         <body>
           <script>
-            // Leave the iframe
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}&topLevel=1";
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&topLevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
-  // Step 2: ensure top-level cookie exists
+  // 2️⃣ Ensure the cookie can be set in the top-level context
   if (!req.cookies.shopify_toplevel) {
+    console.log(`⚠️ No top-level cookie for ${shop}, setting now`);
     return res.send(`
       <html>
         <body>
           <script>
             document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
-            window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}&topLevel=1";
+            window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&topLevel=1";
           </script>
         </body>
       </html>
     `);
   }
 
-  // Step 3: safe to begin OAuth
+  // 3️⃣ Force install to always start in a NEW browser tab (not inside iframe)
+  console.log(`🚀 Launching top-level install for ${shop}`);
+  return res.send(`
+    <html>
+      <body>
+        <script>
+          // Force top-level context for Chrome/Safari 3rd-party cookie rules
+          if (window.top === window.self) {
+            window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+          } else {
+            window.top.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+          }
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+app.get("/shopify/auth-start", async (req, res) => {
   try {
+    const { shop } = req.query;
+    console.log(`🔑 Starting OAuth cleanly for ${shop}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
