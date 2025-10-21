@@ -1021,35 +1021,38 @@ app.get("/shopify/install", async (req, res) => {
   const { shop, host, escaped } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Detect if this is the iframe version
-  const inIframe = req.get("Sec-Fetch-Dest") === "iframe" || req.get("Sec-Fetch-Site") === "cross-site";
-
-  // Case 1: Inside iframe → escape to top-level version
-  if ((inIframe || !escaped) && !req.query.escaped) {
+  // Step 1: Escape iframe if not done yet
+  if (!escaped) {
     return res.send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8"><title>Shopify Install Redirect</title></head>
+        <head><meta charset="utf-8"><title>Shopify Install</title></head>
         <body>
           <script>
-            // Bounce the top window out of the iframe
-            window.top.location.href =
-              "https://api.botassistai.com/shopify/install?shop=" +
-              encodeURIComponent("${shop}") +
-              "&host=" + encodeURIComponent("${host || ""}") +
-              "&escaped=true";
+            // Always run top-level
+            if (window.top === window.self) {
+              // We are already top-level
+              window.location.href =
+                "https://api.botassistai.com/shopify/install?shop=" +
+                encodeURIComponent("${shop}") +
+                "&host=" + encodeURIComponent("${host || ""}") +
+                "&escaped=true";
+            } else {
+              // Escape iframe
+              window.top.location.href =
+                "https://api.botassistai.com/shopify/install?shop=" +
+                encodeURIComponent("${shop}") +
+                "&host=" + encodeURIComponent("${host || ""}") +
+                "&escaped=true";
+            }
           </script>
         </body>
       </html>
     `);
   }
 
-  // Case 2: Escaped / top-level version → set cookie and start OAuth
+  // Step 2: We're now top-level → can safely set cookie & start OAuth
   try {
-    res.setHeader("Access-Control-Allow-Origin", "https://" + shop);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-
-    // Write top-level flag
     res.cookie("shopify_toplevel", "true", {
       sameSite: "none",
       secure: true,
