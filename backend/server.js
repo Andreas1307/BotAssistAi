@@ -1017,23 +1017,29 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.get("/shopify/auth/toplevel", (req, res) => {
+  const { shop, host } = req.query;
+  res.send(`
+    <html>
+      <body>
+        <script>
+          // ensure cookie domain + secure
+          document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
+          // reload install outside the iframe
+          window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  const topLevelCookie = req.cookies["shopify_toplevel"];
-  if (!topLevelCookie) {
-    console.log("⚠️ No top-level cookie found — setting it now");
-    return res.send(`
-      <html>
-        <body>
-          <script>
-            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-          </script>
-        </body>
-      </html>
-    `);
+  // if cookie missing, bounce to the toplevel helper first
+  if (!req.cookies["shopify_toplevel"]) {
+    return res.redirect(`/shopify/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
 
   try {
