@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Shopify Install Redirect</title>
+  </head>
+  <body>
+    <script>
+      // Parse URL parameters
+      const url = new URL(window.location.href);
+      const shop = url.searchParams.get("shop");
+      const host = url.searchParams.get("host");
+
+      // Set top-level cookie
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+
+      // Redirect to your backend auth-start
+      window.location.href = `https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
+    </script>
+  </body>
+</html>

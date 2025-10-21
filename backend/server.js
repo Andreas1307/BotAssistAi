@@ -1018,32 +1018,20 @@ app.get("/api/ping", async (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host } = req.query;
+  const { shop, host, embedded } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  const isEmbedded = req.query.embedded === "1";
-
-  // Always escape iframe first
-  if (isEmbedded) {
+  if (embedded === "1") {
     console.log(`🧩 Escaping iframe for ${shop}`);
     return res.send(`
       <script>
-        window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        window.top.location.href = "https://www.botassistai.com/escape.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
       </script>
     `);
   }
 
-  // 🚨 Single step: set top-level cookie, then redirect immediately to OAuth
-  res.send(`
-    <html>
-      <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
-          window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-        </script>
-      </body>
-    </html>
-  `);
+  // If already top-level
+  return res.redirect(`https://www.botassistai.com/escape.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
 });
 
 app.get("/shopify/auth-start", async (req, res) => {
