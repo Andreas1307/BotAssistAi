@@ -1021,14 +1021,16 @@ app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Force top-level redirect to /shopify/start
   res.send(`
     <html>
       <body>
         <script>
+          const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
           if (window.top === window.self) {
-            window.location.href = "/shopify/start?shop=${shop}&host=${host}";
+            window.location.href = redirectUrl;
           } else {
-            window.top.location.href = "/shopify/start?shop=${shop}&host=${host}";
+            window.top.location.href = redirectUrl;
           }
         </script>
       </body>
@@ -1037,21 +1039,30 @@ app.get("/shopify/install", (req, res) => {
 });
 
 app.get("/shopify/start", async (req, res) => {
-  const { shop } = req.query;
-  res.cookie("shopify_toplevel", "true", {
-    sameSite: "none",
-    secure: true,
-    httpOnly: false,
-    path: "/",
-  });
+  try {
+    const { shop } = req.query;
+    if (!shop) return res.status(400).send("Missing shop");
 
-  await shopify.auth.begin({
-    shop,
-    callbackPath: "/shopify/callback",
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
+    // Set top-level cookie that Shopify OAuth library will use
+    res.cookie("shopify_toplevel", "true", {
+      sameSite: "none",
+      secure: true,
+      httpOnly: false, // must be accessible by JS
+      path: "/",
+    });
+
+    console.log(`🔑 Starting OAuth for ${shop}`);
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+  } catch (err) {
+    console.error("❌ OAuth start failed:", err);
+    if (!res.headersSent) res.status(500).send("OAuth start failed");
+  }
 });
 
 app.get('/shopify/callback', async (req, res) => {
