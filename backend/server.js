@@ -1034,27 +1034,37 @@ app.get("/shopify/escape", (req, res) => {
   `);
 });
 
-app.get("/shopify/install", async (req, res) => {
+app.get("/shopify/install", (req, res) => {
   const { shop, host, embedded } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
+  if (!shop) return res.status(400).send("Missing shop");
 
+  // Always bounce out of iframe first
   if (embedded === "1") {
-    console.log(`🧩 Escaping iframe for ${shop}`);
     return res.send(`
       <script>
-        window.top.location.href = "https://api.botassistai.com/shopify/escape?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
       </script>
     `);
   }
 
-  // Already top-level
-  return res.redirect(`https://api.botassistai.com/shopify/escape?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
+  // Set top-level cookie in this same domain
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <script>
+          document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
+          window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/shopify/auth-start", async (req, res) => {
   try {
     const { shop } = req.query;
-    console.log(`🔑 Starting OAuth cleanly for ${shop}`);
+    console.log(`🔑 Starting OAuth for ${shop}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1193,7 +1203,11 @@ app.get('/shopify/callback', async (req, res) => {
     `);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
-    if (!res.headersSent) res.status(500).send('OAuth callback failed.');
+    //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
+    res.status(200).send(`
+      <html><body><h3>OAuth error: ${err.name || "Unknown"}</h3>
+      <p>${err.message || ""}</p></body></html>
+    `);
   }
 });
 
