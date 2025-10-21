@@ -1074,6 +1074,9 @@ app.get("/shopify/install", (req, res) => {
 
 app.get("/shopify/auth-start", async (req, res) => {
   try {
+    res.setHeader("Access-Control-Allow-Origin", "https://" + req.query.shop);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+
     const inIframe =
       req.get("Sec-Fetch-Dest") === "iframe" ||
       req.get("Sec-Fetch-Site") === "cross-site";
