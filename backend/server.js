@@ -1035,26 +1035,30 @@ app.get("/shopify/escape", (req, res) => {
 });
 
 app.get("/shopify/install", (req, res) => {
-  const { shop, host, embedded } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  const { shop, host } = req.query;
 
-  // Always bounce out of iframe first
-  if (embedded === "1") {
-    return res.send(`
-      <script>
-        window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-      </script>
-    `);
-  }
+  if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Set top-level cookie in this same domain
   res.send(`
     <!DOCTYPE html>
     <html>
       <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
-          window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        <script type="text/javascript">
+          const inIframe = window.self !== window.top;
+
+          if (inIframe) {
+            // 🚪 1. Bounce out of iframe first
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
+              shop
+            )}&host=${encodeURIComponent(host || "")}";
+          } else {
+            // 🍪 2. Set top-level cookie before starting OAuth
+            document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
+            // 🚀 3. Continue OAuth normally
+            window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(
+              shop
+            )}&host=${encodeURIComponent(host || "")}";
+          }
         </script>
       </body>
     </html>
