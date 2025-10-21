@@ -1035,7 +1035,7 @@ app.get("/shopify/escape", (req, res) => {
 });
 
 app.get("/shopify/install", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop, host, embedded } = req.query;
 
   if (!shop) return res.status(400).send("Missing shop parameter");
 
@@ -1043,21 +1043,22 @@ app.get("/shopify/install", (req, res) => {
     <!DOCTYPE html>
     <html>
       <body>
-        <script type="text/javascript">
+        <script>
+          const shop = "${shop}";
+          const host = "${host || ""}";
+          const embedded = ${embedded ? "true" : "false"};
           const inIframe = window.self !== window.top;
 
-          if (inIframe) {
-            // 🚪 1. Bounce out of iframe first
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-              shop
-            )}&host=${encodeURIComponent(host || "")}";
-          } else {
-            // 🍪 2. Set top-level cookie before starting OAuth
+          // 🧩 Step 1: If in iframe, bounce to top-level
+          if (inIframe && !embedded) {
+            console.log('🔁 Exiting iframe for install...');
+            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host) + "&embedded=1";
+          } 
+          // 🧩 Step 2: Top-level - set cookie & start OAuth
+          else {
+            console.log('🚀 Top-level install, setting cookie...');
             document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
-            // 🚀 3. Continue OAuth normally
-            window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(
-              shop
-            )}&host=${encodeURIComponent(host || "")}";
+            window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
       </body>
@@ -1066,6 +1067,12 @@ app.get("/shopify/install", (req, res) => {
 });
 
 app.get("/shopify/auth-start", async (req, res) => {
+  const inIframe = req.get('Sec-Fetch-Dest') === 'iframe';
+  if (inIframe) {
+    console.log('🚫 Auth-start called from iframe, redirecting to install');
+    return res.redirect(`/shopify/install?${new URLSearchParams(req.query).toString()}`);
+  }
+
   try {
     const { shop } = req.query;
     console.log(`🔑 Starting OAuth for ${shop}`);
