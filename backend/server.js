@@ -1017,62 +1017,41 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", async (req, res) => {
-  const { shop, host, escaped } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
+app.get("/shopify/install", (req, res) => {
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
 
-  // Step 1: Escape iframe if not done yet
-  if (!escaped) {
-    return res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head><meta charset="utf-8"><title>Shopify Install</title></head>
-        <body>
-          <script>
-            // Always run top-level
-            if (window.top === window.self) {
-              // We are already top-level
-              window.location.href =
-                "https://api.botassistai.com/shopify/install?shop=" +
-                encodeURIComponent("${shop}") +
-                "&host=" + encodeURIComponent("${host || ""}") +
-                "&escaped=true";
-            } else {
-              // Escape iframe
-              window.top.location.href =
-                "https://api.botassistai.com/shopify/install?shop=" +
-                encodeURIComponent("${shop}") +
-                "&host=" + encodeURIComponent("${host || ""}") +
-                "&escaped=true";
-            }
-          </script>
-        </body>
-      </html>
-    `);
-  }
+  res.send(`
+    <html>
+      <body>
+        <script>
+          if (window.top === window.self) {
+            window.location.href = "/shopify/start?shop=${shop}&host=${host}";
+          } else {
+            window.top.location.href = "/shopify/start?shop=${shop}&host=${host}";
+          }
+        </script>
+      </body>
+    </html>
+  `);
+});
 
-  // Step 2: We're now top-level → can safely set cookie & start OAuth
-  try {
-    res.cookie("shopify_toplevel", "true", {
-      sameSite: "none",
-      secure: true,
-      httpOnly: false,
-      path: "/",
-    });
+app.get("/shopify/start", async (req, res) => {
+  const { shop } = req.query;
+  res.cookie("shopify_toplevel", "true", {
+    sameSite: "none",
+    secure: true,
+    httpOnly: false,
+    path: "/",
+  });
 
-    console.log(`🔑 Starting OAuth for ${shop}`);
-
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start failed");
-  }
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.get('/shopify/callback', async (req, res) => {
