@@ -1035,34 +1035,36 @@ app.get("/shopify/escape", (req, res) => {
 });
 
 app.get("/shopify/install", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop, host, escaped } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   res.send(`
     <!DOCTYPE html>
     <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Shopify Install</title>
-      </head>
+      <head><meta charset="utf-8" /><title>Shopify Install</title></head>
       <body>
         <script>
           const shop = "${shop}";
           const host = "${host || ""}";
+          const escaped = ${escaped ? "true" : "false"};
           const inIframe = window.top !== window.self;
 
-          // Step 1: Escape iframe
-          if (inIframe) {
+          // If we're still inside an iframe and haven't escaped yet → escape
+          if (inIframe && !escaped) {
             window.top.location.href =
-              "https://api.botassistai.com/shopify/install?shop=" + encodeURIComponent(shop) +
-              "&host=" + encodeURIComponent(host) +
+              "https://api.botassistai.com/shopify/install?shop=" +
+              encodeURIComponent(shop) +
+              "&host=" +
+              encodeURIComponent(host) +
               "&escaped=true";
           } else {
-            // Step 2: Top level: set cookie + start OAuth
+            // Now we're top-level (either escaped or opened directly)
             document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
             window.location.href =
-              "https://api.botassistai.com/shopify/auth-start?shop=" + encodeURIComponent(shop) +
-              "&host=" + encodeURIComponent(host);
+              "https://api.botassistai.com/shopify/auth-start?shop=" +
+              encodeURIComponent(shop) +
+              "&host=" +
+              encodeURIComponent(host);
           }
         </script>
       </body>
