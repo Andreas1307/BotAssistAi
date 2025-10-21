@@ -1021,16 +1021,19 @@ app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Force top-level redirect to /shopify/start
   res.send(`
     <html>
       <body>
         <script>
-          const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
-          if (window.top === window.self) {
-            window.location.href = redirectUrl;
-          } else {
-            window.top.location.href = redirectUrl;
+          // Prevent double redirects
+          if (!window.sessionStorage.getItem('shopifyOauthStarted')) {
+            window.sessionStorage.setItem('shopifyOauthStarted', 'true');
+            const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
+            if (window.top === window.self) {
+              window.location.href = redirectUrl;
+            } else {
+              window.top.location.href = redirectUrl;
+            }
           }
         </script>
       </body>
