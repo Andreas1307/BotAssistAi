@@ -1021,11 +1021,11 @@ app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Force single redirect per browser session
   res.send(`
     <html>
       <body>
         <script>
-          // Prevent double redirects
           if (!window.sessionStorage.getItem('shopifyOauthStarted')) {
             window.sessionStorage.setItem('shopifyOauthStarted', 'true');
             const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
@@ -1034,6 +1034,8 @@ app.get("/shopify/install", (req, res) => {
             } else {
               window.top.location.href = redirectUrl;
             }
+          } else {
+            document.body.innerHTML = "OAuth already started. Please wait...";
           }
         </script>
       </body>
@@ -1048,12 +1050,12 @@ app.get("/shopify/start", async (req, res) => {
     const { shop } = req.query;
     if (!shop) return res.status(400).send("Missing shop");
 
-    // Prevent multiple concurrent OAuth starts
     if (ongoingOauth.has(shop)) {
       return res.send("OAuth already in progress. Please wait...");
     }
     ongoingOauth.set(shop, true);
 
+    // Set top-level cookie for Shopify OAuth
     res.cookie("shopify_toplevel", "true", {
       sameSite: "none",
       secure: true,
@@ -1070,7 +1072,7 @@ app.get("/shopify/start", async (req, res) => {
       rawResponse: res,
     });
 
-    ongoingOauth.delete(shop);
+    ongoingOauth.delete(shop); // Remove after redirect
   } catch (err) {
     ongoingOauth.delete(req.query.shop);
     console.error("❌ OAuth start failed:", err);
