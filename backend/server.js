@@ -1017,78 +1017,46 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/escape", (req, res) => {
-  const { shop, host } = req.query;
-
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head><title>Shopify Install Redirect</title></head>
-      <body>
-        <script>
-          document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
-          window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-        </script>
-      </body>
-    </html>
-  `);
-});
-
-app.get("/shopify/install", (req, res) => {
+app.get("/shopify/install", async (req, res) => {
   const { shop, host, escaped } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head><meta charset="utf-8" /><title>Shopify Install</title></head>
-      <body>
-        <script>
-          const shop = "${shop}";
-          const host = "${host || ""}";
-          const escaped = ${escaped ? "true" : "false"};
-          const inIframe = window.top !== window.self;
+  // Detect if this is the iframe version
+  const inIframe = req.get("Sec-Fetch-Dest") === "iframe" || req.get("Sec-Fetch-Site") === "cross-site";
 
-          // If we're still inside an iframe and haven't escaped yet → escape
-          if (inIframe && !escaped) {
+  // Case 1: Inside iframe → escape to top-level version
+  if ((inIframe || !escaped) && !req.query.escaped) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><title>Shopify Install Redirect</title></head>
+        <body>
+          <script>
+            // Bounce the top window out of the iframe
             window.top.location.href =
               "https://api.botassistai.com/shopify/install?shop=" +
-              encodeURIComponent(shop) +
-              "&host=" +
-              encodeURIComponent(host) +
+              encodeURIComponent("${shop}") +
+              "&host=" + encodeURIComponent("${host || ""}") +
               "&escaped=true";
-          } else {
-            // Now we're top-level (either escaped or opened directly)
-            document.cookie = "shopify_toplevel=true; Path=/; SameSite=None; Secure";
-            window.location.href =
-              "https://api.botassistai.com/shopify/auth-start?shop=" +
-              encodeURIComponent(shop) +
-              "&host=" +
-              encodeURIComponent(host);
-          }
-        </script>
-      </body>
-    </html>
-  `);
-});
+          </script>
+        </body>
+      </html>
+    `);
+  }
 
-app.get("/shopify/auth-start", async (req, res) => {
+  // Case 2: Escaped / top-level version → set cookie and start OAuth
   try {
-    res.setHeader("Access-Control-Allow-Origin", "https://" + req.query.shop);
+    res.setHeader("Access-Control-Allow-Origin", "https://" + shop);
     res.setHeader("Access-Control-Allow-Credentials", "true");
 
-    const inIframe =
-      req.get("Sec-Fetch-Dest") === "iframe" ||
-      req.get("Sec-Fetch-Site") === "cross-site";
+    // Write top-level flag
+    res.cookie("shopify_toplevel", "true", {
+      sameSite: "none",
+      secure: true,
+      httpOnly: false,
+      path: "/",
+    });
 
-    if (inIframe) {
-      console.log("🚫 Auth-start inside iframe → bounce to install");
-      return res.redirect(
-        `/shopify/install?${new URLSearchParams(req.query).toString()}`
-      );
-    }
-
-    const { shop } = req.query;
     console.log(`🔑 Starting OAuth for ${shop}`);
 
     await shopify.auth.begin({
@@ -1247,6 +1215,11 @@ app.use((req, res, next) => {
 
 
 
+
+
+
+
+
 app.post('/shopify/session-attach', (req, res) => {
   console.log("📦 Received body in session-attach:", req.body);
 
@@ -1261,9 +1234,6 @@ app.post('/shopify/session-attach', (req, res) => {
 
   return res.status(200).json({ success: true });
 });
-
-
-
 
 app.post("/paypal/webhook", async (req, res) => {
   const { orderID, userId } = req.body;
