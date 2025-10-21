@@ -1022,49 +1022,24 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   const isEmbedded = req.query.embedded === "1";
-  const isTopLevel = req.query.topLevel === "1";
 
-  // 1️⃣ If still inside the Shopify Admin iframe → escape it
-  if (isEmbedded && !isTopLevel) {
+  // Always escape iframe first
+  if (isEmbedded) {
     console.log(`🧩 Escaping iframe for ${shop}`);
     return res.send(`
-      <html>
-        <body>
-          <script>
-            window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&topLevel=1";
-          </script>
-        </body>
-      </html>
+      <script>
+        window.top.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+      </script>
     `);
   }
 
-  // 2️⃣ Ensure the cookie can be set in the top-level context
-  if (!req.cookies.shopify_toplevel) {
-    console.log(`⚠️ No top-level cookie for ${shop}, setting now`);
-    return res.send(`
-      <html>
-        <body>
-          <script>
-            document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
-            window.location.href = "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}&topLevel=1";
-          </script>
-        </body>
-      </html>
-    `);
-  }
-
-  // 3️⃣ Force install to always start in a NEW browser tab (not inside iframe)
-  console.log(`🚀 Launching top-level install for ${shop}`);
-  return res.send(`
+  // 🚨 Single step: set top-level cookie, then redirect immediately to OAuth
+  res.send(`
     <html>
       <body>
         <script>
-          // Force top-level context for Chrome/Safari 3rd-party cookie rules
-          if (window.top === window.self) {
-            window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-          } else {
-            window.top.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-          }
+          document.cookie = "shopify_toplevel=true; path=/; domain=.botassistai.com; SameSite=None; Secure";
+          window.location.href = "https://api.botassistai.com/shopify/auth-start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
         </script>
       </body>
     </html>
