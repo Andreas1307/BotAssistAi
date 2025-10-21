@@ -1038,16 +1038,23 @@ app.get("/shopify/install", (req, res) => {
   `);
 });
 
+const ongoingOauth = new Map();
+
 app.get("/shopify/start", async (req, res) => {
   try {
     const { shop } = req.query;
     if (!shop) return res.status(400).send("Missing shop");
 
-    // Set top-level cookie that Shopify OAuth library will use
+    // Prevent multiple concurrent OAuth starts
+    if (ongoingOauth.has(shop)) {
+      return res.send("OAuth already in progress. Please wait...");
+    }
+    ongoingOauth.set(shop, true);
+
     res.cookie("shopify_toplevel", "true", {
       sameSite: "none",
       secure: true,
-      httpOnly: false, // must be accessible by JS
+      httpOnly: false,
       path: "/",
     });
 
@@ -1059,7 +1066,10 @@ app.get("/shopify/start", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+
+    ongoingOauth.delete(shop);
   } catch (err) {
+    ongoingOauth.delete(req.query.shop);
     console.error("❌ OAuth start failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start failed");
   }
