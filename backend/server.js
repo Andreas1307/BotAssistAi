@@ -1017,6 +1017,22 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.get("/shopify/auth/exitiframe", (req, res) => {
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  res.send(`
+    <html>
+      <body>
+        <script>
+          // Always escape the embedded context first
+          window.top.location.href = "https://api.botassistai.com/shopify/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 app.get("/shopify/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   res.send(`
@@ -1037,9 +1053,9 @@ app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // if cookie missing, bounce to the toplevel helper first
+  // ⚠️ Always go through exitiframe when starting OAuth
   if (!req.cookies["shopify_toplevel"]) {
-    return res.redirect(`/shopify/auth/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
+    return res.redirect(`/shopify/auth/exitiframe?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
 
   try {
