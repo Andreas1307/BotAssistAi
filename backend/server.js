@@ -1032,31 +1032,6 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/auth/toplevel", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
-  // Set top-level cookie outside iframe
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,          // must be accessible by JS
-    secure: process.env.NODE_ENV === "production", 
-    sameSite: "none",         // required for cross-site iframe
-    path: "/",
-    maxAge: 600000            // optional, 10 min
-  });
-
-  res.send(`
-    <html>
-      <body>
-        <script>
-          // Redirect to start OAuth
-          window.top.location.href = "/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-        </script>
-      </body>
-    </html>
-  `);
-});
-
 app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1071,13 +1046,16 @@ app.get("/shopify/install", (req, res) => {
         <script>
           const shop = "${shop}";
           const host = "${host || ''}";
-          const topLevelUrl = "/shopify/auth/exitiframe?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
 
+          // If inside iframe → break out to top-level
           if (window.top !== window.self) {
-            console.log("Exiting iframe → to /exitiframe");
-            window.top.location.href = topLevelUrl;
+            console.log("Exiting iframe → restarting install at top level");
+            window.top.location.href = "/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           } else {
-            window.location.href = topLevelUrl;
+            // We're top-level, set the cookie and begin OAuth
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            console.log("Top-level cookie set, redirecting to start OAuth…");
+            window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
       </body>
@@ -1101,25 +1079,6 @@ app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
     console.error("❌ OAuth start failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start failed");
   }
-});
-
-app.get("/shopify/auth/exitiframe", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
-  res.send(`
-    <html>
-      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <h3>Getting ready for ${shop}...</h3>
-        <script>
-          const shop = "${shop}";
-          const host = "${host || ''}";
-          const next = "/shopify/auth/toplevel?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
-          window.location.href = next;
-        </script>
-      </body>
-    </html>
-  `);
 });
 
 app.use((req, res, next) => {
