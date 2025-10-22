@@ -72,10 +72,10 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    //domain: ".botassistai.com"
   }
 }));
-/*
+
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -83,14 +83,6 @@ app.use(['/ping-client', '/ask-ai'], cors({
   credentials: true // ⚠️ NO cookies allowed here
 }));
 
-app.use(['/shopify/install', '/shopify/callback'], cors({
-  origin: [
-    'https://www.botassistai.com',
-    /\.myshopify\.com$/,
-  ],
-  credentials: true,
-}));
-*/
 const allowedOrigins = [
   'https://www.botassistai.com',
   'https://botassistai.com',
