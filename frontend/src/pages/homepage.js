@@ -16,7 +16,7 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
+import { fetchWithAuth, safeRedirect, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
 const Homepage = () => {
@@ -28,7 +28,7 @@ const Homepage = () => {
     background: '#f2f2f2',
     chatbotBackground: '#092032',
     chatBoxBackground: '#112B3C',
-    chatInputBackground: '#ffffff',        
+    chatInputBackground: '#ffffff',
     chatInputTextColor: '#000000',
     chatBtn: '#00F5D4',
     websiteChatBtn: '#00F5D4',
@@ -57,29 +57,8 @@ const Homepage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const app = await initShopifyAppBridge();
-      if (!app) return;
-  
-      try {
-        const res = await fetchWithAuth("/api/ping");
-        if (!res.ok) {
-          console.warn("⚠️ No active session, redirecting to OAuth");
-          const params = new URLSearchParams(window.location.search);
-          const shopParam = params.get("shop");
-          const hostParam = params.get("host");
-          safeRedirect(`/shopify/install?shop=${shopParam}&host=${hostParam}`);
-          return;
-        }
-  
-        console.log("✅ Embedded app session confirmed");
-      } catch (err) {
-        console.error("❌ Error pinging backend:", err);
-      }
-    })();
+    getAppBridgeInstance();
   }, []);
-  
-
   
 
   useEffect(() => {
@@ -102,7 +81,8 @@ const Homepage = () => {
         });
   
         if (!data.installed) {
-          safeRedirect(`/shopify/install?shop=${shopParam}&host=${hostParam}`);
+          // 🔐 Force OAuth flow before anything else
+          safeRedirect(`${directory}/auth/toplevel?shop=${encodeURIComponent(shopParam)}`);
   
           // Save chatbot config once OAuth completes
           await axios.post(`/chatbot-config-shopify`, {
@@ -120,11 +100,6 @@ const Homepage = () => {
   
         console.log("✅ Shopify store ready");
         setInstalled(true);
-
-        if (user?.username) {
-          safeRedirect(`https://www.botassistai.com/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
-        }
-  
       } catch (err) {
         console.error("❌ Shopify flow failed:", err);
         setInstalled(false);
@@ -135,7 +110,6 @@ const Homepage = () => {
   
     checkShop();
   }, []); 
-  
   
   
   
@@ -159,6 +133,9 @@ const Homepage = () => {
   */
   
   
+
+
+
 
 
 
