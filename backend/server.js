@@ -1022,23 +1022,32 @@ app.get("/shopify/install", (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   res.send(`
-    <html><body>
-      <script>
-        // Prevent multiple OAuth starts across reloads/tabs
-        const key = 'oauthStarted-${shop}';
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, '1');
-          const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
-          if (window.top === window.self) {
-            window.location.href = redirectUrl;
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
+        <h3>Installing app for ${shop}...</h3>
+        <script>
+          const shop = "${shop}";
+          const host = "${host || ''}";
+
+          // If inside an iframe → exit it first
+          if (window.top !== window.self) {
+            window.top.location.href = "/shopify/install?shop=" + shop + "&host=" + host;
           } else {
-            window.top.location.href = redirectUrl;
+            // Prevent double OAuth triggers per shop
+            const key = "installing-" + shop;
+            if (sessionStorage.getItem(key)) {
+              document.body.innerHTML = "<p>App installation in progress. Please wait...</p>";
+            } else {
+              sessionStorage.setItem(key, "1");
+              window.location.href = "/shopify/start?shop=" + shop + "&host=" + host;
+            }
           }
-        } else {
-          document.body.innerHTML = "OAuth already started. Please wait...";
-        }
-      </script>
-    </body></html>
+        </script>
+      </body>
+    </html>
   `);
 });
 
@@ -1054,7 +1063,7 @@ app.get("/shopify/start", async (req, res) => {
     }
 
     ongoingOauth.set(shop, true);
-    setTimeout(() => ongoingOauth.delete(shop), 15000); // keep lock for 15s
+    setTimeout(() => ongoingOauth.delete(shop), 15000); // keep lock 15s
 
     res.cookie("shopify_toplevel", "true", {
       sameSite: "none",
@@ -1072,7 +1081,6 @@ app.get("/shopify/start", async (req, res) => {
       rawResponse: res,
     });
 
-    // Do NOT delete here — let timeout handle cleanup
   } catch (err) {
     ongoingOauth.delete(req.query.shop);
     console.error("❌ OAuth start failed:", err);
