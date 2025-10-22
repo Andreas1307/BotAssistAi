@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: ".botassistai.com"
+    domain: ".botassistai.com"
   }
 }));
 
@@ -1032,29 +1032,38 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", (req, res) => {
+app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  if (!shop) return res.status(400).send("Missing shop parameter");
 
   res.send(`
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       </head>
-      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <h3>Preparing installation for ${shop}...</h3>
+      <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;">
+        <h3>Installing app for ${shop}...</h3>
         <script>
           const shop = "${shop}";
           const host = "${host || ''}";
 
-          // If inside iframe → break out to top-level
+          // 1️⃣ If inside iframe → use App Bridge to break out
           if (window.top !== window.self) {
-            console.log("Exiting iframe → restarting install at top level");
-            window.top.location.href = "/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+            console.log("Inside iframe → requesting top-level redirect...");
+            const AppBridge = window["app-bridge"];
+            const createApp = AppBridge.default || AppBridge;
+            const app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: host,
+              forceRedirect: true,
+            });
+            const Redirect = AppBridge.actions.Redirect;
+            app.dispatch(Redirect.toTopLevel("/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)));
           } else {
-            // We're top-level, set the cookie and begin OAuth
+            // 2️⃣ Top-level → set cookie, then begin OAuth
+            console.log("Top-level reached → starting OAuth flow");
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            console.log("Top-level cookie set, redirecting to start OAuth…");
             window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
@@ -1068,6 +1077,8 @@ app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   try {
+    console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
+
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
