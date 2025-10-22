@@ -1024,10 +1024,10 @@ app.get("/shopify/auth/toplevel", (req, res) => {
 
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none",
     path: "/",
-  });
+  });  
 
   const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
   res.send(`
@@ -1151,6 +1151,16 @@ app.get('/shopify/callback', async (req, res) => {
     if (!session?.shop || !session?.accessToken) {
       return res.status(400).send('Session missing required data.');
     }
+
+
+
+    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
+if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
+  console.error("❌ Missing shopify_toplevel cookie");
+}
+
+
+
 
     const shop = session.shop;
     const host = req.query.host;
