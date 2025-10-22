@@ -1027,21 +1027,24 @@ app.get("/api/ping", async (req, res) => {
 });
 
 app.get("/shopify/auth/toplevel", (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Set top-level cookie
   res.cookie("shopify_toplevel", "true", {
     sameSite: "none",
     secure: true,
     httpOnly: false,
   });
 
-  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}`;
+  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
   res.send(`
     <html>
       <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
         <h3>Launching OAuth for ${shop}...</h3>
-        <script>window.top.location.href = "${redirectUrl}";</script>
+        <script>
+          window.top.location.href = "${redirectUrl}";
+        </script>
       </body>
     </html>
   `);
@@ -1051,7 +1054,6 @@ app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Always render a *safe top-level redirect* page
   res.send(`
     <html>
       <head>
@@ -1062,16 +1064,33 @@ app.get("/shopify/install", (req, res) => {
         <script>
           const shop = "${shop}";
           const host = "${host || ''}";
-         const startUrl = "/shopify/auth/toplevel?shop=" + encodeURIComponent(shop);
+          const topLevelUrl = "/shopify/auth/exitiframe?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
 
-          // ✅ If inside iframe, jump OUT ONCE
           if (window.top !== window.self) {
-            console.log("Exiting iframe for top-level OAuth...");
-            window.top.location.href = startUrl; // go directly to /start at top-level
+            console.log("Exiting iframe → to /exitiframe");
+            window.top.location.href = topLevelUrl;
           } else {
-            console.log("Top-level context — starting OAuth...");
-            window.location.href = startUrl;
+            window.location.href = topLevelUrl;
           }
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+app.get("/shopify/auth/exitiframe", (req, res) => {
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  res.send(`
+    <html>
+      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
+        <h3>Getting ready for ${shop}...</h3>
+        <script>
+          const shop = "${shop}";
+          const host = "${host || ''}";
+          const next = "/shopify/auth/toplevel?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+          window.location.href = next;
         </script>
       </body>
     </html>
@@ -1122,7 +1141,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-// am updatat dar asta e codul vechi cum ar veni
+
 app.get('/shopify/callback', async (req, res) => {
   try {
     console.log("🍪 CALLBACK COOKIES:", req.headers.cookie); 
