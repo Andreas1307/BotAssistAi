@@ -1033,24 +1033,24 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/auth/toplevel", clearShopifyCookies, (req, res) => {
+app.get("/shopify/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Set the mandatory top-level cookie before OAuth
+  // Set top-level cookie outside iframe
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: "none", // this is required for cross-site iframe
     path: "/",
   });
 
-  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
   res.send(`
     <html>
       <body>
         <script>
-          window.top.location.href = "${redirectUrl}";
+          // Redirect to start OAuth
+          window.top.location.href = "/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
         </script>
       </body>
     </html>
@@ -1085,6 +1085,24 @@ app.get("/shopify/install", (req, res) => {
   `);
 });
 
+app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  try {
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+  } catch (err) {
+    console.error("❌ OAuth start failed:", err);
+    if (!res.headersSent) res.status(500).send("OAuth start failed");
+  }
+});
+
 app.get("/shopify/auth/exitiframe", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1102,32 +1120,6 @@ app.get("/shopify/auth/exitiframe", (req, res) => {
       </body>
     </html>
   `);
-});
-
-app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
-  // Re-set top-level cookie
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
-    path: "/",
-  });
-
-  try {
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start failed");
-  }
 });
 
 app.use((req, res, next) => {
