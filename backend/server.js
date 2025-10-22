@@ -1026,6 +1026,27 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.get("/shopify/auth/toplevel", (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  res.cookie("shopify_toplevel", "true", {
+    sameSite: "none",
+    secure: true,
+    httpOnly: false,
+  });
+
+  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}`;
+  res.send(`
+    <html>
+      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
+        <h3>Launching OAuth for ${shop}...</h3>
+        <script>window.top.location.href = "${redirectUrl}";</script>
+      </body>
+    </html>
+  `);
+});
+
 app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1041,7 +1062,7 @@ app.get("/shopify/install", (req, res) => {
         <script>
           const shop = "${shop}";
           const host = "${host || ''}";
-          const startUrl = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+         const startUrl = "/shopify/auth/toplevel?shop=" + encodeURIComponent(shop);
 
           // ✅ If inside iframe, jump OUT ONCE
           if (window.top !== window.self) {
