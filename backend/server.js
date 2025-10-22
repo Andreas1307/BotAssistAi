@@ -1037,6 +1037,7 @@ app.get("/shopify/auth/toplevel", clearShopifyCookies, (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Set the mandatory top-level cookie before OAuth
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
@@ -1112,15 +1113,6 @@ app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "none",
-    path: "/",
-  });
-
-  // Short-lived marker (debug/validation)
-  res.cookie("oauth_started", "1", {
-    maxAge: 60 * 1000,
-    sameSite: "none",
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: false,
     path: "/",
   });
 
