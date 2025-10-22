@@ -1022,18 +1022,17 @@ app.get("/shopify/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Set top-level cookie
   res.cookie("shopify_toplevel", "true", {
-    sameSite: "none",
-    secure: true,
     httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: "none",
+    path: "/",
   });
 
   const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
   res.send(`
     <html>
-      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <h3>Launching OAuth for ${shop}...</h3>
+      <body>
         <script>
           window.top.location.href = "${redirectUrl}";
         </script>
