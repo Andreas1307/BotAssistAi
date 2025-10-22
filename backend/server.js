@@ -991,7 +991,6 @@ app.use(express.urlencoded({ extended: true }));
 
 function clearShopifyCookies(req, res, next) {
   const cookiesToClear = [
-    'shopify_toplevel',
     'shopify_oauth_state',
     'shopify_app_state',
     'shopify_app_state.sig',
@@ -1039,10 +1038,11 @@ app.get("/shopify/auth/toplevel", (req, res) => {
 
   // Set top-level cookie outside iframe
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none", // this is required for cross-site iframe
+    httpOnly: false,          // must be accessible by JS
+    secure: process.env.NODE_ENV === "production", 
+    sameSite: "none",         // required for cross-site iframe
     path: "/",
+    maxAge: 600000            // optional, 10 min
   });
 
   res.send(`
@@ -1132,7 +1132,11 @@ app.use((req, res, next) => {
 app.get('/shopify/callback', async (req, res) => {
   try {
     console.log("🍪 CALLBACK COOKIES:", req.headers.cookie); 
-    
+        console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
+if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
+  console.error("❌ Missing shopify_toplevel cookie");
+}
+
     console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
     console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
     console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
@@ -1150,10 +1154,6 @@ app.get('/shopify/callback', async (req, res) => {
 
 
 
-    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
-if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-  console.error("❌ Missing shopify_toplevel cookie");
-}
 
 
 
