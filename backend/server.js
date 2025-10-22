@@ -1026,23 +1026,25 @@ app.get("/shopify/install", (req, res) => {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body style="background:#f6f6f7;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <h3>Installing app for ${shop}...</h3>
+      <body style="background:#fafafa;display:flex;align-items:center;justify-content:center;height:100vh;">
+        <h3>Preparing to install for ${shop}...</h3>
         <script>
           const shop = "${shop}";
-          const host = "${host || ''}";
+          const host = "${host || ""}";
+          const redirectUrl = "/shopify/start?shop=" + shop + "&host=" + host;
 
-          // If inside an iframe → exit it first
+          // Step 1: if inside iframe → break out
           if (window.top !== window.self) {
+            console.log("Exiting iframe for top-level auth...");
             window.top.location.href = "/shopify/install?shop=" + shop + "&host=" + host;
           } else {
-            // Prevent double OAuth triggers per shop
-            const key = "installing-" + shop;
+            // Step 2: ensure this runs once per shop
+            const key = "oauth-started-" + shop;
             if (sessionStorage.getItem(key)) {
-              document.body.innerHTML = "<p>App installation in progress. Please wait...</p>";
+              document.body.innerHTML = "<p>Authentication already in progress...</p>";
             } else {
               sessionStorage.setItem(key, "1");
-              window.location.href = "/shopify/start?shop=" + shop + "&host=" + host;
+              window.location.href = redirectUrl;
             }
           }
         </script>
