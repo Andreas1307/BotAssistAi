@@ -1021,25 +1021,24 @@ app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Force single redirect per browser session
   res.send(`
-    <html>
-      <body>
-        <script>
-          if (!window.sessionStorage.getItem('shopifyOauthStarted')) {
-            window.sessionStorage.setItem('shopifyOauthStarted', 'true');
-            const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
-            if (window.top === window.self) {
-              window.location.href = redirectUrl;
-            } else {
-              window.top.location.href = redirectUrl;
-            }
+    <html><body>
+      <script>
+        // Prevent multiple OAuth starts across reloads/tabs
+        const key = 'oauthStarted-${shop}';
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          const redirectUrl = "/shopify/start?shop=${shop}&host=${host}";
+          if (window.top === window.self) {
+            window.location.href = redirectUrl;
           } else {
-            document.body.innerHTML = "OAuth already started. Please wait...";
+            window.top.location.href = redirectUrl;
           }
-        </script>
-      </body>
-    </html>
+        } else {
+          document.body.innerHTML = "OAuth already started. Please wait...";
+        }
+      </script>
+    </body></html>
   `);
 });
 
@@ -1050,12 +1049,13 @@ app.get("/shopify/start", async (req, res) => {
     const { shop } = req.query;
     if (!shop) return res.status(400).send("Missing shop");
 
-    if (ongoingOauth.has(shop)) {
-      return res.send("OAuth already in progress. Please wait...");
+    if (ongoingOauth.get(shop)) {
+      return res.status(429).send("OAuth already in progress. Please wait...");
     }
-    ongoingOauth.set(shop, true);
 
-    // Set top-level cookie for Shopify OAuth
+    ongoingOauth.set(shop, true);
+    setTimeout(() => ongoingOauth.delete(shop), 15000); // keep lock for 15s
+
     res.cookie("shopify_toplevel", "true", {
       sameSite: "none",
       secure: true,
@@ -1072,12 +1072,19 @@ app.get("/shopify/start", async (req, res) => {
       rawResponse: res,
     });
 
-    ongoingOauth.delete(shop); // Remove after redirect
+    // Do NOT delete here — let timeout handle cleanup
   } catch (err) {
     ongoingOauth.delete(req.query.shop);
     console.error("❌ OAuth start failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start failed");
   }
+});
+
+app.use((req, res, next) => {
+  if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
+    console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
+  }
+  next();
 });
 
 app.get('/shopify/callback', async (req, res) => {
@@ -1211,13 +1218,6 @@ app.get('/shopify/callback', async (req, res) => {
       <p>${err.message || ""}</p></body></html>
     `);
   }
-});
-
-app.use((req, res, next) => {
-  if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
-    console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
-  }
-  next();
 });
 
 
