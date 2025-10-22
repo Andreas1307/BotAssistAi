@@ -989,6 +989,21 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+function clearShopifyCookies(req, res, next) {
+  const cookiesToClear = [
+    'shopify_toplevel',
+    'shopify_oauth_state',
+    'shopify_app_state',
+    'shopify_app_state.sig',
+  ];
+
+  cookiesToClear.forEach((name) => {
+    res.clearCookie(name, { path: '/' });
+  });
+
+  next();
+}
+
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   // Only allow your app origin in production; for now this is permissive for debugging:
@@ -1018,14 +1033,13 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/auth/toplevel", (req, res) => {
+app.get("/shopify/auth/toplevel", clearShopifyCookies, (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Must match Shopify requirements
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
-    secure: process.env.NODE_ENV === "production", // false in dev
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none",
     path: "/",
   });
@@ -1089,11 +1103,11 @@ app.get("/shopify/auth/exitiframe", (req, res) => {
   `);
 });
 
-app.get("/shopify/start", async (req, res) => {
+app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // Only set cookies for production HTTPS
+  // Re-set top-level cookie
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
@@ -1101,7 +1115,7 @@ app.get("/shopify/start", async (req, res) => {
     path: "/",
   });
 
-  // short-lived marker
+  // Short-lived marker (debug/validation)
   res.cookie("oauth_started", "1", {
     maxAge: 60 * 1000,
     sameSite: "none",
