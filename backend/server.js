@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: ".botassistai.com"
+    domain: ".botassistai.com"
   }
 }));
 
@@ -1022,12 +1022,13 @@ app.get("/shopify/auth/toplevel", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
+  // Must match Shopify requirements
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production", // false in dev
     sameSite: "none",
     path: "/",
-  });  
+  });
 
   const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
   res.send(`
@@ -1089,29 +1090,27 @@ app.get("/shopify/auth/exitiframe", (req, res) => {
 });
 
 app.get("/shopify/start", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  // Only set cookies for production HTTPS
+  res.cookie("shopify_toplevel", "true", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    path: "/",
+  });
+
+  // short-lived marker
+  res.cookie("oauth_started", "1", {
+    maxAge: 60 * 1000,
+    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: false,
+    path: "/",
+  });
+
   try {
-    const { shop } = req.query;
-    if (!shop) return res.status(400).send("Missing shop");
-
-    // write top-level cookie that Shopify's OAuth expects (SameSite=None + Secure + accessible to JS)
-    // trust proxy (above) ensures secure cookies get set when behind TLS-terminating proxy.
-    res.cookie("shopify_toplevel", "true", {
-      sameSite: "none",
-      secure: true,
-      httpOnly: false,
-      path: "/",
-    });
-
-    // extra short-lived marker to verify cookie set (for debug or TOAST UI)
-    res.cookie("oauth_started", "1", {
-      maxAge: 60 * 1000, // 1 min
-      sameSite: "none",
-      secure: true,
-      httpOnly: false,
-      path: "/",
-    });
-
-    console.log(`🔑 Starting OAuth for ${shop}`);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1119,7 +1118,6 @@ app.get("/shopify/start", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-
   } catch (err) {
     console.error("❌ OAuth start failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start failed");
