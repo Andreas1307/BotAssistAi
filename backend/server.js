@@ -1002,13 +1002,15 @@ function clearShopifyCookies(req, res, next) {
     'shopify_oauth_state',
     'shopify_app_state',
     'shopify_app_state.sig',
+    'shopify_toplevel',
+    'shopify_toplevel.sig'
   ];
 
   cookiesToClear.forEach((name) => {
-    res.clearCookie(name, { path: '/' });
+    res.clearCookie(name, { path: '/', sameSite: 'None', secure: true });
   });
 
-  next();
+  next && next();
 }
 
 app.use((req, res, next) => {
@@ -1110,15 +1112,13 @@ app.get("/shopify/start", async (req, res) => {
   try {
     console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
 
-    // 🧹 FIX: Clear old OAuth cookies before starting new one
-    clearShopifyCookies(req, res, async () => {
-      await shopify.auth.begin({
-        shop,
-        callbackPath: "/shopify/callback",
-        isOnline: true,
-        rawRequest: req,
-        rawResponse: res,
-      });
+    clearShopifyCookies(req, res, () => {});
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
     });
   } catch (err) {
     console.error("❌ OAuth start failed:", err);
