@@ -1043,6 +1043,8 @@ app.get("/api/ping", async (req, res) => {
 
 app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
+  console.log("🧭 /shopify/install triggered", { shop, host });
+
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   res.send(`
@@ -1055,13 +1057,15 @@ app.get("/shopify/install", async (req, res) => {
         <script>
           const shop = "${shop}";
           const host = "${host || ""}";
-          const target = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+          const target = "https://api.botassistai.com/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
 
-          // Always escape iframe first
+          console.log("➡️ Redirecting to:", target);
+
           if (window.top !== window.self) {
+            console.log("🚪 Escaping iframe...");
             window.top.location.href = target;
           } else {
-            // At top level → set cookie + continue
+            console.log("✅ At top level, continuing to start OAuth");
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
             window.location.href = target;
           }
@@ -1073,29 +1077,42 @@ app.get("/shopify/install", async (req, res) => {
 
 app.get("/shopify/start", async (req, res) => {
   const { shop, host } = req.query;
+  console.log("🧭 /shopify/start hit", { shop, host });
+  console.log("🍪 Incoming cookies:", req.headers.cookie);
 
   const hasTopLevelCookie = (req.headers.cookie || "").includes("shopify_toplevel");
+  console.log("🔍 hasTopLevelCookie:", hasTopLevelCookie);
+
   if (!hasTopLevelCookie) {
+    console.log("⚠️ Missing top-level cookie, setting and redirecting...");
     return res.send(`
       <html>
         <body>
           <script>
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.top.location.href = "/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+            const url = "https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
+            console.log("🔁 Redirecting to", url);
+            window.top.location.href = url;
           </script>
         </body>
       </html>
     `);
   }
 
-  // Start OAuth only if top-level cookie exists
-  await shopify.auth.begin({
-    shop,
-    callbackPath: "/shopify/callback",
-    isOnline: true,
-    rawRequest: req,
-    rawResponse: res,
-  });
+  console.log("✅ Top-level cookie present — beginning OAuth for", shop);
+
+  try {
+    await shopify.auth.begin({
+      shop,
+      callbackPath: "/shopify/callback",
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+  } catch (err) {
+    console.error("❌ OAuth begin error:", err);
+    res.status(500).send("Failed to start OAuth");
+  }
 });
 
 app.use((req, res, next) => {
@@ -1118,6 +1135,17 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
     console.log('🍪 CALLBACK COOKIES:', req.headers.cookie || '(none)');
 
+    console.log("🧭 /shopify/callback hit");
+    console.log("🧠 Query:", req.query);
+    console.log("🍪 Headers:", req.headers.cookie || "(none)");
+  
+    const cookieHeader = req.headers.cookie || "";
+    const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
+    const hasAppState = cookieHeader.includes("shopify_app_state");
+    const hasTopLevel = cookieHeader.includes("shopify_toplevel");
+  
+    console.log("🔍 Cookie presence →", { hasOAuthState, hasAppState, hasTopLevel });
+  
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
