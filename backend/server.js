@@ -997,7 +997,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 function clearShopifyCookies(req, res, next) {
   const cookiesToClear = [
     'shopify_oauth_state',
@@ -1041,7 +1040,7 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", (req, res) => {
+app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
@@ -1052,28 +1051,24 @@ app.get("/shopify/install", (req, res) => {
         <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       </head>
       <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;">
-        <h3>Installing app for ${shop}...</h3>
+        <h3>Authorizing app for ${shop}...</h3>
         <script>
           const shop = "${shop}";
-          const host = "${host || ''}";
+          const host = "${host || ""}";
           const apiKey = "${process.env.SHOPIFY_API_KEY}";
+          
+          const isInIframe = (window.top !== window.self);
 
-          // Step 1: Are we in an iframe?
-          if (window.top !== window.self) {
-            console.log("📦 Inside iframe — redirecting to top level");
+          if (isInIframe) {
+            console.log("📦 Inside iframe → using App Bridge redirect");
             const AppBridge = window["app-bridge"];
             const createApp = AppBridge.default || AppBridge;
             const app = createApp({ apiKey, host, forceRedirect: true });
             const Redirect = AppBridge.actions.Redirect;
-            app.dispatch(
-              Redirect.toTopLevel("/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host))
-            );
+            app.dispatch(Redirect.toApp({ path: "/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host) }));
           } else {
-            console.log("🌍 Top-level — setting cookie and starting OAuth");
-            // Step 2: Set top-level cookie
+            console.log("🌍 Top-level → setting cookie & starting OAuth");
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-
-            // Step 3: Start OAuth
             window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
