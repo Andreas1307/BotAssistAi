@@ -1049,23 +1049,21 @@ app.get("/shopify/install", async (req, res) => {
     <html>
       <head>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       </head>
       <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;">
         <h3>Authorizing app for ${shop}...</h3>
         <script>
           const shop = "${shop}";
           const host = "${host || ""}";
-          const apiKey = "${process.env.SHOPIFY_API_KEY}";
+          const target = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
 
-          // Always break out of iframe and go to /shopify/start at top-level
-          if (window.top === window.self) {
-            console.log("🌍 Top-level → set cookie & start OAuth");
-            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+          // Always escape iframe first
+          if (window.top !== window.self) {
+            window.top.location.href = target;
           } else {
-            console.log("📦 In iframe → exit to top window");
-            window.top.location.href = "/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+            // At top level → set cookie + continue
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.location.href = target;
           }
         </script>
       </body>
