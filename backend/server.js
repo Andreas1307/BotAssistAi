@@ -1073,12 +1073,21 @@ app.get("/shopify/install", async (req, res) => {
 });
 
 app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  let { shop } = req.query;
+  
+  // Try to recover shop if missing
+  if (!shop && req.headers.referer && req.headers.referer.includes("myshopify.com")) {
+    const match = req.headers.referer.match(/([\w-]+\.myshopify\.com)/);
+    if (match) shop = match[1];
+  }
+
+  if (!shop) {
+    console.error("❌ Missing shop param at /shopify/start");
+    return res.status(400).send("Missing shop parameter");
+  }
 
   try {
     console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
-
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
