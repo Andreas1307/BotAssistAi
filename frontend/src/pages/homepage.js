@@ -122,7 +122,7 @@ const Homepage = () => {
         setInstalled(true);
 
         if (user?.username) {
-          safeRedirect(`https://www.botassistai.com/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+          safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
         }
   
       } catch (err) {
