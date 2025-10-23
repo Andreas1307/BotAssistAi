@@ -1090,23 +1090,14 @@ app.get("/shopify/start", async (req, res) => {
     `);
   }
 
-  try {
-    console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
-
-    // Only clear OAuth state cookies, NOT shopify_toplevel
-    clearShopifyCookies(req, res, () => {});
-
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start failed");
-  }
+  // Start OAuth only if top-level cookie exists
+  await shopify.auth.begin({
+    shop,
+    callbackPath: "/shopify/callback",
+    isOnline: true,
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.use((req, res, next) => {
