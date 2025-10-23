@@ -1047,23 +1047,21 @@ app.get("/shopify/install", async (req, res) => {
         <script>
           const shop = "${shop}";
           const host = "${host || ''}";
+          const apiKey = "${process.env.SHOPIFY_API_KEY}";
 
-          // 1️⃣ If inside iframe → use App Bridge to break out
+          // Step 1: Check if we are inside an iframe
           if (window.top !== window.self) {
-            console.log("Inside iframe → requesting top-level redirect...");
+            console.log("📦 Inside iframe → redirecting to top level");
             const AppBridge = window["app-bridge"];
             const createApp = AppBridge.default || AppBridge;
-            const app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: host,
-              forceRedirect: true,
-            });
+            const app = createApp({ apiKey, host, forceRedirect: true });
             const Redirect = AppBridge.actions.Redirect;
             app.dispatch(Redirect.toTopLevel("/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)));
           } else {
-            // 2️⃣ Top-level → set cookie, then begin OAuth
-            console.log("Top-level reached → starting OAuth flow");
+            console.log("🌍 Top-level reached → set cookie and start OAuth");
+            // Step 2: We’re top-level now, safe to set cookies
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            // Step 3: Begin OAuth
             window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
