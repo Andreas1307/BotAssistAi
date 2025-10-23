@@ -1067,17 +1067,14 @@ app.get("/shopify/toplevel", (req, res) => {
   console.log("🧭 /shopify/toplevel hit", { shop, host });
 
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
-    secure: true,
+    httpOnly: false, // must be readable by browser JS
+    secure: true,    // HTTPS only
     sameSite: "none",
-    domain: ".botassistai.com",
-    path: "/",
+    path: "/",       // root path
+    maxAge: 5 * 60 * 1000 // short-lived
   });
-  
-  const redirectUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(
-    shop
-  )}&host=${encodeURIComponent(host || "")}`;
 
+  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
   console.log("🔁 Redirecting to start OAuth:", redirectUrl);
 
   res.send(`
@@ -1100,12 +1097,10 @@ app.get("/shopify/start", async (req, res) => {
 
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  const hasTopLevel = (req.headers.cookie || "").includes("shopify_toplevel");
-  if (!hasTopLevel) {
+  const cookies = req.headers.cookie || "";
+  if (!cookies.includes("shopify_toplevel")) {
     console.log("⚠️ Missing shopify_toplevel cookie, redirecting to /toplevel");
-    return res.redirect(
-      `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
-    );
+    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
 
   try {
