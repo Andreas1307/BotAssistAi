@@ -989,6 +989,15 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
+
 function clearShopifyCookies(req, res, next) {
   const cookiesToClear = [
     'shopify_oauth_state',
@@ -1032,14 +1041,14 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", async (req, res) => {
+app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   res.send(`
     <html>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       </head>
       <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;">
@@ -1049,19 +1058,22 @@ app.get("/shopify/install", async (req, res) => {
           const host = "${host || ''}";
           const apiKey = "${process.env.SHOPIFY_API_KEY}";
 
-          // Step 1: Check if we are inside an iframe
+          // Step 1: Are we in an iframe?
           if (window.top !== window.self) {
-            console.log("📦 Inside iframe → redirecting to top level");
+            console.log("📦 Inside iframe — redirecting to top level");
             const AppBridge = window["app-bridge"];
             const createApp = AppBridge.default || AppBridge;
             const app = createApp({ apiKey, host, forceRedirect: true });
             const Redirect = AppBridge.actions.Redirect;
-            app.dispatch(Redirect.toTopLevel("/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host)));
+            app.dispatch(
+              Redirect.toTopLevel("/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host))
+            );
           } else {
-            console.log("🌍 Top-level reached → set cookie and start OAuth");
-            // Step 2: We’re top-level now, safe to set cookies
+            console.log("🌍 Top-level — setting cookie and starting OAuth");
+            // Step 2: Set top-level cookie
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            // Step 3: Begin OAuth
+
+            // Step 3: Start OAuth
             window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
