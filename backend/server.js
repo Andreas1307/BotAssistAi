@@ -1073,8 +1073,8 @@ app.get("/shopify/install", async (req, res) => {
 });
 
 app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
-  let { shop } = req.query;
-  
+  let { shop, host } = req.query;
+
   // Try to recover shop if missing
   if (!shop && req.headers.referer && req.headers.referer.includes("myshopify.com")) {
     const match = req.headers.referer.match(/([\w-]+\.myshopify\.com)/);
@@ -1086,6 +1086,25 @@ app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
     return res.status(400).send("Missing shop parameter");
   }
 
+  // ✅ Step 1: Ensure we're running top-level
+  const hasTopLevelCookie = (req.headers.cookie || "").includes("shopify_toplevel");
+  if (!hasTopLevelCookie) {
+    console.log("🔄 Missing top-level cookie — forcing top-level redirect for", shop);
+    return res.send(`
+      <html>
+        <head><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+        <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;">
+          <h3>Preparing secure authorization for ${shop}...</h3>
+          <script>
+            document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+            window.top.location.href = "/shopify/start?shop=" + encodeURIComponent("${shop}") + "&host=" + encodeURIComponent("${host || ''}");
+          </script>
+        </body>
+      </html>
+    `);
+  }
+
+  // ✅ Step 2: Proceed with OAuth
   try {
     console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
     await shopify.auth.begin({
