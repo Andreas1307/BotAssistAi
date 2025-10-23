@@ -1058,20 +1058,15 @@ app.get("/shopify/install", async (req, res) => {
           const shop = "${shop}";
           const host = "${host || ""}";
           const apiKey = "${process.env.SHOPIFY_API_KEY}";
-          
-          const isInIframe = (window.top !== window.self);
 
-          if (isInIframe) {
-            console.log("📦 Inside iframe → using App Bridge redirect");
-            const AppBridge = window["app-bridge"];
-            const createApp = AppBridge.default || AppBridge;
-            const app = createApp({ apiKey, host, forceRedirect: true });
-            const Redirect = AppBridge.actions.Redirect;
-            app.dispatch(Redirect.toApp({ path: "/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host) }));
-          } else {
-            console.log("🌍 Top-level → setting cookie & starting OAuth");
+          // Always break out of iframe and go to /shopify/start at top-level
+          if (window.top === window.self) {
+            console.log("🌍 Top-level → set cookie & start OAuth");
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
             window.location.href = "/shopify/start?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
+          } else {
+            console.log("📦 In iframe → exit to top window");
+            window.top.location.href = "/shopify/install?shop=" + encodeURIComponent(shop) + "&host=" + encodeURIComponent(host);
           }
         </script>
       </body>
