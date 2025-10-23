@@ -1077,10 +1077,9 @@ app.get("/shopify/install", async (req, res) => {
   `);
 });
 
-app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
+app.get("/shopify/start", async (req, res) => {
   let { shop, host } = req.query;
 
-  // Try to recover shop if missing
   if (!shop && req.headers.referer && req.headers.referer.includes("myshopify.com")) {
     const match = req.headers.referer.match(/([\w-]+\.myshopify\.com)/);
     if (match) shop = match[1];
@@ -1091,7 +1090,6 @@ app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
     return res.status(400).send("Missing shop parameter");
   }
 
-  // ✅ Step 1: Ensure we're running top-level
   const hasTopLevelCookie = (req.headers.cookie || "").includes("shopify_toplevel");
   if (!hasTopLevelCookie) {
     console.log("🔄 Missing top-level cookie — forcing top-level redirect for", shop);
@@ -1109,15 +1107,18 @@ app.get("/shopify/start", clearShopifyCookies, async (req, res) => {
     `);
   }
 
-  // ✅ Step 2: Proceed with OAuth
   try {
     console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
-    await shopify.auth.begin({
-      shop,
-      callbackPath: "/shopify/callback",
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
+
+    // 🧹 FIX: Clear old OAuth cookies before starting new one
+    clearShopifyCookies(req, res, async () => {
+      await shopify.auth.begin({
+        shop,
+        callbackPath: "/shopify/callback",
+        isOnline: true,
+        rawRequest: req,
+        rawResponse: res,
+      });
     });
   } catch (err) {
     console.error("❌ OAuth start failed:", err);
