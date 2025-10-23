@@ -996,14 +996,13 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
-
 function clearShopifyCookies(req, res, next) {
   const cookiesToClear = [
     'shopify_oauth_state',
     'shopify_app_state',
     'shopify_app_state.sig',
-    'shopify_toplevel',
-    'shopify_toplevel.sig'
+    // 'shopify_toplevel', // <- don't clear this before OAuth
+    // 'shopify_toplevel.sig'
   ];
 
   cookiesToClear.forEach((name) => {
@@ -1075,29 +1074,16 @@ app.get("/shopify/install", async (req, res) => {
 });
 
 app.get("/shopify/start", async (req, res) => {
-  let { shop, host } = req.query;
-
-  if (!shop && req.headers.referer && req.headers.referer.includes("myshopify.com")) {
-    const match = req.headers.referer.match(/([\w-]+\.myshopify\.com)/);
-    if (match) shop = match[1];
-  }
-
-  if (!shop) {
-    console.error("❌ Missing shop param at /shopify/start");
-    return res.status(400).send("Missing shop parameter");
-  }
+  const { shop, host } = req.query;
 
   const hasTopLevelCookie = (req.headers.cookie || "").includes("shopify_toplevel");
   if (!hasTopLevelCookie) {
-    console.log("🔄 Missing top-level cookie — forcing top-level redirect for", shop);
     return res.send(`
       <html>
-        <head><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
-        <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;">
-          <h3>Preparing secure authorization for ${shop}...</h3>
+        <body>
           <script>
             document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-            window.top.location.href = "/shopify/start?shop=" + encodeURIComponent("${shop}") + "&host=" + encodeURIComponent("${host || ''}");
+            window.top.location.href = "/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
           </script>
         </body>
       </html>
@@ -1107,7 +1093,9 @@ app.get("/shopify/start", async (req, res) => {
   try {
     console.log("🚀 Starting OAuth for", shop, "Cookies:", req.headers.cookie);
 
+    // Only clear OAuth state cookies, NOT shopify_toplevel
     clearShopifyCookies(req, res, () => {});
+
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
