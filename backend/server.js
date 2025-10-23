@@ -1013,11 +1013,10 @@ function clearShopifyCookies(req, res, next) {
 }
 
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  // Only allow your app origin in production; for now this is permissive for debugging:
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
 
@@ -1064,47 +1063,34 @@ app.get("/shopify/install", async (req, res) => {
 
 app.get("/shopify/toplevel", (req, res) => {
   const { shop, host } = req.query;
-  console.log("🧭 /shopify/toplevel hit", { shop, host });
-
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false, // must be readable by browser JS
-    secure: true,    // HTTPS only
-    sameSite: "none",
-    path: "/",       // root path
-    maxAge: 5 * 60 * 1000 // short-lived
+    httpOnly: false,   // must be readable by JS
+    secure: true,      // HTTPS only
+    sameSite: "none",  // cross-site requests
+    path: "/",
+    maxAge: 5 * 60 * 1000,
   });
 
   const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
-  console.log("🔁 Redirecting to start OAuth:", redirectUrl);
-
   res.send(`
-    <html>
-      <head><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
-      <body>
-        <script>
-          console.log("✅ Toplevel cookie set, continuing OAuth");
-          window.location.href = "${redirectUrl}";
-        </script>
-      </body>
-    </html>
+    <html><body>
+      <script>
+        window.location.href = "${redirectUrl}";
+      </script>
+    </body></html>
   `);
 });
 
 app.get("/shopify/start", async (req, res) => {
   const { shop, host } = req.query;
-  console.log("🧭 /shopify/start hit", { shop, host });
-  console.log("🍪 Incoming cookies:", req.headers.cookie);
+  if (!shop) return res.status(400).send("Missing shop");
 
-  if (!shop) return res.status(400).send("Missing shop parameter");
-
-  const cookies = req.headers.cookie || "";
-  if (!cookies.includes("shopify_toplevel")) {
-    console.log("⚠️ Missing shopify_toplevel cookie, redirecting to /toplevel");
+  // Ensure top-level cookie is set
+  if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
 
   try {
-    console.log("✅ Starting OAuth for", shop);
     await shopify.auth.begin({
       shop,
       callbackPath: "/shopify/callback",
@@ -1260,10 +1246,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
           forceRedirect: true
         });
         const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/?shop=${shop}&host=${req.query.host}");
+        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/?shop=${session.shop}&host=${req.query.host}");
       </script>
     `);
-    
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
