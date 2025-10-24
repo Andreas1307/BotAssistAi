@@ -1009,83 +1009,47 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get('/shopify/install', (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send('Missing shop parameter');
-  const redirectUrl = `https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
-  res.send(`
-    <html>
-      <body>
-        <script>
-          window.top.location.href = ${JSON.stringify(redirectUrl)};
-        </script>
-      </body>
-    </html>
-  `);
-});
-
-app.get('/shopify/toplevel', (req, res) => {
+app.get('/shopify/install', async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
 
+  // 1️⃣ Set top-level cookie immediately
   res.cookie('shopify_toplevel', 'true', {
     httpOnly: false,
     secure: true,
     sameSite: 'none',
     path: '/',
-    maxAge: 5 * 60 * 1000
+    maxAge: 5 * 60 * 1000,
   });
 
-  const startUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
-  res.send(`
-    <html>
-      <body>
-        <script>window.location.href = ${JSON.stringify(startUrl)};</script>
-      </body>
-    </html>
-  `);
-});
+  // 2️⃣ Generate OAuth state
+  const state = crypto.randomBytes(16).toString('hex');
+  res.cookie('shopify_oauth_state', state, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 5 * 60 * 1000,
+  });
 
-app.get('/shopify/start', async (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send('Missing shop parameter');
+  res.cookie('shopify_app_state', state, {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 5 * 60 * 1000,
+  });
 
-  const cookies = req.headers.cookie || '';
-  if (!cookies.includes('shopify_toplevel')) {
-    const toplevel = `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
-    return res.send(`<html><body><script>window.location.href = ${JSON.stringify(toplevel)};</script></body></html>`);
-  }
-
+  // 3️⃣ Begin OAuth flow directly
   try {
-    const state = crypto.randomBytes(16).toString('hex');
-
-    // --- Set OAuth state cookie
-    res.cookie('shopify_oauth_state', state, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      maxAge: 5 * 60 * 1000,
-    });
-
-    // --- Set app_state cookie
-    res.cookie('shopify_app_state', state, {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'none',
-      maxAge: 5 * 60 * 1000,
-    });
-
-    // --- Begin OAuth
     await shopify.auth.begin({
       shop,
       callbackPath: '/shopify/callback',
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
-      state, // pass it explicitly
+      state,
     });
   } catch (err) {
-    console.error('OAuth begin error', err);
+    console.error('OAuth begin error:', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
