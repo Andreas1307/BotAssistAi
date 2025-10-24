@@ -60,6 +60,7 @@ const sessionStore = new MySQLStore({
 
 
 app.set('trust proxy', 1);
+app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -74,7 +75,6 @@ app.use(session({
     domain: ".botassistai.com"
   }
 }));
-app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
@@ -95,10 +95,12 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const allowed = allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : o === origin);
+    const allowed = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
     callback(null, allowed);
   },
-  credentials: true // required for cookies
+  credentials: true,
 }));
 
 app.use((req, res, next) => {
@@ -987,18 +989,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : o === origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
-
 app.get("/api/ping", async (req, res) => {
   try {
     const sessionId = await shopify.auth.session.getCurrentId({
@@ -1019,25 +1009,24 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.use((req, res, next) => {
-  if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
-    console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
-  }
-  next();
-});
-
-app.get("/shopify/install", (req, res) => {
+app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  const toplevelUrl = `https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+  console.log("🧭 /shopify/install triggered", { shop, host });
 
   res.send(`
-    <html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-    <body style="display:flex;align-items:center;justify-content:center;height:100vh;">
-      <h3>Authorizing app for ${shop}...</h3>
-      <script>window.top.location.href = ${JSON.stringify(toplevelUrl)};</script>
-    </body></html>
+    <html>
+      <head><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+      <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;font-family:sans-serif;">
+        <h3>Authorizing app for ${shop}...</h3>
+        <script>
+          const target = "https://api.botassistai.com/shopify/toplevel?shop=" + encodeURIComponent("${shop}") + "&host=" + encodeURIComponent("${host || ''}");
+          console.log("➡️ Escaping iframe to:", target);
+          window.top.location.href = target;
+        </script>
+      </body>
+    </html>
   `);
 });
 
@@ -1045,36 +1034,54 @@ app.get("/shopify/toplevel", (req, res) => {
   const { shop, host } = req.query;
   console.log("🧭 /shopify/toplevel hit", { shop, host });
 
+  // set top-level cookie
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,  // must be readable by JS
-    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false,
+    secure: true,
     sameSite: "none",
     path: "/",
-    maxAge: 5 * 60 * 1000 // 5 min
   });
 
-  const redirectUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
+  const redirectUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(
+    shop
+  )}&host=${encodeURIComponent(host || "")}`;
+
+  console.log("🔁 Redirecting to start OAuth:", redirectUrl);
+
   res.send(`
-    <html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-    <body><script>window.location.href = "${redirectUrl}";</script></body></html>
+    <html>
+      <head><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+      <body>
+        <script>
+          console.log("✅ Toplevel cookie set, continuing OAuth");
+          window.location.href = "${redirectUrl}";
+        </script>
+      </body>
+    </html>
   `);
 });
 
 app.get("/shopify/start", async (req, res) => {
   const { shop, host } = req.query;
+  console.log("🧭 /shopify/start hit", { shop, host });
+  console.log("🍪 Incoming cookies:", req.headers.cookie);
+
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Ensure top-level cookie exists
-  if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
+  const hasTopLevel = (req.headers.cookie || "").includes("shopify_toplevel");
+  if (!hasTopLevel) {
     console.log("⚠️ Missing shopify_toplevel cookie, redirecting to /toplevel");
-    return res.redirect(`https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
+    return res.redirect(
+      `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+    );
   }
 
   try {
+    console.log("✅ Starting OAuth for", shop);
     await shopify.auth.begin({
       shop,
-      isOnline: true,
       callbackPath: "/shopify/callback",
+      isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
@@ -1124,6 +1131,12 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     if (!session?.shop || !session?.accessToken) {
       return res.status(400).send('Session missing required data.');
     }
+
+
+
+
+
+
 
     const shop = session.shop;
     const host = req.query.host;
@@ -1216,6 +1229,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
   
     return res.redirect(`https://www.botassistai.com/dashboard?shop=${shop}&host=${host}`);
+ 
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1225,6 +1239,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     `);
   }
 });
+
+
+
 
 
 
