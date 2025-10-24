@@ -68,7 +68,7 @@ const Homepage = () => {
           const params = new URLSearchParams(window.location.search);
           const shopParam = params.get("shop");
           const hostParam = params.get("host");
-          safeRedirect(`/shopify/install?shop=${shopParam}&host=${hostParam}`);
+          safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
           return;
         }
   
@@ -102,15 +102,14 @@ const Homepage = () => {
         });
   
         if (!data.installed) {
-          safeRedirect(`/shopify/install?shop=${shopParam}&host=${hostParam}`);
+          safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
   
-          // Save chatbot config once OAuth completes
           await axios.post(`/chatbot-config-shopify`, {
             shop: shopParam,
             colors,
           });
   
-          return; // ✅ Prevents continuing flow before install
+          return; 
         }
   
         if (!data.hasBilling) {
