@@ -990,29 +990,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-function clearShopifyCookies(req, res, next) {
-  const cookiesToClear = [
-    'shopify_oauth_state',
-    'shopify_app_state',
-    'shopify_app_state.sig',
-    // 'shopify_toplevel', // <- don't clear this before OAuth
-    // 'shopify_toplevel.sig'
-  ];
-
-  cookiesToClear.forEach((name) => {
-    res.clearCookie(name, { path: '/', sameSite: 'None', secure: true });
-  });
-
-  next && next();
-}
-
-app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : o === origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
