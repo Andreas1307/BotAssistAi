@@ -1052,21 +1052,33 @@ app.get('/shopify/start', async (req, res) => {
 
   const cookies = req.headers.cookie || '';
   if (!cookies.includes('shopify_toplevel')) {
-    // If missing, re-run toplevel (this should not loop endlessly - toplevel sets a cookie)
     const toplevel = `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
     return res.send(`<html><body><script>window.location.href = ${JSON.stringify(toplevel)};</script></body></html>`);
   }
 
   try {
-    // IMPORTANT: rawRequest/rawResponse so SDK sets cookies on response
+    // --- Generate a random OAuth state
+    const state = crypto.randomBytes(16).toString('hex');
+
+    // --- Set OAuth state cookie
+    res.cookie('shopify_oauth_state', state, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 5 * 60 * 1000,
+    });
+
+    // --- Begin OAuth flow with the state
     await shopify.auth.begin({
       shop,
       callbackPath: '/shopify/callback',
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
+      state, // pass it explicitly
     });
-    // the SDK will have sent a redirect response to Shopify; DO NOT send another response
+
+    // The SDK will redirect to Shopify; DO NOT send another response
   } catch (err) {
     console.error('OAuth begin error', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
