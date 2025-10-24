@@ -1013,44 +1013,37 @@ app.get('/shopify/top-level-auth', (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
-  // ✅ Important: Use SAME domain as backend
   res.cookie('shopify_toplevel', 'true', {
-    httpOnly: false,
-    secure: true,
-    sameSite: 'None',
+    httpOnly: false,      // MUST be accessible by browser JS
+    secure: true,         // true in production
+    sameSite: 'None',     // critical for cross-site
     path: '/',
-    domain: '.api.botassistai.com', // 👈 fix here
+    domain: '.botassistai.com', // must match your domain
   });
 
-  return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+  // Redirect to install route
+  res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
 app.get('/shopify/install', async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
 
-  // Ensure top-level auth is done first
+  // Ensure top-level auth is done
   if (!req.cookies || !req.cookies.shopify_toplevel) {
     console.log('🔁 Redirecting to top-level-auth for', shop);
     return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
   }
 
-  try {
-    const redirectUrl = await shopify.auth.begin({
-      shop,
-      isOnline: true,
-      callbackPath: '/shopify/callback',
-      rawRequest: req,
-      rawResponse: res,
-    });
+  const redirectUrl = await shopify.auth.begin({
+    shop,
+    isOnline: true,
+    callbackPath: '/shopify/callback',
+    rawRequest: req,
+    rawResponse: res,
+  });
 
-    if (!res.headersSent && redirectUrl) {
-      res.redirect(redirectUrl);
-    }
-  } catch (err) {
-    console.error('❌ OAuth initiation failed:', err);
-    if (!res.headersSent) res.status(500).send('OAuth failed.');
-  }
+  res.redirect(redirectUrl);
 });
 
 app.use((req, res, next) => {
