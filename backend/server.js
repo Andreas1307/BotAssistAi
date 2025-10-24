@@ -1222,7 +1222,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
   
-    return res.redirect(`/?shop=${shop}&host=${host}`);
+    return res.redirect(`www.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`);
 
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
