@@ -988,7 +988,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const API_HOST = 'https://api.botassistai.com';
 
 app.get("/api/ping", async (req, res) => {
   try {
@@ -1013,12 +1012,15 @@ app.get("/api/ping", async (req, res) => {
 app.get('/shopify/install', (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
-
-  const toplevelUrl = `${API_HOST}/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+  const redirectUrl = `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
   res.send(`
-    <html><body>
-      <script>window.top.location.href = ${JSON.stringify(toplevelUrl)};</script>
-    </body></html>
+    <html>
+      <body>
+        <script>
+          window.top.location.href = ${JSON.stringify(redirectUrl)};
+        </script>
+      </body>
+    </html>
   `);
 });
 
@@ -1026,18 +1028,22 @@ app.get('/shopify/toplevel', (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
 
-  // Set top-level cookie on API host. Use API hostname (not www) so OAuth cookie lands on same origin.
   res.cookie('shopify_toplevel', 'true', {
-    httpOnly: false,                      // must be readable from client JS for flow checks
-    secure: true,                         // production HTTPS only
+    httpOnly: false,
+    secure: true,
     sameSite: 'none',
     path: '/',
-    // domain: ".botassistai.com",         // avoid domain mismatch - omit to default to API host
-    maxAge: 5 * 60 * 1000,
+    maxAge: 5 * 60 * 1000
   });
 
-  const redirectUrl = `${API_HOST}/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
-  res.send(`<html><body><script>window.location.href = ${JSON.stringify(redirectUrl)};</script></body></html>`);
+  const startUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+  res.send(`
+    <html>
+      <body>
+        <script>window.location.href = ${JSON.stringify(startUrl)};</script>
+      </body>
+    </html>
+  `);
 });
 
 app.get('/shopify/start', async (req, res) => {
@@ -1047,7 +1053,7 @@ app.get('/shopify/start', async (req, res) => {
   const cookies = req.headers.cookie || '';
   if (!cookies.includes('shopify_toplevel')) {
     // If missing, re-run toplevel (this should not loop endlessly - toplevel sets a cookie)
-    const toplevel = `${API_HOST}/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+    const toplevel = `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
     return res.send(`<html><body><script>window.location.href = ${JSON.stringify(toplevel)};</script></body></html>`);
   }
 
