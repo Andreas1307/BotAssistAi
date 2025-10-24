@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    domain: "api.botassistai.com"
   }
 }));
 
@@ -1222,16 +1222,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
   
-    res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        const AppBridge = window["app-bridge"];
-        const createApp = AppBridge.default || AppBridge;
-        const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${req.query.host}", forceRedirect: true });
-        const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/?shop=${session.shop}&host=${req.query.host}");
-      </script>
-    `);
+    return res.redirect(`/?shop=${shop}&host=${host}`);
+
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1241,9 +1233,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     `);
   }
 });
-
-
-
 
 
 
