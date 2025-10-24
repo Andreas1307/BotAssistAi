@@ -95,12 +95,10 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const allowed = allowedOrigins.some(o =>
-      o instanceof RegExp ? o.test(origin) : o === origin
-    );
+    const allowed = allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : o === origin);
     callback(null, allowed);
   },
-  credentials: true,
+  credentials: true // required for cookies
 }));
 
 app.use((req, res, next) => {
@@ -1021,13 +1019,17 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
+app.use((req, res, next) => {
+  if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
+    console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
+  }
+  next();
+});
+
 app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
-  console.log("🧭 /shopify/install", { shop, host });
 
-  // Use window.top to escape Shopify admin iframe and navigate to your API domain /toplevel
-  // NOTE: "api.botassistai.com" is the domain the cookie must be set on
   const toplevelUrl = `https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
 
   res.send(`
@@ -1044,18 +1046,14 @@ app.get("/shopify/toplevel", (req, res) => {
   console.log("🧭 /shopify/toplevel hit", { shop, host });
 
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,   // must be readable by JS
-    secure: true,      // production HTTPS only
+    httpOnly: false,  // must be readable by JS
+    secure: process.env.NODE_ENV === 'production',
     sameSite: "none",
-    domain: ".botassistai.com",
     path: "/",
-    maxAge: 5 * 60 * 1000 // short lived
+    maxAge: 5 * 60 * 1000 // 5 min
   });
 
-  // redirect to /start on the same domain so cookies are present for auth.begin
   const redirectUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
-  console.log("🔁 set top-level cookie and redirect to:", redirectUrl);
-
   res.send(`
     <html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
     <body><script>window.location.href = "${redirectUrl}";</script></body></html>
@@ -1066,17 +1064,13 @@ app.get("/shopify/start", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  console.log("🧭 /shopify/start hit", { shop, host });
-  console.log("🍪 incoming cookies:", req.headers.cookie);
-
-  // If top-level cookie missing, go back to toplevel
+  // Ensure top-level cookie exists
   if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("⚠️ Missing shopify_toplevel cookie, redirecting to /toplevel");
     return res.redirect(`https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
 
   try {
-    // IMPORTANT: pass rawRequest/rawResponse so SDK can set cookies on the response
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1084,7 +1078,6 @@ app.get("/shopify/start", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    // auth.begin will have sent a redirect response to Shopify; do NOT send another response here
   } catch (err) {
     console.error("❌ OAuth begin error:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
@@ -1222,8 +1215,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
   
-    return res.redirect(`https://www.botassistai.com/${user.username}/dashboard?shop=${shop}&host=${host}`);
-
+    return res.redirect(`https://www.botassistai.com/dashboard?shop=${shop}&host=${host}`);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
