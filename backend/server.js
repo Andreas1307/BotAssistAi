@@ -1057,7 +1057,6 @@ app.get('/shopify/start', async (req, res) => {
   }
 
   try {
-    // --- Generate a random OAuth state
     const state = crypto.randomBytes(16).toString('hex');
 
     // --- Set OAuth state cookie
@@ -1068,7 +1067,15 @@ app.get('/shopify/start', async (req, res) => {
       maxAge: 5 * 60 * 1000,
     });
 
-    // --- Begin OAuth flow with the state
+    // --- Set app_state cookie
+    res.cookie('shopify_app_state', state, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 5 * 60 * 1000,
+    });
+
+    // --- Begin OAuth
     await shopify.auth.begin({
       shop,
       callbackPath: '/shopify/callback',
@@ -1077,8 +1084,6 @@ app.get('/shopify/start', async (req, res) => {
       rawResponse: res,
       state, // pass it explicitly
     });
-
-    // The SDK will redirect to Shopify; DO NOT send another response
   } catch (err) {
     console.error('OAuth begin error', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
