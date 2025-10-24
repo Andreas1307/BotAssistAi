@@ -1031,17 +1031,25 @@ app.get('/shopify/install', async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
 
+  // If top-level cookie is not set, redirect to top-level-auth first
+  if (!req.cookies.shopify_toplevel) {
+    const redirectUrl = `/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
+    console.log('🔁 Redirecting to top-level-auth for', shop);
+    return res.redirect(redirectUrl);
+  }
+
   try {
-    await shopify.auth.begin({
+    const authRoute = await shopify.auth.begin({
       shop,
-      callbackPath: '/shopify/callback',
       isOnline: true,
+      callbackPath: '/shopify/callback',
       rawRequest: req,
       rawResponse: res,
     });
+    return res.redirect(authRoute);
   } catch (err) {
-    console.error('OAuth begin error:', err);
-    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
+    console.error('❌ OAuth initiation failed:', err);
+    return res.status(500).send('Failed to start OAuth');
   }
 });
 
