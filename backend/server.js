@@ -988,6 +988,7 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const API_HOST = 'https://api.botassistai.com';
 
 app.get("/api/ping", async (req, res) => {
   try {
