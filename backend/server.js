@@ -1035,13 +1035,14 @@ app.get("/shopify/toplevel", (req, res) => {
   console.log("🧭 /shopify/toplevel hit", { shop, host });
 
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false, // must be readable by JS
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    httpOnly: false,             // must be accessible via JS
+    secure: process.env.NODE_ENV === 'production', // false in localhost
+    sameSite: 'none',            // required for cross-site
     path: '/',
     domain: process.env.NODE_ENV === 'production' ? '.botassistai.com' : undefined,
-    maxAge: 5 * 60 * 1000, // 5 minutes
+    maxAge: 5 * 60 * 1000,
   });
+  
   const redirectUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(
     shop
   )}&host=${encodeURIComponent(host || "")}`;
