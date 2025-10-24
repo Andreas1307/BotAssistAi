@@ -1012,7 +1012,7 @@ app.get("/api/ping", async (req, res) => {
 app.get('/shopify/install', (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
-  const redirectUrl = `/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+  const redirectUrl = `https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
   res.send(`
     <html>
       <body>
@@ -1036,7 +1036,7 @@ app.get('/shopify/toplevel', (req, res) => {
     maxAge: 5 * 60 * 1000
   });
 
-  const startUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+  const startUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
   res.send(`
     <html>
       <body>
