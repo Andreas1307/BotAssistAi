@@ -1011,36 +1011,31 @@ app.get("/api/ping", async (req, res) => {
 
 app.get('/shopify/top-level-auth', (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send('Missing shop parameter');
+  if (!shop) return res.status(400).send('Missing shop');
 
-  // Set top-level cookie
   res.cookie('shopify_toplevel', 'true', {
     httpOnly: false,
     secure: true,
     sameSite: 'none',
     path: '/',
-    maxAge: 5 * 60 * 1000,
+    domain: '.botassistai.com', // 👈 must match session cookie
   });
 
-  // Redirect to /shopify/install
-  const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
-  res.redirect(installUrl);
+  return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
 app.get('/shopify/install', async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
 
-  // If top-level cookie is not set, redirect to top-level-auth first
+  // Ensure top-level auth is done first
   if (!req.cookies || !req.cookies.shopify_toplevel) {
-    const redirectUrl = `/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
     console.log('🔁 Redirecting to top-level-auth for', shop);
-    return res.redirect(redirectUrl);
+    return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
-    // shopify.auth.begin may either return a URL or perform the redirect itself.
-    const maybeRedirectUrl = await shopify.auth.begin({
+    const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
       callbackPath: '/shopify/callback',
@@ -1048,18 +1043,12 @@ app.get('/shopify/install', async (req, res) => {
       rawResponse: res,
     });
 
-    // Only redirect here if auth.begin returned a URL and headers are not already sent
-    if (maybeRedirectUrl && !res.headersSent) {
-      return res.redirect(maybeRedirectUrl);
+    if (!res.headersSent && redirectUrl) {
+      res.redirect(redirectUrl);
     }
-
-    // If auth.begin already handled the redirect/response, just return
-    return;
   } catch (err) {
     console.error('❌ OAuth initiation failed:', err);
-    if (!res.headersSent) {
-      return res.status(500).send('Failed to start OAuth');
-    }
+    if (!res.headersSent) res.status(500).send('OAuth failed.');
   }
 });
 
