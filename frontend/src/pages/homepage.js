@@ -56,7 +56,18 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shopParam = params.get("shop");
+  
+    // If top-level cookie missing, redirect to top-level auth
+    if (!document.cookie.includes("shopify_toplevel")) {
+      window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+      return;
+    }
+  
+    // Proceed with App Bridge init
     (async () => {
       const app = await initShopifyAppBridge();
       if (!app) return;
@@ -64,9 +75,6 @@ const Homepage = () => {
       try {
         const res = await fetchWithAuth("/api/ping");
         if (!res.ok) {
-          console.warn("⚠️ No active session, redirecting to OAuth");
-          const params = new URLSearchParams(window.location.search);
-          const shopParam = params.get("shop");
           const hostParam = params.get("host");
           safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
           return;
@@ -78,6 +86,7 @@ const Homepage = () => {
       }
     })();
   }, []);
+  
   
 
   

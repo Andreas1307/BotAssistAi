@@ -1022,7 +1022,7 @@ app.get('/shopify/top-level-auth', (req, res) => {
     maxAge: 5 * 60 * 1000,
   });
 
-  // Redirect to /shopify/install with same query
+  // Redirect to /shopify/install
   const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
   res.redirect(installUrl);
 });
@@ -1044,7 +1044,6 @@ app.get('/shopify/install', async (req, res) => {
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
-
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
@@ -1069,6 +1068,10 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("🧭 /shopify/callback hit");
     console.log("🧠 Query:", req.query);
     console.log("🍪 Headers:", req.headers.cookie || "(none)");
+
+    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
+      console.error("❌ Missing shopify_toplevel cookie");
+    }    
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
