@@ -1234,17 +1234,23 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
-        const AppBridge = window["app-bridge"];
+        const AppBridge = window['app-bridge'];
         const createApp = AppBridge.default || AppBridge;
+    
         const app = createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: "${host}",
-          forceRedirect: true,
+          forceRedirect: true
         });
+    
         const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}");
+        Redirect.dispatch(
+          AppBridge.actions.Redirect.Action.APP,
+          "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}"
+        );
       </script>
     `);
+    
 
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
