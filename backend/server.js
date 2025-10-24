@@ -1032,24 +1032,34 @@ app.get('/shopify/install', async (req, res) => {
   if (!shop) return res.status(400).send('Missing shop parameter');
 
   // If top-level cookie is not set, redirect to top-level-auth first
-  if (!req.cookies.shopify_toplevel) {
+  if (!req.cookies || !req.cookies.shopify_toplevel) {
     const redirectUrl = `/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
     console.log('🔁 Redirecting to top-level-auth for', shop);
     return res.redirect(redirectUrl);
   }
 
   try {
-    const authRoute = await shopify.auth.begin({
+    // shopify.auth.begin may either return a URL or perform the redirect itself.
+    const maybeRedirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
       callbackPath: '/shopify/callback',
       rawRequest: req,
       rawResponse: res,
     });
-    return res.redirect(authRoute);
+
+    // Only redirect here if auth.begin returned a URL and headers are not already sent
+    if (maybeRedirectUrl && !res.headersSent) {
+      return res.redirect(maybeRedirectUrl);
+    }
+
+    // If auth.begin already handled the redirect/response, just return
+    return;
   } catch (err) {
     console.error('❌ OAuth initiation failed:', err);
-    return res.status(500).send('Failed to start OAuth');
+    if (!res.headersSent) {
+      return res.status(500).send('Failed to start OAuth');
+    }
   }
 });
 
