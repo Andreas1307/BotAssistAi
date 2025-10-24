@@ -1193,28 +1193,23 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
   
-    
     const redirectHtml = `
-    <html>
-      <head>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      </head>
-      <body>
-        <script>
-          const AppBridge = window['app-bridge'];
-          const createApp = AppBridge.default || AppBridge;
-          const app = createApp({
-            apiKey: ${JSON.stringify(process.env.SHOPIFY_API_KEY)},
-            host: ${JSON.stringify(host)},
-            forceRedirect: true
-          });
-          const Redirect = AppBridge.actions.Redirect.create(app);
-          Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, ${JSON.stringify(`https://www.botassistai.com/${user.username}/dashboard?shop=${session.shop}`)});
-        </script>
-      </body>
-    </html>
-  `;
-  res.send(redirectHtml);
+  <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+  <script>
+    const app = window['app-bridge'].createApp({
+      apiKey: '${process.env.SHOPIFY_API_KEY}',
+      host: '${host}',
+      forceRedirect: true
+    });
+    app.dispatch(
+      window['app-bridge'].actions.Redirect.toApp({
+        path: 'https://www.botassistai.com/${user.username}/dashboard?shop=${session.shop}'
+      })
+    );
+  </script>
+`;
+res.send(redirectHtml);
+
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
