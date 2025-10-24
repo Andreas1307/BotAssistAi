@@ -1013,10 +1013,14 @@ function clearShopifyCookies(req, res, next) {
 }
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.some(o => o instanceof RegExp ? o.test(origin) : o === origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
 
@@ -1040,64 +1044,70 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", async (req, res) => {
+app.get("/shopify/install", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
+  console.log("🧭 /shopify/install", { shop, host });
 
-  console.log("🧭 /shopify/install triggered", { shop, host });
+  // Use window.top to escape Shopify admin iframe and navigate to your API domain /toplevel
+  // NOTE: "api.botassistai.com" is the domain the cookie must be set on
+  const toplevelUrl = `https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
 
   res.send(`
-    <html>
-      <head><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
-      <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#fafafa;font-family:sans-serif;">
-        <h3>Authorizing app for ${shop}...</h3>
-        <script>
-          const target = "https://api.botassistai.com/shopify/toplevel?shop=" + encodeURIComponent("${shop}") + "&host=" + encodeURIComponent("${host || ''}");
-          console.log("➡️ Escaping iframe to:", target);
-          window.top.location.href = target;
-        </script>
-      </body>
-    </html>
+    <html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+    <body style="display:flex;align-items:center;justify-content:center;height:100vh;">
+      <h3>Authorizing app for ${shop}...</h3>
+      <script>window.top.location.href = ${JSON.stringify(toplevelUrl)};</script>
+    </body></html>
   `);
 });
 
 app.get("/shopify/toplevel", (req, res) => {
   const { shop, host } = req.query;
+  console.log("🧭 /shopify/toplevel hit", { shop, host });
+
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,   // must be readable by JS
-    secure: true,      // HTTPS only
-    sameSite: "none",  // cross-site requests
+    secure: true,      // production HTTPS only
+    sameSite: "none",
+    domain: ".botassistai.com",
     path: "/",
-    maxAge: 5 * 60 * 1000,
+    maxAge: 5 * 60 * 1000 // short lived
   });
 
-  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
+  // redirect to /start on the same domain so cookies are present for auth.begin
+  const redirectUrl = `https://api.botassistai.com/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
+  console.log("🔁 set top-level cookie and redirect to:", redirectUrl);
+
   res.send(`
-    <html><body>
-      <script>
-        window.location.href = "${redirectUrl}";
-      </script>
-    </body></html>
+    <html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+    <body><script>window.location.href = "${redirectUrl}";</script></body></html>
   `);
 });
 
 app.get("/shopify/start", async (req, res) => {
   const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Ensure top-level cookie is set
+  console.log("🧭 /shopify/start hit", { shop, host });
+  console.log("🍪 incoming cookies:", req.headers.cookie);
+
+  // If top-level cookie missing, go back to toplevel
   if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
+    console.log("⚠️ Missing shopify_toplevel cookie, redirecting to /toplevel");
+    return res.redirect(`https://api.botassistai.com/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`);
   }
 
   try {
+    // IMPORTANT: pass rawRequest/rawResponse so SDK can set cookies on the response
     await shopify.auth.begin({
       shop,
-      callbackPath: "/shopify/callback",
       isOnline: true,
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
+    // auth.begin will have sent a redirect response to Shopify; do NOT send another response here
   } catch (err) {
     console.error("❌ OAuth begin error:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
@@ -1240,11 +1250,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <script>
         const AppBridge = window["app-bridge"];
         const createApp = AppBridge.default || AppBridge;
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${req.query.host}",
-          forceRedirect: true
-        });
+        const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host: "${req.query.host}", forceRedirect: true });
         const Redirect = AppBridge.actions.Redirect.create(app);
         Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/?shop=${session.shop}&host=${req.query.host}");
       </script>
