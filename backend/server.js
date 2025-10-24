@@ -1009,51 +1009,60 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", (req, res) => {
+app.get('/shopify/install', (req, res) => {
   const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
+  if (!shop) return res.status(400).send('Missing shop parameter');
 
+  const toplevelUrl = `${API_HOST}/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
   res.send(`
-    <script>
-      window.top.location.href = "/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}";
-    </script>
+    <html><body>
+      <script>window.top.location.href = ${JSON.stringify(toplevelUrl)};</script>
+    </body></html>
   `);
 });
 
-app.get("/shopify/toplevel", (req, res) => {
+app.get('/shopify/toplevel', (req, res) => {
   const { shop, host } = req.query;
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
-    secure: true,
-    sameSite: "none",
-    path: "/",
-    // Don't set domain unless required. Usually omit domain to default to current host
+  if (!shop) return res.status(400).send('Missing shop parameter');
+
+  // Set top-level cookie on API host. Use API hostname (not www) so OAuth cookie lands on same origin.
+  res.cookie('shopify_toplevel', 'true', {
+    httpOnly: false,                      // must be readable from client JS for flow checks
+    secure: true,                         // production HTTPS only
+    sameSite: 'none',
+    path: '/',
+    // domain: ".botassistai.com",         // avoid domain mismatch - omit to default to API host
     maxAge: 5 * 60 * 1000,
   });
 
-  const redirectUrl = `/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
-  res.send(`<script>window.location.href="${redirectUrl}"</script>`);
+  const redirectUrl = `${API_HOST}/shopify/start?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+  res.send(`<html><body><script>window.location.href = ${JSON.stringify(redirectUrl)};</script></body></html>`);
 });
 
-app.get("/shopify/start", async (req, res) => {
-  const { shop } = req.query;
-  const cookies = req.headers.cookie || "";
+app.get('/shopify/start', async (req, res) => {
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send('Missing shop parameter');
 
-  if (!cookies.includes("shopify_toplevel")) {
-    return res.redirect(`/shopify/toplevel?shop=${encodeURIComponent(shop)}`);
+  const cookies = req.headers.cookie || '';
+  if (!cookies.includes('shopify_toplevel')) {
+    // If missing, re-run toplevel (this should not loop endlessly - toplevel sets a cookie)
+    const toplevel = `${API_HOST}/shopify/toplevel?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || '')}`;
+    return res.send(`<html><body><script>window.location.href = ${JSON.stringify(toplevel)};</script></body></html>`);
   }
 
   try {
+    // IMPORTANT: rawRequest/rawResponse so SDK sets cookies on response
     await shopify.auth.begin({
       shop,
-      callbackPath: "/shopify/callback",
+      callbackPath: '/shopify/callback',
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
+    // the SDK will have sent a redirect response to Shopify; DO NOT send another response
   } catch (err) {
-    console.error("❌ OAuth begin error:", err);
-    res.status(500).send("Failed to start OAuth");
+    console.error('OAuth begin error', err);
+    if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
 
@@ -1195,27 +1204,27 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
   
     
-    res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default || AppBridge;
-    
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true
-        });
-    
-        const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(
-          AppBridge.actions.Redirect.Action.APP,
-          "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}"
-        );
-      </script>
-    `);
-    
-
+    const redirectHtml = `
+    <html>
+      <head>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      </head>
+      <body>
+        <script>
+          const AppBridge = window['app-bridge'];
+          const createApp = AppBridge.default || AppBridge;
+          const app = createApp({
+            apiKey: ${JSON.stringify(process.env.SHOPIFY_API_KEY)},
+            host: ${JSON.stringify(host)},
+            forceRedirect: true
+          });
+          const Redirect = AppBridge.actions.Redirect.create(app);
+          Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, ${JSON.stringify(`https://www.botassistai.com/${user.username}/dashboard?shop=${session.shop}`)});
+        </script>
+      </body>
+    </html>
+  `;
+  res.send(redirectHtml);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1226,6 +1235,13 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
 });
 
+app.get('/debug/cookies', (req, res) => {
+  res.json({
+    headersCookie: req.headers.cookie || null,
+    host: req.headers.host,
+    origin: req.headers.origin || null,
+  });
+});
 
 
 
