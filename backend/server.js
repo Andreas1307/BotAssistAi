@@ -60,7 +60,6 @@ const sessionStore = new MySQLStore({
 
 
 app.set('trust proxy', 1);
-app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -72,9 +71,10 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: "api.botassistai.com"
+    domain: ".botassistai.com"
   }
 }));
+app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
