@@ -7,6 +7,7 @@ const API_HOSTNAME = 'api.botassistai.com';         // hostname used by SDK
 
 // shopify config: make sure hostName matches your API host (no protocol)
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
+require('@shopify/shopify-api/adapters/node');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
