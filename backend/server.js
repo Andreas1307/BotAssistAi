@@ -1013,12 +1013,13 @@ app.get('/shopify/top-level-auth', (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop');
 
+  // ✅ Important: Use SAME domain as backend
   res.cookie('shopify_toplevel', 'true', {
     httpOnly: false,
     secure: true,
-    sameSite: 'none',
+    sameSite: 'None',
     path: '/',
-    domain: '.botassistai.com', // 👈 must match session cookie
+    domain: '.api.botassistai.com', // 👈 fix here
   });
 
   return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
@@ -1196,15 +1197,27 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const redirectHtml = `
     <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
     <script>
-      const AppBridge = window['app-bridge'];
+      const AppBridge = window["app-bridge"];
       const createApp = AppBridge.default || AppBridge;
       const app = createApp({
-        apiKey: '${process.env.SHOPIFY_API_KEY}',
-        host: '${host}',
-        forceRedirect: true
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: "${host}",
+        forceRedirect: true,
       });
+  
       const Redirect = AppBridge.actions.Redirect.create(app);
-      Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, '/');
+  
+      // ✅ If this is under Shopify review, redirect to root (keeps iframe)
+      const isShopifyReview = "${process.env.SHOPIFY_REVIEW_MODE}" === "true";
+      if (isShopifyReview) {
+        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/");
+      } else {
+        // ✅ Normal production redirect to external dashboard
+        Redirect.dispatch(
+          AppBridge.actions.Redirect.Action.REMOTE,
+          "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}"
+        );
+      }
     </script>
   `;
   res.send(redirectHtml);
