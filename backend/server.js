@@ -1009,11 +1009,11 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get('/shopify/install', async (req, res) => {
-  const { shop, host } = req.query;
+app.get('/shopify/top-level-auth', (req, res) => {
+  const { shop } = req.query;
   if (!shop) return res.status(400).send('Missing shop parameter');
 
-  // 1️⃣ Set top-level cookie immediately
+  // Set top-level cookie
   res.cookie('shopify_toplevel', 'true', {
     httpOnly: false,
     secure: true,
@@ -1022,23 +1022,15 @@ app.get('/shopify/install', async (req, res) => {
     maxAge: 5 * 60 * 1000,
   });
 
-  // 2️⃣ Generate OAuth state
-  const state = crypto.randomBytes(16).toString('hex');
-  res.cookie('shopify_oauth_state', state, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 5 * 60 * 1000,
-  });
+  // Redirect to /shopify/install with same query
+  const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
+  res.redirect(installUrl);
+});
 
-  res.cookie('shopify_app_state', state, {
-    httpOnly: false,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 5 * 60 * 1000,
-  });
+app.get('/shopify/install', async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send('Missing shop parameter');
 
-  // 3️⃣ Begin OAuth flow directly
   try {
     await shopify.auth.begin({
       shop,
@@ -1046,13 +1038,13 @@ app.get('/shopify/install', async (req, res) => {
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
-      state,
     });
   } catch (err) {
     console.error('OAuth begin error:', err);
     if (!res.headersSent) res.status(500).send('Failed to start OAuth');
   }
 });
+
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
