@@ -989,6 +989,12 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://admin.shopify.com");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 const API_HOST = process.env.API_HOST || "https://api.botassistai.com";
 
 function abs(path) {
@@ -1023,11 +1029,13 @@ app.get("/shopify/auth", (req, res) => {
   console.log("🍪 /shopify/auth hit for", shop);
 
   res.cookie("shopify_toplevel", "true", {
-    sameSite: "none",
+    sameSite: "None",
     secure: true,
-    httpOnly: false, // must be readable by frontend scripts
+    httpOnly: false,
     path: "/",
+    domain: ".botassistai.com", // 👈 important
   });
+  
 
   console.log("✅ Cookie set on response headers");
 
@@ -1106,7 +1114,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
     console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
     console.log('🍪 CALLBACK COOKIES:', req.headers.cookie || '(none)');
-
+    console.log("🍪 CALLBACK HEADERS:", req.headers.cookie);
+    console.log("🧠 CALLBACK HOST:", req.get('host'));
+    
     console.log("🧭 /shopify/callback hit");
     console.log("🧠 Query:", req.query);
     console.log("🍪 Headers:", req.headers.cookie || "(none)");
