@@ -995,17 +995,14 @@ app.get("/shopify/auth", (req, res) => {
 
   console.log("🍪 /shopify/auth hit for shop:", shop);
 
-  // Set top-level cookie
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false, // must be accessible in JS
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None", // mandatory for iframe
-    path: "/",
-  });
-  console.log("✅ shopify_toplevel cookie set");
-
-  // Redirect to /install
-  res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+  // Serve a small HTML page that sets the cookie in browser
+  res.send(`
+    <script>
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+      console.log("✅ shopify_toplevel cookie set in browser");
+      window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+    </script>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1015,14 +1012,9 @@ app.get("/shopify/install", async (req, res) => {
   console.log("🔑 /shopify/install hit for shop:", shop);
   console.log("🍪 Incoming cookies:", req.cookies);
 
-  // If no top-level cookie, redirect to /auth via JS
   if (!req.cookies?.shopify_toplevel) {
-    console.warn("⚠️ Missing top-level cookie, redirecting via JS...");
-    return res.send(`
-      <script>
-        window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
-      </script>
-    `);
+    console.warn("⚠️ Missing top-level cookie, redirecting to /auth...");
+    return res.redirect(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
@@ -1042,7 +1034,6 @@ app.get("/shopify/install", async (req, res) => {
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
-
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
