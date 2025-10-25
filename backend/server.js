@@ -1009,41 +1009,44 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get('/shopify/top-level-auth', (req, res) => {
+app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send('Missing shop');
+  if (!shop) return res.status(400).send("Missing shop");
 
-  res.cookie('shopify_toplevel', 'true', {
-    httpOnly: false,      // MUST be accessible by browser JS
-    secure: true,         // true in production
-    sameSite: 'None',     // critical for cross-site
-    path: '/',
-    domain: '.botassistai.com', // must match your domain
+  res.cookie("shopify_toplevel", "true", {
+    httpOnly: false,      // must be readable by client JS
+    secure: true,         // required for embedded apps
+    sameSite: "None",     // critical for Shopify
+    path: "/",
+    domain: ".botassistai.com", // <-- match your main domain
   });
 
-  // Redirect to install route
-  res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+  return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
-app.get('/shopify/install', async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send('Missing shop parameter');
+app.get("/shopify/install", async (req, res) => {
+  try {
+    const { shop } = req.query;
+    if (!shop) return res.status(400).send("Missing shop parameter");
 
-  // Ensure top-level auth is done
-  if (!req.cookies || !req.cookies.shopify_toplevel) {
-    console.log('🔁 Redirecting to top-level-auth for', shop);
-    return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
+    if (!req.cookies?.shopify_toplevel) {
+      console.log("🔁 Redirecting to top-level-auth for", shop);
+      return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
+    }
+
+    const redirectUrl = await shopify.auth.begin({
+      shop,
+      isOnline: true,
+      callbackPath: "/shopify/callback",
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error("❌ Install error:", err);
+    if (!res.headersSent) return res.status(500).send("Install failed");
   }
-
-  const redirectUrl = await shopify.auth.begin({
-    shop,
-    isOnline: true,
-    callbackPath: '/shopify/callback',
-    rawRequest: req,
-    rawResponse: res,
-  });
-
-  res.redirect(redirectUrl);
 });
 
 app.use((req, res, next) => {
@@ -1090,12 +1093,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     if (!session?.shop || !session?.accessToken) {
       return res.status(400).send('Session missing required data.');
     }
-
-
-
-
-
-
 
     const shop = session.shop;
     const host = req.query.host;
@@ -1197,25 +1194,15 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         host: "${host}",
         forceRedirect: true,
       });
-  
       const Redirect = AppBridge.actions.Redirect.create(app);
-  
-      // ✅ If this is under Shopify review, redirect to root (keeps iframe)
-      const isShopifyReview = "${process.env.SHOPIFY_REVIEW_MODE}" === "true";
-      if (isShopifyReview) {
-        Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "/");
-      } else {
-        // ✅ Normal production redirect to external dashboard
-        Redirect.dispatch(
-          AppBridge.actions.Redirect.Action.REMOTE,
-          "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}"
-        );
-      }
+      Redirect.dispatch(
+        AppBridge.actions.Redirect.Action.REMOTE,
+        "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}"
+      );
     </script>
   `;
-  res.send(redirectHtml);
-  
 
+  return res.status(200).send(redirectHtml);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
