@@ -990,7 +990,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://admin.shopify.com");
+  const allowedOrigins = ['https://admin.shopify.com', 'https://botassistai.com'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Credentials", "true");
   next();
 });
@@ -1143,7 +1147,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host;
+    const host = req.query.host ? decodeURIComponent(req.query.host) : '';
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1265,7 +1269,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
           </script>
         </body>
       </html>
-    `);
+    `); 
     
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
