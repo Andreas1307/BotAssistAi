@@ -991,20 +991,26 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  if (!shop) return res.status(400).send("Missing shop parameter");
 
   console.log("🍪 /shopify/auth hit for shop:", shop);
 
-  // Serve a small HTML page that sets the cookie in browser
   res.send(`
     <script>
-      if (window.top === window.self) {
-        window.location.href = "/shopify/install?shop=${shop}";
-      } else {
-        window.top.location.href = "/shopify/install?shop=${shop}";
-      }
+      console.log("🚀 Setting top-level cookie...");
+      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
+      console.log("✅ shopify_toplevel cookie set!");
+
+      // Wait a moment to ensure cookie persists
+      setTimeout(() => {
+        if (window.top === window.self) {
+          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        } else {
+          window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        }
+      }, 200);
     </script>
-    `);
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1014,14 +1020,12 @@ app.get("/shopify/install", async (req, res) => {
   console.log("🔑 /shopify/install hit for shop:", shop);
   console.log("🍪 Incoming cookies:", req.cookies);
 
-  // If top-level cookie is missing, redirect to /auth
   if (!req.cookies?.shopify_toplevel) {
     console.warn("⚠️ Missing top-level cookie, redirecting to /auth...");
     return res.redirect(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
-    // Begin OAuth: this will automatically set the shopify_oauth_state cookie
     const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1031,10 +1035,10 @@ app.get("/shopify/install", async (req, res) => {
     });
 
     console.log("➡️ Redirecting to Shopify OAuth URL:", redirectUrl);
-    return res.redirect(redirectUrl);
+    if (!res.headersSent && redirectUrl) return res.redirect(redirectUrl);
   } catch (err) {
     console.error("❌ OAuth initiation failed:", err);
-    return res.status(500).send("Failed to start OAuth");
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
 
