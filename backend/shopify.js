@@ -14,7 +14,7 @@ const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_SCOPES.split(','),
-  hostName: API_HOSTNAME, // **CRITICAL** must match API host
+  hostName: API_HOSTNAME, 
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
