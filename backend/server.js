@@ -1099,15 +1099,6 @@ app.get("/shopify/install", async (req, res) => {
 });
 
 app.use((req, res, next) => {
-  const _writeHead = res.writeHead;
-  res.writeHead = function (...args) {
-    console.log("🔔 Set-Cookie headers:", res.getHeader("Set-Cookie"));
-    _writeHead.apply(res, args);
-  };
-  next();
-});
-
-app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
     console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
   }
