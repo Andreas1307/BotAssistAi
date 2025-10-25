@@ -1250,7 +1250,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               const Redirect = AppBridge.actions.Redirect.create(app);
               Redirect.dispatch(
                 AppBridge.actions.Redirect.Action.REMOTE,
-                "https://www.botassistai.com/your-dashboard-path?shop=${encodeURIComponent(session.shop)}"
+                "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}"
               );
             } catch (e) {
               // If App Bridge cannot initialize here, fallback to top-level redirect
