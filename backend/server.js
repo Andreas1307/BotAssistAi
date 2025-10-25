@@ -989,8 +989,13 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 app.use((req, res, next) => {
-  const allowedOrigins = ['https://admin.shopify.com', 'https://botassistai.com'];
+  const allowedOrigins = [
+    "https://admin.shopify.com",
+    "https://botassistai.com",
+    "https://www.botassistai.com"
+  ];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -1000,7 +1005,6 @@ app.use((req, res, next) => {
 });
 
 const API_HOST = process.env.API_HOST || "https://api.botassistai.com";
-
 function abs(path) {
   return path.startsWith("http") ? path : `${API_HOST}${path}`;
 }
@@ -1013,12 +1017,13 @@ app.get("/shopify/top-level-auth", (req, res) => {
 
   const authUrl = abs(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
 
+  res.setHeader("Content-Type", "text/html");
   res.send(`
     <!doctype html>
     <html>
       <body>
         <script>
-          console.log("🔁 Top-level redirect triggered");
+          console.log("🔁 Redirecting top window to:", "${authUrl}");
           window.top.location.href = "${authUrl}";
         </script>
       </body>
@@ -1037,11 +1042,10 @@ app.get("/shopify/auth", (req, res) => {
     secure: true,
     httpOnly: false,
     path: "/",
-    domain: ".botassistai.com", // 👈 important
+    domain: ".botassistai.com", // ✅ cookie available to all subdomains
   });
-  
 
-  console.log("✅ Cookie set on response headers");
+  console.log("✅ Set shopify_toplevel cookie");
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
   res.send(`
@@ -1049,7 +1053,7 @@ app.get("/shopify/auth", (req, res) => {
     <html>
       <body>
         <script>
-          console.log("✅ shopify_toplevel cookie should now be set");
+          console.log("✅ shopify_toplevel cookie set, redirecting to install…");
           window.location.href = "${installUrl}";
         </script>
       </body>
@@ -1060,17 +1064,16 @@ app.get("/shopify/auth", (req, res) => {
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   console.log("🔑 /shopify/install hit for", shop);
-  console.log("🍪 Cookies received:", req.cookies);
+  console.log("🍪 Received cookies:", req.cookies);
 
   if (!req.cookies.shopify_toplevel) {
-    console.warn("⚠️ Missing cookie, redirecting to top-level-auth");
+    console.warn("⚠️ Missing top-level cookie, redirecting...");
     return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
 
-  console.log("✅ Cookie found! Proceeding with OAuth…");
-
   try {
-    const maybeRedirectUrl = await shopify.auth.begin({
+    console.log("🚀 Starting OAuth for", shop);
+    const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
       callbackPath: "/shopify/callback",
@@ -1078,17 +1081,17 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    if (maybeRedirectUrl) {
-      console.log("➡️ Redirecting to Shopify OAuth:", maybeRedirectUrl);
-      return res.redirect(maybeRedirectUrl);
+    if (redirectUrl) {
+      console.log("➡️ Redirecting to Shopify OAuth:", redirectUrl);
+      return res.redirect(redirectUrl);
     }
 
     if (res.headersSent) {
-      console.log("ℹ️ Headers already sent by shopify.auth.begin");
+      console.log("ℹ️ Headers already sent by shopify.auth.begin()");
       return;
     }
 
-    res.status(500).send("Unexpected: no redirect issued.");
+    res.status(500).send("Unexpected: No redirect issued by Shopify API");
   } catch (err) {
     console.error("❌ OAuth init failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start error");
@@ -1245,7 +1248,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-   const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
+    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
       user.username
     )}/dashboard?shop=${encodeURIComponent(shop)}`;
 
@@ -1258,31 +1261,25 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <body>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
-            try {
-              const AppBridge = window["app-bridge"];
-              const createApp = AppBridge.default || AppBridge;
-              const app = createApp({
-                apiKey: "${process.env.SHOPIFY_API_KEY}",
-                host: "${host}",
-                forceRedirect: true,
-              });
-              const Redirect = AppBridge.actions.Redirect.create(app);
-              Redirect.dispatch(
-                AppBridge.actions.Redirect.Action.REMOTE,
-                "${dashboardUrl}"
-              );
-            } catch (e) {
-              console.error("⚠️ App Bridge redirect failed, using fallback", e);
-              window.top.location.href = "${dashboardUrl}";
-            }
+            const AppBridge = window["app-bridge"];
+            const createApp = AppBridge.default || AppBridge;
+            const app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${host}",
+              forceRedirect: true,
+            });
+            const Redirect = AppBridge.actions.Redirect.create(app);
+            Redirect.dispatch(
+              AppBridge.actions.Redirect.Action.REMOTE,
+              "${dashboardUrl}"
+            );
           </script>
         </body>
       </html>
-    `); 
+    `);
     
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
-    //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
     res.status(200).send(`
       <html><body><h3>OAuth error: ${err.name || "Unknown"}</h3>
       <p>${err.message || ""}</p></body></html>
@@ -1298,7 +1295,6 @@ app.get("/debug/cookies", (req, res) => {
     origin: req.headers.origin || null,
   });
 });
-
 
 
 
