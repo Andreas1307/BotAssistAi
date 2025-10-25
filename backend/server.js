@@ -991,39 +991,33 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
-  if (!shop) {
-    console.error("❌ /auth called without shop param");
-    return res.status(400).send("Missing shop parameter");
-  }
+  if (!shop) return res.status(400).send("Missing shop");
 
-  console.log(`🟢 /auth called for shop: ${shop}`);
+  console.log("🍪 /shopify/auth hit for shop:", shop);
 
   // Set top-level cookie
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
+    httpOnly: false, // must be accessible in JS
     secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
+    sameSite: "None", // mandatory for iframe
     path: "/",
   });
-
-  console.log("🍪 shopify_toplevel cookie set");
+  console.log("✅ shopify_toplevel cookie set");
 
   // Redirect to /install
-  const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
-  console.log(`🔁 Redirecting to ${installUrl}`);
-  res.redirect(installUrl);
+  res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
-  console.log(`🟢 /install called for shop: ${shop}`);
+  console.log("🔑 /shopify/install hit for shop:", shop);
   console.log("🍪 Incoming cookies:", req.cookies);
 
-  // If top-level cookie missing → force /auth redirect
+  // If no top-level cookie, redirect to /auth via JS
   if (!req.cookies?.shopify_toplevel) {
-    console.warn("⚠️ Missing shopify_toplevel cookie, redirecting to /auth");
+    console.warn("⚠️ Missing top-level cookie, redirecting via JS...");
     return res.send(`
       <script>
         window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
@@ -1032,6 +1026,7 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
+    console.log("🔁 Starting OAuth for shop:", shop);
     const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1040,16 +1035,14 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    console.log("🟢 OAuth started, redirectUrl:", redirectUrl);
-
-    if (!res.headersSent && redirectUrl) {
-      res.redirect(redirectUrl);
-    }
+    console.log("➡️ Redirecting to Shopify OAuth URL:", redirectUrl);
+    if (!res.headersSent && redirectUrl) return res.redirect(redirectUrl);
   } catch (err) {
     console.error("❌ OAuth initiation failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
+
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
