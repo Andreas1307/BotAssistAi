@@ -1031,7 +1031,7 @@ app.get("/shopify/install", async (req, res) => {
 
   if (!req.cookies?.shopify_toplevel) {
     console.log("🔁 No top-level cookie, redirecting via JS for", shop);
-    return res.status(200).send(`
+    return res.send(`
       <script>
         window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
       </script>
@@ -1202,12 +1202,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       const Redirect = AppBridge.actions.Redirect.create(app);
       Redirect.dispatch(
         AppBridge.actions.Redirect.Action.REMOTE,
-        "https://www.botassistai.com/${user.username}/dashboard?shop=${shop}"
+        "https://www.botassistai.com/${session.user?.username || 'dashboard'}?shop=${session.shop}"
       );
     </script>
   `;
-  return res.status(200).send(redirectHtml);
-  
+  res.send(redirectHtml);
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
