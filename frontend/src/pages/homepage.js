@@ -70,7 +70,7 @@ const Homepage = () => {
   
     // If top-level cookie missing, redirect to /auth (sets top-level cookie)
     if (!document.cookie.includes("shopify_toplevel")) {
-      window.top.location.href = `${directory}/auth?shop=${shopParam}`;
+      window.top.location.href = `${directory}/shopify/auth?shop=${shopParam}`;
       return;
     }
   
@@ -79,7 +79,7 @@ const Homepage = () => {
       const app = await initShopifyAppBridge();
       if (!app) {
         // If App Bridge init fails, fallback to OAuth install
-        safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
+        safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
         return;
       }
   

@@ -1009,7 +1009,7 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/auth", (req, res) => {
+app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
@@ -1022,10 +1022,10 @@ app.get("/auth", (req, res) => {
   });
 
   // Redirect to /install
-  res.redirect(`/install?shop=${encodeURIComponent(shop)}`);
+  res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
-app.get("/install", async (req, res) => {
+app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
@@ -1033,7 +1033,7 @@ app.get("/install", async (req, res) => {
     console.log("🔁 No top-level cookie, redirecting via JS for", shop);
     return res.status(200).send(`
       <script>
-        window.top.location.href = "/auth?shop=${encodeURIComponent(shop)}";
+        window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
       </script>
     `);
   }
@@ -1042,7 +1042,7 @@ app.get("/install", async (req, res) => {
     const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
-      callbackPath: "/callback",
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
