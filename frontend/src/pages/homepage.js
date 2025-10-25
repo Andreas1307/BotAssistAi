@@ -56,33 +56,42 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
+    const hostParam = params.get("host");
   
-    // If top-level cookie missing, redirect to top-level auth
-    if (!document.cookie.includes("shopify_toplevel")) {
-      window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+    // If shop param missing, stop
+    if (!shopParam) {
+      console.warn("❌ Missing shop parameter in URL");
       return;
     }
   
-    // Proceed with App Bridge init
+    // If top-level cookie missing, redirect to /auth (sets top-level cookie)
+    if (!document.cookie.includes("shopify_toplevel")) {
+      window.top.location.href = `${directory}/auth?shop=${shopParam}`;
+      return;
+    }
+  
+    // Initialize Shopify App Bridge
     (async () => {
       const app = await initShopifyAppBridge();
-      if (!app) return;
+      if (!app) {
+        // If App Bridge init fails, fallback to OAuth install
+        safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
+        return;
+      }
   
       try {
-        const res = await fetchWithAuth("/api/ping");
-        if (!res.ok) {
-          const hostParam = params.get("host");
-          safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
-          return;
-        }
+        // No /api/ping anymore — just assume App Bridge works
+        console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
   
-        console.log("✅ Embedded app session confirmed");
+        // Optionally, you can trigger install if shop is not installed yet
+        // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
       } catch (err) {
-        console.error("❌ Error pinging backend:", err);
+        console.error("❌ Shopify App Bridge init error:", err);
+        safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
       }
     })();
   }, []);

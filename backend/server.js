@@ -1009,7 +1009,7 @@ app.get("/api/ping", async (req, res) => {
   }
 });
 
-app.get("/shopify/top-level-auth", (req, res) => {
+app.get("/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
@@ -1018,14 +1018,14 @@ app.get("/shopify/top-level-auth", (req, res) => {
     secure: true,
     sameSite: "None",
     path: "/",
-    domain: ".botassistai.com", // important
+    domain: ".botassistai.com",
   });
 
-  // Go back to install
-  res.redirect(`https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`);
+  // Redirect to /install
+  res.redirect(`/install?shop=${encodeURIComponent(shop)}`);
 });
 
-app.get("/shopify/install", async (req, res) => {
+app.get("/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
 
@@ -1033,26 +1033,21 @@ app.get("/shopify/install", async (req, res) => {
     console.log("🔁 No top-level cookie, redirecting via JS for", shop);
     return res.status(200).send(`
       <script>
-        window.top.location.href = "https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}";
+        window.top.location.href = "/auth?shop=${encodeURIComponent(shop)}";
       </script>
     `);
   }
 
   try {
-    const maybeRedirectUrl = await shopify.auth.begin({
+    const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
-      callbackPath: "/shopify/callback",
+      callbackPath: "/callback",
       rawRequest: req,
       rawResponse: res,
     });
 
-    if (!res.headersSent && maybeRedirectUrl) {
-      console.log("🧭 Redirecting to OAuth URL →", maybeRedirectUrl);
-      return res.redirect(maybeRedirectUrl);
-    }
-
-    console.log("🧠 shopify.auth.begin handled redirect internally.");
+    if (!res.headersSent && redirectUrl) return res.redirect(redirectUrl);
   } catch (err) {
     console.error("❌ OAuth initiation failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
