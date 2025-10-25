@@ -91,7 +91,7 @@ const Homepage = () => {
         // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
       } catch (err) {
         console.error("❌ Shopify App Bridge init error:", err);
-        safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
+        safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
       }
     })();
   }, []);
