@@ -997,63 +997,51 @@ function abs(path) {
   return `${API_HOST}${path}`;
 }
 
-app.get("/shopify/auth", (req, res) => {
+app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
-  console.log("🍪 /shopify/auth hit for shop:", shop);
 
-  // This page runs inside the browser (top window) and sets the cookie.
-  // We set the cookie via document.cookie in the top window (not via res.cookie),
-  // because when rendered inside Shopify's iframe Set-Cookie often won't persist.
-  // We include SameSite=None and Secure when appropriate.
-  const secureFlag = process.env.NODE_ENV === "production" ? " Secure;" : "";
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  const authUrl = `${API_HOST}/shopify/auth?shop=${encodeURIComponent(shop)}`;
+  res.setHeader("Content-Type", "text/html");
   res.send(`
     <!doctype html>
     <html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>Shopify top-level auth</title>
-      </head>
       <body>
         <script>
-          try {
-            // Set cookie on the top window
-            const cookieValue = "shopify_toplevel=true; path=/; SameSite=None;${secureFlag}";
-            // If we can access top, set on top
-            try {
-              window.top.document; // test
-              // setting via top might not allow document.cookie due cross-origin checks;
-              // using top.location hack below to ensure cookie will be set in top after write
-            } catch (e) {
-              // ignore
-            }
-
-            // Write cookie in THIS context (will apply to this origin)
-            document.cookie = cookieValue;
-            console.log("[auth] set cookie via document.cookie:", document.cookie);
-
-            // Give browser a moment to write cookie before redirecting
-            setTimeout(() => {
-              const installUrl = "${abs("/shopify/install")}?shop=${encodeURIComponent(shop)}";
-              if (window.top === window.self) {
-                window.location.href = installUrl;
-              } else {
-                // redirect top to ensure cookie is top-level
-                window.top.location.href = installUrl;
-              }
-            }, 200);
-          } catch (err) {
-            console.error("[auth] cookie set failed:", err);
-            // fallback: redirect anyway
-            const installUrl = "${abs("/shopify/install")}?shop=${encodeURIComponent(shop)}";
-            window.top.location.href = installUrl;
-          }
+          // We're inside the Shopify iframe here.
+          // Force the top window to go to our auth page.
+          window.top.location.href = "${authUrl}";
         </script>
       </body>
     </html>
   `);
 });
+
+app.get("/shopify/auth", (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop parameter");
+
+  console.log("🍪 /shopify/auth hit for shop:", shop);
+
+  const secureFlag = process.env.NODE_ENV === "production" ? " Secure;" : "";
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(`
+    <!doctype html>
+    <html>
+      <body>
+        <script>
+          // Now we're top-level, so cookies will stick.
+          document.cookie = "shopify_toplevel=true; path=/; SameSite=None;${secureFlag}";
+          console.log("[auth] cookie set OK");
+
+          setTimeout(() => {
+            window.location.href = "${API_HOST}/shopify/install?shop=${encodeURIComponent(shop)}";
+          }, 200);
+        </script>
+      </body>
+    </html>
+  `);
+})
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
@@ -1062,11 +1050,9 @@ app.get("/shopify/install", async (req, res) => {
   console.log("🍪 Parsed cookies (req.cookies):", req.cookies);
   console.log("🍪 Raw Cookie header:", req.headers.cookie || "(none)");
 
-  // If top-level cookie is NOT present, go to /shopify/auth to set it (full absolute URL)
   if (!req.cookies?.shopify_toplevel) {
-    console.warn("⚠️ Missing top-level cookie; redirecting to /shopify/auth to set it");
-    // Use absolute URL to avoid iframe confusion
-    return res.redirect(abs(`/shopify/auth?shop=${encodeURIComponent(shop)}`));
+    console.warn("⚠️ Missing top-level cookie; going to /shopify/top-level-auth");
+    return res.redirect(`${API_HOST}/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
   }
 
   try {
