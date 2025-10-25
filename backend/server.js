@@ -1052,40 +1052,32 @@ app.get('/shopify/auth', (req, res) => {
   `);
 });
 
-app.get('/shopify/install', async (req, res) => {
-  const { shop } = req.query;
-  console.log('🔑 /shopify/install hit for', shop);
-  console.log('🍪 Received cookies:', req.cookies);
-
-  if (!req.cookies.shopify_toplevel) {
-    console.warn('⚠️ Missing top-level cookie, redirecting to top-level-auth');
-    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
-  }
-
+app.get("/shopify/install", async (req, res, next) => {
   try {
-    console.log('🚀 Starting OAuth for', shop);
-    const redirectUrl = await shopify.auth.begin({
+    const shop = req.query.shop;
+
+    if (!shop) {
+      return res.status(400).send("Missing shop parameter");
+    }
+
+    console.log(`🔑 /shopify/install hit for ${shop}`);
+    console.log("🍪 Received cookies:", req.cookies);
+
+    const authRoute = await shopify.auth.begin({
       shop,
+      callbackPath: "/shopify/callback",
       isOnline: true,
-      callbackPath: '/shopify/callback',
       rawRequest: req,
       rawResponse: res,
     });
 
-    if (redirectUrl) {
-      console.log('➡️ Redirecting to Shopify OAuth:', redirectUrl);
-      return res.redirect(redirectUrl);
-    }
+    console.log("🚀 Starting OAuth for", shop);
 
-    if (res.headersSent) {
-      console.log('ℹ️ Headers already sent by shopify.auth.begin()');
-      return;
-    }
-
-    res.status(500).send('Unexpected: No redirect issued by Shopify API');
+    // ❗ Important: return after begin
+    return; // prevents Express from continuing after response
   } catch (err) {
-    console.error('❌ OAuth init failed:', err);
-    if (!res.headersSent) res.status(500).send('OAuth start error');
+    console.error("❌ Install error:", err);
+    next(err);
   }
 });
 
