@@ -1051,35 +1051,6 @@ app.get("/shopify/install", async (req, res) => {
   }
 });
 
-app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop parameter");
-
-  if (!req.cookies?.shopify_toplevel) {
-    console.log("🔁 No top-level cookie, redirecting via JS for", shop);
-    return res.send(`
-      <script>
-        window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(shop)}";
-      </script>
-    `);
-  }
-
-  try {
-    const redirectUrl = await shopify.auth.begin({
-      shop,
-      isOnline: true,
-      callbackPath: "/shopify/callback",
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    if (!res.headersSent && redirectUrl) return res.redirect(redirectUrl);
-  } catch (err) {
-    console.error("❌ OAuth initiation failed:", err);
-    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
-  }
-});
-
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
     console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
