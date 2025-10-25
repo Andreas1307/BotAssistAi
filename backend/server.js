@@ -1014,50 +1014,48 @@ app.get("/shopify/top-level-auth", (req, res) => {
   if (!shop) return res.status(400).send("Missing shop");
 
   res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,      // must be readable by client JS
-    secure: true,         // required for embedded apps
-    sameSite: "None",     // critical for Shopify
+    httpOnly: false,
+    secure: true,
+    sameSite: "None",
     path: "/",
-    domain: ".botassistai.com", // <-- match your main domain
+    domain: ".botassistai.com", // important
   });
 
-  return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+  // Go back to install
+  res.redirect(`https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
-app.get('/shopify/install', async (req, res) => {
+app.get("/shopify/install", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop parameter");
+
+  if (!req.cookies?.shopify_toplevel) {
+    console.log("🔁 No top-level cookie, redirecting via JS for", shop);
+    return res.status(200).send(`
+      <script>
+        window.top.location.href = "https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}";
+      </script>
+    `);
+  }
+
   try {
-    const { shop } = req.query;
-    if (!shop) return res.status(400).send('Missing shop parameter');
-
-    // Ensure top-level auth is complete
-    if (!req.cookies?.shopify_toplevel) {
-      console.log('🔁 Redirecting to top-level-auth for', shop);
-      return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
-    }
-
-    // Begin OAuth — may either redirect itself or return a URL
     const maybeRedirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
-      callbackPath: '/shopify/callback',
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
 
-    // ✅ Only redirect manually if auth.begin() returns a URL
     if (!res.headersSent && maybeRedirectUrl) {
-      console.log('🧭 Manually redirecting to OAuth URL →', maybeRedirectUrl);
+      console.log("🧭 Redirecting to OAuth URL →", maybeRedirectUrl);
       return res.redirect(maybeRedirectUrl);
     }
 
-    // ✅ If Shopify already handled the redirect, just return
-    console.log('🧠 shopify.auth.begin handled redirect internally.');
-    return;
+    console.log("🧠 shopify.auth.begin handled redirect internally.");
   } catch (err) {
-    console.error('❌ OAuth initiation failed:', err);
-    if (!res.headersSent) {
-      return res.status(500).send('Failed to start OAuth');
-    }
+    console.error("❌ OAuth initiation failed:", err);
+    if (!res.headersSent) res.status(500).send("Failed to start OAuth");
   }
 });
 
@@ -1213,8 +1211,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       );
     </script>
   `;
-
   return res.status(200).send(redirectHtml);
+  
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
@@ -1232,6 +1230,7 @@ app.get('/debug/cookies', (req, res) => {
     origin: req.headers.origin || null,
   });
 });
+
 
 
 
