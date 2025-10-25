@@ -1024,28 +1024,40 @@ app.get("/shopify/top-level-auth", (req, res) => {
   return res.redirect(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 });
 
-app.get("/shopify/install", async (req, res) => {
+app.get('/shopify/install', async (req, res) => {
   try {
     const { shop } = req.query;
-    if (!shop) return res.status(400).send("Missing shop parameter");
+    if (!shop) return res.status(400).send('Missing shop parameter');
 
+    // Ensure top-level auth is complete
     if (!req.cookies?.shopify_toplevel) {
-      console.log("🔁 Redirecting to top-level-auth for", shop);
+      console.log('🔁 Redirecting to top-level-auth for', shop);
       return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
     }
 
-    const redirectUrl = await shopify.auth.begin({
+    // Begin OAuth — may either redirect itself or return a URL
+    const maybeRedirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
-      callbackPath: "/shopify/callback",
+      callbackPath: '/shopify/callback',
       rawRequest: req,
       rawResponse: res,
     });
 
-    return res.redirect(redirectUrl);
+    // ✅ Only redirect manually if auth.begin() returns a URL
+    if (!res.headersSent && maybeRedirectUrl) {
+      console.log('🧭 Manually redirecting to OAuth URL →', maybeRedirectUrl);
+      return res.redirect(maybeRedirectUrl);
+    }
+
+    // ✅ If Shopify already handled the redirect, just return
+    console.log('🧠 shopify.auth.begin handled redirect internally.');
+    return;
   } catch (err) {
-    console.error("❌ Install error:", err);
-    if (!res.headersSent) return res.status(500).send("Install failed");
+    console.error('❌ OAuth initiation failed:', err);
+    if (!res.headersSent) {
+      return res.status(500).send('Failed to start OAuth');
+    }
   }
 });
 
