@@ -1231,8 +1231,14 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       }
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
-  
-    const redirectHtml = `
+
+   const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
+      user.username
+    )}/dashboard?shop=${encodeURIComponent(shop)}`;
+
+    console.log(`➡️ Redirecting user to dashboard: ${dashboardUrl}`);
+
+    res.status(200).send(`
       <!doctype html>
       <html>
         <head><meta charset="utf-8"/></head>
@@ -1250,17 +1256,17 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               const Redirect = AppBridge.actions.Redirect.create(app);
               Redirect.dispatch(
                 AppBridge.actions.Redirect.Action.REMOTE,
-                "https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(session.shop)}"
+                "${dashboardUrl}"
               );
             } catch (e) {
-              // If App Bridge cannot initialize here, fallback to top-level redirect
-              window.top.location.href = "/"; 
+              console.error("⚠️ App Bridge redirect failed, using fallback", e);
+              window.top.location.href = "${dashboardUrl}";
             }
           </script>
         </body>
       </html>
-    `;
-    return res.status(200).send(redirectHtml);
+    `);
+    
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     //if (!res.headersSent) res.status(500).send('OAuth callback failed.');
