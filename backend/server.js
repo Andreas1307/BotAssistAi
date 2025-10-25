@@ -992,23 +992,34 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
-
   console.log("🍪 /shopify/auth hit for shop:", shop);
+
+  // Serve JS that sets the cookie in browser context (inside iframe/shopify)
+  // Domain here must match your API domain (leading dot for subdomains)
+  const cookieDomain = ".botassistai.com";
+  const secureFlag = process.env.NODE_ENV === "production" ? "Secure;" : "";
 
   res.send(`
     <script>
-      console.log("🚀 Setting top-level cookie...");
-      document.cookie = "shopify_toplevel=true; path=/; SameSite=None; Secure";
-      console.log("✅ shopify_toplevel cookie set!");
+      try {
+        console.log("[auth] setting top-level cookie for ${cookieDomain}");
+        // set expiration short to avoid stale cookies during dev
+        const expires = new Date(Date.now() + 5*60*1000).toUTCString();
+        document.cookie = "shopify_toplevel=true; Domain=${cookieDomain}; Path=/; SameSite=None; ${secureFlag} Expires=" + expires;
+        console.log("[auth] cookie set:", document.cookie);
 
-      // Wait a moment to ensure cookie persists
-      setTimeout(() => {
-        if (window.top === window.self) {
-          window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-        } else {
-          window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
-        }
-      }, 200);
+        // Wait to ensure cookie persists then navigate back to install
+        setTimeout(function(){
+          const dest = "/shopify/install?shop=${encodeURIComponent(shop)}";
+          if (window.top === window.self) window.location.href = dest;
+          else window.top.location.href = dest;
+        }, 250);
+      } catch(e) {
+        console.error("[auth] cookie set failed", e);
+        // fallback
+        if (window.top === window.self) window.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+        else window.top.location.href = "/shopify/install?shop=${encodeURIComponent(shop)}";
+      }
     </script>
   `);
 });
@@ -1016,16 +1027,28 @@ app.get("/shopify/auth", (req, res) => {
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop parameter");
-
   console.log("🔑 /shopify/install hit for shop:", shop);
-  console.log("🍪 Incoming cookies:", req.cookies);
+  console.log("🍪 Incoming parsed cookies:", req.cookies);
+  console.log("🍪 Raw cookie header:", req.headers.cookie || "(none)");
 
   if (!req.cookies?.shopify_toplevel) {
-    console.warn("⚠️ Missing top-level cookie, redirecting to /auth...");
-    return res.redirect(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
+    console.warn("⚠️ Missing top-level cookie — redirecting to /shopify/auth to set it");
+    // Use top-level redirect (client will set cookie)
+    const redirectTo = `/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    // If request is from iframe context, prefer returning JS to set window.top
+    return res.send(`
+      <script>
+        try {
+          window.top.location.href = "${redirectTo}";
+        } catch(e) {
+          window.location.href = "${redirectTo}";
+        }
+      </script>
+    `);
   }
 
   try {
+    console.log("[install] calling shopify.auth.begin ...");
     const redirectUrl = await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1034,8 +1057,21 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    console.log("➡️ Redirecting to Shopify OAuth URL:", redirectUrl);
-    if (!res.headersSent && redirectUrl) return res.redirect(redirectUrl);
+    // If the SDK handled the redirect internally, it may have already written headers
+    if (res.headersSent) {
+      console.log("[install] shopify.auth.begin sent redirect internally (headersSent=true).");
+      return; // nothing more to do
+    }
+
+    // If a URL is returned, redirect to it
+    if (redirectUrl) {
+      console.log("➡️ Redirecting to Shopify OAuth URL:", redirectUrl);
+      return res.redirect(redirectUrl);
+    }
+
+    // Unexpected: no redirect and headers not sent
+    console.warn("[install] shopify.auth.begin returned nothing and didn't send redirect; sending 500.");
+    return res.status(500).send("Failed to initiate OAuth (no redirect).");
   } catch (err) {
     console.error("❌ OAuth initiation failed:", err);
     if (!res.headersSent) res.status(500).send("Failed to start OAuth");
