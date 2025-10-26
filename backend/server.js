@@ -115,6 +115,25 @@ app.use((req, res, next) => {
 
 app.use(shopifySessionMiddleware);
 
+app.use("/api", async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).send("Missing Authorization header");
+
+    const token = authHeader.replace("Bearer ", "").trim();
+    const payload = await shopify.session.decodeSessionToken(token);
+
+    if (!payload.dest || !payload.dest.includes(payload.iss)) {
+      return res.status(401).send("Invalid session token domain");
+    }
+
+    req.shopify = payload;
+    next();
+  } catch (err) {
+    console.error("❌ Invalid session token:", err.message);
+    res.status(401).send("Invalid or expired session token");
+  }
+});
 
 
 
