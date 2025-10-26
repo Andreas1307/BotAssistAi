@@ -1,14 +1,11 @@
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
+import createApp from "@shopify/app-bridge";
 
 function getAppBridgeGlobal() {
-  const AppBridge = window["app-bridge"];
-  if (!AppBridge) {
-    console.error("App Bridge global not found. Make sure https://cdn.shopify.com/shopifycloud/app-bridge.js is loaded in index.html");
-    return null;
-  }
-  return AppBridge.default || AppBridge;
+  return createApp;
 }
+
 
 function isEmbedded() {
   return window.top !== window.self;
