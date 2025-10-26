@@ -1050,7 +1050,9 @@ app.get("/shopify/install", async (req, res) => {
   }
 
   try {
-    const redirectUrl = await shopify.auth.begin({
+    console.log("🧭 Calling shopify.auth.begin...");
+    // This will send the redirect automatically
+    await shopify.auth.begin({
       shop,
       isOnline: true,
       callbackPath: "/shopify/callback",
@@ -1058,11 +1060,15 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    console.log("➡️ Shopify OAuth redirect:", redirectUrl);
-    return res.redirect(redirectUrl);
+    console.log("✅ shopify.auth.begin() completed — redirect sent.");
+    // Do NOT call res.redirect() here
   } catch (err) {
     console.error("❌ [Install] OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start error");
+    if (!res.headersSent) {
+      res.status(500).send(`OAuth start error: ${err.message}`);
+    } else {
+      console.error("⚠️ Headers already sent; skipping res.send");
+    }
   }
 });
 
