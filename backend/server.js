@@ -997,16 +997,12 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  console.log(`🧭 [Top-Level Auth] for shop: ${shop}`);
-
   const redirectUrl = `/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-    <!doctype html>
     <html>
       <body>
         <script>
-          // If inside iframe, force top frame
           if (window.top === window.self) {
             window.location.href = "${redirectUrl}";
           } else {
@@ -1020,10 +1016,6 @@ app.get("/shopify/top-level-auth", (req, res) => {
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop param");
-
-  console.log(`🍪 [Auth] Setting top-level cookie for ${shop}`);
-
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
@@ -1033,7 +1025,6 @@ app.get("/shopify/auth", (req, res) => {
 
   const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
   res.send(`
-    <!doctype html>
     <html>
       <body>
         <script>
@@ -1052,23 +1043,16 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
 
   if (!req.cookies.shopify_toplevel) {
-    console.warn("⚠️ Missing top-level cookie → redirecting to top-level-auth");
     return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
   }
 
-  try {
-    console.log("🧭 Calling shopify.auth.begin...");
-    await shopify.auth.begin({
-      shop,
-      isOnline: true,
-      callbackPath: "/shopify/callback",
-      rawRequest: req,
-      rawResponse: res,
-    });
-  } catch (err) {
-    console.error("❌ [Install] OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send(err.message);
-  }
+  await shopify.auth.begin({
+    shop,
+    isOnline: true,
+    callbackPath: "/shopify/callback",
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.use((req, res, next) => {
