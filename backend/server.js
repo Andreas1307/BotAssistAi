@@ -1019,21 +1019,25 @@ app.get("/shopify/auth", (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   console.log(`🍪 [Auth] Setting top-level cookie for ${shop}`);
+  // DO NOT set domain — let browser use response host
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
     path: "/",
-    domain: COOKIE_DOMAIN,
   });
-
-  console.log(`✅ shopify_toplevel cookie set for domain ${COOKIE_DOMAIN}`);
+  console.log(`✅ shopify_toplevel cookie set`);
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
-  res.send(`
+  res.status(200).send(`
     <!doctype html><html><body>
       <script>
-        window.location.href = "${installUrl}";
+        // navigate in top context
+        if (window.top === window.self) {
+          window.location.href = "${installUrl}";
+        } else {
+          window.top.location.href = "${installUrl}";
+        }
       </script>
     </body></html>
   `);
@@ -1051,7 +1055,7 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log("🧭 Calling shopify.auth.begin...");
-    // This will send the redirect automatically
+    // shopify.auth.begin will send the redirect itself when rawResponse is provided
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1059,15 +1063,11 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-
     console.log("✅ shopify.auth.begin() completed — redirect sent.");
-    // Do NOT call res.redirect() here
   } catch (err) {
     console.error("❌ [Install] OAuth start failed:", err);
     if (!res.headersSent) {
       res.status(500).send(`OAuth start error: ${err.message}`);
-    } else {
-      console.error("⚠️ Headers already sent; skipping res.send");
     }
   }
 });
@@ -1240,13 +1240,45 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         </body>
       </html>
     `);
- } catch (err) {
+  } catch (err) {
     console.error('❌ Shopify callback error:', err);
-    res.status(200).send(`
+  
+    // If cookie missing, ask user to restart top-level flow
+    if (err && err.name === 'CookieNotFound') {
+      const shop = req.query.shop || (req.query && req.query.shop) || '';
+      console.warn('⚠️ OAuth cookie missing; re-starting top-level auth for shop:', shop);
+  
+      // Render a tiny page that top-level-redirects to /shopify/top-level-auth
+      return res.status(200).send(`
+        <!doctype html>
+        <html>
+          <head><meta charset="utf-8"/></head>
+          <body>
+            <script>
+              console.warn("OAuth cookie missing — restarting top-level auth");
+              // If we are in an iframe, force top window to call top-level-auth
+              const target = "${abs('/shopify/top-level-auth?shop=')}" + encodeURIComponent("${shop}");
+              if (window.top === window.self) {
+                window.location.href = target;
+              } else {
+                window.top.location.href = target;
+              }
+            </script>
+            <noscript>
+              OAuth cookie missing. Please <a href="${abs('/shopify/top-level-auth?shop=' + encodeURIComponent(shop))}" target="_top">click here</a>.
+            </noscript>
+          </body>
+        </html>
+      `);
+    }
+  
+    return res.status(200).send(`
       <html><body><h3>OAuth error: ${err.name || "Unknown"}</h3>
-      <p>${err.message || ""}</p></body></html>
+      <pre>${(err && err.message) || ""}</pre>
+      </body></html>
     `);
   }
+  
 });
 
 app.get("/debug/cookies", (req, res) => {
