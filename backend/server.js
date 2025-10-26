@@ -989,8 +989,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const COOKIE_DOMAIN = ".botassistai.com"; // ✅ keep leading dot
-
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
