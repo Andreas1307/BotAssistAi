@@ -1062,6 +1062,8 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
+
+    // --- Start OAuth (shopify-api sends redirect)
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1069,17 +1071,27 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    const cookies = res.getHeader("set-cookie") || [];
-const widenedCookies = cookies.map(c =>
-  c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
-);
-res.setHeader("set-cookie", widenedCookies);
 
-console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
+    // 🧠 Important: we must not touch headers after this point
+    // So the rest runs only if headers weren't sent yet
+    if (!res.headersSent) {
+      const cookies = res.getHeader("set-cookie") || [];
+      const widenedCookies = cookies.map(c =>
+        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
+      );
+      res.setHeader("set-cookie", widenedCookies);
+      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
+    } else {
+      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
+    }
+
   } catch (err) {
     console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
+    if (!res.headersSent) {
+      res.status(500).send("Error starting Shopify OAuth");
+    }
+  } finally {
     authInProgress.delete(shop);
-    res.status(500).send("Error starting Shopify OAuth");
   }
 });
 
