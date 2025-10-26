@@ -989,35 +989,28 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const API_HOST = process.env.API_HOST || "https://api.botassistai.com";
-const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || ".botassistai.com";
+const COOKIE_DOMAIN = ".botassistai.com"; // ✅ keep leading dot
 
 function abs(path) {
-  return path.startsWith("http") ? path : `${API_HOST}${path}`;
+  return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  console.log(`🧭 [Top-Level Auth] Initiating for shop: ${shop}`);
-
+  console.log(`🧭 [Top-Level Auth] for shop: ${shop}`);
   const redirectUrl = abs(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
 
   res.status(200).send(`
-    <!doctype html>
-    <html>
-      <body>
-        <script>
-          console.log("🔁 Top-level redirect to: ${redirectUrl}");
-          if (window.top === window.self) {
-            window.location.href = "${redirectUrl}";
-          } else {
-            window.top.location.href = "${redirectUrl}";
-          }
-        </script>
-      </body>
-    </html>
+    <!doctype html><html><body>
+      <script>
+        if (window.top === window.self)
+          window.location.href = "${redirectUrl}";
+        else
+          window.top.location.href = "${redirectUrl}";
+      </script>
+    </body></html>
   `);
 });
 
@@ -1025,29 +1018,24 @@ app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  console.log(`🍪 [Auth] Setting top-level cookie for shop: ${shop}`);
-
+  console.log(`🍪 [Auth] Setting top-level cookie for ${shop}`);
   res.cookie("shopify_toplevel", "true", {
-    sameSite: "None",
-    secure: true,
     httpOnly: false,
+    secure: true,
+    sameSite: "None",
     path: "/",
     domain: COOKIE_DOMAIN,
   });
 
-  console.log(`✅ shopify_toplevel cookie set (domain=${COOKIE_DOMAIN})`);
+  console.log(`✅ shopify_toplevel cookie set for domain ${COOKIE_DOMAIN}`);
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
-  res.status(200).send(`
-    <!doctype html>
-    <html>
-      <body>
-        <script>
-          console.log("🔁 Redirecting to install:", "${installUrl}");
-          window.location.href = "${installUrl}";
-        </script>
-      </body>
-    </html>
+  res.send(`
+    <!doctype html><html><body>
+      <script>
+        window.location.href = "${installUrl}";
+      </script>
+    </body></html>
   `);
 });
 
@@ -1061,8 +1049,6 @@ app.get("/shopify/install", async (req, res) => {
     return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
 
-  console.log("✅ shopify_toplevel cookie found → begin OAuth flow");
-
   try {
     const redirectUrl = await shopify.auth.begin({
       shop,
@@ -1072,19 +1058,10 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    if (redirectUrl && !res.headersSent) {
-      console.log("➡️ Redirecting user to Shopify OAuth:", redirectUrl);
-      return res.redirect(redirectUrl);
-    }
-
-    if (res.headersSent) {
-      console.log("ℹ️ Response already handled by shopify.auth.begin");
-      return;
-    }
-
-    res.status(500).send("Unexpected: no redirect issued.");
+    console.log("➡️ Shopify OAuth redirect:", redirectUrl);
+    return res.redirect(redirectUrl);
   } catch (err) {
-    console.error("❌ [Install] OAuth init failed:", err);
+    console.error("❌ [Install] OAuth start failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start error");
   }
 });
