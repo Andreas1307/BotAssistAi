@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    //domain: ".botassistai.com"
   }
 }));
 
@@ -1063,6 +1063,7 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
+    console.log("🍪 [INSTALL → after begin] Cookies now set:", res.getHeader('set-cookie'));
   } catch (err) {
     console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
     res.status(500).send("Error starting Shopify OAuth");
@@ -1214,7 +1215,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
-    // --- Redirect using App Bridge
     res.status(200).send(`
       <!doctype html>
       <html>
