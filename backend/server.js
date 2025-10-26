@@ -1109,9 +1109,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-const processedCodes = new Set();
-
+ 
 app.get('/shopify/callback', async (req, res) => {
   try {
     console.log("🟢 /callback hit");
@@ -1123,7 +1121,6 @@ app.get('/shopify/callback', async (req, res) => {
 if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   console.error("❌ Missing shopify_toplevel cookie");
 }
-
     console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
     console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
     console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
@@ -1134,10 +1131,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("🧭 /shopify/callback hit");
     console.log("🧠 Query:", req.query);
     console.log("🍪 Headers:", req.headers.cookie || "(none)");
-
-    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-      console.error("❌ Missing shopify_toplevel cookie");
-    }    
 
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
       console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
@@ -1152,21 +1145,12 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         </body></html>
       `);
     }
-
-    if (!code) return res.status(400).send("Missing code");
-    if (processedCodes.has(code)) {
-      console.warn("⚠️ Code already processed, skipping Shopify callback");
-      return res.redirect(`/already-installed?shop=${shop}`);
-    }
-  
-    processedCodes.add(code);
     
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
     const hasAppState = cookieHeader.includes("shopify_app_state");
     const hasTopLevel = cookieHeader.includes("shopify_toplevel");
-  
     console.log("🔍 Cookie presence →", { hasOAuthState, hasAppState, hasTopLevel });
   
     const { session } = await shopify.auth.callback({
@@ -1273,7 +1257,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
-    res.status(200).send(`
+    return res.send(`
       <!doctype html>
       <html>
         <head><meta charset="utf-8" /></head>
@@ -1281,13 +1265,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
           <script type="module">
             import createApp from "https://unpkg.com/@shopify/app-bridge@3.7.0/dist/index.esm.js";
             import * as actions from "https://unpkg.com/@shopify/app-bridge@3.7.0/actions/index.esm.js";
-    
             const app = createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${host}",
               forceRedirect: true,
             });
-    
             const redirect = actions.Redirect.create(app);
             redirect.dispatch(actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
           </script>
