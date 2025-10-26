@@ -1196,12 +1196,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(
-      user.username
-    )}/dashboard?shop=${encodeURIComponent(shop)}`;
-
+    
+    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
+    // --- Redirect using App Bridge
     res.status(200).send(`
       <!doctype html>
       <html>
@@ -1217,12 +1216,12 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               forceRedirect: true,
             });
             const Redirect = AppBridge.actions.Redirect.create(app);
-            console.log("✅ Redirecting to Shopify Admin App...");
             Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
           </script>
         </body>
       </html>
     `);
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
