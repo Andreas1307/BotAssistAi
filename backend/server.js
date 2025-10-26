@@ -207,6 +207,8 @@ app.get("/auth/embedded", (req, res) => {
 
 function verifyHMAC(queryParams, secret) {
   const { hmac, ...rest } = queryParams;
+  if (!queryParams.hmac) return false;
+
   const message = Object.keys(rest)
     .sort()
     .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
@@ -226,24 +228,7 @@ function verifyHMAC(queryParams, secret) {
     return false;
   }
 }
-function verifyHMAC(queryParams, secret) {
-  const { hmac, ...rest } = queryParams;
-  const message = Object.keys(rest)
-    .sort()
-    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
-    .join('&');
 
-  const digest = crypto
-    .createHmac('sha256', secret)
-    .update(message)
-    .digest('hex');
-
-  try {
-    return crypto.timingSafeEqual(Buffer.from(hmac, 'utf-8'), Buffer.from(digest, 'utf-8'));
-  } catch (e) {
-    return false;
-  }
-}
 app.get('/', async (req, res) => {
   const { shop, hmac, host } = req.query;
 
@@ -632,10 +617,11 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 async function registerGdprWebhooks(session) {
   const gdprWebhooks = [
-    { topic: "CUSTOMERS_DATA_REQUEST", path: "/shopify/gdpr/customers/data_request" },
-    { topic: "CUSTOMERS_REDACT", path: "/shopify/gdpr/customers/redact" },
-    { topic: "SHOP_REDACT", path: "/shopify/gdpr/shop/redact" },
+    { topic: "customers/data_request", path: "/shopify/gdpr/customers/data_request" },
+    { topic: "customers/redact", path: "/shopify/gdpr/customers/redact" },
+    { topic: "shop/redact", path: "/shopify/gdpr/shop/redact" },
   ];
+  
 
   for (const webhook of gdprWebhooks) {
     try {
@@ -958,13 +944,16 @@ function verifyWebhookRaw(req, secret) {
   );
 }
 
-
 app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
   if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
-  const parsed = JSON.parse(req.body.toString('utf8'));
-  console.log("📦 GDPR: Customer Data Request", parsed);
+  try {
+    const parsed = JSON.parse(req.body.toString('utf8'));
+    console.log("📦 GDPR: Customer Data Request", parsed);
+  } catch(err) {
+    console.error("❌ Failed to parse GDPR webhook:", err);
+  }
   res.sendStatus(200);
 });
 
