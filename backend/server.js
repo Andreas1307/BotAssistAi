@@ -997,25 +997,29 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  const redirectUrl = `/shopify/auth?shop=${encodeURIComponent(shop)}`;
+  console.log(`🪟 [TOP] Forcing top-level redirect for ${shop}`);
 
+  const redirectUrl = abs(`/shopify/auth?shop=${encodeURIComponent(shop)}`);
   res.send(`
-    <html>
-      <body>
-        <script>
-          if (window.top === window.self) {
-            window.location.href = "${redirectUrl}";
-          } else {
-            window.top.location.href = "${redirectUrl}";
-          }
-        </script>
-      </body>
-    </html>
+    <html><body>
+      <script>
+        const target = "${redirectUrl}";
+        if (window.top === window.self) {
+          window.location.href = target;
+        } else {
+          window.top.location.href = target;
+        }
+      </script>
+    </body></html>
   `);
 });
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
+
+  console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
+
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
@@ -1023,32 +1027,35 @@ app.get("/shopify/auth", (req, res) => {
     path: "/",
   });
 
-  const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
+  const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
   res.send(`
-    <html>
-      <body>
-        <script>
-          if (window.top === window.self) {
-            window.location.href = "${installUrl}";
-          } else {
-            window.top.location.href = "${installUrl}";
-          }
-        </script>
-      </body>
-    </html>
+    <html><body>
+      <script>
+        const target = "${installUrl}";
+        if (window.top === window.self) {
+          window.location.href = target;
+        } else {
+          window.top.location.href = target;
+        }
+      </script>
+    </body></html>
   `);
 });
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
 
-  // Force top-level auth if shopify_toplevel cookie is missing
-  if (!req.cookies.shopify_toplevel) {
-    console.log("⚠️ shopify_toplevel cookie missing, redirecting to top-level-auth");
-    return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
+  const hasTopLevel = !!req.cookies.shopify_toplevel;
+  console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
+
+  if (!hasTopLevel) {
+    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
+    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
 
   try {
+    console.log("🚀 [INSTALL] Beginning Shopify OAuth");
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1057,7 +1064,7 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
   } catch (err) {
-    console.error("❌ Shopify install error:", err);
+    console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
     res.status(500).send("Error starting Shopify OAuth");
   }
 });
