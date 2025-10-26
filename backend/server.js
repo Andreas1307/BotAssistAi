@@ -1110,6 +1110,8 @@ app.use((req, res, next) => {
   next();
 });
 
+const processedCodes = new Set();
+
 app.get('/shopify/callback', async (req, res) => {
   try {
     console.log("🟢 /callback hit");
@@ -1150,6 +1152,14 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         </body></html>
       `);
     }
+
+    if (!code) return res.status(400).send("Missing code");
+    if (processedCodes.has(code)) {
+      console.warn("⚠️ Code already processed, skipping Shopify callback");
+      return res.redirect(`/already-installed?shop=${shop}`);
+    }
+  
+    processedCodes.add(code);
     
   
     const cookieHeader = req.headers.cookie || "";
