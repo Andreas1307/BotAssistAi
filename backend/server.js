@@ -1239,23 +1239,24 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     res.status(200).send(`
       <!doctype html>
       <html>
-        <head><meta charset="utf-8"/></head>
+        <head><meta charset="utf-8" /></head>
         <body>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
-            console.log("✅ OAuth complete, redirecting to dashboard...");
-            const target = "${dashboardUrl}";
-            if (window.top === window.self) {
-              // Not embedded → normal redirect
-              window.location.href = target;
-            } else {
-              // Inside iframe → escape to top-level
-              window.top.location.href = target;
-            }
+            const AppBridge = window["app-bridge"];
+            const createApp = AppBridge.default || AppBridge;
+            const app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${host}",
+              forceRedirect: true,
+            });
+            const Redirect = AppBridge.actions.Redirect.create(app);
+            console.log("✅ Redirecting to Shopify Admin App...");
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
           </script>
         </body>
       </html>
     `);
-    
  } catch (err) {
     console.error('❌ Shopify callback error:', err);
     res.status(200).send(`
