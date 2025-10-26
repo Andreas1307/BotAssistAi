@@ -72,7 +72,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    //domain: ".botassistai.com"
+    domain: ".botassistai.com"
   }
 }));
 
@@ -992,7 +992,7 @@ app.use(express.urlencoded({ extended: true }));
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
-
+const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
@@ -1054,6 +1054,12 @@ app.get("/shopify/install", async (req, res) => {
     return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
 
+  if (authInProgress.has(shop)) {
+    console.log(`⚠️ Auth already in progress for ${shop}`);
+    return res.status(200).send("OAuth in progress, please wait...");
+  }
+  authInProgress.add(shop);
+
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
     await shopify.auth.begin({
@@ -1063,9 +1069,16 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-    console.log("🍪 [INSTALL → after begin] Cookies now set:", res.getHeader('set-cookie'));
+    const cookies = res.getHeader("set-cookie") || [];
+const widenedCookies = cookies.map(c =>
+  c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
+);
+res.setHeader("set-cookie", widenedCookies);
+
+console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
   } catch (err) {
     console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
+    authInProgress.delete(shop);
     res.status(500).send("Error starting Shopify OAuth");
   }
 });
@@ -1103,6 +1116,21 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
+
+    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
+      console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
+      const shop = req.query.shop;
+      return res.status(200).send(`
+        <html><body>
+          <script>
+            const target = "${abs(`/shopify/top-level-auth?shop=${encodeURIComponent(req.query.shop)}`)}";
+            if (window.top === window.self) window.location.href = target;
+            else window.top.location.href = target;
+          </script>
+        </body></html>
+      `);
+    }
+    
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
