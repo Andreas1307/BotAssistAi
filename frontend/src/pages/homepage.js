@@ -82,7 +82,7 @@ const Homepage = () => {
         safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
         return;
       }
-  
+      window.appBridge = app;
       try {
         // No /api/ping anymore — just assume App Bridge works
         console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");

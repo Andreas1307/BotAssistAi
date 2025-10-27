@@ -77,10 +77,10 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
+  const app = window.appBridge;
 
-  // Running outside Shopify → plain fetch
-  if (!isEmbedded() || !app) {
+  // Non-embedded (standalone) users
+  if (!app) {
     return fetch(url, {
       ...options,
       headers: {
@@ -90,9 +90,8 @@ export async function fetchWithAuth(url, options = {}) {
     });
   }
 
-  // Running inside Shopify → fetch with token
   try {
-    const token = await getSessionToken(app);
+    const token = await getSessionToken(app); // Shopify session token
     return fetch(url, {
       ...options,
       headers: {
@@ -102,7 +101,7 @@ export async function fetchWithAuth(url, options = {}) {
       },
     });
   } catch (err) {
-    console.error("❌ Token error:", err);
+    console.error("❌ Shopify token error:", err);
     return new Response(null, { status: 401 });
   }
 }
