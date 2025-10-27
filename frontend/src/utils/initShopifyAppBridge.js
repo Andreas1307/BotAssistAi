@@ -19,14 +19,13 @@ export async function initShopifyAppBridge() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    // Redirect to auth if not embedded or missing shop/host
     if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.info("ℹ️ Running outside Shopify iframe — redirecting to auth");
+      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
+    
 
-    // Initialize App Bridge
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -35,25 +34,7 @@ export async function initShopifyAppBridge() {
 
     window.appBridge = app;
 
-    console.log("✅ Shopify App Bridge initialized");
-
-    /**
-     * Fetch a session token for backend API calls
-     * Usage: const token = await getToken();
-     */
-    async function getToken() {
-      try {
-        const token = await getSessionToken(app);
-        return token;
-      } catch (err) {
-        console.error("❌ Failed to fetch session token:", err);
-        // Force a top-level redirect to re-authenticate
-        window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-        return null;
-      }
-    }
-
-    // Optionally initialize Web Vitals if available
+    // Silently try to initialize Web Vitals
     try {
       if (typeof app.initializeWebVitals === "function") {
         app.initializeWebVitals();
@@ -62,7 +43,8 @@ export async function initShopifyAppBridge() {
       // ignore
     }
 
-    return { app, getToken };
+    console.log("✅ Shopify App Bridge initialized");
+    return app;
   } catch (err) {
     console.error("❌ Failed to init App Bridge:", err);
     return null;

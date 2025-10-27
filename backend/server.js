@@ -58,6 +58,7 @@ const sessionStore = new MySQLStore({
   database: process.env.DATABASE
 });
 
+
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 app.use(session({
@@ -221,6 +222,24 @@ function verifyHMAC(queryParams, secret) {
       Buffer.from(hmac, 'utf-8'),
       Buffer.from(digest, 'utf-8')
     );
+  } catch (e) {
+    return false;
+  }
+}
+function verifyHMAC(queryParams, secret) {
+  const { hmac, ...rest } = queryParams;
+  const message = Object.keys(rest)
+    .sort()
+    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
+    .join('&');
+
+  const digest = crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('hex');
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hmac, 'utf-8'), Buffer.from(digest, 'utf-8'));
   } catch (e) {
     return false;
   }
@@ -973,7 +992,6 @@ app.use(express.urlencoded({ extended: true }));
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
-
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
@@ -1298,9 +1316,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
-
-
-
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
