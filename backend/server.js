@@ -57,7 +57,6 @@ const sessionStore = new MySQLStore({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE
 });
-const jwt = require('jsonwebtoken')
 
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
