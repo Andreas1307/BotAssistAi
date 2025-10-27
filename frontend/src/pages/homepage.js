@@ -154,6 +154,9 @@ const Homepage = () => {
   }, []); 
   
   
+  
+  
+
   /*
   const redirectToInstall = async (shop) => {
     if (!shop) return;
