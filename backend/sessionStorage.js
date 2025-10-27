@@ -1,4 +1,3 @@
-// sessionStorage.js
 const fs = require("fs");
 const path = require("path");
 const { Session } = require("@shopify/shopify-api");
@@ -26,11 +25,13 @@ function saveSessions(sessions) {
 }
 
 module.exports = {
+  // ✅ Store session to file
   storeCallback: async (session) => {
     if (!session.id || !session.shop) {
       console.error("Invalid session object, missing id or shop:", session);
       return false;
     }
+
     const sessions = loadSessions();
     sessions[session.id] = {
       id: session.id,
@@ -40,29 +41,23 @@ module.exports = {
       scope: session.scope,
       expires: session.expires?.toISOString(),
       state: session.state || null,
-      onlineAccessInfo: session.onlineAccessInfo || null
+      onlineAccessInfo: session.onlineAccessInfo || null,
     };
+
     saveSessions(sessions);
     console.log("✅ Stored session:", session.id);
     return true;
   },
-  
 
+  // ✅ Load one session
   loadCallback: async (id) => {
     const sessions = loadSessions();
     const data = sessions[id];
-  
     if (!data) {
       console.error("Session not found for id:", id);
       return undefined;
     }
-  
-    if (!data.id || !data.shop) {
-      console.error("Stored session missing id or shop:", data);
-      return undefined;
-    }
-  
-    // Correct construction of Session object
+
     const session = new Session({
       id: data.id,
       shop: data.shop,
@@ -73,13 +68,12 @@ module.exports = {
       accessToken: data.accessToken,
       onlineAccessInfo: data.onlineAccessInfo,
     });
-  
+
     console.log("🔍 Loaded session:", id);
     return session;
   },
-  
-  
 
+  // ✅ Delete session
   deleteCallback: async (id) => {
     const sessions = loadSessions();
     if (sessions[id]) {
@@ -88,5 +82,11 @@ module.exports = {
       console.log("🗑️ Deleted session:", id);
     }
     return true;
+  },
+
+  // ✅ NEW: Return all stored sessions
+  getAllSessions: async () => {
+    const sessions = loadSessions();
+    return Object.values(sessions);
   },
 };
