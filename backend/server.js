@@ -1129,14 +1129,15 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const shop = session.shop;
     const host = req.query.host ? decodeURIComponent(req.query.host) : '';
 
-    res.cookie('shopify_online_session', session.sessionToken, {
-      httpOnly: true,        // Not accessible from JS
-      secure: true,          // Only sent over HTTPS
-      sameSite: 'None',      // Required for embedded apps in Shopify
-      path: '/',             // Available site-wide
-      maxAge: 1000 * 60 * 60 * 24 * 7 // Optional: 7 days
+    res.cookie('shopify_online_session', session.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     });
-    console.log('🍪 shopify_online_session cookie set for', shop);
+    console.log('🍪 shopify_online_session cookie set (using accessToken) for', session.shop);
+    
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
