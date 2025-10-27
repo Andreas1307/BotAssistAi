@@ -5,35 +5,40 @@ module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    // If no token, assume non-Shopify user → skip validation
-    if (!authHeader?.startsWith('Bearer ')) {
-      console.log("ℹ️ No Shopify token present — continuing as non-Shopify user");
+    // First, check header
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '');
+      const payload = await shopify.session.decodeSessionToken(token);
+      if (!payload) return res.status(401).json({ error: 'Invalid Shopify session token' });
+
+      const shop = payload.dest?.replace(/^https:\/\//, '').toLowerCase();
+      const sessionId = `${shop}_${payload.sub}`;
+      const session = await customSessionStorage.loadCallback(sessionId);
+      if (!session) return res.status(401).json({ error: 'Shopify session not found' });
+
+      req.shopify = { shop, session };
+      console.log("✅ Shopify session validated via header:", shop);
       return next();
     }
 
-    // Decode and validate Shopify session token
-    const token = authHeader.replace('Bearer ', '');
-    const payload = await shopify.session.decodeSessionToken(token);
-
-    if (!payload) {
-      return res.status(401).json({ error: 'Invalid Shopify session token payload' });
+    // Next, fallback: check embedded app session cookie (online session)
+    if (req.cookies?.shopify_online_session) {
+      const token = req.cookies.shopify_online_session;
+      const payload = await shopify.session.decodeSessionToken(token);
+      if (payload) {
+        const shop = payload.dest?.replace(/^https:\/\//, '').toLowerCase();
+        const sessionId = `${shop}_${payload.sub}`;
+        const session = await customSessionStorage.loadCallback(sessionId);
+        if (session) {
+          req.shopify = { shop, session };
+          console.log("✅ Shopify session validated via cookie:", shop);
+          return next();
+        }
+      }
     }
 
-    const shop = payload.dest?.replace(/^https:\/\//, '').toLowerCase();
-    if (!shop) {
-      return res.status(401).json({ error: 'Invalid Shopify token (missing shop)' });
-    }
-
-    const sessionId = `${shop}_${payload.sub}`;
-    const session = await customSessionStorage.loadCallback(sessionId);
-
-    if (!session) {
-      return res.status(401).json({ error: 'Shopify session not found' });
-    }
-
-    // Attach Shopify info to request
-    req.shopify = { shop, session };
-    console.log("✅ Shopify session validated:", shop);
+    // Otherwise, treat as non-Shopify user
+    console.log("ℹ️ No Shopify token present — continuing as non-Shopify user");
     return next();
 
   } catch (err) {
@@ -41,3 +46,4 @@ module.exports = async function verifySessionToken(req, res, next) {
     return res.status(401).json({ error: 'Invalid Shopify session token' });
   }
 };
+
