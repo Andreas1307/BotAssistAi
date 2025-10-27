@@ -205,27 +205,7 @@ app.get("/auth/embedded", (req, res) => {
 
 
 
-function verifyHMAC(queryParams, secret) {
-  const { hmac, ...rest } = queryParams;
-  const message = Object.keys(rest)
-    .sort()
-    .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
-    .join('&');
 
-  const digest = crypto
-    .createHmac('sha256', secret)
-    .update(message)
-    .digest('hex');
-
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(hmac, 'utf-8'),
-      Buffer.from(digest, 'utf-8')
-    );
-  } catch (e) {
-    return false;
-  }
-}
 function verifyHMAC(queryParams, secret) {
   const { hmac, ...rest } = queryParams;
   const message = Object.keys(rest)
@@ -1062,17 +1042,7 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
-
-    const appState = Math.random().toString(36).substring(2);
-  res.cookie("shopify_app_state", appState, {
-    httpOnly: false,
-    secure: true,
-    sameSite: "None",
-    path: "/",
-  });
-  console.log("🍪 [INSTALL] Set shopify_app_state cookie:", appState);
-
-    // --- Start OAuth (shopify-api sends redirect)
+    
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1325,6 +1295,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
+
+
+
+
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
