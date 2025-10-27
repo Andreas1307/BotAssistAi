@@ -79,7 +79,7 @@ export function safeRedirect(url) {
 export async function fetchWithAuth(url, options = {}) {
   const app = window.appBridge;
 
-  // Non-embedded (standalone) users
+  // For non-Shopify users, skip token
   if (!app) {
     return fetch(url, {
       ...options,
@@ -91,7 +91,7 @@ export async function fetchWithAuth(url, options = {}) {
   }
 
   try {
-    const token = await getSessionToken(app); // Shopify session token
+    const token = await getSessionToken(app); // 🔥 fetches fresh 1-minute JWT
     return fetch(url, {
       ...options,
       headers: {
@@ -101,7 +101,7 @@ export async function fetchWithAuth(url, options = {}) {
       },
     });
   } catch (err) {
-    console.error("❌ Shopify token error:", err);
+    console.error("❌ Failed to get Shopify session token:", err);
     return new Response(null, { status: 401 });
   }
 }
