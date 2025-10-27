@@ -1107,21 +1107,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
-/*
-    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
-      console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
-      const shop = req.query.shop;
-      return res.status(200).send(`
-        <html><body>
-          <script>
-            const target = "${abs(`/shopify/top-level-auth?shop=${encodeURIComponent(req.query.shop)}`)}";
-            if (window.top === window.self) window.location.href = target;
-            else window.top.location.href = target;
-          </script>
-        </body></html>
-      `);
-    }
-    */
+
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
@@ -1142,6 +1128,15 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     const shop = session.shop;
     const host = req.query.host ? decodeURIComponent(req.query.host) : '';
+
+    res.cookie('shopify_online_session', session.sessionToken, {
+      httpOnly: true,        // Not accessible from JS
+      secure: true,          // Only sent over HTTPS
+      sameSite: 'None',      // Required for embedded apps in Shopify
+      path: '/',             // Available site-wide
+      maxAge: 1000 * 60 * 60 * 24 * 7 // Optional: 7 days
+    });
+    console.log('🍪 shopify_online_session cookie set for', shop);
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1304,9 +1299,6 @@ app.get("/debug/cookies", (req, res) => {
     origin: req.headers.origin || null,
   });
 });
-
-
-
 
 
 
