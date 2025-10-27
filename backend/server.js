@@ -1063,6 +1063,15 @@ app.get("/shopify/install", async (req, res) => {
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
 
+    const appState = Math.random().toString(36).substring(2);
+  res.cookie("shopify_app_state", appState, {
+    httpOnly: false,
+    secure: true,
+    sameSite: "None",
+    path: "/",
+  });
+  console.log("🍪 [INSTALL] Set shopify_app_state cookie:", appState);
+
     // --- Start OAuth (shopify-api sends redirect)
     await shopify.auth.begin({
       shop,
@@ -1128,7 +1137,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
-
+/*
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
       console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
       const shop = req.query.shop;
@@ -1142,7 +1151,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         </body></html>
       `);
     }
-    
+    */
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
