@@ -57,7 +57,7 @@ const sessionStore = new MySQLStore({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE
 });
-
+const jwt = require('jsonwebtoken')
 
 app.set('trust proxy', 1);
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
@@ -115,25 +115,6 @@ app.use((req, res, next) => {
 
 app.use(shopifySessionMiddleware);
 
-app.use("/api", async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).send("Missing Authorization header");
-
-    const token = authHeader.replace("Bearer ", "").trim();
-    const payload = await shopify.session.decodeSessionToken(token);
-
-    if (!payload.dest || !payload.dest.includes(payload.iss)) {
-      return res.status(401).send("Invalid session token domain");
-    }
-
-    req.shopify = payload;
-    next();
-  } catch (err) {
-    console.error("❌ Invalid session token:", err.message);
-    res.status(401).send("Invalid or expired session token");
-  }
-});
 
 
 
@@ -226,8 +207,6 @@ app.get("/auth/embedded", (req, res) => {
 
 function verifyHMAC(queryParams, secret) {
   const { hmac, ...rest } = queryParams;
-  if (!queryParams.hmac) return false;
-
   const message = Object.keys(rest)
     .sort()
     .map(k => `${k}=${Array.isArray(rest[k]) ? rest[k][0] : rest[k]}`)
@@ -247,7 +226,6 @@ function verifyHMAC(queryParams, secret) {
     return false;
   }
 }
-
 app.get('/', async (req, res) => {
   const { shop, hmac, host } = req.query;
 
@@ -636,11 +614,10 @@ initialisePassport(passport, getUserByEmail, getUserById)
 
 async function registerGdprWebhooks(session) {
   const gdprWebhooks = [
-    { topic: "customers/data_request", path: "/shopify/gdpr/customers/data_request" },
-    { topic: "customers/redact", path: "/shopify/gdpr/customers/redact" },
-    { topic: "shop/redact", path: "/shopify/gdpr/shop/redact" },
+    { topic: "CUSTOMERS_DATA_REQUEST", path: "/shopify/gdpr/customers/data_request" },
+    { topic: "CUSTOMERS_REDACT", path: "/shopify/gdpr/customers/redact" },
+    { topic: "SHOP_REDACT", path: "/shopify/gdpr/shop/redact" },
   ];
-  
 
   for (const webhook of gdprWebhooks) {
     try {
@@ -963,16 +940,13 @@ function verifyWebhookRaw(req, secret) {
   );
 }
 
+
 app.post('/shopify/gdpr/customers/data_request', express.raw({ type: 'application/json' }), (req, res) => {
   if (!verifyWebhookRaw(req, process.env.SHOPIFY_API_SECRET)) {
     return res.status(401).send('Invalid HMAC');
   }
-  try {
-    const parsed = JSON.parse(req.body.toString('utf8'));
-    console.log("📦 GDPR: Customer Data Request", parsed);
-  } catch(err) {
-    console.error("❌ Failed to parse GDPR webhook:", err);
-  }
+  const parsed = JSON.parse(req.body.toString('utf8'));
+  console.log("📦 GDPR: Customer Data Request", parsed);
   res.sendStatus(200);
 });
 
@@ -1000,6 +974,7 @@ app.use(express.urlencoded({ extended: true }));
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
+
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
@@ -1071,6 +1046,15 @@ app.get("/shopify/install", async (req, res) => {
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
 
+    const appState = Math.random().toString(36).substring(2);
+    res.cookie("shopify_app_state", appState, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "None",
+      path: "/",
+    });
+    console.log("🍪 [INSTALL] Set shopify_app_state cookie:", appState);
+
     // --- Start OAuth (shopify-api sends redirect)
     await shopify.auth.begin({
       shop,
@@ -1109,7 +1093,7 @@ app.use((req, res, next) => {
   }
   next();
 });
- 
+
 app.get('/shopify/callback', async (req, res) => {
   try {
     console.log("🟢 /callback hit");
@@ -1121,6 +1105,7 @@ app.get('/shopify/callback', async (req, res) => {
 if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   console.error("❌ Missing shopify_toplevel cookie");
 }
+
     console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
     console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
     console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
@@ -1132,6 +1117,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("🧠 Query:", req.query);
     console.log("🍪 Headers:", req.headers.cookie || "(none)");
 
+    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
+      console.error("❌ Missing shopify_toplevel cookie");
+    }    
+
+    /*
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
       console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
       const shop = req.query.shop;
@@ -1145,12 +1135,13 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         </body></html>
       `);
     }
-    
+    */
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
     const hasAppState = cookieHeader.includes("shopify_app_state");
     const hasTopLevel = cookieHeader.includes("shopify_toplevel");
+  
     console.log("🔍 Cookie presence →", { hasOAuthState, hasAppState, hasTopLevel });
   
     const { session } = await shopify.auth.callback({
@@ -1257,26 +1248,27 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
-    return res.send(`
+    res.status(200).send(`
       <!doctype html>
       <html>
         <head><meta charset="utf-8" /></head>
         <body>
-          <script type="module">
-            import createApp from "https://unpkg.com/@shopify/app-bridge@3.7.0/dist/index.esm.js";
-            import * as actions from "https://unpkg.com/@shopify/app-bridge@3.7.0/actions/index.esm.js";
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script>
+            const AppBridge = window["app-bridge"];
+            const createApp = AppBridge.default || AppBridge;
             const app = createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${host}",
               forceRedirect: true,
             });
-            const redirect = actions.Redirect.create(app);
-            redirect.dispatch(actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
+            const Redirect = AppBridge.actions.Redirect.create(app);
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
           </script>
         </body>
       </html>
     `);
-    
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
@@ -1317,6 +1309,20 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
