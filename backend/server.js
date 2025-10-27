@@ -177,7 +177,7 @@ app.use((req, res, next) => {
 
 
 
-app.get('/shopify/embedded', (req, res) => {
+app.get('/shopify/embedded', verifySessionToken,  (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 app.use((req, res, next) => {
@@ -189,7 +189,7 @@ app.use((req, res, next) => {
 });
 
 
-app.get("/auth/embedded", (req, res) => {
+app.get("/auth/embedded", verifySessionToken, (req, res) => {
   const { shop, host } = req.query;
 
   if (!shop || !host) {
@@ -375,7 +375,7 @@ async function registerScriptTag(shop, accessToken) {
   }
 }
 
-app.post('/api/link-shop-to-user', async (req, res) => {
+app.post('/api/link-shop-to-user', verifySessionToken, async (req, res) => {
   if (!req.isAuthenticated() || !req.user?.user_id) {
     return res.status(401).json({ error: "Not logged in" });
   }
@@ -508,7 +508,7 @@ You received this email because you had an account with us.
 }
 });
 
-app.get('/chatbot-loader.js', async (req, res) => {
+app.get('/chatbot-loader.js', verifySessionToken, async (req, res) => {
   const shop = Array.isArray(req.query.shop) ? req.query.shop[0] : req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing or invalid shop');
 
@@ -637,7 +637,7 @@ async function registerGdprWebhooks(session) {
 }
 
 
-app.get('/check-shopify-store', async (req, res) => {
+app.get('/check-shopify-store', verifySessionToken, async (req, res) => {
   const { shop } = req.query;
 
   if (!shop) {
@@ -1296,11 +1296,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   
 });
 
-
-
-
-
-
 app.get("/debug/cookies", (req, res) => {
   res.json({
     headersCookie: req.headers.cookie || null,
@@ -1317,7 +1312,7 @@ app.get("/debug/cookies", (req, res) => {
 
 
 
-app.post('/shopify/session-attach', (req, res) => {
+app.post('/shopify/session-attach', verifySessionToken, (req, res) => {
   console.log("📦 Received body in session-attach:", req.body);
 
   const { userId } = req.body;
@@ -1332,7 +1327,7 @@ app.post('/shopify/session-attach', (req, res) => {
   return res.status(200).json({ success: true });
 });
 
-app.post("/paypal/webhook", async (req, res) => {
+app.post("/paypal/webhook", verifySessionToken, async (req, res) => {
   const { orderID, userId } = req.body;
 
 
@@ -1433,7 +1428,7 @@ app.post("/paypal/webhook", async (req, res) => {
 
 
 
-app.get("/payed-membership", async (req, res) => {
+app.get("/payed-membership", verifySessionToken, async (req, res) => {
 const { type, userId } = req.query;
 
 if (!type || !userId) {
@@ -1574,7 +1569,7 @@ cron.schedule("0 0 * * *", async () => {
 
 
 
-app.post("/save-services", upload.any(), async (req, res) => {
+app.post("/save-services", verifySessionToken, upload.any(), async (req, res) => {
   const { userId, services: rawServices } = req.body;
 
   // If req.body.services came in as a string (which FormData might do), parse it
@@ -1634,7 +1629,7 @@ app.post("/save-services", upload.any(), async (req, res) => {
   }
 });
 
-app.post("/client-services", async (req, res) => {
+app.post("/client-services", verifySessionToken, async (req, res) => {
   const { apiKey } = req.body;
   console.log(apiKey)
   try {
@@ -1675,7 +1670,7 @@ if(user.booking) {
 
 });
 
-app.get("/get-services", async (req, res) => {
+app.get("/get-services", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
   try {
     const [rows] = await pool.query("SELECT * FROM services WHERE user_id = ?", [userId])
@@ -1686,7 +1681,7 @@ app.get("/get-services", async (req, res) => {
   }
 })            
 
-app.get("/delete-service", async (req, res) => {
+app.get("/delete-service", verifySessionToken, async (req, res) => {
   const { userId, name } = req.query;
   try{
     await pool.query("DELETE FROM services WHERE user_id = ? AND name = ?", [userId, name]);
@@ -1697,7 +1692,7 @@ app.get("/delete-service", async (req, res) => {
   }
 })
 
-app.post("/save-staff", upload.any(), async (req, res) => {
+app.post("/save-staff", verifySessionToken, upload.any(), async (req, res) => {
   const { userId, staff: rawStaff } = req.body;
 
   // Handle JSON-stringified body values from FormData
@@ -2280,13 +2275,9 @@ try {
 
 
 
-// DACA TOT NU MERGE , SA COMENTEZ LINILE ASTEA SI SA VAD CUM 
 
 
-//si sa vad ce zice pe chatgpt
-
-
-app.post("/create-subscription2", async (req, res) => {
+app.post("/create-subscription2", verifySessionToken, async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -2361,7 +2352,7 @@ app.post("/create-subscription2", async (req, res) => {
   }
 });
 
-app.get("/billing/callback", async (req, res) => {
+app.get("/billing/callback", verifySessionToken, async (req, res) => {
   try {
     const { userId, host } = req.query;
 
@@ -2439,7 +2430,7 @@ function findClosestAvailableTimes(chosenTime, availableTimes) {
   return closestTimes;
 }
 
-app.get("/fetch-all-faq", async (req, res) => {
+app.get("/fetch-all-faq", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
 
   try {
@@ -2470,7 +2461,7 @@ let user_id;
 const conversationId = `${user_id}-${generateRandomToken()}`;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-app.post("/ask-ai", async (req, res) => {
+app.post("/ask-ai", verifySessionToken, async (req, res) => {
   
   try {
       const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
@@ -2987,7 +2978,7 @@ return !isUnresolved(response);
 }
 
 
-app.get("/get-bot-status", async (req, res) => {
+app.get("/get-bot-status", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
 
   try {
@@ -3000,7 +2991,7 @@ app.get("/get-bot-status", async (req, res) => {
   }
 });
 
-app.get("/set-bot-status", async (req, res) => {
+app.get("/set-bot-status", verifySessionToken, async (req, res) => {
   const { userId, aiBot } = req.query;
 
   try {
@@ -3013,7 +3004,7 @@ app.get("/set-bot-status", async (req, res) => {
 });
 
 
-app.get("/get-queries", async (req, res) => {
+app.get("/get-queries", verifySessionToken, async (req, res) => {
 const { userId } = req.query;
 try {
   const [rows] = await pool.query(`
@@ -3033,7 +3024,7 @@ try {
 }
 });
 
-app.get("/resTime-graph", async (req, res) => {
+app.get("/resTime-graph", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
 
   try {
@@ -3045,7 +3036,7 @@ app.get("/resTime-graph", async (req, res) => {
   }
 })
 
-app.get("/chat-stats/last-7-days/:userId", async (req, res) => {
+app.get("/chat-stats/last-7-days/:userId", verifySessionToken, async (req, res) => {
   const { userId } = req.params;
 
   try {
@@ -3069,7 +3060,7 @@ app.get("/chat-stats/last-7-days/:userId", async (req, res) => {
   }
 });
 
-app.get("/chat-history/:userId", async (req, res) => {
+app.get("/chat-history/:userId", verifySessionToken, async (req, res) => {
 try {
     const { userId } = req.params;
 
@@ -3097,7 +3088,7 @@ LIMIT 20;
 }
 });
 
-app.get("/satisfaction", async (req, res) => {
+app.get("/satisfaction", verifySessionToken, async (req, res) => {
 const { userId } = req.query
 
 try {
@@ -3109,7 +3100,7 @@ try {
 }
 })
 
-app.get("/conv-history", async (req, res) => {
+app.get("/conv-history", verifySessionToken, async (req, res) => {
 const { userId } = req.query;
 if (!userId) {
   return res.status(404).json({ message: "Invalid credentials"})
@@ -3124,7 +3115,7 @@ try {
 }
 })
 
-app.post("/submit-feedback", async (req, res) => {
+app.post("/submit-feedback", verifySessionToken, async (req, res) => {
   try {
     const { apiKey, rating } = req.body;
 
@@ -3169,7 +3160,7 @@ const userId = user.user_id;
 });
 
 
-app.post("/ping-client", async (req, res) => {
+app.post("/ping-client", verifySessionToken, async (req, res) => {
   const { apiKey } = req.body;
 
   try {
@@ -3203,7 +3194,7 @@ app.post("/ping-client", async (req, res) => {
 });
 
 
-app.get("/get-connected", async (req, res) => {
+app.get("/get-connected", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
   try {
     const [rows] = await pool.query("SELECT last_connected FROM users WHERE user_id = ?", [userId]);
@@ -3223,7 +3214,7 @@ const user = rows[0];
 });
 
 
-app.get("/daily-messages", async (req, res) => {
+app.get("/daily-messages", verifySessionToken, async (req, res) => {
 try {
   const { userId } = req.query;
 
@@ -3248,7 +3239,7 @@ try {
 }
 });
 
-app.get("/yesterday-messages", async (req, res) => {
+app.get("/yesterday-messages", verifySessionToken, async (req, res) => {
   const { userId } = req.query
   if (!userId) {
     return res.status(400).json({ error: "Missing user_id parameter." });
@@ -3269,7 +3260,7 @@ res.json({ yesterdayMessages: result[0]?.total_messages || 0 });
 }
 })
 
-app.post("/user-training", async (req, res) => {
+app.post("/user-training", verifySessionToken, async (req, res) => {
   const { username } = req.body;
 
   try {
@@ -3297,7 +3288,7 @@ app.post("/user-training", async (req, res) => {
 
 
 
-app.post("/send-suggestion", async (req, res) => {
+app.post("/send-suggestion", verifySessionToken, async (req, res) => {
   const { message } = req.body;
   try {
     const insert = await pool.query("INSERT INTO suggestions (message) VALUES (?)", [message]);
@@ -3308,7 +3299,7 @@ app.post("/send-suggestion", async (req, res) => {
   }
 })
 
-app.post("/send-form", async (req, res) => {
+app.post("/send-form", verifySessionToken, async (req, res) => {
   const { name, email, phone, message } = req.body;
 try {
     const transporter = nodemailer.createTransport({
@@ -3347,7 +3338,7 @@ try {
 })
 
 
-app.post("/upload-file", upload.single("file"), async (req, res) => {
+app.post("/upload-file", verifySessionToken, upload.single("file"), async (req, res) => {
 try {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded." });
@@ -3424,12 +3415,12 @@ if (req.isAuthenticated()) {
 }
 return res.status(401).json({ error: "Unauthorized: Please log in first" });
 };
-app.get("/dashboard", ensureAuthenticated, (req, res) => {
+app.get("/dashboard", verifySessionToken, ensureAuthenticated, (req, res) => {
 res.json({ message: "Welcome to the dashboard", user: req.user });
 });
 
 
-app.get("/auth-check", async (req, res) => {
+app.get("/auth-check", verifySessionToken, async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ user: null });
   }
@@ -3573,7 +3564,7 @@ function decryptApiKey(encryptedKey) {
 }
 
 
-app.get("/get-api", async (req, res) => {
+app.get("/get-api", verifySessionToken, async (req, res) => {
   const { userId } = req.query
   try {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId])
@@ -3729,7 +3720,7 @@ app.get("/check-google_id", async (req, res) => {
 });
 
 
-app.post("/change-password", async (req, res) => {
+app.post("/change-password", verifySessionToken, async (req, res) => {
 const {oldPassword, newPassword, userId} = req.body;
 try{
   const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
@@ -3754,7 +3745,7 @@ try{
 }
 })
 
-app.post("/update-config", upload.single("file"), async (req, res) => {
+app.post("/update-config", verifySessionToken, upload.single("file"), async (req, res) => {
 const {
   responseTone,
   responseDelay,
@@ -3834,7 +3825,7 @@ try {
 }
 });
 
-app.get("/reset-bot", async (req, res) => {
+app.get("/reset-bot", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
 
   try{
@@ -3865,7 +3856,7 @@ app.get("/reset-bot", async (req, res) => {
 })
 
 
-app.post("/send-question", async (req, res) => {
+app.post("/send-question", verifySessionToken, async (req, res) => {
   const { userId, email, msg } = req.body;
   try {
     const add = await pool.query("INSERT INTO user_messages (user_id, user_email, message) VALUES (?, ?, ?)", 
