@@ -2,15 +2,6 @@ const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
 /**
- * Middleware to verify Shopify (embedded) or non-Shopify users.
- * 1️⃣ Checks for a valid Bearer JWT (App Bridge session token)
- * 2️⃣ Falls back to cookie-based session for browsers
- */
-// verifySessionToken.js
-const { shopify } = require("./shopify");
-const customSessionStorage = require("./sessionStorage");
-
-/**
  * Verifies both Shopify (JWT or cookie) and non-Shopify users.
  *  - JWT: Shopify App Bridge session token (audit requirement)
  *  - Cookie: your existing shopify_online_session fallback
