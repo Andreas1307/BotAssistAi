@@ -72,6 +72,7 @@ export function safeRedirect(url) {
   }
 }
 
+
 /**
  * Fetch with App Bridge auth token if inside Shopify
  * Falls back to plain fetch when running standalone
