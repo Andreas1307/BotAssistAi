@@ -5,7 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/footer";
 import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
-
+import axios from "axios";
 const LogIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

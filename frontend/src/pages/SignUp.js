@@ -5,7 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/footer";
 import directory from '../directory';
 import { fetchWithAuth } from "../utils/initShopifyAppBridge";
-
+import axios from "axios";
 const SignUp = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -14,7 +14,7 @@ const SignUp = () => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [error, setError] = useState("")
   const navigate = useNavigate();
-
+const [user, setUser] = useState(null)
   useEffect(() => {
     const fetchUser = async () => {
       try {

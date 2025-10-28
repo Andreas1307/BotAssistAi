@@ -8,6 +8,7 @@ import { Link } from "react-router-dom"
 const UpgradeNow = ({ closePage }) => {
   const [timer, setTimer] = useState(60);
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(false)
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : 0));
