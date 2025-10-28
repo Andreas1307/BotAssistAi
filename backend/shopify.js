@@ -1,5 +1,6 @@
-// shopify.js
-require('@shopify/shopify-api/adapters/node');
+// ✅ shopify.js
+require('@shopify/shopify-api/adapters/node'); // MUST come first!
+
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
@@ -7,7 +8,7 @@ const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_SCOPES.split(','),
-  hostName: process.env.HOST.replace(/^https?:\/\//, ''), // no protocol!
+  hostName: process.env.HOST.replace(/^https?:\/\//, ''), // no protocol
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   sessionStorage: {
@@ -15,6 +16,11 @@ const shopify = shopifyApi({
     loadCallback,
     deleteCallback,
   },
+});
+
+console.log('🟢 Shopify initialized:', {
+  hasSessionAPI: !!shopify.session,
+  version: LATEST_API_VERSION,
 });
 
 module.exports = { shopify };
