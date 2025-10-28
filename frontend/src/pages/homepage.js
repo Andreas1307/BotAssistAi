@@ -82,7 +82,7 @@ const Homepage = () => {
         safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
         return;
       }
-      window.appBridge = app;
+  
       try {
         // No /api/ping anymore — just assume App Bridge works
         console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
@@ -115,19 +115,16 @@ const Homepage = () => {
   
     const checkShop = async () => {
       try {
-        const res = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
-        const data = await res.json();
+        const { data } = await axios.get(`/check-shopify-store`, {
+          params: { shop: shopParam },
+        });
   
         if (!data.installed) {
           safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
   
-          await fetchWithAuth(`/chatbot-config-shopify`, {
-            method: "POST",
-            body: JSON.stringify({
-              shop: shopParam,
-              colors,
-            }),
-            headers: { "Content-Type": "application/json" },
+          await axios.post(`/chatbot-config-shopify`, {
+            shop: shopParam,
+            colors,
           });
   
           return; 
@@ -177,22 +174,28 @@ const Homepage = () => {
    
   };
   */
+  
+  
+
+
+
+  
+
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await fetchWithAuth("/auth-check");        
-        setUser(data.user);
+        const res = await axios.get(`/auth-check`, { withCredentials: true });
+        setUser(res.data.user);
       } catch (error) {
-        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
-  
     fetchUser();
   }, []);
-  
+
 
   useEffect(() => {
     if (!loading) {

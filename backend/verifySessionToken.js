@@ -1,26 +1,20 @@
+// verifySessionToken.js
 const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
-/**
- * Verifies both Shopify (JWT or cookie) and non-Shopify users.
- *  - JWT: Shopify App Bridge session token (audit requirement)
- *  - Cookie: shopify_online_session fallback
- *  - None: non-Shopify user
- */
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    // 1️⃣ Shopify JWT session token
+    // 1️⃣ Shopify Session Token (JWT)
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        // ✅ FIX: use new API method
-        const payload = await shopify.auth.decodeSessionToken(token);
+        const payload = await shopify.session.decodeSessionToken(token);
         if (!payload) throw new Error("Invalid JWT payload");
 
-        const shop = payload.dest?.replace(/^https:\/\//, "").toLowerCase();
+        const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
         const onlineSessionId = `${shop}_${payload.sub}`;
         const offlineSessionId = `offline_${shop}`;
 
@@ -29,33 +23,23 @@ module.exports = async function verifySessionToken(req, res, next) {
           (await customSessionStorage.loadCallback(offlineSessionId));
 
         if (session) {
-          req.shopify = { shop, session };
+          req.shopify = { shop, session, payload };
           console.log("✅ Shopify session validated via JWT:", shop);
           return next();
         }
+
+        console.warn("⚠️ No session found for JWT payload — maybe not stored yet");
+        return res.status(401).send("Session expired or invalid.");
       } catch (err) {
-        console.warn("⚠️ JWT invalid or expired, falling back to cookie:", err.message);
+        console.warn("⚠️ Invalid or expired JWT:", err.message);
+        return res.status(401).send("Invalid Shopify session token.");
       }
     }
 
-    // 2️⃣ Cookie fallback
-    if (req.cookies?.shopify_online_session) {
-      const accessToken = req.cookies.shopify_online_session;
-      const allSessions = await customSessionStorage.getAllSessions();
-      const session = allSessions.find(s => s.accessToken === accessToken);
-
-      if (session) {
-        req.shopify = { shop: session.shop, session };
-        console.log("✅ Shopify session validated via cookie:", session.shop);
-        return next();
-      }
-    }
-
-    // 3️⃣ No Shopify auth
-    console.log("ℹ️ No Shopify session token or cookie — treating as non-Shopify user");
+    // 2️⃣ Fallback for non-Shopify users or external access
+    console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
-    next();
-
+    return next();
   } catch (err) {
     console.error("❌ Session verification failed:", err);
     req.shopify = null;
