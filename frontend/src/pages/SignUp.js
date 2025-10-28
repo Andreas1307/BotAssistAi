@@ -125,12 +125,13 @@ const [user, setUser] = useState(null)
       return;
     }
     try {
-      const res = await fetchWithAuth(
+      const data = await fetchWithAuth(
         `/register`, {
           method: "POST",
-          body:  { username, email, password }
+          body: JSON.stringify({ username, email, password }),
         }
       );
+      const res = await data.json();
       
       if (res.data?.user?.username) {
         if (window.fbq) {
