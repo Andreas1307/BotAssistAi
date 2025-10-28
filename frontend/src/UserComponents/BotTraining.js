@@ -6,6 +6,7 @@ import axios from "../utils/axiosShopify.js"
 import directory from '../directory';
 import { ToastContainer, toast } from 'react-toastify';
 import { handleBilling } from "../utils/billing";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 
 const SupportBotCustomization = () => {
   const [responseTone, setResponseTone] = useState('');
@@ -59,18 +60,7 @@ const SupportBotCustomization = () => {
   };
 
   const [shopifyUser, setShopifyUser] = useState(false)
-  useEffect(() => {   
-    const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
-    } 
-    fetchShopifyUser()
-
-  }, [user])
+ 
 
 
   
@@ -83,8 +73,14 @@ const SupportBotCustomization = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const res = await fetchWithAuth("/auth-check"); 
+        setUser(res.user);
+        if(res.user.shopify_access_token) {
+          setShopifyUser(true)
+        } else {
+          setShopifyUser(false)
+        }
+        setRenew(res.showRenewalModal)
       } catch (error) {
         setUser(null);
         showErrorNotification()
@@ -100,10 +96,11 @@ const SupportBotCustomization = () => {
   
     const fetchUserData = async () => {
       try {
-        const response = await axios.post(
-          `/user-training`,
-          { username: user.username },
-          { withCredentials: true }
+        const response = await fetchWithAuth(
+          `/user-training`, {
+            method: "POST",
+            body: { username: user.username }
+          }
         );
 
         const data = response.data.config || {};
@@ -139,10 +136,12 @@ const SupportBotCustomization = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`/get-membership`, {
-          params: { userId: user?.user_id}
-        })
-        if(response.data.message.subscription_plan === "Pro") {
+        const userId = user?.user_id;
+        const response = await fetchWithAuth(`/get-membership?userId=${userId}`, {
+          method: "GET",
+        });
+
+        if(response.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
           setMembership(false)
@@ -182,10 +181,10 @@ const setFieldValue = (field, value) => {
     formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
-      const response = await axios.post(`/update-config`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }, // Ensure correct content type
-        withCredentials: true,
-      });
+      const response = await fetchWithAuth(`/update-config`, {
+        method: "POST",
+        body: formData
+            });
       showNotification("Settings updated successfully!");
     } catch (e) {
       showErrorNotification("Something went wrong with saving settings.")

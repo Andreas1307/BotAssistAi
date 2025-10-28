@@ -79,23 +79,25 @@ export function safeRedirect(url) {
 export async function fetchWithAuth(url, options = {}) {
   const token = window.sessionToken || getCookie("shopify_online_session");
 
+  // Detect if the request is multipart
   const isFormData = options.body instanceof FormData;
 
-const defaultHeaders = {
-  ...(isFormData ? {} : { "Content-Type": "application/json" }),
-  ...(token ? { Authorization: `Bearer ${token}` } : {}),
-};
-
+  // ✅ Don’t manually set Content-Type for FormData
+  const defaultHeaders = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    credentials: "include", // like axios { withCredentials: true }
+    body: isFormData
+      ? options.body
+      : options.body
+      ? JSON.stringify(options.body)
+      : undefined,
   };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
-  }
 
   const fullUrl = url.startsWith("http")
     ? url
@@ -104,16 +106,22 @@ const defaultHeaders = {
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const errorText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errorText}`);
   }
 
+  // Try parsing JSON, but handle empty response
   try {
     return await res.json();
   } catch {
     return null;
   }
 }
+
+function getCookie(name) {
+  return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
+}
+
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
