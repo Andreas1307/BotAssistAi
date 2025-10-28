@@ -1,5 +1,7 @@
 const { shopify } = require('./shopify');
 const customSessionStorage = require('./sessionStorage');
+const { Shopify } = require('@shopify/shopify-api');
+
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -11,7 +13,7 @@ module.exports = async function verifySessionToken(req, res, next) {
 
       try {
         // ✅ This now works correctly:
-        const payload = await shopify.session.decodeSessionToken(token);
+        const payload = await Shopify.Utils.decodeSessionToken(token);
         if (!payload) throw new Error('Invalid JWT payload');
 
         const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
