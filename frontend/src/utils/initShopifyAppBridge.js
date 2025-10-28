@@ -78,36 +78,22 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
-  // 🔹 If embedded, get a fresh Shopify JWT
-  let token = null;
-  if (app) {
-    try {
-      token = await getSessionToken(app);
-      window.sessionToken = token; // cache it for later
-    } catch (err) {
-      console.warn("⚠️ Failed to get Shopify session token:", err);
-    }
-  }
-
-  const isFormData = options.body instanceof FormData;
-  const headers = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+  const defaultHeaders = {
+    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers,
-    credentials: "include",
-    body: isFormData
-      ? options.body
-      : options.body
-      ? JSON.stringify(options.body)
-      : undefined,
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include", // 🔑 allow cookies cross-domain
   };
+
+  if (options.body) {
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  }
 
   const fullUrl = url.startsWith("http")
     ? url
@@ -116,8 +102,8 @@ export async function fetchWithAuth(url, options = {}) {
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Request failed: ${res.status} ${text}`);
+    const errText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
@@ -128,5 +114,5 @@ export async function fetchWithAuth(url, options = {}) {
 }
 
 function getCookie(name) {
-  return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
+  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
