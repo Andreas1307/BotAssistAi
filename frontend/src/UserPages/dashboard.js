@@ -12,7 +12,7 @@ import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
-import axios from "../utils/axiosShopify.js"
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 
 
 import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
@@ -245,9 +245,11 @@ const Dashboard = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`/get-membership`, {
-          params: { userId: user?.user_id}
-        })
+        const userId = user?.user_id;
+        const response = await fetchWithAuth(`/get-membership?${userId}`, {
+          method: "GET",
+        });
+
         if(response.data.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
@@ -264,7 +266,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`/auth-check`, { withCredentials: true });
+        const res = await fetchWithAuth("/auth-check"); 
         setUser(res.data.user);
         if(res.data.user.shopify_access_token) {
           setShopifyUser(true)
@@ -288,8 +290,9 @@ const Dashboard = () => {
         return;
       }
       try {
-        const response = await axios.get(`/get-queries`, {
-          params: { userId: user.user_id }
+        const userId = user.user_id;
+        const response = await fetchWithAuth(`/get-queries?${userId}`, {
+          method: "GET",
         });
         setUnresolvedQueries(response.data.unresolvedQueries.length);
         setResolvedQueries(response.data.resolvedQueries.length);
@@ -313,9 +316,11 @@ const Dashboard = () => {
   
     const fetchSatisfaction = async () => {
       try {
-        const response = await axios.get(`/satisfaction`, {
-          params: { userId: user.user_id }
+        const userId = user.user_id;
+        const response = await fetchWithAuth(`/satisfaction?${userId}`, {
+          method: "GET",
         });
+
   
         const satisfactionData = response.data.message;
         setSatisfaction(satisfactionData);
@@ -362,7 +367,9 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await axios.get(`/chat-history/${userId}`)
+        const response = await fetchWithAuth(`/chat-history/${userId}`, {
+          method: "GET",
+        });
         
         const messages = response.data.messages;
         if (!messages || messages.length === 0) return;
@@ -406,9 +413,9 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await axios.get(`/daily-messages` , {
-          params: { userId }
-        })
+        const response = await fetchWithAuth(`/daily-messages?${userId}`, {
+          method: "GET",
+        });
         setDailyCount(response.data.dailyMessages);    
       } catch (e) {
         console.log("An error occured with fetching the daily conversations", e)
@@ -425,8 +432,9 @@ useEffect(() => {
   const fetchBotStatus = async () => {
     const userId = user.user_id;
     try {
-      const res = await axios.get(`/get-bot-status`, {
-        params: { userId }
+
+      const res = await fetchWithAuth(`/get-bot-status?${userId}`, {
+        method: "GET",
       });
       const botEnabled = !!res.data.bool; // Ensure boolean
       setAiBot(botEnabled);
@@ -444,9 +452,11 @@ useEffect(() => {
   const fetchAllFaq = async () => {
     if(!user) return
     try {
-      const res = await axios.get(`/fetch-all-faq`, {
-        params: { userId: user.user_id}
-      })
+      const userId = user.user_id
+      const res = await fetchWithAuth(`/fetch-all-faq?${userId}`, {
+        method: "GET",
+      });
+
       const data = res.data.faq;
 
       if (!data) {
@@ -486,9 +496,11 @@ useEffect(() => {
 
   const checkConnected = async () => {
     try {
-      const res = await axios.get(`/get-connected`, {
-        params: { userId: user.user_id },
+      const userId = user.user_id
+      const res = await fetchWithAuth(`/get-connected?${userId}`, {
+        method: "GET",
       });
+
 
       if (res.data.connected) {
         setConnected(true);
@@ -514,9 +526,12 @@ const setBotStatus = async (status) => {
   if (!user) return;
   const userId = user.user_id;
   try {
-    await axios.get(`/set-bot-status`, {
-      params: { userId, aiBot: status ? 1 : 0 }, // convert to 1/0 for DB
-    });
+    const queryParams = new URLSearchParams({
+      userId,
+      aiBot: status ? 1 : 0, // convert boolean to 1/0
+    }).toString();
+    
+    const response = await fetchWithAuth(`/set-bot-status?${queryParams}`);
   } catch (e) {
     console.log("Error occurred with setting bot on or off", e);
     showErrorNotification();
@@ -525,7 +540,7 @@ const setBotStatus = async (status) => {
 
 const handleLogout = async () => {
   try {
-    await axios.post(`/logout`, {}, { withCredentials: true });
+    await fetchWithAuth(`/logout`);
     navigate("/");
   } catch (error) {
     console.log("Logout failed", error);
@@ -598,8 +613,14 @@ const fetchConvHistory = async (loadAllChats = false) => {
   if (!user || (!hasMore && !loadAllChats)) return;
 
   try {
-    const res = await axios.get(`/conv-history`, {
-      params: { userId: user.user_id, page: loadAllChats ? undefined : page, limit: 20, all: loadAllChats }
+    const query = new URLSearchParams({
+      userId: user.user_id,
+      ...(loadAllChats ? { all: true } : { page, limit: 20 }),
+    }).toString();
+    
+    // Make the request
+    const res = await fetchWithAuth(`/conv-history?${query}`, {
+      method: "GET", // optional, default is GET
     });
 
 
@@ -646,10 +667,13 @@ const fetchConvHistory = async (loadAllChats = false) => {
     e.preventDefault()
     if(!user) return
     try {
-      const res = await axios.post(`/send-question`, {
-        userId: user?.user_id,
-        email: user?.email,
-        msg: userQuery
+      const res = await fetchWithAuth(`/send-question`, {
+        method: "POST", 
+        body: {
+          userId: user?.user_id,
+          email: user?.email,
+          msg: userQuery
+        }
       })
       showNotification("Message sent successfully!")
       setUserQuery("")
@@ -729,9 +753,7 @@ const handleReset = async () => {
   }
   const userId = user.user_id
   try {
-    await axios.get(`/reset-bot`, { 
-      params: { userId }
-    })
+    await fetchWithAuth(`/reset-bot?${userId}`)
     setTimeout(() => {
       showNotification("Note , your bot will not work unless you train it")
     }, 1500)

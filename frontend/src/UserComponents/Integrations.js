@@ -14,7 +14,7 @@ import "../styling/Integrations.css";
 import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow, set } from "date-fns";
-import axios from "../utils/axiosShopify.js"
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 const Integrations = () => {
   const [bgColor, setBgColor] = useState("#007bff");
   const [position, setPosition] = useState("bottom-right");
@@ -339,18 +339,16 @@ const Integrations = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`/auth-check`, {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-        setShopifyDomain(res.data.user.shopify_shop_domain)
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
-        showErrorNotification();
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
 
@@ -359,8 +357,8 @@ const Integrations = () => {
       if (!user) return;
       try {
         const userId = user?.user_id;
-        const res = await axios.get(`/get-api`, {
-          params: { userId },
+        const res = await fetchWithAuth(`/get-api?${userId}`, {
+          method: "GET",
         });
         setApiKey(res.data.key);
       } catch (e) {
@@ -376,7 +374,10 @@ const Integrations = () => {
     const fetchShopifyUser = async () => {
       if (!user || !user.user_id) return;
       try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user.user_id }})
+        const id = user?.user_id;
+        const response = await fetchWithAuth(`/check-shopify-user?${id}`, {
+          method: "GET",
+        });
         setShopifyUser(response.data.data)
         setShopifyDomain(response.data.domain)
       } catch(e) {
@@ -391,8 +392,9 @@ const Integrations = () => {
     const getShopifyStyles = async () => {
       if (!shopifyDomain) return;
       try {
-        const response = await axios.get(`/get-shopify-styles`, {
-          params: { shop: shopifyDomain }
+        const shop = shopifyDomain
+        const response = await fetchWithAuth(`/get-shopify-styles?${shop}`, {
+          method: "GET",
         });
         setColors(response.data.data);
       } catch (e) {
@@ -406,9 +408,9 @@ const Integrations = () => {
 
   const redirectToInstall = async (shop) => {
     try {
-      const response = await axios.post(`/chatbot-config-shopify`, {
-        shop,
-        colors,
+      const response = await fetchWithAuth(`/chatbot-config-shopify`, {
+        method: "POST",
+        body: { shop, colors}
       });
       if (response.data.data === true) {
         setChatBotConfig(false)
@@ -442,8 +444,8 @@ const Integrations = () => {
     const fetchBotStatus = async () => {
       const userId = user.user_id;
       try {
-        const res = await axios.get(`/get-bot-status`, {
-          params: { userId },
+        const res = await fetchWithAuth(`/get-bot-status?${userId}`, {
+          method: "GET",
         });
         const botEnabled = !!res.data.bool; // Ensure boolean
         setAiBot(botEnabled);
@@ -460,9 +462,12 @@ const Integrations = () => {
     if (!user) return;
     const userId = user.user_id;
     try {
-      await axios.get(`/set-bot-status`, {
-        params: { userId, aiBot: status ? 1 : 0 }, // convert to  1/0 for DB
-      });
+      const queryParams = new URLSearchParams({
+        userId,
+        aiBot: status ? 1 : 0, // convert boolean to 1/0
+      }).toString();
+      
+      const response = await fetchWithAuth(`/set-bot-status?${queryParams}`);
     } catch (e) {
       console.log("Error occurred with setting bot on or off", e);
       showErrorNotification();
@@ -476,8 +481,8 @@ const Integrations = () => {
       }
       const userId = user.user_id;
       try {
-        const res = await axios.get(`/get-api`, {
-          params: { userId },
+        const res = await fetchWithAuth(`/get-api?${userId}`, {
+          method: "GET",
         });
         setApiKey(res.data.key);
       } catch (e) {
@@ -575,8 +580,8 @@ const Integrations = () => {
     }
     const userId = user.user_id;
     try {
-      await axios.get(`/reset-bot`, {
-        params: { userId },
+      await fetchWithAuth(`/reset-bot?${userId}`, {
+        method: "GET",
       });
       setTimeout(() => {
         showNotification("Note , your bot will not work unless you train it");
@@ -593,8 +598,11 @@ const Integrations = () => {
 
     const checkConnected = async () => {
       try {
-        const res = await axios.get(`/get-connected`, {
-          params: { userId: user.user_id },
+        
+    const userId = user.user_id;
+        
+        const res = await fetchWithAuth(`/get-connected?${userId}`, {
+          method: "GET",
         });
 
         if (res.data.connected) {

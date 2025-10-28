@@ -6,7 +6,7 @@ import Newsletter from "../components/newsletter";
 import Footer from "../components/footer";
 import Faq from "../components/faq"
 import directory from '../directory';
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { FaStar, FaUsers } from "react-icons/fa";
 import { Helmet } from "react-helmet";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -23,14 +23,16 @@ const Pricing = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
 

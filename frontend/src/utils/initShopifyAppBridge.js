@@ -77,31 +77,41 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = window.appBridge;
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
-  // For non-Shopify users, skip token
-  if (!app) {
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-      },
-    });
+  const defaultHeaders = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const opts = {
+    method: options.method || "GET",
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include", // 🔑 allow cookies cross-domain
+  };
+
+  if (options.body) {
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  }
+
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
+
+  const res = await fetch(fullUrl, opts);
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
-    const token = await getSessionToken(app); // 🔥 fetches fresh 1-minute JWT
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
-    });
-  } catch (err) {
-    console.error("❌ Failed to get Shopify session token:", err);
-    return new Response(null, { status: 401 });
+    return await res.json();
+  } catch {
+    return null;
   }
+}
+
+function getCookie(name) {
+  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }

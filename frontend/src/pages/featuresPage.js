@@ -8,7 +8,7 @@ import HowItWorks from "../components/howItWorks";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import directory from '../directory';
 import { Helmet } from "react-helmet";
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 const FeaturesPage = () => {
   const location = useLocation()
   const [user, setUser] = useState(null);
@@ -19,14 +19,16 @@ const FeaturesPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
 

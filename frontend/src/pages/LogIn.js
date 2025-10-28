@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../styling/SignLog.css";
 import Header from "../components/Header";
 import Footer from "../components/footer";
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
 
 const LogIn = () => {
@@ -14,22 +14,23 @@ const LogIn = () => {
   const [error, setError] = useState("")
   const navigate = useNavigate();
 
-  // Check if the user is authenticated
+ 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
 
-  // Redirect authenticated user to dashboard
   useEffect(() => {
     if (!loading && user) {
       if (window.location.pathname === "/login") {
@@ -39,15 +40,14 @@ const LogIn = () => {
     }
   }, [user, loading, navigate]);
 
-  // Handle form submission
+  
   const handleData = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${directory}/log-in`,
-        { email, password },
-        { withCredentials: true }
-      );
+      const response = await fetchWithAuth(`/log-in`, {
+        method: "POST",
+        body: { email, password },
+      });
       navigate(`/${response.data.user.username}/dashboard`);
     } catch (e) {
       console.error("Error logging in:", e);

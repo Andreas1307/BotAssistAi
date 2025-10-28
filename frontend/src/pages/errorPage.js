@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import { Link } from "react-router-dom"
 import "../styling/error.css"
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
 import { useNavigate } from "react-router-dom";
 
@@ -14,14 +14,16 @@ const Error = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
   useEffect(() => {

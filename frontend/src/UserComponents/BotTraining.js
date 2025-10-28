@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { IoSettingsOutline } from "react-icons/io5"
 import { Link } from "react-router-dom"
 import "../styling/BotTraining.css"
-import axios from "../utils/axiosShopify.js"
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
 import { ToastContainer, toast } from 'react-toastify';
 import { handleBilling } from "../utils/billing";
@@ -61,16 +61,11 @@ const SupportBotCustomization = () => {
   const [shopifyUser, setShopifyUser] = useState(false)
   useEffect(() => {   
     const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
+      console.log("NO shopify")
     } 
     fetchShopifyUser()
 
-  }, [user])
+  }, [user])          
 
 
   
@@ -79,19 +74,19 @@ const SupportBotCustomization = () => {
   };
 
 
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
-        showErrorNotification()
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
 
@@ -100,10 +95,11 @@ const SupportBotCustomization = () => {
   
     const fetchUserData = async () => {
       try {
-        const response = await axios.post(
-          `/user-training`,
-          { username: user.username },
-          { withCredentials: true }
+        const response = await fetchWithAuth(
+          `/user-training`, {
+            method: "POST",
+            body:  { username: user.username },
+          }
         );
 
         const data = response.data.config || {};
@@ -139,9 +135,10 @@ const SupportBotCustomization = () => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`/get-membership`, {
-          params: { userId: user?.user_id}
-        })
+        const userId = user?.user_id;
+        const response = await fetchWithAuth(`/get-membership?${userId}`, {
+          method: "GET",
+        });
         if(response.data.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
@@ -182,9 +179,9 @@ const setFieldValue = (field, value) => {
     formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
-      const response = await axios.post(`/update-config`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }, // Ensure correct content type
-        withCredentials: true,
+      const response = await fetchWithAuth(`/update-config`, {
+        method: "POST",
+        body: formData
       });
       showNotification("Settings updated successfully!");
     } catch (e) {
@@ -208,9 +205,9 @@ const setFieldValue = (field, value) => {
     formData.append("file", file);
   
     try {
-      const response = await axios.post(`/upload-file`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
+      const response = await fetchWithAuth(`/upload-file`, {
+        method: "POST",
+        body: formData
       });
   
       setUploadStatus("File uploaded successfully!");

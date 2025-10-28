@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaRocket, FaCheckCircle, FaTimesCircle, FaStar, FaBolt, FaShieldAlt } from "react-icons/fa";
 import "../styling/upgrade.css"; 
-import axios from "../utils/axiosShopify.js"
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
 import PayPalIntegration from "../UserComponents/PayPalIntegration";
 import { Link } from "react-router-dom"
@@ -18,14 +18,18 @@ const UpgradeNow = ({ closePage }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`/auth-check`, { withCredentials: true })
-        setUser(response.data.user)
-      } catch (e) {
-         console.log("Error fetching the user", e)
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
+      } catch (error) {
+        console.error("❌ Auth check error:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    }
-    fetchUser()
-  }, [])
+    };
+  
+    fetchUser();
+  }, []);
 
 
 

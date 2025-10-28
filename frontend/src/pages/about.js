@@ -6,7 +6,7 @@ import Newsletter from "../components/newsletter";
 import Footer from "../components/footer";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import directory from '../directory';
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 const About = () => {
   const [user, setUser] = useState(null);
@@ -18,16 +18,28 @@ const About = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
+
+  
+// SA UPDATEZ
+
+
+
+
+
+
+
 
 
   useEffect(() => {

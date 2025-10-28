@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaCog } from "react-icons/fa";
 import "../styling/Settings.css";
 import { FaKey } from "react-icons/fa";
-import axios from "../utils/axiosShopify.js"
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
@@ -84,18 +84,19 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`/auth-check`, {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
+
 
   const formattedDate = new Date(user.created_at).toLocaleString("en-US", {
     year: "numeric",
@@ -112,10 +113,11 @@ const SettingsPage = () => {
 
   const saveData = async () => {
     try {
-      const response = await axios.post(
-        `/change-password`,
-        { oldPassword, newPassword, userId: user.user_id },
-        { withCredentials: true }
+      await fetchWithAuth(
+        `/change-password`,{
+          method: "POST",
+          body: { oldPassword, newPassword, userId: user.user_id },
+        }
       );
       //Notify here
       setNewPassword("");
@@ -128,7 +130,7 @@ const SettingsPage = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`/logout`, {}, { withCredentials: true });
+      await fetchWithAuth(`/logout`);
       navigate("/");
     } catch (error) {
       console.log("Logout failed", error);
@@ -139,10 +141,11 @@ const SettingsPage = () => {
     const checkGoogle = async () => {
       if (!user) return;
       try {
-        const res = await axios.get(`/check-google_id`, {
-          params: { userId: user.user_id },
-          withCredentials: true, // ✅ Ensures cookies/auth headers are included
+        const userId = user.user_id;
+        const res = await fetchWithAuth(`/check-google_id?${userId}`, {
+          method: "GET",
         });
+
         if (res.data.user.google_id === null) {
           return setGoogle(true);
         } else {

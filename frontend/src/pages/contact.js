@@ -8,7 +8,7 @@ import Newsletter from "../components/newsletter";
 import Footer from "../components/footer";
 import Faq from "../components/faq";
 import directory from '../directory';
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { ToastContainer, toast } from "react-toastify";
@@ -61,18 +61,19 @@ const Contact = () => {
     });
   };
 
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
 
@@ -98,7 +99,11 @@ const Contact = () => {
   const handleSuggestion = async (e) => {
     e.preventDefault()
     try {
-      await axios.post(`${directory}/send-suggestion`, { message: suggest}, { withCredentials: true})
+      await fetchWithAuth(`/send-suggestion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: suggest }),
+      });
       setSubmited(true)
       setForm(false)
     } catch(e) {
@@ -108,9 +113,11 @@ const Contact = () => {
   const handleForm = async (e) => {
     e.preventDefault()
     try {
-      await axios.post(`${directory}/send-form`, {
-        name, email, phone, message
-      }, { withCredentials: true})
+      await fetchWithAuth(`/send-form`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, message }),
+      });
       setName("")
       setEmail("")
       setPhone("");

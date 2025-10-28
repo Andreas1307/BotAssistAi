@@ -4,7 +4,7 @@ import "../styling/SignLog.css";
 import Header from "../components/Header";
 import Footer from "../components/footer";
 import directory from '../directory';
-import axios from "axios";
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -18,12 +18,11 @@ const SignUp = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
-        if (res.data.user) {
-          navigate(`/${res.data.user.username}/dashboard`);
-        }
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error("❌ Auth check error:", error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -126,10 +125,11 @@ const SignUp = () => {
       return;
     }
     try {
-      const res = await axios.post(
-        `${directory}/register`,
-        { username, email, password },
-        { withCredentials: true }
+      const res = await fetchWithAuth(
+        `/register`, {
+          method: "POST",
+          body:  { username, email, password }
+        }
       );
       
       if (res.data?.user?.username) {

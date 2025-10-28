@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Line, Doughnut, Bar } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import "../styling/AnalyticsPage.css";
-import axios from "../utils/axiosShopify.js"
+import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from '../directory';
 import { Link } from "react-router-dom"
 import { ToastContainer, toast } from 'react-toastify';
@@ -53,12 +53,7 @@ const AnalyticsPage = () => {
 const [shopifyUser, setShopifyUser] = useState(false)
   useEffect(() => {   
     const fetchShopifyUser = async () => {
-      try {
-        const response = await axios.get(`/check-shopify-user`, {params: { id: user?.user_id }})
-        setShopifyUser(response.data.data)
-      } catch(e) {
-        console.log("An error occured checking the shopify user", e)
-      }
+      console.log("Not fetching api")
     } 
     fetchShopifyUser()
 
@@ -71,26 +66,29 @@ const [shopifyUser, setShopifyUser] = useState(false)
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`/auth-check`, { withCredentials: true });
-        setUser(res.data.user);
+        const { data } = await fetchWithAuth("/auth-check");        
+        setUser(data.user);
       } catch (error) {
+        console.error("❌ Auth check error:", error);
         setUser(null);
-        showErrorNotification()
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
   }, []);
+
 
   // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
       if (!user) return
       try{
-        const response = await axios.get(`/get-membership`, {
-          params: { userId: user?.user_id}
-        })
+        const userId = user?.user_id;
+        const response = await fetchWithAuth(`/get-membership?${userId}`, {
+          method: "GET",
+        });
         if(response.data.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
@@ -109,9 +107,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
     const fetchDaily = async () => {
       if(!user) return
       try {
-        const res = await axios.get(`/daily-messages`, {
-          params: { userId: user?.user_id}
-        }, { withCredentials: true})
+        const userId = user?.user_id;
+        const res = await fetchWithAuth(`/daily-messages?${userId}`, {
+          method: "GET",
+        });
         setDailyCount(res.data.dailyMessages)
       } catch(e) {
         console.log("An error occured fetching daily conversations num", e)
@@ -125,9 +124,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
     const fetchYesterday = async () => {
       if(!user) return
       try {
-        const res = await axios.get(`/yesterday-messages`, {
-          params: { userId: user?.user_id}
-        })
+        const userId = user?.user_id;
+        const res = await fetchWithAuth(`/yesterday-messages?${userId}`, {
+          method: "GET",
+        });
         setYestCount(res.data.yesterdayMessages)
       } catch(e) {
         console.log("❌ Error fetching yesterday's messages:", e);
@@ -141,9 +141,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
     const fetchResTime = async () => {
       if(!user) return
       try {
-        const res = await axios.get(`/resTime-graph`, { 
-          params: {userId: user?.user_id}
-        }, { withCredentials: true})
+        const userId = user?.user_id;
+        const res = await fetchWithAuth(`/resTime-graph?${userId}`, {
+          method: "GET",
+        });
         setResData(res.data.message.slice(-5))
       } catch(e) {
         console.log("An error has occured with retreiving the response time for chart", e)
@@ -160,7 +161,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
   
     const fetchLastWeekData = async () => {
       try {
-        const res = await axios.get(`/chat-stats/last-7-days/${user.user_id}`);
+
+        const res = await fetchWithAuth(`/chat-stats/last-7-days/${user.user_id}`, {
+          method: "GET",
+        });
         const rawData = res.data.data;
   
         const counts = {};
@@ -205,7 +209,9 @@ const [shopifyUser, setShopifyUser] = useState(false)
   
     const fetchChatData = async () => {
       try {
-        const res = await axios.get(`/chat-history/${user.user_id}`);
+        const res = await fetchWithAuth(`/chat-history/${user.user_id}`, {
+          method: "GET",
+        });
   
         if (res.data.messages) {
           const timeRanges = new Array(6).fill(0);
