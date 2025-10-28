@@ -80,10 +80,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
       if (!user) return
       try{
         const userId = user?.user_id;
-        const response = await fetchWithAuth(`/get-membership?${userId}`, {
+        const response = await fetchWithAuth(`/get-membership?userId=${userId}`, {
           method: "GET",
         });
-        if(response.data.message.subscription_plan === "Pro") {
+        if(response.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
           setMembership(false)
@@ -102,10 +102,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
       if(!user) return
       try {
         const userId = user?.user_id;
-        const res = await fetchWithAuth(`/daily-messages?${userId}`, {
+        const res = await fetchWithAuth(`/daily-messages?userId=${userId}`, {
           method: "GET",
         });
-        setDailyCount(res.data.dailyMessages)
+        setDailyCount(res.dailyMessages)
       } catch(e) {
         console.log("An error occured fetching daily conversations num", e)
         //NOTIFY HERE
@@ -119,10 +119,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
       if(!user) return
       try {
         const userId = user?.user_id;
-        const res = await fetchWithAuth(`/yesterday-messages?${userId}`, {
+        const res = await fetchWithAuth(`/yesterday-messages?userId=${userId}`, {
           method: "GET",
         });
-        setYestCount(res.data.yesterdayMessages)
+        setYestCount(res.yesterdayMessages)
       } catch(e) {
         console.log("❌ Error fetching yesterday's messages:", e);
         showErrorNotification()
@@ -136,10 +136,10 @@ const [shopifyUser, setShopifyUser] = useState(false)
       if(!user) return
       try {
         const userId = user?.user_id;
-        const res = await fetchWithAuth(`/resTime-graph?${userId}`, {
+        const res = await fetchWithAuth(`/resTime-graph?userId=${userId}`, {
           method: "GET",
         });
-        setResData(res.data.message.slice(-5))
+        setResData(res.message.slice(-5))
       } catch(e) {
         console.log("An error has occured with retreiving the response time for chart", e)
         showErrorNotification()
@@ -159,7 +159,7 @@ const [shopifyUser, setShopifyUser] = useState(false)
         const res = await fetchWithAuth(`/chat-stats/last-7-days/${user.user_id}`, {
           method: "GET",
         });
-        const rawData = res.data.data;
+        const rawData = res.data;
   
         const counts = {};
         rawData.forEach(row => {
@@ -206,7 +206,7 @@ const [shopifyUser, setShopifyUser] = useState(false)
         const res = await fetchWithAuth(`/chat-history/${user.user_id}`, {
           method: "GET",
         });
-  
+  console.log("ANAL?Y", res)
         if (res.data.messages) {
           const timeRanges = new Array(6).fill(0);
   

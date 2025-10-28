@@ -357,10 +357,10 @@ const Integrations = () => {
       if (!user) return;
       try {
         const userId = user?.user_id;
-        const res = await fetchWithAuth(`/get-api?${userId}`, {
+        const res = await fetchWithAuth(`/get-api?userId=${userId}`, {
           method: "GET",
         });
-        setApiKey(res.data.key);
+        setApiKey(res.key);
       } catch (e) {
         console.log("Error fetching api", e);
         showErrorNotification();
@@ -375,11 +375,11 @@ const Integrations = () => {
       if (!user || !user.user_id) return;
       try {
         const id = user?.user_id;
-        const response = await fetchWithAuth(`/check-shopify-user?${id}`, {
+        const response = await fetchWithAuth(`/check-shopify-user?id=${id}`, {
           method: "GET",
         });
-        setShopifyUser(response.data.data)
-        setShopifyDomain(response.data.domain)
+        setShopifyUser(response.data)
+        setShopifyDomain(response.domain)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
       }
@@ -393,10 +393,10 @@ const Integrations = () => {
       if (!shopifyDomain) return;
       try {
         const shop = shopifyDomain
-        const response = await fetchWithAuth(`/get-shopify-styles?${shop}`, {
+        const response = await fetchWithAuth(`/get-shopify-styles?shop=${shop}`, {
           method: "GET",
         });
-        setColors(response.data.data);
+        setColors(response.data);
       } catch (e) {
         console.log("Error occurred while trying to fetch the Shopify styles", e);
       }
@@ -412,7 +412,7 @@ const Integrations = () => {
         method: "POST",
         body: { shop, colors}
       });
-      if (response.data.data === true) {
+      if (response.data === true) {
         setChatBotConfig(false)
       }
     } catch (e) {
@@ -444,10 +444,10 @@ const Integrations = () => {
     const fetchBotStatus = async () => {
       const userId = user.user_id;
       try {
-        const res = await fetchWithAuth(`/get-bot-status?${userId}`, {
+        const res = await fetchWithAuth(`/get-bot-status?userId=${userId}`, {
           method: "GET",
         });
-        const botEnabled = !!res.data.bool; // Ensure boolean
+        const botEnabled = !!res.bool; // Ensure boolean
         setAiBot(botEnabled);
       } catch (e) {
         console.log("Error getting the status of bot", e);
@@ -467,7 +467,7 @@ const Integrations = () => {
         aiBot: status ? 1 : 0, // convert boolean to 1/0
       }).toString();
       
-      const response = await fetchWithAuth(`/set-bot-status?${queryParams}`);
+      await fetchWithAuth(`/set-bot-status?queryParams=${queryParams}`);
     } catch (e) {
       console.log("Error occurred with setting bot on or off", e);
       showErrorNotification();
@@ -481,10 +481,10 @@ const Integrations = () => {
       }
       const userId = user.user_id;
       try {
-        const res = await fetchWithAuth(`/get-api?${userId}`, {
+        const res = await fetchWithAuth(`/get-api?userId=${userId}`, {
           method: "GET",
         });
-        setApiKey(res.data.key);
+        setApiKey(res.key);
       } catch (e) {
         console.log("Error fetching api", e);
         showErrorNotification();
@@ -580,7 +580,7 @@ const Integrations = () => {
     }
     const userId = user.user_id;
     try {
-      await fetchWithAuth(`/reset-bot?${userId}`, {
+      await fetchWithAuth(`/reset-bot?userId=${userId}`, {
         method: "GET",
       });
       setTimeout(() => {
@@ -601,13 +601,13 @@ const Integrations = () => {
         
     const userId = user.user_id;
         
-        const res = await fetchWithAuth(`/get-connected?${userId}`, {
+        const res = await fetchWithAuth(`/get-connected?userId=${userId}`, {
           method: "GET",
         });
 
-        if (res.data.connected) {
+        if (res.connected) {
           setConnected(true);
-          setLastConnected(res.data.last_connected);
+          setLastConnected(res.last_connected);
         } else {
           setConnected(false);
         }

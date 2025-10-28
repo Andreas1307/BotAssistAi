@@ -246,11 +246,11 @@ const Dashboard = () => {
       if (!user) return
       try{
         const userId = user?.user_id;
-        const response = await fetchWithAuth(`/get-membership?${userId}`, {
+        const response = await fetchWithAuth(`/get-membership?userId=${userId}`, {
           method: "GET",
         });
 
-        if(response.data.message.subscription_plan === "Pro") {
+        if(response.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
           setMembership(false)
@@ -268,12 +268,12 @@ const Dashboard = () => {
       try {
         const res = await fetchWithAuth("/auth-check"); 
         setUser(res.user);
-        if(res.data.user.shopify_access_token) {
+        if(res.user.shopify_access_token) {
           setShopifyUser(true)
         } else {
           setShopifyUser(false)
         }
-        setRenew(res.data.showRenewalModal)
+        setRenew(res.showRenewalModal)
       } catch (error) {
         setUser(null);
         showErrorNotification()
@@ -291,11 +291,11 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id;
-        const response = await fetchWithAuth(`/get-queries?${userId}`, {
+        const response = await fetchWithAuth(`/get-queries?userId=${userId}`, {
           method: "GET",
         });
-        setUnresolvedQueries(response.data.unresolvedQueries.length);
-        setResolvedQueries(response.data.resolvedQueries.length);
+        setUnresolvedQueries(response.unresolvedQueries.length);
+        setResolvedQueries(response.resolvedQueries.length);
       } catch (e) {
         console.log("Error occurred with fetching the queries", e);
         showErrorNotification()
@@ -317,12 +317,12 @@ const Dashboard = () => {
     const fetchSatisfaction = async () => {
       try {
         const userId = user.user_id;
-        const response = await fetchWithAuth(`/satisfaction?${userId}`, {
+        const response = await fetchWithAuth(`/satisfaction?userId=${userId}`, {
           method: "GET",
         });
 
   
-        const satisfactionData = response.data.message;
+        const satisfactionData = response.message;
         setSatisfaction(satisfactionData);
   
         if (satisfactionData.length > 0) {
@@ -371,7 +371,7 @@ const Dashboard = () => {
           method: "GET",
         });
         
-        const messages = response.data.messages;
+        const messages = response.messages;
         if (!messages || messages.length === 0) return;
   
         // Pair the messages correctly: User -> Bot
@@ -416,7 +416,7 @@ const Dashboard = () => {
         const response = await fetchWithAuth(`/daily-messages?${userId}`, {
           method: "GET",
         });
-        setDailyCount(response.data.dailyMessages);    
+        setDailyCount(response.dailyMessages);    
       } catch (e) {
         console.log("An error occured with fetching the daily conversations", e)
         showErrorNotification()
@@ -436,7 +436,7 @@ useEffect(() => {
       const res = await fetchWithAuth(`/get-bot-status?${userId}`, {
         method: "GET",
       });
-      const botEnabled = !!res.data.bool; // Ensure boolean
+      const botEnabled = !!res.bool; // Ensure boolean
       setAiBot(botEnabled);
     } catch (e) {
       console.log("Error getting the status of bot", e);
@@ -453,11 +453,11 @@ useEffect(() => {
     if(!user) return
     try {
       const userId = user.user_id
-      const res = await fetchWithAuth(`/fetch-all-faq?${userId}`, {
+      const res = await fetchWithAuth(`/fetch-all-faq?userId=${userId}`, {
         method: "GET",
       });
 
-      const data = res.data.faq;
+      const data = res.faq;
 
       if (!data) {
         setFlaggedIssue("FAQ data not yet initialized");
@@ -497,14 +497,14 @@ useEffect(() => {
   const checkConnected = async () => {
     try {
       const userId = user.user_id
-      const res = await fetchWithAuth(`/get-connected?${userId}`, {
+      const res = await fetchWithAuth(`/get-connected?userId=${userId}`, {
         method: "GET",
       });
 
 
-      if (res.data.connected) {
+      if (res.connected) {
         setConnected(true);
-        setLastConnected(res.data.last_connected);
+        setLastConnected(res.last_connected);
       } else {
         setConnected(false);
       }
@@ -531,7 +531,7 @@ const setBotStatus = async (status) => {
       aiBot: status ? 1 : 0, // convert boolean to 1/0
     }).toString();
     
-    const response = await fetchWithAuth(`/set-bot-status?${queryParams}`);
+     await fetchWithAuth(`/set-bot-status?queryParams=${queryParams}`);
   } catch (e) {
     console.log("Error occurred with setting bot on or off", e);
     showErrorNotification();
@@ -619,22 +619,23 @@ const fetchConvHistory = async (loadAllChats = false) => {
     }).toString();
     
     // Make the request
-    const res = await fetchWithAuth(`/conv-history?${query}`, {
+    const userId = user.user_id;
+    const res = await fetchWithAuth(`/conv-history?userId=${userId}`, {
       method: "GET", // optional, default is GET
     });
 
 
     if (loadAllChats) {
-      setConvHistory(res.data.message);
+      setConvHistory(res.message);
 
       setLoadAll(true);
       setHasMore(false); // No more to load after viewing all
     } else {
-      if (!res.data.message || res.data.message.length === 0) {
+      if (!res.message || res.message.length === 0) {
         setHasMore(false); // No more messages available
       } else {
         setConvHistory(prev => {
-          const newMessages = res.data.message.filter(msg => 
+          const newMessages = res.message.filter(msg => 
             !prev.some(prevMsg => prevMsg.id === msg.id) // Avoid duplicates
           );
           return [...prev, ...newMessages];
@@ -753,7 +754,7 @@ const handleReset = async () => {
   }
   const userId = user.user_id
   try {
-    await fetchWithAuth(`/reset-bot?${userId}`)
+    await fetchWithAuth(`/reset-bot?userId=${userId}`)
     setTimeout(() => {
       showNotification("Note , your bot will not work unless you train it")
     }, 1500)

@@ -116,7 +116,7 @@ const Contact = () => {
       await fetchWithAuth(`/send-form`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, message }),
+        body: { name, email, phone, message },
       });
       setName("")
       setEmail("")

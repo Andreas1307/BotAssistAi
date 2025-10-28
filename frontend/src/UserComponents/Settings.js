@@ -142,11 +142,11 @@ const SettingsPage = () => {
       if (!user) return;
       try {
         const userId = user.user_id;
-        const res = await fetchWithAuth(`/check-google_id?${userId}`, {
+        const res = await fetchWithAuth(`/check-google_id?userId=${userId}`, {
           method: "GET",
         });
 
-        if (res.data.user.google_id === null) {
+        if (res.user.google_id === null) {
           return setGoogle(true);
         } else {
           setGoogle(false);

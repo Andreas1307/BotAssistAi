@@ -102,7 +102,7 @@ const SupportBotCustomization = () => {
           }
         );
 
-        const data = response.data.config || {};
+        const data = response.config || {};
   
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,
@@ -136,10 +136,10 @@ const SupportBotCustomization = () => {
       if (!user) return
       try{
         const userId = user?.user_id;
-        const response = await fetchWithAuth(`/get-membership?${userId}`, {
+        const response = await fetchWithAuth(`/get-membership?userId=${userId}`, {
           method: "GET",
         });
-        if(response.data.message.subscription_plan === "Pro") {
+        if(response.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
           setMembership(false)
@@ -179,7 +179,7 @@ const setFieldValue = (field, value) => {
     formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
-      const response = await fetchWithAuth(`/update-config`, {
+      await fetchWithAuth(`/update-config`, {
         method: "POST",
         body: formData
       });

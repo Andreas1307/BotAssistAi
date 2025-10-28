@@ -2985,7 +2985,8 @@ app.get("/get-bot-status", verifySessionToken, async (req, res) => {
 });
 
 app.get("/set-bot-status", verifySessionToken, async (req, res) => {
-  const { userId, aiBot } = req.query;
+  const { queryParams } = req.query;
+  const { userId, aiBot } = queryParams;
 
   try {
     await pool.query("UPDATE users SET apiBot = ? WHERE user_id = ?", [aiBot, userId]);
