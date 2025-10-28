@@ -179,6 +179,7 @@ const setFieldValue = (field, value) => {
     formData.append("phoneNum", userData.phoneNum ?? "");
   
     try {
+      console.log("ROMFDSFD", formData)
       await fetchWithAuth(`/update-config`, {
         method: "POST",
         body: formData
@@ -188,7 +189,6 @@ const setFieldValue = (field, value) => {
       showErrorNotification("Something went wrong with saving settings.")
     }
   };
-
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
