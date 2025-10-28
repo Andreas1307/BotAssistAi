@@ -173,8 +173,8 @@ const setFieldValue = (field, value) => {
     formData.append("fineTuningData", userData.fine_tuning_data ?? "");
     formData.append("userName", user.username ?? "");
     formData.append("userId", user.user_id ?? "");
-    formData.append("faqQuestion", userData.question ?? "");
-    formData.append("faqAnswer", userData.answer ?? "");
+    formData.append("faqQuestion", userData.question ?? "N/A");
+    formData.append("faqAnswer", userData.answer ?? "N/A");
     formData.append("webUrl", userData.web_url ?? "");
     formData.append("phoneNum", userData.phoneNum ?? "");
   
