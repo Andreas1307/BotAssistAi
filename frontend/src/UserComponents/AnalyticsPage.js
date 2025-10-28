@@ -51,13 +51,7 @@ const AnalyticsPage = () => {
     });
   };
 const [shopifyUser, setShopifyUser] = useState(false)
-  useEffect(() => {   
-    const fetchShopifyUser = async () => {
-      console.log("Not fetching api")
-    } 
-    fetchShopifyUser()
 
-  }, [user])
 
   const activatePlan = async () => {
     await handleBilling(user.user_id);
