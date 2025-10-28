@@ -121,8 +121,3 @@ export async function fetchWithAuth(url, options = {}) {
 function getCookie(name) {
   return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
 }
-
-
-function getCookie(name) {
-  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
-}
