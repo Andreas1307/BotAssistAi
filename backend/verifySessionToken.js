@@ -6,6 +6,10 @@ module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
+    if (authHeader?.startsWith("Bearer ")) {
+      console.log("🧩 Shopify JWT received:", authHeader.slice(0, 40) + "...");
+    }
+    
     // 1️⃣ Shopify Session Token (JWT)
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");

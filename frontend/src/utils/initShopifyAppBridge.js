@@ -77,21 +77,30 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  const app = getAppBridgeInstance();
 
-  // Detect if the request is multipart
+  // 🔹 If embedded, get a fresh Shopify JWT
+  let token = null;
+  if (app) {
+    try {
+      token = await getSessionToken(app);
+      window.sessionToken = token; // cache it for later
+    } catch (err) {
+      console.warn("⚠️ Failed to get Shopify session token:", err);
+    }
+  }
+
   const isFormData = options.body instanceof FormData;
-
-  // ✅ Don’t manually set Content-Type for FormData
-  const defaultHeaders = {
+  const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // like axios { withCredentials: true }
+    headers,
+    credentials: "include",
     body: isFormData
       ? options.body
       : options.body
@@ -106,11 +115,10 @@ export async function fetchWithAuth(url, options = {}) {
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errorText}`);
+    const text = await res.text();
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
-  // Try parsing JSON, but handle empty response
   try {
     return await res.json();
   } catch {
