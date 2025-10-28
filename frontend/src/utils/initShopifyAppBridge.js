@@ -79,10 +79,13 @@ export function safeRedirect(url) {
 export async function fetchWithAuth(url, options = {}) {
   const token = window.sessionToken || getCookie("shopify_online_session");
 
-  const defaultHeaders = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  const isFormData = options.body instanceof FormData;
+
+const defaultHeaders = {
+  ...(isFormData ? {} : { "Content-Type": "application/json" }),
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+};
+
 
   const opts = {
     method: options.method || "GET",
