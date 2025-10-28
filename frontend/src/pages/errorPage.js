@@ -31,7 +31,7 @@ const Error = () => {
       if (user) {
        navigate(`/${user.username}/dashboard`)
       } else {
-        navigate("*"); 
+        navigate("/"); 
       }
     }
   }, [user, loading, navigate]);
