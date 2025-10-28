@@ -1,7 +1,6 @@
 const { shopify } = require('./shopify');
 const customSessionStorage = require('./sessionStorage');
-const { decodeSessionToken } = require('@shopify/shopify-api');
-
+const { decodeSessionToken } = require('@shopify/shopify-api/dist/auth/session/token');
 
 
 module.exports = async function verifySessionToken(req, res, next) {
