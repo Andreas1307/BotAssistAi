@@ -18,9 +18,10 @@ const About = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await fetchWithAuth("/auth-check"); 
-        console.log("DSAAAAAAAAAAAA", data)       
-        setUser(data.user);
+        const res = await fetchWithAuth("/auth-check");
+        const data = await res.json(); // <-- parse JSON
+        console.log("DSAAAAAAAAAAAA", data);
+        setUser(data.user); // now data.user exists
       } catch (error) {
         console.error("❌ Auth check error:", error);
         setUser(null);
@@ -31,6 +32,7 @@ const About = () => {
   
     fetchUser();
   }, []);
+  
 
   
 
