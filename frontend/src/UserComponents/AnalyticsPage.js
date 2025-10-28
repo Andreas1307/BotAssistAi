@@ -159,9 +159,9 @@ const [shopifyUser, setShopifyUser] = useState(false)
         const res = await fetchWithAuth(`/chat-stats/last-7-days?userId=${userId}`, {
           method: "GET",
         });
-        const rawData = res;
   
         const counts = {};
+        const rawData = Array.isArray(res) ? res : res.data || [];
         rawData.forEach(row => {
           const dateStr = new Date(row.date).toDateString(); // Get date without time
           counts[dateStr] = row.message_count; // Store message counts

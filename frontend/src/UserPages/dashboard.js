@@ -367,7 +367,7 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await fetchWithAuth(`/chat-history/${userId}`, {
+        const response = await fetchWithAuth(`/chat-history?userId=${userId}`, {
           method: "GET",
         });
         
