@@ -4,18 +4,20 @@ const customSessionStorage = require("./sessionStorage");
 /**
  * Verifies both Shopify (JWT or cookie) and non-Shopify users.
  *  - JWT: Shopify App Bridge session token (audit requirement)
- *  - Cookie: your existing shopify_online_session fallback
+ *  - Cookie: shopify_online_session fallback
  *  - None: non-Shopify user
  */
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    // 1️⃣ Shopify JWT session token (required by Shopify audits)
+    // 1️⃣ Shopify JWT session token
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
+
       try {
-        const payload = await shopify.session.decodeSessionToken(token);
+        // ✅ FIX: use new API method
+        const payload = await shopify.auth.decodeSessionToken(token);
         if (!payload) throw new Error("Invalid JWT payload");
 
         const shop = payload.dest?.replace(/^https:\/\//, "").toLowerCase();
@@ -36,7 +38,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       }
     }
 
-    // 2️⃣ Cookie fallback (your existing flow)
+    // 2️⃣ Cookie fallback
     if (req.cookies?.shopify_online_session) {
       const accessToken = req.cookies.shopify_online_session;
       const allSessions = await customSessionStorage.getAllSessions();
@@ -49,14 +51,13 @@ module.exports = async function verifySessionToken(req, res, next) {
       }
     }
 
-    // 3️⃣ No Shopify auth found → non-Shopify user
+    // 3️⃣ No Shopify auth
     console.log("ℹ️ No Shopify session token or cookie — treating as non-Shopify user");
     req.shopify = null;
-    return next();
+    next();
 
   } catch (err) {
     console.error("❌ Session verification failed:", err);
-    // Don’t hard fail, just mark as unauthenticated for non-Shopify users
     req.shopify = null;
     next();
   }
