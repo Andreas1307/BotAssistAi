@@ -659,7 +659,7 @@ const fetchConvHistory = async (loadAllChats = false) => {
     if (user) {
       navigate(`/${user?.username}/dashboard`);
     } else {
-      navigate("/");
+      console.log("USERRRRRRR", user)
     }
   }, [user, loading, navigate]);
 
