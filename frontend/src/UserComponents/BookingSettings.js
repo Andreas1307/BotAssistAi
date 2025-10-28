@@ -306,7 +306,7 @@ const selectedProTip = codeSnippets.find(
         const res = await axios.get(`${directory}/auth-check`, {
           withCredentials: true,
         });
-        setUser(res.data.user);
+        setUser(res.user);
       } catch (error) {
         setUser(null);
       } finally {

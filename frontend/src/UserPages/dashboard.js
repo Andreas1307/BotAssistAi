@@ -267,7 +267,7 @@ const Dashboard = () => {
     const fetchUser = async () => {
       try {
         const res = await fetchWithAuth("/auth-check"); 
-        setUser(res.data.user);
+        setUser(res.user);
         if(res.data.user.shopify_access_token) {
           setShopifyUser(true)
         } else {

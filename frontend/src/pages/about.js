@@ -19,7 +19,6 @@ const About = () => {
     const fetchUser = async () => {
       try {
         const data = await fetchWithAuth("/auth-check"); // already parsed JSON
-        console.log("DSAAAAAAAAAAAA", data);
         setUser(data.user); 
       } catch (error) {
         console.error("❌ Auth check error:", error);

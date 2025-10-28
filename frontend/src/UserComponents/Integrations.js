@@ -339,7 +339,7 @@ const Integrations = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await fetchWithAuth("/auth-check");        
+        const data = await fetchWithAuth("/auth-check");        
         setUser(data.user);
       } catch (error) {
         console.error("❌ Auth check error:", error);
