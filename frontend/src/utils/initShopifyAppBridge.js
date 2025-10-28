@@ -78,22 +78,21 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
+  // Try App Bridge token first
   let token = null;
+  const app = window.appBridge || null;
 
-  try {
-    const app = window.appBridge;
-    if (app && typeof getSessionToken === "function") {
-      token = await getSessionToken(app);
+  if (app) {
+    try {
+      token = await getSessionToken(app); // Shopify JWT
       window.sessionToken = token; // cache for later
+    } catch (err) {
+      console.warn("⚠️ Failed to get Shopify session token, falling back to cookie:", err);
+      token = window.sessionToken || getCookie("shopify_online_session");
     }
-  } catch (err) {
-    console.warn("⚠️ Failed to get Shopify App Bridge session token, falling back to cookie:", err);
+  } else {
+    // If App Bridge not initialized, fallback to cached token or cookie
     token = window.sessionToken || getCookie("shopify_online_session");
-  }
-
-  if (!token) {
-    // final fallback to cookie if App Bridge token fails
-    token = getCookie("shopify_online_session");
   }
 
   const isFormData = options.body instanceof FormData;
@@ -107,11 +106,13 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers,
-    credentials: "include",
-    body: isFormData
-      ? options.body
-      : options.body
-      ? JSON.stringify(options.body)
+    credentials: "include", // 🔑 allows cookies cross-domain
+    body: options.body
+      ? isFormData
+        ? options.body
+        : typeof options.body === "string"
+        ? options.body
+        : JSON.stringify(options.body)
       : undefined,
   };
 
@@ -133,7 +134,11 @@ export async function fetchWithAuth(url, options = {}) {
   }
 }
 
-// Safe cookie parser
+/**
+ * Reads a cookie by name safely
+ */
 function getCookie(name) {
-  return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
+  if (!document.cookie) return null;
+  const match = document.cookie.split("; ").find(row => row.startsWith(name + "="));
+  return match ? match.split("=")[1] : null;
 }
