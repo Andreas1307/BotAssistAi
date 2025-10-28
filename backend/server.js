@@ -3030,8 +3030,8 @@ app.get("/resTime-graph", verifySessionToken, async (req, res) => {
   }
 })
 
-app.get("/chat-stats/last-7-days/:userId", verifySessionToken, async (req, res) => {
-  const { userId } = req.params;
+app.get("/chat-stats/last-7-days", verifySessionToken, async (req, res) => {
+  const { userId } = req.query;
 
   try {
     const query = `
@@ -3054,9 +3054,9 @@ app.get("/chat-stats/last-7-days/:userId", verifySessionToken, async (req, res) 
   }
 });
 
-app.get("/chat-history/:userId", verifySessionToken, async (req, res) => {
+app.get("/chat-history", verifySessionToken, async (req, res) => {
 try {
-    const { userId } = req.params;
+    const { userId } = req.query;
 
     // Validate input
     if (!userId) {

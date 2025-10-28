@@ -413,7 +413,7 @@ const Dashboard = () => {
       }
       try {
         const userId = user.user_id
-        const response = await fetchWithAuth(`/daily-messages?${userId}`, {
+        const response = await fetchWithAuth(`/daily-messages?userId=${userId}`, {
           method: "GET",
         });
         setDailyCount(response.dailyMessages);    

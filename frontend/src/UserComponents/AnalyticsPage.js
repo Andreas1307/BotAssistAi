@@ -155,11 +155,11 @@ const [shopifyUser, setShopifyUser] = useState(false)
   
     const fetchLastWeekData = async () => {
       try {
-
-        const res = await fetchWithAuth(`/chat-stats/last-7-days/${user.user_id}`, {
+        const userId = user.user_id;
+        const res = await fetchWithAuth(`/chat-stats/last-7-days?userId=${userId}`, {
           method: "GET",
         });
-        const rawData = res.data;
+        const rawData = res;
   
         const counts = {};
         rawData.forEach(row => {
@@ -203,14 +203,15 @@ const [shopifyUser, setShopifyUser] = useState(false)
   
     const fetchChatData = async () => {
       try {
-        const res = await fetchWithAuth(`/chat-history/${user.user_id}`, {
+        const userId = user.user_id
+        const res = await fetchWithAuth(`/chat-history?userId=${userId}`, {
           method: "GET",
         });
   console.log("ANAL?Y", res)
-        if (res.data.messages) {
+        if (res.messages) {
           const timeRanges = new Array(6).fill(0);
   
-          res.data.messages.forEach((msg) => {
+          res.messages.forEach((msg) => {
             const hour = new Date(msg.timestamp).getHours();
             const index = Math.floor(hour / 4); // Group hours into 4-hour slots
             timeRanges[index]++;
