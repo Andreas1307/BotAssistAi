@@ -78,20 +78,26 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
-
-  // 🔹 If embedded, get a fresh Shopify JWT
   let token = null;
-  if (app) {
-    try {
+
+  try {
+    const app = window.appBridge;
+    if (app && typeof getSessionToken === "function") {
       token = await getSessionToken(app);
-      if (typeof window !== "undefined") window.sessionToken = token; // cache it for later
-    } catch (err) {
-      console.warn("⚠️ Failed to get Shopify session token:", err);
+      window.sessionToken = token; // cache for later
     }
+  } catch (err) {
+    console.warn("⚠️ Failed to get Shopify App Bridge session token, falling back to cookie:", err);
+    token = window.sessionToken || getCookie("shopify_online_session");
+  }
+
+  if (!token) {
+    // final fallback to cookie if App Bridge token fails
+    token = getCookie("shopify_online_session");
   }
 
   const isFormData = options.body instanceof FormData;
+
   const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -111,7 +117,7 @@ export async function fetchWithAuth(url, options = {}) {
 
   const fullUrl = url.startsWith("http")
     ? url
-    : `${typeof window !== "undefined" ? window.directory : "https://api.botassistai.com"}${url}`;
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
 
   const res = await fetch(fullUrl, opts);
 
@@ -127,13 +133,7 @@ export async function fetchWithAuth(url, options = {}) {
   }
 }
 
+// Safe cookie parser
 function getCookie(name) {
-  if (typeof document === "undefined" || !document.cookie) return null;
-
-  const cookie = document.cookie
-    .split("; ")
-    .find((r) => r.startsWith(name + "="));
-
-  return cookie ? cookie.split("=")[1] : null;
+  return document.cookie.split("; ").find(r => r.startsWith(name + "="))?.split("=")[1];
 }
-
