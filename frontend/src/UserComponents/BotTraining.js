@@ -80,13 +80,10 @@ const SupportBotCustomization = () => {
         } else {
           setShopifyUser(false)
         }
-        setRenew(res.showRenewalModal)
       } catch (error) {
         setUser(null);
         showErrorNotification()
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
     fetchUser();
   }, []);
