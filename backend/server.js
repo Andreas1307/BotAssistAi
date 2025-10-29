@@ -972,6 +972,15 @@ app.use(express.urlencoded({ extended: true }));
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
+
+const verifyShopifyToken = require('./verifyShopifyToken');
+
+app.get('/protected-route', verifyShopifyToken, (req, res) => {
+  if (!req.shopify) return res.status(403).send('Unauthorized');
+  res.json({ message: `Hello ${req.shopify.shop}` });
+});
+
+
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
