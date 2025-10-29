@@ -1,4 +1,3 @@
-// shopify.js
 require('@shopify/shopify-api/adapters/node');
 
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
@@ -17,3 +16,6 @@ const shopify = shopifyApi({
 console.log('✅ Shopify initialized with version:', LATEST_API_VERSION);
 
 module.exports = { shopify };
+
+
+
