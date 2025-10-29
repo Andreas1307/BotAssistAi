@@ -77,21 +77,7 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  let token = null;
-
-  try {
-    const app = getAppBridgeInstance() || (await initShopifyAppBridge());
-
-    // ✅ Only attempt token if app exists AND running inside Shopify iframe
-    if (app && window.top !== window.self) {
-      token = await getSessionToken(app);
-      window.sessionToken = token;
-    } else {
-      console.info("ℹ️ Not running inside Shopify iframe — skipping token fetch");
-    }
-  } catch (err) {
-    console.warn("⚠️ Failed to initialize or fetch session token:", err.message);
-  }
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -101,7 +87,7 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // allow cookies
+    credentials: "include", // 🔑 allow cookies cross-domain
   };
 
   if (options.body) {
