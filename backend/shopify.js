@@ -1,5 +1,4 @@
-require('@shopify/shopify-api/adapters/node');
-const { shopifyApi, LATEST_API_VERSION, auth } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
@@ -13,6 +12,6 @@ const shopify = shopifyApi({
 });
 
 console.log("✅ Shopify initialized with version:", LATEST_API_VERSION);
-console.log("Has decodeSessionToken:", typeof auth?.decodeSessionToken === 'function');
+console.log("Has decodeSessionToken:", typeof shopify.auth?.decodeSessionToken === 'function');
 
-module.exports = { shopify, auth };
+module.exports = { shopify };
