@@ -1,6 +1,29 @@
+require('@shopify/shopify-api/adapters/node'); // ensure correct adapter
 const { shopify } = require('./shopify');
 const customSessionStorage = require('./sessionStorage');
-const { decodeSessionToken } = require('@shopify/shopify-api/lib/auth/session/decode-session-token.js'); // ✅ correct import
+const { jwtDecode } = require('@shopify/shopify-api/runtime'); // ✅ supported API
+const crypto = require('crypto');
+
+async function verifyJWT(token, secret) {
+  try {
+    const payload = jwtDecode(token); // decode without verifying signature
+    const [headerB64, payloadB64, signatureB64] = token.split('.');
+    const data = `${headerB64}.${payloadB64}`;
+    const expectedSig = crypto
+      .createHmac('sha256', secret)
+      .update(data)
+      .digest('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+
+    if (signatureB64 !== expectedSig) throw new Error('Invalid signature');
+    if (payload.exp && Date.now() / 1000 > payload.exp) throw new Error('Token expired');
+    return payload;
+  } catch (err) {
+    throw new Error(`JWT verification failed: ${err.message}`);
+  }
+}
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -10,8 +33,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       const token = authHeader.replace('Bearer ', '');
 
       try {
-        // ✅ Decode JWT using Shopify's helper (v11+)
-        const payload = await decodeSessionToken(shopify.config.apiSecretKey, token);
+        const payload = await verifyJWT(token, shopify.config.apiSecretKey);
         if (!payload) throw new Error('Invalid JWT payload');
 
         const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
