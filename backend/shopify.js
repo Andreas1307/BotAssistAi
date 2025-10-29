@@ -23,4 +23,3 @@ console.log("✅ Shopify initialized with version:", shopifyModule.LATEST_API_VE
 console.log("Has decodeSessionToken:", auth?.decodeSessionToken ? true : false);
 
 module.exports = { shopify, auth };
- sa updatez
