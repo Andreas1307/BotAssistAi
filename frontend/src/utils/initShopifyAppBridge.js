@@ -78,10 +78,19 @@ export function safeRedirect(url) {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  // Use App Bridge sessionToken if available
-  let token = window.sessionToken || getCookie("shopify_online_session");
+  let token = null;
+  
+  try {
+    const app = getAppBridgeInstance();
+    if (app) {
+      token = await getSessionToken(app); // ✅ JWT for online session
+      window.sessionToken = token;
+    }
+  } catch (err) {
+    console.warn("⚠️ Failed to get Shopify JWT, falling back to offline token:", err);
+    token = getCookie("shopify_online_session"); // ✅ fallback offline session
+  }
 
-  // Only add Bearer if token exists
   const defaultHeaders = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -90,7 +99,7 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // allow cookies
+    credentials: "include",
   };
 
   if (options.body) {
@@ -117,4 +126,3 @@ export async function fetchWithAuth(url, options = {}) {
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
-

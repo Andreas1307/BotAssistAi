@@ -23,12 +23,10 @@ module.exports = async function verifySessionToken(req, res, next) {
       const onlineSessionId = `${shop}_${payload.sub}`;
       const offlineSessionId = `offline_${shop}`;
 
-      const session =
-        (await customSessionStorage.loadCallback(onlineSessionId)) ||
-        (await customSessionStorage.loadCallback(offlineSessionId));
+      const session = await customSessionStorage.loadCallbackByAccessToken(token);
 
       if (session) {
-        req.shopify = { shop, session, payload };
+        req.shopify = { shop: session.shop, session, payload: null };
         console.log('✅ Shopify session validated via JWT:', shop);
         return next();
       }
