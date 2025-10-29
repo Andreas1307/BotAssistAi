@@ -1,4 +1,3 @@
-// verifyShopifyToken.js
 const { shopify } = require('./shopify');
 const { loadCallback } = require('./sessionStorage');
 
@@ -13,7 +12,7 @@ async function verifyShopifyToken(req, res, next) {
     }
 
     const sessionId = await shopify.session.getCurrentId({
-      isOnline: true, // or false for offline tokens
+      isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
