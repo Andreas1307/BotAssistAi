@@ -155,4 +155,4 @@ function getCookie(name) {
   if (!document.cookie) return null;
   const row = document.cookie.split("; ").find(r => r.startsWith(name + "="));
   return row ? row.split("=")[1] : null;
-}
+} 
