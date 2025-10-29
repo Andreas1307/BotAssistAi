@@ -1,5 +1,5 @@
 require('@shopify/shopify-api/adapters/node');
-const { shopifyApi, LATEST_API_VERSION, Auth } = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
@@ -9,14 +9,10 @@ const shopify = shopifyApi({
   hostName: process.env.HOST.replace(/^https?:\/\//, ''), // NO protocol
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: {
-    storeCallback,
-    loadCallback,
-    deleteCallback,
-  },
+  sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
 console.log("✅ Shopify initialized with version:", LATEST_API_VERSION);
-console.log("Has auth.decodeSessionToken:", !!Auth.decodeSessionToken);
+console.log("Has decodeSessionToken:", !!shopify.api.auth?.decodeSessionToken);
 
-module.exports = { shopify, Auth };
+module.exports = { shopify };
