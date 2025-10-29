@@ -101,60 +101,61 @@ const Homepage = () => {
   
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shopParam = params.get("shop");
-    const hostParam = params.get("host");
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const shopParam = params.get("shop");
+      const hostParam = params.get("host");
   
-    if (!shopParam || !hostParam) {
-      console.warn("❌ Not running inside Shopify context.");
-      setLoading(false);
-      return;
-    }
+      if (!shopParam || !hostParam) {
+        console.warn("❌ Missing Shopify params");
+        return;
+      }
   
-    setShop(shopParam);
+      // 1️⃣ Ensure top-level cookie
+      if (!document.cookie.includes("shopify_toplevel")) {
+        window.top.location.href = `${directory}/shopify/auth?shop=${shopParam}`;
+        return;
+      }
   
-    const checkShop = async () => {
+      // 2️⃣ Initialize App Bridge
+      const app = await initShopifyAppBridge();
+      if (!app) {
+        safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+        return;
+      }
+  
+      // 3️⃣ Check authentication
+      let authedUser = null;
       try {
-        const res = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
-        const data = await res.json();
+        const authData = await fetchWithAuth("/auth-check");
+        authedUser = authData?.user || null;
+        setUser(authedUser);
+      } catch (err) {
+        console.warn("⚠️ Auth check failed:", err);
+      }
   
+      // 4️⃣ Check shop status
+      try {
+        const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
         if (!data.installed) {
+          console.log("⚠️ Shop not installed — redirecting to install");
           safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
-  
-          await fetchWithAuth(`/chatbot-config-shopify`, {
-            method: "POST",
-            body: JSON.stringify({
-              shop: shopParam,
-              colors,
-            }),
-            headers: { "Content-Type": "application/json" },
-          });
-  
-          return; 
-        }
-  
-        if (!data.hasBilling) {
-          console.warn("⚠️ Store installed but missing billing setup.");
           return;
         }
   
-        console.log("✅ Shopify store ready");
-        setInstalled(true);
-
-        if (user?.username) {
-          safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+        // 5️⃣ Redirect to dashboard
+        if (authedUser?.username) {
+          console.log("✅ Redirecting to dashboard:", authedUser.username);
+          safeRedirect(`/${authedUser.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+        } else {
+          console.warn("⚠️ User not found — staying on homepage");
         }
-  
       } catch (err) {
-        console.error("❌ Shopify flow failed:", err);
-        setInstalled(false);
-      } finally {
-        setLoading(false);
+        console.error("❌ Shop check failed:", err);
       }
-    };
+    })();
+  }, []);
   
-    checkShop();
-  }, []); 
   
   
   
