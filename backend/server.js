@@ -1027,22 +1027,12 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   const hasTopLevel = !!req.cookies.shopify_toplevel;
-  console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
-
   if (!hasTopLevel) {
-    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
-    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
+    return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
   }
-
-  if (authInProgress.has(shop)) {
-    console.log(`⚠️ Auth already in progress for ${shop}`);
-    return res.status(200).send("OAuth in progress, please wait...");
-  }
-  authInProgress.add(shop);
 
   try {
-    console.log("🚀 [INSTALL] Beginning Shopify OAuth");
-    
+    // OAuth redirect handled internally
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1050,27 +1040,10 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-
-    // 🧠 Important: we must not touch headers after this point
-    // So the rest runs only if headers weren't sent yet
-    if (!res.headersSent) {
-      const cookies = res.getHeader("set-cookie") || [];
-      const widenedCookies = cookies.map(c =>
-        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
-      );
-      res.setHeader("set-cookie", widenedCookies);
-      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
-    } else {
-      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
-    }
-
+    // ⚠️ Do NOT touch headers or cookies here
   } catch (err) {
-    console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
-    if (!res.headersSent) {
-      res.status(500).send("Error starting Shopify OAuth");
-    }
-  } finally {
-    authInProgress.delete(shop);
+    console.error("Shopify OAuth start failed:", err);
+    if (!res.headersSent) res.status(500).send("OAuth start error");
   }
 });
 
