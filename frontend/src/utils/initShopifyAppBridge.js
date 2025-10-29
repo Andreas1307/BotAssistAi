@@ -2,18 +2,13 @@ import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
 import { getShopOrigin } from "@shopify/app-bridge/utilities";
-import directory from "../directory";
-/**
- * Detect if running inside Shopify iframe
- */
+
+let app = null; // ✅ shared singleton instance
+
 function isEmbedded() {
   return window.top !== window.self;
 }
-/**
- * Initializes Shopify App Bridge safely.
- * - Skips if not embedded or missing params
- * - Avoids noisy Web Vitals errors
- */
+
 export async function initShopifyAppBridge() {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -25,9 +20,8 @@ export async function initShopifyAppBridge() {
       console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
-    
 
-    const app = createApp({
+    app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
       forceRedirect: true,
@@ -35,7 +29,6 @@ export async function initShopifyAppBridge() {
 
     window.appBridge = app;
 
-    // Silently try to initialize Web Vitals
     try {
       if (typeof app.initializeWebVitals === "function") {
         app.initializeWebVitals();
@@ -52,20 +45,19 @@ export async function initShopifyAppBridge() {
   }
 }
 
-/**
- * Returns existing App Bridge instance if available
- */
 export function getAppBridgeInstance() {
   if (app) return app;
 
-  const shopOrigin = getShopOrigin() || new URLSearchParams(window.location.search).get("shop");
+  const shopOrigin =
+    getShopOrigin() || new URLSearchParams(window.location.search).get("shop");
+
   if (!shopOrigin) {
     console.warn("⚠️ No shopOrigin found for App Bridge");
     return null;
   }
 
   app = createApp({
-    apiKey: process.env.SHOPIFY_API_KEY,
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     shopOrigin,
     host: new URLSearchParams(window.location.search).get("host"),
     forceRedirect: true,
@@ -73,9 +65,7 @@ export function getAppBridgeInstance() {
 
   return app;
 }
-/**
- * Safe redirect (embedded or standalone)
- */
+
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
@@ -87,17 +77,13 @@ export function safeRedirect(url) {
   }
 }
 
-/**
- * Fetch with App Bridge auth token if inside Shopify
- * Falls back to plain fetch when running standalone
- */
 export async function fetchWithAuth(url, options = {}) {
   const app = getAppBridgeInstance();
   let token = null;
 
   try {
     if (app) {
-      token = await getSessionToken(app); // 🔐 Shopify JWT
+      token = await getSessionToken(app);
       window.sessionToken = token;
     }
   } catch (err) {
@@ -117,9 +103,7 @@ export async function fetchWithAuth(url, options = {}) {
 
   if (options.body) {
     opts.body =
-      typeof options.body === "string"
-        ? options.body
-        : JSON.stringify(options.body);
+      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
   const base = window.directory || "https://api.botassistai.com";
@@ -140,5 +124,8 @@ export async function fetchWithAuth(url, options = {}) {
 }
 
 function getCookie(name) {
-  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
+  return document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(name + "="))
+    ?.split("=")[1];
 }
