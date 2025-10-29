@@ -1,17 +1,20 @@
-// --- Ensure NODE_ENV/ENV set:
-// HOST = "https://api.botassistai.com"
-// SHOPIFY_API_KEY, SHOPIFY_API_SECRET set
+// shopify.js
+require('@shopify/shopify-api/adapters/node'); // Important: adapter first
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-require('@shopify/shopify-api/adapters/node');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_SCOPES.split(','),
-  hostName: "api.botassistai.com", // ✅ NO protocol, must match your API host exactly
+  hostName: process.env.HOST.replace(/^https?:\/\//, ''), // must not have https://
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
-  sessionStorage: { storeCallback, loadCallback, deleteCallback },
+  sessionStorage: {
+    storeCallback,
+    loadCallback,
+    deleteCallback,
+  },
 });
+
 module.exports = { shopify };
