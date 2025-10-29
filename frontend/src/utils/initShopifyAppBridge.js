@@ -54,11 +54,11 @@ export async function initShopifyAppBridge() {
 
 /**
  * Returns existing App Bridge instance if available
- */
+ 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
-
+*/
 /**
  * Safe redirect (embedded or standalone)
  */
