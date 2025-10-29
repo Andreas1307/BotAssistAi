@@ -78,17 +78,7 @@ export function safeRedirect(url) {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
-  let token = null;
-
-  try {
-    if (app) {
-      token = await getSessionToken(app);
-      window.sessionToken = token;
-    }
-  } catch (err) {
-    console.warn("⚠️ Failed to get session token:", err);
-  }
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -98,16 +88,16 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include",
+    credentials: "include", // 🔑 allow cookies cross-domain
   };
 
   if (options.body) {
-    opts.body =
-      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
-  const base = window.directory || "https://api.botassistai.com";
-  const fullUrl = url.startsWith("http") ? url : `${base}${url}`;
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
 
   const res = await fetch(fullUrl, opts);
 
@@ -124,8 +114,5 @@ export async function fetchWithAuth(url, options = {}) {
 }
 
 function getCookie(name) {
-  return document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(name + "="))
-    ?.split("=")[1];
+  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
