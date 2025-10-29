@@ -78,43 +78,22 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  // Try App Bridge token first
-  let token = null;
-  const app = window.appBridge || null;
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
-  if (app) {
-    try {
-      token = await getSessionToken(app); // Shopify JWT
-      window.sessionToken = token; // cache for later
-    } catch (err) {
-      console.warn("⚠️ Failed to get Shopify session token, falling back to cookie:", err);
-      token = window.sessionToken || getCookie("shopify_online_session");
-    }
-  } else {
-    // If App Bridge not initialized, fallback to cached token or cookie
-    token = window.sessionToken || getCookie("shopify_online_session");
-  }
-
-  const isFormData = options.body instanceof FormData;
-
-  const headers = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+  const defaultHeaders = {
+    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers,
-    credentials: "include", // 🔑 allows cookies cross-domain
-    body: options.body
-      ? isFormData
-        ? options.body
-        : typeof options.body === "string"
-        ? options.body
-        : JSON.stringify(options.body)
-      : undefined,
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include", // 🔑 allow cookies cross-domain
   };
+
+  if (options.body) {
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  }
 
   const fullUrl = url.startsWith("http")
     ? url
@@ -123,8 +102,8 @@ export async function fetchWithAuth(url, options = {}) {
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Request failed: ${res.status} ${text}`);
+    const errText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
@@ -134,11 +113,6 @@ export async function fetchWithAuth(url, options = {}) {
   }
 }
 
-/**
- * Reads a cookie by name safely
- */
 function getCookie(name) {
-  if (!document.cookie) return null;
-  const match = document.cookie.split("; ").find(row => row.startsWith(name + "="));
-  return match ? match.split("=")[1] : null;
+  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
