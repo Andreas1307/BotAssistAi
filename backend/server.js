@@ -972,7 +972,6 @@ app.use(express.urlencoded({ extended: true }));
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
-
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
@@ -1028,27 +1027,50 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   const hasTopLevel = !!req.cookies.shopify_toplevel;
+  console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
 
-  // 🔒 STEP 1: Make sure we have a top-level cookie
   if (!hasTopLevel) {
-    console.log(`🪟 [INSTALL] Missing top-level cookie → redirecting for ${shop}`);
-    return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
+    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
+    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
 
-  // 🔑 STEP 2: Begin OAuth
+  if (authInProgress.has(shop)) {
+    console.log(`⚠️ Auth already in progress for ${shop}`);
+    return res.status(200).send("OAuth in progress, please wait...");
+  }
+  authInProgress.add(shop);
+
   try {
-    console.log(`🧭 [INSTALL] Beginning OAuth for ${shop}`);
+    console.log("🚀 [INSTALL] Beginning Shopify OAuth");
+    
     await shopify.auth.begin({
       shop,
-      callbackPath: "/shopify/callback",
       isOnline: true,
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
-    // ⚠️ DO NOT modify cookies or send extra headers here
+
+    // 🧠 Important: we must not touch headers after this point
+    // So the rest runs only if headers weren't sent yet
+    if (!res.headersSent) {
+      const cookies = res.getHeader("set-cookie") || [];
+      const widenedCookies = cookies.map(c =>
+        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
+      );
+      res.setHeader("set-cookie", widenedCookies);
+      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
+    } else {
+      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
+    }
+
   } catch (err) {
-    console.error("❌ Shopify OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send("OAuth start error");
+    console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
+    if (!res.headersSent) {
+      res.status(500).send("Error starting Shopify OAuth");
+    }
+  } finally {
+    authInProgress.delete(shop);
   }
 });
 
