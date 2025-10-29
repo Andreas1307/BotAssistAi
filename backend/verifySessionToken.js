@@ -1,5 +1,5 @@
 require('@shopify/shopify-api/adapters/node');
-const { decodeSessionToken } = require('@shopify/shopify-api/runtime'); // ✅ correct location
+const { decodeSessionToken } = require('@shopify/shopify-api'); // ✅ FIXED
 const { shopify } = require('./shopify');
 const customSessionStorage = require('./sessionStorage');
 
@@ -17,10 +17,9 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     let payload = null;
     try {
-      // decode JWT using API secret
-      payload = decodeSessionToken(shopify.config.apiSecretKey, token);
-    } catch {
-      payload = null;
+      payload = decodeSessionToken(token); // ✅ no need for apiSecretKey
+    } catch (err) {
+      console.warn('❌ Failed to decode JWT:', err.message);
     }
 
     if (payload) {
@@ -38,7 +37,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       }
     }
 
-    // fallback: check offline token directly
+    // fallback for offline token
     const session = await customSessionStorage.loadCallbackByAccessToken?.(token);
     if (session) {
       req.shopify = { shop: session.shop, session, payload: null };
