@@ -980,7 +980,6 @@ app.get('/protected-route', verifyShopifyToken, (req, res) => {
   res.json({ message: `Hello ${req.shopify.shop}` });
 });
 
-
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;

@@ -1,3 +1,4 @@
+// verifyShopifyToken.js
 const { shopify } = require('./shopify');
 const { loadCallback } = require('./sessionStorage');
 
@@ -5,13 +6,14 @@ async function verifyShopifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
+    // No token → treat as external user
     if (!authHeader?.startsWith('Bearer ')) {
-      req.shopify = null; // external user
+      req.shopify = null;
       return next();
     }
 
     const sessionId = await shopify.session.getCurrentId({
-      isOnline: true,
+      isOnline: true, // or false for offline tokens
       rawRequest: req,
       rawResponse: res,
     });
