@@ -14,7 +14,6 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
-console.log("✅ Shopify initialized with version:", LATEST_API_VERSION);
-console.log("Shopify API ready!");
+console.log('✅ Shopify initialized with version:', LATEST_API_VERSION);
 
 module.exports = { shopify };
