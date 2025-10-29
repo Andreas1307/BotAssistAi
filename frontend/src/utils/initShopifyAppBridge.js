@@ -77,26 +77,31 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  let token = null;
 
-  const defaultHeaders = {
+  try {
+    const app = getAppBridgeInstance();
+    if (app) token = await getSessionToken(app); // ✅ real JWT
+  } catch (err) {
+    console.warn("⚠️ Failed to get session token:", err.message);
+  }
+
+  const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    headers,
+    credentials: "include", // keep cookies like connect.sid
+    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
-  }
 
   const fullUrl = url.startsWith("http")
     ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+    : `https://api.botassistai.com${url}`;
 
   const res = await fetch(fullUrl, opts);
 
@@ -105,13 +110,8 @@ export async function fetchWithAuth(url, options = {}) {
     throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
-  try {
-    return await res.json();
-  } catch {
-    return null;
-  }
+  return await res.json();
 }
-
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }

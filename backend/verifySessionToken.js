@@ -11,7 +11,8 @@ module.exports = async function verifySessionToken(req, res, next) {
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        const payload = await shopify.session.decodeSessionToken(token);
+        const payload = await shopify.auth.decodeSessionToken(token);
+
         if (!payload) throw new Error("Invalid JWT payload");
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
