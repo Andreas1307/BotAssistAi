@@ -1,6 +1,7 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { getShopOrigin } from "@shopify/app-bridge/utilities";
 import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
@@ -55,9 +56,23 @@ export async function initShopifyAppBridge() {
  * Returns existing App Bridge instance if available
  */
 export function getAppBridgeInstance() {
-  return window.appBridge || null;
-}
+  if (app) return app;
 
+  const shopOrigin = getShopOrigin() || new URLSearchParams(window.location.search).get("shop");
+  if (!shopOrigin) {
+    console.warn("⚠️ No shopOrigin found for App Bridge");
+    return null;
+  }
+
+  app = createApp({
+    apiKey: process.env.SHOPIFY_API_KEY,
+    shopOrigin,
+    host: new URLSearchParams(window.location.search).get("host"),
+    forceRedirect: true,
+  });
+
+  return app;
+}
 /**
  * Safe redirect (embedded or standalone)
  */
@@ -77,7 +92,17 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  const app = getAppBridgeInstance();
+  let token = null;
+
+  try {
+    if (app) {
+      token = await getSessionToken(app); // 🔐 Shopify JWT
+      window.sessionToken = token;
+    }
+  } catch (err) {
+    console.warn("⚠️ Failed to get session token:", err);
+  }
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -87,16 +112,18 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    credentials: "include",
   };
 
   if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body =
+      typeof options.body === "string"
+        ? options.body
+        : JSON.stringify(options.body);
   }
 
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const base = window.directory || "https://api.botassistai.com";
+  const fullUrl = url.startsWith("http") ? url : `${base}${url}`;
 
   const res = await fetch(fullUrl, opts);
 
