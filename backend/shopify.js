@@ -1,3 +1,5 @@
+require('@shopify/shopify-api/adapters/node'); // Node runtime adapter
+
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
