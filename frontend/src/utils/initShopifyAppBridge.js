@@ -1,6 +1,7 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
@@ -78,32 +79,68 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  let token = null;
+  const app = getAppBridgeInstance?.() || window.appBridge || null;
 
-  const defaultHeaders = {
-    "Content-Type": "application/json",
+  // 🔹 Step 1: Try getting a fresh App Bridge token if available
+  if (app) {
+    try {
+      token = await getSessionToken(app); // always fresh Shopify JWT
+      window.sessionToken = token;
+    } catch (err) {
+      console.warn("⚠️ Could not fetch Shopify session token:", err);
+      token = window.sessionToken || getCookie("shopify_online_session");
+    }
+  } else {
+    // 🔹 Fallback for non-embedded or external users
+    token = window.sessionToken || getCookie("shopify_online_session");
+  }
+
+  const isFormData = options.body instanceof FormData;
+
+  const headers = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    headers,
+    credentials: "include",
+    body:
+      options.body && !isFormData
+        ? typeof options.body === "string"
+          ? options.body
+          : JSON.stringify(options.body)
+        : options.body,
   };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
-  }
 
   const fullUrl = url.startsWith("http")
     ? url
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
-  const res = await fetch(fullUrl, opts);
+  let res = await fetch(fullUrl, opts);
 
+  // 🔄 Step 2: Handle expired or invalid token automatically
+  if (res.status === 401 && app) {
+    console.warn("🔄 Token expired — refreshing session token...");
+    try {
+      token = await getSessionToken(app);
+      window.sessionToken = token;
+
+      // retry request once
+      opts.headers.Authorization = `Bearer ${token}`;
+      res = await fetch(fullUrl, opts);
+    } catch (retryErr) {
+      console.error("❌ Token refresh failed:", retryErr);
+    }
+  }
+
+  // 🔹 Step 3: Handle final response
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const text = await res.text();
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
   try {
@@ -113,6 +150,11 @@ export async function fetchWithAuth(url, options = {}) {
   }
 }
 
+/**
+ * Safely reads cookies
+ */
 function getCookie(name) {
-  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
+  if (typeof document === "undefined" || !document.cookie) return null;
+  const match = document.cookie.split("; ").find(row => row.startsWith(name + "="));
+  return match ? match.split("=")[1] : null;
 }
