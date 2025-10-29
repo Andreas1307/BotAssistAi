@@ -1,29 +1,31 @@
-require('@shopify/shopify-api/adapters/node');
-const { decodeSessionToken } = require('@shopify/shopify-api'); // ✅ FIXED
-const { shopify } = require('./shopify');
-const customSessionStorage = require('./sessionStorage');
+// ✅ MUST come first before importing anything else
+require("@shopify/shopify-api/adapters/node");
+
+const { decodeSessionToken } = require("@shopify/shopify-api");
+const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader?.startsWith('Bearer ')) {
-      console.log('ℹ️ No Shopify session token — treating as external user');
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.log("ℹ️ No Shopify session token — treating as external user");
       req.shopify = null;
       return next();
     }
 
-    const token = authHeader.replace('Bearer ', '');
-
+    const token = authHeader.replace("Bearer ", "");
     let payload = null;
+
     try {
-      payload = decodeSessionToken(token); // ✅ no need for apiSecretKey
+      // ✅ Works only after adapter registration
+      payload = decodeSessionToken(token);
     } catch (err) {
-      console.warn('❌ Failed to decode JWT:', err.message);
+      console.warn("❌ Failed to decode JWT:", err.message);
     }
 
     if (payload) {
-      const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
+      const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
       const onlineSessionId = `${shop}_${payload.sub}`;
 
       const session =
@@ -32,23 +34,23 @@ module.exports = async function verifySessionToken(req, res, next) {
 
       if (session) {
         req.shopify = { shop, session, payload };
-        console.log('✅ Shopify session validated via JWT:', shop);
+        console.log("✅ Shopify session validated via JWT:", shop);
         return next();
       }
     }
 
-    // fallback for offline token
+    // Fallback for offline access token
     const session = await customSessionStorage.loadCallbackByAccessToken?.(token);
     if (session) {
       req.shopify = { shop: session.shop, session, payload: null };
-      console.log('✅ Shopify session validated via offline token:', session.shop);
+      console.log("✅ Shopify session validated via offline token:", session.shop);
       return next();
     }
 
-    console.warn('⚠️ No session found for token');
-    return res.status(401).send('Session expired or invalid.');
+    console.warn("⚠️ No session found for token");
+    return res.status(401).send("Session expired or invalid.");
   } catch (err) {
-    console.error('❌ Session verification failed:', err);
+    console.error("❌ Session verification failed:", err);
     req.shopify = null;
     next();
   }
