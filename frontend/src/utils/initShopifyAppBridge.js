@@ -77,7 +77,17 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  const app = getAppBridgeInstance();
+  let token = null;
+
+  if (app) {
+    try {
+      token = await getSessionToken(app);
+      window.sessionToken = token;
+    } catch (err) {
+      console.warn("⚠️ Failed to get session token:", err);
+    }
+  }
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -87,7 +97,7 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    credentials: "include",
   };
 
   if (options.body) {
@@ -111,6 +121,7 @@ export async function fetchWithAuth(url, options = {}) {
     return null;
   }
 }
+
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
