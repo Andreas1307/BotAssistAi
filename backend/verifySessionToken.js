@@ -1,11 +1,22 @@
 // verifySessionToken.js
 const { shopify } = require("./shopify");
-
-// 👇 import decodeSessionToken directly
-const { decodeSessionToken } = require("@shopify/shopify-api/lib/auth");
-
-// Custom session storage
 const customSessionStorage = require("./sessionStorage");
+
+// helper to find decode function safely
+function getDecodeFunction(shopify) {
+  if (shopify?.auth?.decodeSessionToken) {
+    return shopify.auth.decodeSessionToken;
+  }
+
+  try {
+    // Shopify v11+ (official path)
+    const { decodeSessionToken } = require("@shopify/shopify-api/runtime/auth");
+    return (token) => decodeSessionToken(shopify.config.apiSecretKey, token);
+  } catch (e) {
+    console.warn("⚠️ decodeSessionToken not found in @shopify/shopify-api/runtime/auth, fallback disabled.");
+    throw new Error("decodeSessionToken not available in this Shopify API version");
+  }
+}
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
@@ -13,10 +24,10 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-      try {
-        // ✅ use standalone function, not shopify.auth.decodeSessionToken
-        const payload = await decodeSessionToken(shopify.config.apiSecretKey, token);
+      const decode = getDecodeFunction(shopify);
 
+      try {
+        const payload = await decode(token);
         if (!payload) throw new Error("Invalid JWT payload");
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
