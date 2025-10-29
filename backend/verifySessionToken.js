@@ -2,20 +2,15 @@
 const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
-// helper to find decode function safely
-function getDecodeFunction(shopify) {
-  if (shopify?.auth?.decodeSessionToken) {
-    return shopify.auth.decodeSessionToken;
-  }
+let decodeSessionTokenFn;
 
-  try {
-    // Shopify v11+ (official path)
-    const { decodeSessionToken } = require("@shopify/shopify-api/runtime/auth");
-    return (token) => decodeSessionToken(shopify.config.apiSecretKey, token);
-  } catch (e) {
-    console.warn("⚠️ decodeSessionToken not found in @shopify/shopify-api/runtime/auth, fallback disabled.");
-    throw new Error("decodeSessionToken not available in this Shopify API version");
-  }
+// 🧠 Safe dynamic import
+try {
+  const { decodeSessionToken } = require("@shopify/shopify-api/runtime/auth");
+  decodeSessionTokenFn = decodeSessionToken;
+  console.log("✅ Using decodeSessionToken from runtime/auth");
+} catch (err) {
+  console.warn("⚠️ decodeSessionToken not found in @shopify/shopify-api/runtime/auth");
 }
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -24,10 +19,16 @@ module.exports = async function verifySessionToken(req, res, next) {
 
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-      const decode = getDecodeFunction(shopify);
+
+      if (!decodeSessionTokenFn) {
+        console.error("❌ decodeSessionToken function unavailable — cannot verify token");
+        return res.status(500).send("Shopify auth not properly configured");
+      }
 
       try {
-        const payload = await decode(token);
+        // ✅ decode JWT with secret key
+        const payload = await decodeSessionTokenFn(shopify.config.apiSecretKey, token);
+
         if (!payload) throw new Error("Invalid JWT payload");
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
