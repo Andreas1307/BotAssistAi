@@ -1,7 +1,6 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
-import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
@@ -54,11 +53,11 @@ export async function initShopifyAppBridge() {
 
 /**
  * Returns existing App Bridge instance if available
- 
+ */
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
-*/
+
 /**
  * Safe redirect (embedded or standalone)
  */
