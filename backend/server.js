@@ -1027,22 +1027,26 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   const hasTopLevel = !!req.cookies.shopify_toplevel;
+
+  // 🔒 STEP 1: Make sure we have a top-level cookie
   if (!hasTopLevel) {
+    console.log(`🪟 [INSTALL] Missing top-level cookie → redirecting for ${shop}`);
     return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
   }
 
+  // 🔑 STEP 2: Begin OAuth
   try {
-    // OAuth redirect handled internally
+    console.log(`🧭 [INSTALL] Beginning OAuth for ${shop}`);
     await shopify.auth.begin({
       shop,
-      isOnline: true,
       callbackPath: "/shopify/callback",
+      isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
-    // ⚠️ Do NOT touch headers or cookies here
+    // ⚠️ DO NOT modify cookies or send extra headers here
   } catch (err) {
-    console.error("Shopify OAuth start failed:", err);
+    console.error("❌ Shopify OAuth start failed:", err);
     if (!res.headersSent) res.status(500).send("OAuth start error");
   }
 });
