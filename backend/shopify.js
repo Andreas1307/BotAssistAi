@@ -1,7 +1,5 @@
 // shopify.js
 const { shopifyApi, LATEST_API_VERSION, Shopify } = require('@shopify/shopify-api');
-const { restResources } = require('@shopify/shopify-api/rest/admin/2023-10');
-const { setRestClient } = require('@shopify/shopify-api/lib/clients/rest'); // optional
 
 // ✅ Make sure to explicitly set the adapter FIRST
 Shopify.Context.initialize({
