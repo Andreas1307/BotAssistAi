@@ -98,16 +98,18 @@ const SettingsPage = () => {
   }, []);
 
 
-  const formattedDate = new Date(user.created_at).toLocaleString("en-US", {
+  const formattedDate = "Ddfsfdadasaw"
+  /*
+  new Date(user.created_at).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: true, // Change to false for 24-hour format
+    hour12: true,
   });
-
+*/
   
 
 
