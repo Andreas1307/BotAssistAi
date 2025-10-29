@@ -15,6 +15,6 @@ const shopify = shopifyApi({
 });
 
 console.log("✅ Shopify initialized with version:", LATEST_API_VERSION);
-console.log("Has shopify.auth.decodeSessionToken:", typeof shopify.auth?.decodeSessionToken === 'function');
+console.log("Shopify API ready!");
 
 module.exports = { shopify };
