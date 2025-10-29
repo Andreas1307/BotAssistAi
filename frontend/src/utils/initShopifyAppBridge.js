@@ -77,16 +77,20 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
   let token = null;
 
-  if (app) {
-    try {
+  try {
+    const app = getAppBridgeInstance() || (await initShopifyAppBridge());
+
+    // ✅ Only attempt token if app exists AND running inside Shopify iframe
+    if (app && window.top !== window.self) {
       token = await getSessionToken(app);
       window.sessionToken = token;
-    } catch (err) {
-      console.warn("⚠️ Failed to get session token:", err);
+    } else {
+      console.info("ℹ️ Not running inside Shopify iframe — skipping token fetch");
     }
+  } catch (err) {
+    console.warn("⚠️ Failed to initialize or fetch session token:", err.message);
   }
 
   const defaultHeaders = {
@@ -97,7 +101,7 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include",
+    credentials: "include", // allow cookies
   };
 
   if (options.body) {
@@ -121,7 +125,6 @@ export async function fetchWithAuth(url, options = {}) {
     return null;
   }
 }
-
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
