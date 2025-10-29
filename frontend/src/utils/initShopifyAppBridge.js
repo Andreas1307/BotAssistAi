@@ -77,32 +77,44 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  const app = getAppBridgeInstance();
+  let token = null;
 
-  const defaultHeaders = {
+  if (app) {
+    try {
+      token = await getSessionToken(app);
+      window.sessionToken = token; // optional cache
+      console.log("✅ Using Shopify JWT token");
+    } catch (err) {
+      console.error("⚠️ Failed to get session token:", err);
+    }
+  }
+
+  const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    headers,
+    credentials: "include",
   };
 
   if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body =
+      options.body instanceof FormData ? options.body : JSON.stringify(options.body);
   }
 
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const base = window.directory || "https://api.botassistai.com";
+  const fullUrl = url.startsWith("http") ? url : `${base}${url}`;
 
   const res = await fetch(fullUrl, opts);
-
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const text = await res.text();
+    console.error("❌ [fetchWithAuth] Error:", res.status, text);
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
   try {
@@ -110,8 +122,4 @@ export async function fetchWithAuth(url, options = {}) {
   } catch {
     return null;
   }
-}
-
-function getCookie(name) {
-  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
