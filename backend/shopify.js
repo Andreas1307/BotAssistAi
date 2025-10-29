@@ -1,25 +1,23 @@
-// 1️⃣ Import Node adapter first
+// 1️⃣ Node adapter first
 require('@shopify/shopify-api/adapters/node');
 
 // 2️⃣ Import shopifyApi normally
-const shopifyModule = require('@shopify/shopify-api');
+const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
+const { auth } = require('@shopify/shopify-api/dist/auth.js'); // ✅ explicit import
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 // 3️⃣ Initialize Shopify API
-const shopify = shopifyModule.shopifyApi({
+const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_SCOPES.split(','),
-  hostName: process.env.HOST.replace(/^https?:\/\//, ''), // remove protocol
-  apiVersion: shopifyModule.LATEST_API_VERSION,
+  hostName: process.env.HOST.replace(/^https?:\/\//, ''),
+  apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
-// 4️⃣ Export auth explicitly
-const auth = shopifyModule.auth;
-
-console.log("✅ Shopify initialized with version:", shopifyModule.LATEST_API_VERSION);
-console.log("Has decodeSessionToken:", auth?.decodeSessionToken ? true : false);
+console.log("✅ Shopify initialized with version:", LATEST_API_VERSION);
+console.log("Has decodeSessionToken:", typeof auth.decodeSessionToken === 'function');
 
 module.exports = { shopify, auth };
