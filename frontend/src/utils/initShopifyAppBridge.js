@@ -77,41 +77,73 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  console.log("🚀 fetchWithAuth →", url, options);
 
-  const defaultHeaders = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  const app = getAppBridgeInstance();
+  const isEmbedded = window.top !== window.self;
+  let token = null;
 
-  const opts = {
-    method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
-  };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  if (app && isEmbedded) {
+    console.log("🧩 Embedded app detected, fetching session token…");
+    try {
+      token = await getSessionToken(app);
+      console.log("✅ Got session token:", token.slice(0, 20) + "…");
+      window.sessionToken = token; // store for reuse briefly
+    } catch (err) {
+      console.warn("⚠️ Failed to get session token, falling back to cookie:", err);
+      token = window.sessionToken || getCookie("shopify_online_session");
+    }
+  } else {
+    console.log("🌍 Not embedded — using cookie instead");
+    token = window.sessionToken || getCookie("shopify_online_session");
   }
+
+  const isFormData = options.body instanceof FormData;
+  const headers = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  console.log("📦 Final headers:", headers);
 
   const fullUrl = url.startsWith("http")
     ? url
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
-  const res = await fetch(fullUrl, opts);
+  console.log("🌐 Full URL:", fullUrl);
+
+  const res = await fetch(fullUrl, {
+    method: options.method || "GET",
+    headers,
+    credentials: "include",
+    body:
+      options.body && !isFormData
+        ? typeof options.body === "string"
+          ? options.body
+          : JSON.stringify(options.body)
+        : options.body,
+  });
 
   if (!res.ok) {
     const errText = await res.text();
+    console.error("❌ Request failed:", res.status, errText);
     throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
-    return await res.json();
+    const json = await res.json();
+    console.log("📥 Response JSON:", json);
+    return json;
   } catch {
+    console.log("📥 Response not JSON, returning raw");
     return null;
   }
 }
 
 function getCookie(name) {
-  return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
+  const value = document.cookie
+    .split("; ")
+    .find((r) => r.startsWith(name + "="));
+  return value ? value.split("=")[1] : null;
 }
