@@ -78,7 +78,17 @@ export function safeRedirect(url) {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  let token = null;
+
+  try {
+    const app = getAppBridgeInstance();
+    if (app) {
+      token = await getSessionToken(app); // ✅ generates JWT for backend
+      window.sessionToken = token;
+    }
+  } catch (err) {
+    console.warn("⚠️ Failed to get Shopify session token:", err);
+  }
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -88,16 +98,15 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    credentials: "include", // allow cookies
   };
 
   if (options.body) {
     opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const base = window.directory || "https://api.botassistai.com";
+  const fullUrl = url.startsWith("http") ? url : `${base}${url}`;
 
   const res = await fetch(fullUrl, opts);
 
