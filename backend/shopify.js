@@ -1,9 +1,8 @@
 // 1️⃣ Node adapter first
 require('@shopify/shopify-api/adapters/node');
 
-// 2️⃣ Import shopifyApi normally
-const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { auth } = require('@shopify/shopify-api/dist/auth.js'); // ✅ explicit import
+// 2️⃣ Import shopifyApi + auth normally
+const { shopifyApi, auth, LATEST_API_VERSION } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 // 3️⃣ Initialize Shopify API
@@ -17,6 +16,7 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
+// 4️⃣ Debug
 console.log("✅ Shopify initialized with version:", LATEST_API_VERSION);
 console.log("Has decodeSessionToken:", typeof auth.decodeSessionToken === 'function');
 
