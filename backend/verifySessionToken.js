@@ -1,16 +1,17 @@
-const { Shopify } = require("@shopify/shopify-api");
+// verifySessionToken.js
+const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
+    // 1️⃣ Shopify Session Token (JWT)
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        const payload = await shopify.auth.decodeSessionToken(token);
-
+        const payload = await shopify.session.decodeSessionToken(token);
         if (!payload) throw new Error("Invalid JWT payload");
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
@@ -35,6 +36,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       }
     }
 
+    // 2️⃣ Fallback for non-Shopify users or external access
     console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
     return next();
