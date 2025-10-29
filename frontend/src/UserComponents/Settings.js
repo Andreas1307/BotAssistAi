@@ -98,9 +98,7 @@ const SettingsPage = () => {
   }, []);
 
 
-  const formattedDate = "Ddfsfdadasaw"
-  /*
-  new Date(user.created_at).toLocaleString("en-US", {
+  const formattedDate = new Date(user.created_at).toLocaleString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -109,7 +107,6 @@ const SettingsPage = () => {
     second: "2-digit",
     hour12: true,
   });
-*/
   
 
 
