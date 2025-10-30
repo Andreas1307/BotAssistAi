@@ -1,4 +1,4 @@
-const { shopifyApi, LATEST_API_VERSION } = require("@shopify/shopify-api");
+const { shopifyApi, LATEST_API_VERSION, Session } = require("@shopify/shopify-api");
 require("@shopify/shopify-api/adapters/node");
 const { storeCallback, loadCallback, deleteCallback } = require("./sessionStorage");
 
@@ -12,5 +12,5 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
-// ✅ Export shopify instance and the shopifyApi class
-module.exports = { shopify, shopifyApi };
+// Export everything you need
+module.exports = { shopify, shopifyApi, Session };
