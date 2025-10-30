@@ -1,9 +1,9 @@
 import createApp from "@shopify/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
+import { getSessionToken } from "@shopify/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
 import { getShopOrigin } from "@shopify/app-bridge/utilities";
 
-let app = null; // ✅ shared singleton instance
+let app = null; 
 
 function isEmbedded() {
   return window.top !== window.self;
@@ -78,29 +78,37 @@ export function safeRedirect(url) {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridge();
-  let token;
+  let token = null;
 
   try {
-    token = await getSessionToken(app); // ✅ Official JWT retrieval
-    window.sessionToken = token;
+    const app = getAppBridgeInstance();
+    if (app) {
+      token = await getSessionToken(app);
+      window.sessionToken = token;
+    }
   } catch (err) {
-    console.warn("⚠️ Failed to get Shopify JWT, falling back to offline token:", err);
-    token = getCookie("shopify_online_session");
+    console.warn("⚠️ Failed to get Shopify JWT:", err);
+  }
+
+  const defaultHeaders = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const opts = {
+    method: options.method || "GET",
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include",
+  };
+
+  if (options.body) {
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
   const base = window.directory || "https://api.botassistai.com";
   const fullUrl = url.startsWith("http") ? url : `${base}${url}`;
 
-  const res = await fetch(fullUrl, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    credentials: "include",
-  });
+  const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
     const errText = await res.text();
