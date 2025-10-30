@@ -8,8 +8,9 @@ module.exports = async function verifySessionToken(req, res, next) {
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
-      // ✅ decodeSessionToken is now available on shopify.session
+      // ✅ Use shopify.session.decodeSessionToken
       const payload = await shopify.session.decodeSessionToken(token);
+
       if (!payload?.dest) throw new Error("Invalid Shopify session token");
 
       const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();

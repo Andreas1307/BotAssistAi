@@ -12,4 +12,5 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
-module.exports = { shopify };
+// ✅ Export shopify instance and the shopifyApi class
+module.exports = { shopify, shopifyApi };
