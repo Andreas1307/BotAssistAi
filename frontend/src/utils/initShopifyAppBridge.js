@@ -77,51 +77,40 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  // 1️⃣ Ensure App Bridge is initialized
-  let app = window.appBridge || (await initShopifyAppBridge());
-  let token = null;
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
-  // 2️⃣ Always get a fresh JWT from App Bridge
-  if (app) {
-    try {
-      token = await getSessionToken(app);
-      window.sessionToken = token; // cache for quick reuse
-    } catch (err) {
-      console.warn("⚠️ Failed to get Shopify session token:", err);
-    }
-  }
-
-  // 3️⃣ Build headers (only include Authorization if we have a token)
-  const headers = {
+  const defaultHeaders = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
   };
 
-  // 4️⃣ Build full URL
+  const opts = {
+    method: options.method || "GET",
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include", // 🔑 allow cookies cross-domain
+  };
+
+  if (options.body) {
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  }
+
   const fullUrl = url.startsWith("http")
     ? url
-    : `https://api.botassistai.com${url}`;
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
 
-  // 5️⃣ Perform fetch
-  const response = await fetch(fullUrl, {
-    ...options,
-    headers,
-    credentials: "include",
-  });
+  const res = await fetch(fullUrl, opts);
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Request failed: ${response.status} ${text}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
-    return await response.json();
+    return await res.json();
   } catch {
     return null;
   }
 }
-
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
