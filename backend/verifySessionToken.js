@@ -1,5 +1,5 @@
-const { shopifyApi, Shopify } = require("@shopify/shopify-api");
-const { shopify } = require("./shopify");
+// verifySessionToken.js
+const { Shopify } = require("@shopify/shopify-api");
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -10,7 +10,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        // ✅ use Shopify.Session rather than shopify.session
+        // ✅ decode using Shopify.Session helper (not your shopify instance)
         const payload = await Shopify.Session.decodeSessionToken(token);
         if (!payload) throw new Error("Invalid JWT payload");
 
