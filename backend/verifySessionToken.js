@@ -1,4 +1,4 @@
-// backend/verifySessionToken.js
+const { decodeSessionToken } = require("@shopify/shopify-api");
 const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
@@ -9,7 +9,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
-      const payload = await shopify.session.decodeSessionToken(token);
+      // ✅ Decode directly using the helper
+      const payload = await decodeSessionToken(token);
       if (!payload?.dest) throw new Error("Invalid Shopify session token");
 
       const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
@@ -30,7 +31,6 @@ module.exports = async function verifySessionToken(req, res, next) {
       return next();
     }
 
-    // fallback: no Authorization header
     console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
     next();
