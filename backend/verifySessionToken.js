@@ -22,6 +22,9 @@ module.exports = async function verifySessionToken(req, res, next) {
       const session =
         (await customSessionStorage.loadCallback(onlineId)) ||
         (await customSessionStorage.loadCallback(offlineId));
+ console.log('Session:', Session);
+console.log('decodeSessionToken:', Session?.decodeSessionToken);
+
 
       if (!session) {
         console.warn(`⚠️ No stored session for ${shop}`);
@@ -33,6 +36,7 @@ module.exports = async function verifySessionToken(req, res, next) {
       return next();
     }
 
+   
     console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
     next();
