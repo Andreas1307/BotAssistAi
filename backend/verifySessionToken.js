@@ -1,7 +1,6 @@
-// ✅ MUST come first before importing anything else
 require("@shopify/shopify-api/adapters/node");
 
-const { decodeSessionToken } = require("@shopify/shopify-api");
+const { decodeSessionToken } = require("@shopify/shopify-api/lib/auth/session/decode-session-token");
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -18,8 +17,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     let payload = null;
 
     try {
-      // ✅ Works only after adapter registration
-      payload = decodeSessionToken(token);
+      payload = decodeSessionToken(token); // ✅ now properly imported
     } catch (err) {
       console.warn("❌ Failed to decode JWT:", err.message);
     }
@@ -39,7 +37,6 @@ module.exports = async function verifySessionToken(req, res, next) {
       }
     }
 
-    // Fallback for offline access token
     const session = await customSessionStorage.loadCallbackByAccessToken?.(token);
     if (session) {
       req.shopify = { shop: session.shop, session, payload: null };
