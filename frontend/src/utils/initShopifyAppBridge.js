@@ -65,35 +65,26 @@ export function safeRedirect(url) {
 
 export async function fetchWithAuth(url, options = {}) {
   let token = null;
-
   try {
     const app = getAppBridgeInstance();
-    if (app) {
-      token = await getSessionToken(app);
-      window.sessionToken = token;
-    }
+    if (app) token = await getSessionToken(app);
   } catch (err) {
     console.warn("⚠️ Failed to get Shopify JWT:", err);
   }
 
-  const defaultHeaders = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {})
+    },
     credentials: "include",
+    body: options.body ? JSON.stringify(options.body) : undefined
   };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
-  }
 
   const base = window.directory || "https://api.botassistai.com";
   const fullUrl = url.startsWith("http") ? url : `${base}${url}`;
-
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {

@@ -69,8 +69,6 @@ const Homepage = () => {
       console.warn("❌ Missing shop parameter in URL");
       return;
     }
-  
-    // If top-level cookie missing, redirect to /auth (sets top-level cookie)
     if (!document.cookie.includes("shopify_toplevel")) {
       window.top.location.href = `${directory}/shopify/auth?shop=${shopParam}`;
       return;
@@ -122,9 +120,8 @@ const Homepage = () => {
   
     const checkShop = async () => {
       try {
-        const res = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
-        const data = await res.json();
-  
+        const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
+       
         if (!data.installed) {
           safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
   
