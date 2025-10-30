@@ -13,7 +13,37 @@ function isEmbedded() {
  * - Skips if not embedded or missing params
  * - Avoids noisy Web Vitals errors
  */
+export async function initShopifyAppBridge() {
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
 
+  if (!shop) {
+    console.error("❌ Missing 'shop' param, cannot init App Bridge");
+    return null;
+  }
+
+  // if running outside iframe (standalone or first load)
+  if (!isEmbedded() || !host) {
+    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
+      shop
+    )}`;
+    return null;
+  }
+
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
+
+  window.appBridge = app;
+  console.log("✅ App Bridge initialized for", shop);
+  return app;
+}
+/**
+ * Returns existing App Bridge instance if available
+ */
 export async function getAppBridgeInstance() {
   if (window.appBridge) return window.appBridge;
 
@@ -26,13 +56,6 @@ export async function getAppBridgeInstance() {
   const app = createApp({ apiKey, host, forceRedirect: true });
   window.appBridge = app;
   return app;
-}
-
-/**
- * Returns existing App Bridge instance if available
- */
-export function getAppBridgeInstance() {
-  return window.appBridge || null;
 }
 
 /**
