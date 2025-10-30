@@ -1029,37 +1029,48 @@ app.get("/shopify/install", async (req, res) => {
   const hasTopLevel = !!req.cookies.shopify_toplevel;
   console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
 
-  // 🔁 Must first go through top-level page to allow setting cookies
   if (!hasTopLevel) {
     console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
     return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
 
+  if (authInProgress.has(shop)) {
+    console.log(`⚠️ Auth already in progress for ${shop}`);
+    return res.status(200).send("OAuth in progress, please wait...");
+  }
+  authInProgress.add(shop);
+
   try {
-    console.log("🚀 [INSTALL] Starting Shopify OAuth");
+    console.log("🚀 [INSTALL] Beginning Shopify OAuth");
+    
     await shopify.auth.begin({
       shop,
-      callbackPath: "/shopify/callback",
       isOnline: true,
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
 
-    // --- Shopify redirects automatically, but widen cookie domain if headers still open
+    // 🧠 Important: we must not touch headers after this point
+    // So the rest runs only if headers weren't sent yet
     if (!res.headersSent) {
       const cookies = res.getHeader("set-cookie") || [];
-      const widened = cookies.map(
-        c =>
-          c
-            .replace(/Path=\/shopify\/callback/g, "Path=/")
-            .replace(/SameSite=Lax/g, "SameSite=None; Secure")
+      const widenedCookies = cookies.map(c =>
+        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
       );
-      res.setHeader("set-cookie", widened);
-      console.log("🍪 [INSTALL] Widened OAuth cookies:", widened);
+      res.setHeader("set-cookie", widenedCookies);
+      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
+    } else {
+      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
     }
+
   } catch (err) {
-    console.error("❌ [INSTALL] OAuth start failed:", err);
-    if (!res.headersSent) res.status(500).send("Error starting Shopify OAuth");
+    console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
+    if (!res.headersSent) {
+      res.status(500).send("Error starting Shopify OAuth");
+    }
+  } finally {
+    authInProgress.delete(shop);
   }
 });
 
