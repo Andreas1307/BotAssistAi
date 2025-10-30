@@ -38,6 +38,8 @@ const Homepage = () => {
     borderColor: '#00F5D4'
   });
 
+  const [appBridgeReady, setAppBridgeReady] = useState(false);
+
   useEffect(() => {
     const newStars = [];
     for (let i = 0; i < 200; i++) {
@@ -82,6 +84,8 @@ const Homepage = () => {
         safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
         return;
       }
+      
+      setAppBridgeReady(true);
       window.appBridge = app;
       try {
         // No /api/ping anymore — just assume App Bridge works
@@ -101,6 +105,9 @@ const Homepage = () => {
   
 
   useEffect(() => {
+
+    if (!appBridgeReady) return; 
+
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
     const hostParam = params.get("host");
@@ -154,7 +161,7 @@ const Homepage = () => {
     };
   
     checkShop();
-  }, []); 
+  }, [appBridgeReady]); 
   
   
   
