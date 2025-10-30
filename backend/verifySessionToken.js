@@ -1,44 +1,48 @@
-require("@shopify/shopify-api/adapters/node");
-const { Session } = require("@shopify/shopify-api"); // ✅ direct import
+// verifySessionToken.js
+const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
+    // 1️⃣ Shopify Session Token (JWT)
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
-      // ✅ Use the Session class (not shopify.session)
-      const payload = await Session.decodeSessionToken(token, {
-        apiSecretKey: process.env.SHOPIFY_API_SECRET,
-      });
+      try {
+        const payload = await shopify.session.decodeSessionToken(token);
+        if (!payload) throw new Error("Invalid JWT payload");
 
-      if (!payload?.dest) throw new Error("Invalid Shopify session token");
+        const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
+        const onlineSessionId = `${shop}_${payload.sub}`;
+        const offlineSessionId = `offline_${shop}`;
 
-      const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
-      const onlineId = `${shop}_${payload.sub}`;
-      const offlineId = `offline_${shop}`;
+        const session =
+          (await customSessionStorage.loadCallback(onlineSessionId)) ||
+          (await customSessionStorage.loadCallback(offlineSessionId));
 
-      const session =
-        (await customSessionStorage.loadCallback(onlineId)) ||
-        (await customSessionStorage.loadCallback(offlineId));
+        if (session) {
+          req.shopify = { shop, session, payload };
+          console.log("✅ Shopify session validated via JWT:", shop);
+          return next();
+        }
 
-      if (!session) {
-        console.warn(`⚠️ No stored session for ${shop}`);
-        return res.status(401).send("Shopify session not found.");
+        console.warn("⚠️ No session found for JWT payload — maybe not stored yet");
+        return res.status(401).send("Session expired or invalid.");
+      } catch (err) {
+        console.warn("⚠️ Invalid or expired JWT:", err.message);
+        return res.status(401).send("Invalid Shopify session token.");
       }
-
-      req.shopify = { shop, session, payload };
-      console.log(`✅ Verified Shopify JWT for ${shop}`);
-      return next();
     }
 
+    // 2️⃣ Fallback for non-Shopify users or external access
     console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
-    next();
+    return next();
   } catch (err) {
-    console.error("❌ verifySessionToken error:", err);
-    return res.status(401).send("Invalid Shopify session token");
+    console.error("❌ Session verification failed:", err);
+    req.shopify = null;
+    next();
   }
 };

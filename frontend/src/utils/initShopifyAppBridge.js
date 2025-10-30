@@ -67,37 +67,32 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  let app = window.appBridge || (await initShopifyAppBridge());
-  let token = null;
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
-  if (app) {
-    try {
-      token = await getSessionToken(app); // 🔥 Secure, fresh JWT every call
-      window.sessionToken = token;
-    } catch (err) {
-      console.warn("⚠️ Failed to get session token:", err);
-    }
-  }
-
-  const headers = {
+  const defaultHeaders = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
   };
+
+  const opts = {
+    method: options.method || "GET",
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include", // 🔑 allow cookies cross-domain
+  };
+
+  if (options.body) {
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  }
 
   const fullUrl = url.startsWith("http")
     ? url
-    : `https://api.botassistai.com${url}`;
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
 
-  const res = await fetch(fullUrl, {
-    ...options,
-    headers,
-    credentials: "include",
-  });
+  const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Request failed ${res.status}: ${text}`);
+    const errText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
