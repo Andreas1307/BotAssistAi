@@ -1,4 +1,5 @@
-const { decodeSessionToken } = require("@shopify/shopify-api/lib/utils/decode-session-token");
+const { decodeSessionToken } = require("@shopify/shopify-api");
+const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -8,7 +9,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
-      const payload = decodeSessionToken(token);
+      // ✅ Decode directly using the helper
+      const payload = await decodeSessionToken(token);
       if (!payload?.dest) throw new Error("Invalid Shopify session token");
 
       const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
