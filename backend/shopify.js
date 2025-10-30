@@ -12,5 +12,4 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
-// Export everything you need
-module.exports = { shopify, shopifyApi, Session };
+module.exports = { shopify, shopifyApi, Session }; // ✅ Session exported

@@ -1,4 +1,4 @@
-const { shopifyApi, Session } = require("./shopify"); // import Session
+const { Session } = require("./shopify"); // import Session
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
