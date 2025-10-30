@@ -81,9 +81,12 @@ export async function fetchWithAuth(url, options = {}) {
   let token;
 
   if (app) {
-    // Shopify embedded app — get a session token
+    // Get Shopify session token (JWT) for the embedded app
     token = await getSessionToken(app);
     window.sessionToken = token; // optional cache
+  } else {
+    // fallback to offline session cookie (less secure)
+    token = getCookie("shopify_online_session");
   }
 
   const defaultHeaders = {
@@ -101,7 +104,9 @@ export async function fetchWithAuth(url, options = {}) {
     opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
-  const fullUrl = url.startsWith("http") ? url : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
 
   const res = await fetch(fullUrl, opts);
 
