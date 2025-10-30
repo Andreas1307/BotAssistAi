@@ -13,34 +13,21 @@ function isEmbedded() {
  * - Skips if not embedded or missing params
  * - Avoids noisy Web Vitals errors
  */
-export async function initShopifyAppBridge() {
+
+export async function getAppBridgeInstance() {
+  if (window.appBridge) return window.appBridge;
+
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
   const host = params.get("host");
+  const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY;
 
-  if (!shop) {
-    console.error("❌ Missing 'shop' param, cannot init App Bridge");
-    return null;
-  }
+  if (!isEmbedded() || !host) return null;
 
-  // if running outside iframe (standalone or first load)
-  if (!isEmbedded() || !host) {
-    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
-      shop
-    )}`;
-    return null;
-  }
-
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: true,
-  });
-
+  const app = createApp({ apiKey, host, forceRedirect: true });
   window.appBridge = app;
-  console.log("✅ App Bridge initialized for", shop);
   return app;
 }
+
 /**
  * Returns existing App Bridge instance if available
  */
@@ -67,21 +54,33 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  let token = null;
 
-  const defaultHeaders = {
+  try {
+    const app = await getAppBridgeInstance();
+    if (app) {
+      token = await getSessionToken(app); // ✅ real JWT from Shopify
+      window.sessionToken = token;
+    }
+  } catch (err) {
+    console.warn("⚠️ Could not get Shopify session token:", err.message);
+  }
+
+  const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    headers,
+    credentials: "include",
   };
 
   if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body =
+      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
   const fullUrl = url.startsWith("http")
@@ -91,8 +90,8 @@ export async function fetchWithAuth(url, options = {}) {
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const text = await res.text();
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
   try {
