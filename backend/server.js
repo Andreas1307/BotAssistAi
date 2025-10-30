@@ -1051,15 +1051,15 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    // 🧠 Important: we must not touch headers after this point
-    // So the rest runs only if headers weren't sent yet
     if (!res.headersSent) {
       const cookies = res.getHeader("set-cookie") || [];
-      const widenedCookies = cookies.map(c =>
-        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
+      const widenedCookies = cookies.map((cookie) =>
+        cookie
+          // widen all OAuth cookies to be accessible for callback
+          .replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
       );
       res.setHeader("set-cookie", widenedCookies);
-      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
+      console.log("🍪 [INSTALL] Widened Shopify OAuth cookies:", widenedCookies);
     } else {
       console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
     }
