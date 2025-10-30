@@ -77,7 +77,17 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  const app = getAppBridgeInstance();
+  let token = null;
+
+  // Only fetch token if running inside Shopify
+  if (app) {
+    try {
+      token = await getSessionToken(app); // ⚠️ Session token expires in 1 minute
+    } catch (err) {
+      console.error("❌ Failed to get Shopify session token:", err);
+    }
+  }
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -87,29 +97,20 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    body: options.body ? JSON.stringify(options.body) : undefined,
   };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
-  }
 
   const fullUrl = url.startsWith("http")
     ? url
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
   const res = await fetch(fullUrl, opts);
-
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
-  try {
-    return await res.json();
-  } catch {
-    return null;
-  }
+  return res.json().catch(() => null);
 }
 
 function getCookie(name) {
