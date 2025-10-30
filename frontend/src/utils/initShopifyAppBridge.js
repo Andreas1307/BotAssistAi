@@ -66,21 +66,11 @@ export function safeRedirect(url) {
 export async function fetchWithAuth(url, options = {}) {
   if (!app) initShopifyAppBridge();
 
-  let token;
-  try {
-    token = await getSessionToken(app); // 🔑 Always fetch fresh token
-  } catch (err) {
-    console.error("Failed to fetch Shopify session token:", err);
-    throw err;
-  }
+  const token = await getSessionToken(app); // 🔑 fresh token per request
 
   const res = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-      ...(options.headers || {})
-    },
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", ...(options.headers || {}) },
     credentials: "include"
   });
 
