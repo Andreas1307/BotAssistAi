@@ -1,6 +1,6 @@
 require("@shopify/shopify-api/adapters/node");
 
-const { decodeSessionToken } = require("@shopify/shopify-api/lib/auth/session/decode-session-token");
+const { Auth } = require("@shopify/shopify-api");
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -17,9 +17,9 @@ module.exports = async function verifySessionToken(req, res, next) {
     let payload = null;
 
     try {
-      payload = decodeSessionToken(token); // ✅ now properly imported
+      payload = await Auth.validateAuthenticatedSessionToken(token); // ✅ use official API
     } catch (err) {
-      console.warn("❌ Failed to decode JWT:", err.message);
+      console.warn("❌ Failed to validate Shopify JWT:", err.message);
     }
 
     if (payload) {
