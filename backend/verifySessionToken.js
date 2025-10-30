@@ -1,4 +1,7 @@
-const { Session } = require("./shopify"); // import Session
+// verifySessionToken.js
+const { Session } = require("@shopify/shopify-api"); // ✅ direct import
+require("@shopify/shopify-api/adapters/node");       // ensure Node adapter loaded
+
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -8,7 +11,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
-      // ✅ Use Session.decodeSessionToken, not shopifyApi.session
+      // Decode the Shopify session token
       const payload = await Session.decodeSessionToken(token, {
         apiSecretKey: process.env.SHOPIFY_API_SECRET,
       });
@@ -22,9 +25,6 @@ module.exports = async function verifySessionToken(req, res, next) {
       const session =
         (await customSessionStorage.loadCallback(onlineId)) ||
         (await customSessionStorage.loadCallback(offlineId));
- console.log('Session:', Session);
-console.log('decodeSessionToken:', Session?.decodeSessionToken);
-
 
       if (!session) {
         console.warn(`⚠️ No stored session for ${shop}`);
@@ -36,7 +36,6 @@ console.log('decodeSessionToken:', Session?.decodeSessionToken);
       return next();
     }
 
-   
     console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
     next();
