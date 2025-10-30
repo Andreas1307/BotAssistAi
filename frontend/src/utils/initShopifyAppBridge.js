@@ -77,33 +77,21 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  let token = null;
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
-  try {
-    const app = await getAppBridgeInstance();
-    if (app) {
-      token = await getSessionToken(app); // ✅ real JWT from Shopify
-      window.sessionToken = token;
-    }
-  } catch (err) {
-    console.warn("⚠️ Could not get Shopify session token:", err.message);
-  }
-
-  const headers = {
+  const defaultHeaders = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers,
-    credentials: "include",
+    headers: { ...defaultHeaders, ...(options.headers || {}) },
+    credentials: "include", // 🔑 allow cookies cross-domain
   };
 
   if (options.body) {
-    opts.body =
-      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
   const fullUrl = url.startsWith("http")
@@ -113,8 +101,8 @@ export async function fetchWithAuth(url, options = {}) {
   const res = await fetch(fullUrl, opts);
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Request failed: ${res.status} ${text}`);
+    const errText = await res.text();
+    throw new Error(`Request failed: ${res.status} ${errText}`);
   }
 
   try {
