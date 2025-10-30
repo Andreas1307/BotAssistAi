@@ -77,23 +77,51 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = window.appBridge || await initShopifyAppBridge();
-  if (!app) throw new Error("App Bridge not initialized");
+  // 1️⃣ Ensure App Bridge is initialized
+  let app = window.appBridge || (await initShopifyAppBridge());
+  let token = null;
 
-  const token = await getSessionToken(app); // 🔑 MUST fetch token dynamically
-  const res = await fetch(url, {
+  // 2️⃣ Always get a fresh JWT from App Bridge
+  if (app) {
+    try {
+      token = await getSessionToken(app);
+      window.sessionToken = token; // cache for quick reuse
+    } catch (err) {
+      console.warn("⚠️ Failed to get Shopify session token:", err);
+    }
+  }
+
+  // 3️⃣ Build headers (only include Authorization if we have a token)
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  // 4️⃣ Build full URL
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `https://api.botassistai.com${url}`;
+
+  // 5️⃣ Perform fetch
+  const response = await fetch(fullUrl, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-      ...(options.headers || {})
-    },
-    credentials: "include"
+    headers,
+    credentials: "include",
   });
 
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return res.json();
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Request failed: ${response.status} ${text}`);
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
+
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
