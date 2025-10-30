@@ -1,5 +1,5 @@
 // verifySessionToken.js
-const { Shopify } = require("@shopify/shopify-api");
+const { Shopify } = require("@shopify/shopify-api"); // Shopify singleton
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -10,8 +10,12 @@ module.exports = async function verifySessionToken(req, res, next) {
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        // ✅ Use Shopify.Session.decodeSessionToken correctly
-        const payload = Shopify.Utils.decodeSessionToken(token); // ← FIXED
+        if (!Shopify?.Utils?.decodeSessionToken) {
+          throw new Error("Shopify.Utils.decodeSessionToken is undefined. Upgrade @shopify/shopify-api to v12+");
+        }
+
+        // ✅ Decode JWT correctly
+        const payload = Shopify.Utils.decodeSessionToken(token);
         if (!payload) throw new Error("Invalid JWT payload");
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
