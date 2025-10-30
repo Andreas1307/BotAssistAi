@@ -1,7 +1,5 @@
-// verifySessionToken.js
-const { Session } = require("@shopify/shopify-api"); // ✅ direct import
-require("@shopify/shopify-api/adapters/node");       // ensure Node adapter loaded
-
+const { shopify } = require("./shopify"); // ✅ import your configured instance
+require("@shopify/shopify-api/adapters/node"); // ensure Node adapter loaded
 const customSessionStorage = require("./sessionStorage");
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -11,10 +9,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
 
-      // Decode the Shopify session token
-      const payload = await Session.decodeSessionToken(token, {
-        apiSecretKey: process.env.SHOPIFY_API_SECRET,
-      });
+      // ✅ Use the shopify instance, not Session
+      const payload = await shopify.session.decodeSessionToken(token);
 
       if (!payload?.dest) throw new Error("Invalid Shopify session token");
 
