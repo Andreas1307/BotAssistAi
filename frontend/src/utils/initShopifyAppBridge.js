@@ -9,40 +9,26 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export async function initShopifyAppBridge() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
+export function initShopifyAppBridge() {
+  if (!isEmbedded()) return null;
 
-    if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
-      return null;
-    }
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
+  const shop = params.get("shop");
 
-    app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: host,
-      forceRedirect: true,
-    });
-
-    window.appBridge = app;
-
-    try {
-      if (typeof app.initializeWebVitals === "function") {
-        app.initializeWebVitals();
-      }
-    } catch {
-      // ignore
-    }
-
-    console.log("✅ Shopify App Bridge initialized");
-    return app;
-  } catch (err) {
-    console.error("❌ Failed to init App Bridge:", err);
+  if (!host || !shop) {
+    console.warn("⚠️ Missing shop or host — redirecting to backend auth");
+    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     return null;
   }
+
+  app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
+
+  return app;
 }
 
 export function getAppBridgeInstance() {
