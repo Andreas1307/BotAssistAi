@@ -77,14 +77,7 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const app = getAppBridgeInstance();
-  let token;
-
-  if (app) {
-    // Shopify embedded app — get a session token
-    token = await getSessionToken(app);
-    window.sessionToken = token; // optional cache
-  }
+  const token = window.sessionToken || getCookie("shopify_online_session");
 
   const defaultHeaders = {
     "Content-Type": "application/json",
@@ -94,14 +87,16 @@ export async function fetchWithAuth(url, options = {}) {
   const opts = {
     method: options.method || "GET",
     headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include",
+    credentials: "include", // 🔑 allow cookies cross-domain
   };
 
   if (options.body) {
     opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
-  const fullUrl = url.startsWith("http") ? url : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
 
   const res = await fetch(fullUrl, opts);
 
