@@ -14,43 +14,34 @@ function isEmbedded() {
  * - Avoids noisy Web Vitals errors
  */
 export async function initShopifyAppBridge() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
 
-    if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
-      return null;
-    }
-    
-
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-
-    window.appBridge = app;
-
-    // Silently try to initialize Web Vitals
-    try {
-      if (typeof app.initializeWebVitals === "function") {
-        app.initializeWebVitals();
-      }
-    } catch {
-      // ignore
-    }
-
-    console.log("✅ Shopify App Bridge initialized");
-    return app;
-  } catch (err) {
-    console.error("❌ Failed to init App Bridge:", err);
+  // If not embedded → redirect to auth
+  if (!isEmbedded() || !shop) {
+    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
+      shop || ""
+    )}`;
+    console.info("ℹ️ Not in iframe — redirecting to Shopify OAuth");
     return null;
   }
-}
 
+  if (!host) {
+    console.warn("⚠️ Missing host param, cannot init App Bridge");
+    return null;
+  }
+
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
+
+  window.appBridge = app;
+  console.log("✅ Shopify App Bridge initialized");
+  return app;
+}
 /**
  * Returns existing App Bridge instance if available
  */
@@ -77,32 +68,38 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  let app = getAppBridgeInstance() || (await initShopifyAppBridge());
+  let token = null;
 
-  const defaultHeaders = {
+  if (app) {
+    try {
+      // ✅ Always get a fresh JWT from Shopify
+      token = await getSessionToken(app);
+      window.sessionToken = token;
+    } catch (err) {
+      console.warn("⚠️ Failed to get Shopify session token:", err);
+    }
+  }
+
+  const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
-
-  const opts = {
-    method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
-  };
-
-  if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
-  }
 
   const fullUrl = url.startsWith("http")
     ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+    : `https://api.botassistai.com${url}`;
 
-  const res = await fetch(fullUrl, opts);
+  const res = await fetch(fullUrl, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const text = await res.text();
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
   try {
