@@ -18,17 +18,16 @@ export async function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  // If not embedded → redirect to auth
-  if (!isEmbedded() || !shop) {
-    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
-      shop || ""
-    )}`;
-    console.info("ℹ️ Not in iframe — redirecting to Shopify OAuth");
+  if (!shop) {
+    console.error("❌ Missing 'shop' param, cannot init App Bridge");
     return null;
   }
 
-  if (!host) {
-    console.warn("⚠️ Missing host param, cannot init App Bridge");
+  // if running outside iframe (standalone or first load)
+  if (!isEmbedded() || !host) {
+    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
+      shop
+    )}`;
     return null;
   }
 
@@ -39,7 +38,7 @@ export async function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ Shopify App Bridge initialized");
+  console.log("✅ App Bridge initialized for", shop);
   return app;
 }
 /**
@@ -68,16 +67,15 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  let app = getAppBridgeInstance() || (await initShopifyAppBridge());
+  let app = window.appBridge || (await initShopifyAppBridge());
   let token = null;
 
   if (app) {
     try {
-      // ✅ Always get a fresh JWT from Shopify
-      token = await getSessionToken(app);
+      token = await getSessionToken(app); // 🔥 Secure, fresh JWT every call
       window.sessionToken = token;
     } catch (err) {
-      console.warn("⚠️ Failed to get Shopify session token:", err);
+      console.warn("⚠️ Failed to get session token:", err);
     }
   }
 
@@ -99,7 +97,7 @@ export async function fetchWithAuth(url, options = {}) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Request failed: ${res.status} ${text}`);
+    throw new Error(`Request failed ${res.status}: ${text}`);
   }
 
   try {
