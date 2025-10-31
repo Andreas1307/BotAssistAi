@@ -18,29 +18,40 @@ export async function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
+  console.log("🧭 [initShopifyAppBridge] Params →", { shop, host });
+  console.log("🪞 Embedded check:", isEmbedded());
+
   if (!shop) {
     console.error("❌ Missing 'shop' param, cannot init App Bridge");
     return null;
   }
 
-  // If not inside Shopify iframe or missing host → top-level auth
+  // Handle first load or missing host param
   if (!isEmbedded() || !host) {
-    const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    console.warn("⚠️ Not embedded or missing host — redirecting to top-level auth");
+
+    // Top-level redirect (allowed)
     if (window.top === window.self) {
-      // Normal browser context
-      window.location.href = authUrl;
+      const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      console.log("🔁 Top-level redirect to:", redirectUrl);
+      window.location.href = redirectUrl;
     } else {
-      // Embedded context → use App Bridge Redirect
+      // Embedded case → use App Bridge redirect
+      console.log("🧭 Inside iframe — using App Bridge Redirect to auth");
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: host || "",
       });
       const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, authUrl);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
     }
     return null;
   }
 
+  // Initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -62,10 +73,16 @@ export async function getAppBridgeInstance() {
   const host = params.get("host");
   const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY;
 
-  if (!isEmbedded() || !host) return null;
+  console.log("🧩 [getAppBridgeInstance] →", { host, apiKey });
+
+  if (!isEmbedded() || !host) {
+    console.warn("⚠️ Not embedded or missing host — returning null");
+    return null;
+  }
 
   const app = createApp({ apiKey, host, forceRedirect: true });
   window.appBridge = app;
+  console.log("✅ Created new App Bridge instance");
   return app;
 }
 
@@ -73,12 +90,16 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 export function safeRedirect(url) {
-  const app = getAppBridgeInstance();
+  console.log("🚀 [safeRedirect] Redirecting to:", url);
+
+  const app = window.appBridge;
 
   if (isEmbedded() && app) {
+    console.log("🧭 Inside iframe — using App Bridge redirect");
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
+    console.log("🌍 Outside iframe — using window.top.location.href");
     window.top.location.href = url;
   }
 }
@@ -88,16 +109,24 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
+  console.group("🧩 [fetchWithAuth]");
+  console.log("➡️ URL:", url);
+  console.log("🧾 Options:", options);
+
   let token = null;
 
   try {
     const app = await getAppBridgeInstance();
     if (app) {
-      token = await getSessionToken(app); // ✅ get fresh JWT
+      console.log("🪄 Requesting Shopify session token via App Bridge...");
+      token = await getSessionToken(app);
+      console.log("✅ Received Shopify session JWT:", token ? token.slice(0, 25) + "..." : "(none)");
       window.sessionToken = token;
+    } else {
+      console.warn("⚠️ App Bridge not initialized — cannot get JWT");
     }
   } catch (err) {
-    console.warn("⚠️ Could not get Shopify session token:", err.message);
+    console.error("❌ Error getting session token:", err);
   }
 
   const headers = {
@@ -113,22 +142,34 @@ export async function fetchWithAuth(url, options = {}) {
   };
 
   if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body =
+      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
   const fullUrl = url.startsWith("http")
     ? url
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
+  console.log("🌐 Fetching:", fullUrl, "\n🧾 Headers:", headers);
+
   const res = await fetch(fullUrl, opts);
+
+  console.log("📥 Response Status:", res.status);
+
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const text = await res.text();
+    console.error("❌ Request failed:", res.status, text);
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
   try {
-    return await res.json();
+    const json = await res.json();
+    console.log("✅ JSON Response:", json);
+    console.groupEnd();
+    return json;
   } catch {
+    console.warn("⚠️ No JSON body in response");
+    console.groupEnd();
     return null;
   }
 }
