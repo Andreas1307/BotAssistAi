@@ -5,14 +5,13 @@ module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    // 1️⃣ Shopify Session Token (JWT)
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
       console.log("🧾 [verifySessionToken] Received token:", token.slice(0, 25) + "...");
 
       try {
-        // ✅ Use shopify.api to decode session token in v11
-        const payload = await shopify.api.decodeSessionToken(token);
+        // ✅ FIXED: decode via utils, not api
+        const payload = await shopify.utils.decodeSessionToken(token);
         console.log("🪞 Decoded JWT payload:", payload);
 
         if (!payload) throw new Error("Invalid JWT payload");
@@ -39,7 +38,6 @@ module.exports = async function verifySessionToken(req, res, next) {
       }
     }
 
-    // 2️⃣ Fallback for external access
     console.log("ℹ️ No Shopify session token — treating as external user");
     req.shopify = null;
     next();
