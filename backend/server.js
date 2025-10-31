@@ -1227,26 +1227,30 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     
-    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
-    console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
+    const redirectUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
+    console.log(`➡️ Redirecting to dashboard: ${redirectUrl}`);
 
+    console.log(`✅ OAuth complete — redirecting embedded app for ${shop}`);
     res.status(200).send(`
       <!doctype html>
       <html>
-        <head><meta charset="utf-8" /></head>
-        <body>
+        <head>
+          <meta charset="utf-8"/>
           <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
-            const AppBridge = window["app-bridge"];
+            const AppBridge = window['app-bridge'];
             const createApp = AppBridge.default || AppBridge;
             const app = createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${host}",
-              forceRedirect: true,
+              forceRedirect: true
             });
             const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.APP, "${redirectUrl}");
           </script>
+        </head>
+        <body>
+          Redirecting to your embedded app...
         </body>
       </html>
     `);
