@@ -1,3 +1,4 @@
+const { decodeSessionToken } = require('@shopify/shopify-api'); // 👈 import directly
 const { shopify } = require("./shopify");
 const customSessionStorage = require("./sessionStorage");
 
@@ -10,8 +11,8 @@ module.exports = async function verifySessionToken(req, res, next) {
       console.log("🧾 [verifySessionToken] Received token:", token.slice(0, 25) + "...");
 
       try {
-        // ✅ FIXED: decode via utils, not api
-        const payload = await shopify.utils.decodeSessionToken(token);
+        // ✅ use imported helper
+        const payload = await decodeSessionToken(token);
         console.log("🪞 Decoded JWT payload:", payload);
 
         if (!payload) throw new Error("Invalid JWT payload");
