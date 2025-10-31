@@ -23,34 +23,23 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
+  // If not inside Shopify iframe or missing host → top-level auth
   if (!isEmbedded() || !host) {
-    console.log("⚠️ Not embedded or missing host — redirecting to auth via top-level window");
-    // Use top-level navigation only if we're NOT embedded
+    const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     if (window.top === window.self) {
-      window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      // Normal browser context
+      window.location.href = authUrl;
     } else {
-      // Use App Bridge Redirect to safely exit iframe
+      // Embedded context → use App Bridge Redirect
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: host || "",
       });
       const redirect = Redirect.create(app);
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-      );
+      redirect.dispatch(Redirect.Action.REMOTE, authUrl);
     }
     return null;
   }
-  
-
-if (!host) {
-  console.warn("⚠️ Missing host param — retrying App Bridge init");
-  setTimeout(initShopifyAppBridge, 500); // retry once host appears
-  return null;
-}
-
-
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -62,6 +51,7 @@ if (!host) {
   console.log("✅ App Bridge initialized for", shop);
   return app;
 }
+
 /**
  * Returns existing App Bridge instance if available
  */
@@ -98,17 +88,28 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  let token = null;
 
-  const defaultHeaders = {
+  try {
+    const app = await getAppBridgeInstance();
+    if (app) {
+      token = await getSessionToken(app); // ✅ get fresh JWT
+      window.sessionToken = token;
+    }
+  } catch (err) {
+    console.warn("⚠️ Could not get Shopify session token:", err.message);
+  }
+
+  const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    headers,
+    credentials: "include",
   };
 
   if (options.body) {
@@ -120,7 +121,6 @@ export async function fetchWithAuth(url, options = {}) {
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
   const res = await fetch(fullUrl, opts);
-
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`Request failed: ${res.status} ${errText}`);
