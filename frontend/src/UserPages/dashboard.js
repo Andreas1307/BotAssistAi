@@ -655,12 +655,12 @@ const fetchConvHistory = async (loadAllChats = false) => {
 
   // LOADING
   useEffect(() => {
-    if (loading) return; // Ensure the hook always runs in the same order
+    if (loading) return; 
   
     if (user) {
       navigate(`/${user?.username}/dashboard`);
     } else {
-      console.log("USERRRRRRR", user)
+      navigate("/")
     }
   }, [user, loading, navigate]);
 

@@ -23,13 +23,21 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // if running outside iframe (standalone or first load)
-  if (!isEmbedded() || !host) {
-    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
-      shop
-    )}`;
-    return null;
-  }
+// ✅ Fixed
+if (!isEmbedded()) {
+  console.log("🧭 Not in embedded mode, redirecting to embedded app");
+  const redirectUrl = `https://admin.shopify.com/store/${shop}/apps/botassistai?shop=${encodeURIComponent(shop)}`;
+  window.top.location.href = redirectUrl;
+  return null;
+}
+
+if (!host) {
+  console.warn("⚠️ Missing host param — retrying App Bridge init");
+  setTimeout(initShopifyAppBridge, 500); // retry once host appears
+  return null;
+}
+
+
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
