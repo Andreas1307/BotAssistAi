@@ -1227,30 +1227,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     
-    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
-    console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-
-    res.status(200).send(`
-      <!doctype html>
-      <html>
-        <head><meta charset="utf-8" /></head>
-        <body>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script>
-            const AppBridge = window["app-bridge"];
-            const createApp = AppBridge.default || AppBridge;
-            const app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true,
-            });
-            const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
-          </script>
-        </body>
-      </html>
-    `);
-
+    const redirectUrl = `https://admin.shopify.com/store/${shop.replace('.myshopify.com', '')}/apps/botassistai?shop=${shop}&host=${encodeURIComponent(req.query.host)}`;
+    return res.redirect(redirectUrl);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
