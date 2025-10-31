@@ -23,13 +23,26 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-// ✅ Fixed
-if (!isEmbedded()) {
-  console.log("🧭 Not in embedded mode, redirecting to embedded app");
-  const redirectUrl = `https://admin.shopify.com/store/${shop}/apps/botassistai?shop=${encodeURIComponent(shop)}`;
-  window.top.location.href = redirectUrl;
-  return null;
-}
+  if (!isEmbedded() || !host) {
+    console.log("⚠️ Not embedded or missing host — redirecting to auth via top-level window");
+    // Use top-level navigation only if we're NOT embedded
+    if (window.top === window.self) {
+      window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    } else {
+      // Use App Bridge Redirect to safely exit iframe
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: host || "",
+      });
+      const redirect = Redirect.create(app);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
+    }
+    return null;
+  }
+  
 
 if (!host) {
   console.warn("⚠️ Missing host param — retrying App Bridge init");
