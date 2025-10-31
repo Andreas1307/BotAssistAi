@@ -1,8 +1,7 @@
-const { shopifyApi } = require('@shopify/shopify-api');
 require('@shopify/shopify-api/adapters/node');
+const { shopifyApi, utils } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
-// instantiate the API once and export it (you already do this elsewhere)
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
@@ -13,6 +12,7 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
+// ✅ Export for other modules
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -20,8 +20,8 @@ module.exports = async function verifySessionToken(req, res, next) {
       const token = authHeader.replace("Bearer ", "");
 
       try {
-        // ✅ use the utils attached to your shopify instance
-        const payload = await shopify.utils.decodeSessionToken(token);
+        // ✅ FIX: use utils.decodeSessionToken instead of shopify.utils
+        const payload = await utils.decodeSessionToken(token);
         console.log("🪞 Decoded JWT payload:", payload);
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
