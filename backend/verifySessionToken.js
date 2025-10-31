@@ -1,5 +1,6 @@
 require('@shopify/shopify-api/adapters/node');
-const { shopifyApi, utils } = require('@shopify/shopify-api');
+const { decodeSessionToken } = require('@shopify/shopify-api/runtime');
+const { shopifyApi } = require('@shopify/shopify-api');
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
@@ -12,22 +13,19 @@ const shopify = shopifyApi({
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
 });
 
-// ✅ Export for other modules
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-
       try {
-        // ✅ FIX: use utils.decodeSessionToken instead of shopify.utils
-        const payload = await utils.decodeSessionToken(token);
+        // ✅ FIX: decodeSessionToken now comes from '@shopify/shopify-api/runtime'
+        const payload = await decodeSessionToken(token);
         console.log("🪞 Decoded JWT payload:", payload);
 
         const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
         const onlineSessionId = `${shop}_${payload.sub}`;
         const offlineSessionId = `offline_${shop}`;
-
         const session =
           (await loadCallback(onlineSessionId)) ||
           (await loadCallback(offlineSessionId));
