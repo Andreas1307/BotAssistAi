@@ -199,14 +199,12 @@ const Homepage = () => {
   
 
   useEffect(() => {
-    if (!loading) {
       if (user) {
         navigate(`/${user.username}/dashboard`);
-      } else if (location.pathname !== "/") {
+      } else {
         navigate("/");
       }
-    }
-  }, [user, loading, navigate, location.pathname]);
+  }, [user, navigate]);
   
   if (loading) {
     return null;
