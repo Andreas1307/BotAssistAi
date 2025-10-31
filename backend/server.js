@@ -27,29 +27,21 @@ const bodyParser = require("body-parser");
 const cron = require("node-cron");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
-const { connect } = require("http2");
 const algorithm = "aes-256-cbc";
 const keyString = process.env.ENCRYPTION_KEY;
 const encryptionKey = Buffer.from(keyString, 'hex');
 const ivLength = 16;
 const axios = require('axios');
 const chrono = require('chrono-node');
-const jwt = require('jsonwebtoken');
 const pool = createPool({
 host: process.env.DATABASE_HOST,
 user: process.env.DATABASE_USER,
 password: process.env.DATABASE_PASSWORD,
 database: process.env.DATABASE
 }).promise();
-const { shopifyApi } = require('@shopify/shopify-api');
-const shopifyApiPackage = require('@shopify/shopify-api');
 const verifySessionToken = require('./verifySessionToken');
-const { SHOPIFY_API_KEY, HOST } = process.env;
 const fetchWebhooks = require('./fetchWebhooks');
-const { shopify, Webhook } = require('./shopify');
-const { storeCallback } = require('./sessionStorage');
-const { Session } = require("@shopify/shopify-api");
-const { DeliveryMethod } = require("@shopify/shopify-api");
+const { shopify } = require('./shopify');
 const MySQLStore = require('express-mysql-session')(session);
 const shopifySessionMiddleware = require('./shopifySessionMiddleware');
 const sessionStore = new MySQLStore({

@@ -109,37 +109,67 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  const token = window.sessionToken || getCookie("shopify_online_session");
+  console.group("🧩 [fetchWithAuth]");
+  console.log("➡️ URL:", url);
+  console.log("🧾 Options:", options);
 
-  const defaultHeaders = {
+  let token = null;
+
+  try {
+    const app = await getAppBridgeInstance();
+    if (app) {
+      console.log("🪄 Requesting Shopify session token via App Bridge...");
+      token = await getSessionToken(app);
+      console.log("✅ Received Shopify session JWT:", token ? token.slice(0, 25) + "..." : "(none)");
+      window.sessionToken = token;
+    } else {
+      console.warn("⚠️ App Bridge not initialized — cannot get JWT");
+    }
+  } catch (err) {
+    console.error("❌ Error getting session token:", err);
+  }
+
+  const headers = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
   };
 
   const opts = {
     method: options.method || "GET",
-    headers: { ...defaultHeaders, ...(options.headers || {}) },
-    credentials: "include", // 🔑 allow cookies cross-domain
+    headers,
+    credentials: "include",
   };
 
   if (options.body) {
-    opts.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body =
+      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
   }
 
   const fullUrl = url.startsWith("http")
     ? url
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
+  console.log("🌐 Fetching:", fullUrl, "\n🧾 Headers:", headers);
+
   const res = await fetch(fullUrl, opts);
 
+  console.log("📥 Response Status:", res.status);
+
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Request failed: ${res.status} ${errText}`);
+    const text = await res.text();
+    console.error("❌ Request failed:", res.status, text);
+    throw new Error(`Request failed: ${res.status} ${text}`);
   }
 
   try {
-    return await res.json();
+    const json = await res.json();
+    console.log("✅ JSON Response:", json);
+    console.groupEnd();
+    return json;
   } catch {
+    console.warn("⚠️ No JSON body in response");
+    console.groupEnd();
     return null;
   }
 }
