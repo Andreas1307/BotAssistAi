@@ -18,9 +18,6 @@ export async function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  console.log("🧭 [initShopifyAppBridge] Params →", { shop, host });
-  console.log("🪞 Embedded check:", isEmbedded());
-
   if (!shop) {
     console.error("❌ Missing 'shop' param, cannot init App Bridge");
     return null;
@@ -33,11 +30,9 @@ export async function initShopifyAppBridge() {
     // Top-level redirect (allowed)
     if (window.top === window.self) {
       const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.log("🔁 Top-level redirect to:", redirectUrl);
+      
       window.location.href = redirectUrl;
     } else {
-      // Embedded case → use App Bridge redirect
-      console.log("🧭 Inside iframe — using App Bridge Redirect to auth");
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: host || "",
@@ -59,7 +54,6 @@ export async function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ App Bridge initialized for", shop);
   return app;
 }
 
@@ -73,7 +67,6 @@ export async function getAppBridgeInstance() {
   const host = params.get("host");
   const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY;
 
-  console.log("🧩 [getAppBridgeInstance] →", { host, apiKey });
 
   if (!isEmbedded() || !host) {
     console.warn("⚠️ Not embedded or missing host — returning null");
@@ -82,7 +75,6 @@ export async function getAppBridgeInstance() {
 
   const app = createApp({ apiKey, host, forceRedirect: true });
   window.appBridge = app;
-  console.log("✅ Created new App Bridge instance");
   return app;
 }
 
@@ -90,16 +82,12 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 export function safeRedirect(url) {
-  console.log("🚀 [safeRedirect] Redirecting to:", url);
-
   const app = window.appBridge;
 
   if (isEmbedded() && app) {
-    console.log("🧭 Inside iframe — using App Bridge redirect");
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    console.log("🌍 Outside iframe — using window.top.location.href");
     window.top.location.href = url;
   }
 }
@@ -109,69 +97,85 @@ export function safeRedirect(url) {
  * Falls back to plain fetch when running standalone
  */
 export async function fetchWithAuth(url, options = {}) {
-  console.group("🧩 [fetchWithAuth]");
-  console.log("➡️ URL:", url);
-  console.log("🧾 Options:", options);
 
-  let token = null;
-
+  // 1️⃣ Always try to get or reuse a Shopify session token
+  let token = window.sessionToken || null;
   try {
     const app = await getAppBridgeInstance();
     if (app) {
       token = await getSessionToken(app);
       window.sessionToken = token;
-      console.log("✅ Received Shopify session JWT:", token?.slice(0, 25) + "...");
+      console.log("✅ Shopify JWT received:", token?.slice(0, 25) + "...");
     } else {
       console.warn("⚠️ App Bridge not initialized — cannot get JWT");
     }
   } catch (err) {
-    console.error("❌ Error getting session token:", err);
+    console.error("❌ Error fetching session token:", err);
   }
 
-  const headers = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
-  };
-
-  // Only set Content-Type to JSON if body exists and is NOT FormData
-  if (options.body && !(options.body instanceof FormData) && !headers['Content-Type']) {
-    headers['Content-Type'] = 'application/json';
+  // 2️⃣ Merge headers cleanly, allowing user overrides
+  const headers = new Headers(options.headers || {});
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
+  // 3️⃣ Automatically handle Content-Type
+  const bodyIsFormData = options.body instanceof FormData;
+  const bodyIsJSON = options.body && !bodyIsFormData && typeof options.body === "object";
+
+  if (bodyIsJSON && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  // 4️⃣ Build fetch options
   const opts = {
-    method: options.method || 'GET',
+    method: options.method || "GET",
     headers,
-    credentials: 'include',
+    credentials: "include", // always send cookies
+    body: bodyIsFormData
+      ? options.body
+      : bodyIsJSON
+      ? JSON.stringify(options.body)
+      : options.body, // supports text, Blob, etc.
   };
 
-  if (options.body) {
-    opts.body = options.body instanceof FormData ? options.body : JSON.stringify(options.body);
+  // 5️⃣ Construct full URL (handles relative paths)
+  const fullUrl = url.startsWith("http")
+    ? url
+    : `${window.directory || "https://api.botassistai.com"}${url}`;
+
+  console.log("🌐 Fetching:", fullUrl, "\n🧾 Headers:", Object.fromEntries(headers));
+
+  // 6️⃣ Send the request
+  const res = await fetch(fullUrl, opts);
+  console.log("📥 Response:", res.status, res.statusText);
+
+  // 7️⃣ Retry once if token expired (401)
+  if (res.status === 401 && !options._retried) {
+    console.warn("🔄 Token expired — refreshing App Bridge token...");
+    window.sessionToken = null;
+    return fetchWithAuth(url, { ...options, _retried: true });
   }
 
-  const fullUrl = url.startsWith('http') ? url : `${window.directory || 'https://api.botassistai.com'}${url}`;
+  // 8️⃣ Handle response
+  let data;
+  const contentType = res.headers.get("Content-Type") || "";
 
-  console.log("🌐 Fetching:", fullUrl, "\n🧾 Headers:", headers);
-
-  const res = await fetch(fullUrl, opts);
-
-  console.log("📥 Response Status:", res.status);
+  if (contentType.includes("application/json")) {
+    data = await res.json();
+  } else if (contentType.includes("text/")) {
+    data = await res.text();
+  } else {
+    data = await res.blob(); // fallback for files, images, etc.
+  }
 
   if (!res.ok) {
-    const text = await res.text();
-    console.error("❌ Request failed:", res.status, text);
-    throw new Error(`Request failed: ${res.status} ${text}`);
+    console.error("❌ Request failed:", res.status, data);
+    throw new Error(`Request failed: ${res.status} ${JSON.stringify(data)}`);
   }
 
-  try {
-    const json = await res.json();
-    console.log("✅ JSON Response:", json);
-    console.groupEnd();
-    return json;
-  } catch {
-    console.warn("⚠️ No JSON body in response");
-    console.groupEnd();
-    return null;
-  }
+  console.groupEnd();
+  return data;
 }
 
 
