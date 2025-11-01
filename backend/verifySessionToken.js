@@ -1,3 +1,4 @@
+const { decodeSessionToken } = require('@shopify/shopify-api');
 const { shopify } = require('./shopify');
 const { loadCallback } = require('./sessionStorage');
 
@@ -13,7 +14,8 @@ module.exports = async function verifySessionToken(req, res, next) {
   console.log('🧾 Received token:', token.slice(0, 25) + '...');
 
   try {
-    const payload = await shopify.session.decodeSessionToken(token);
+    // ✅ Correct call — no .session property
+    const payload = await decodeSessionToken(token);
     console.log('🪞 Decoded JWT payload:', payload);
 
     const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
