@@ -2435,6 +2435,13 @@ app.post("/ask-ai", async (req, res) => {
   console.log("🧠 Incoming /ask-ai request body:", req.body);
   console.log("🧾 Headers:", req.headers);
   try {
+
+    const isShopify = !!req.shopify;
+    const shop = req.shopify?.shop;
+    const userType = isShopify ? "shopify" : "standard";
+
+
+    console.log("Log, ", isShopify, shop, userType)
       const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
  
       const [users] = await pool.query("SELECT * FROM users")

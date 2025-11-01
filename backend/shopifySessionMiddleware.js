@@ -10,7 +10,6 @@ async function shopifySessionMiddleware(req, res, next) {
   }
 
   const token = authHeader.replace('Bearer ', '');
-  console.log('🧾 Received token:', token.slice(0, 25) + '...');
 
   try {
     // ✅ Decode and verify JWT using your Shopify app secret
@@ -18,7 +17,6 @@ async function shopifySessionMiddleware(req, res, next) {
       algorithms: ['HS256'],
     });
 
-    console.log('🪞 Decoded JWT payload:', payload);
 
     const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
     const onlineSessionId = `${shop}_${payload.sub}`;
@@ -34,7 +32,6 @@ async function shopifySessionMiddleware(req, res, next) {
     }
 
     req.shopify = { shop, session, payload };
-    console.log('✅ Shopify session validated via JWT:', shop);
     next();
   } catch (err) {
     console.error('❌ Invalid Shopify session token:', err.message);

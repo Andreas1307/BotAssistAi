@@ -11,7 +11,6 @@ module.exports = async function verifySessionToken(req, res, next) {
   }
 
   const token = authHeader.replace('Bearer ', '');
-  console.log('🧾 Received token:', token.slice(0, 25) + '...');
 
   try {
     // ✅ Decode and verify Shopify JWT
@@ -19,7 +18,6 @@ module.exports = async function verifySessionToken(req, res, next) {
       algorithms: ['HS256'],
     });
 
-    console.log('🪞 Decoded JWT payload:', payload);
 
     if (!payload.dest) {
       console.warn('⚠️ Token does not contain "dest" — treating as non-Shopify JWT');
@@ -41,7 +39,6 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     req.shopify = { shop, session, payload };
-    console.log('✅ Shopify session validated via JWT:', shop);
     next();
   } catch (err) {
     console.warn('❌ Invalid Shopify session token:', err.message);
