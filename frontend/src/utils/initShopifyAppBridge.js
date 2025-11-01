@@ -17,6 +17,13 @@ export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
   const host = params.get("host");
+  
+  // 🩹 Shopify Web Vitals bug workaround
+if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
+  try {
+    delete window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__;
+  } catch {}
+}
 
   if (!shop) {
     console.error("❌ Missing 'shop' param, cannot init App Bridge");
@@ -105,7 +112,6 @@ export async function fetchWithAuth(url, options = {}) {
     if (app) {
       token = await getSessionToken(app);
       window.sessionToken = token;
-      console.log("✅ Shopify JWT received:", token?.slice(0, 25) + "...");
     } else {
       console.warn("⚠️ App Bridge not initialized — cannot get JWT");
     }
@@ -144,11 +150,9 @@ export async function fetchWithAuth(url, options = {}) {
     ? url
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
-  console.log("🌐 Fetching:", fullUrl, "\n🧾 Headers:", Object.fromEntries(headers));
 
   // 6️⃣ Send the request
   const res = await fetch(fullUrl, opts);
-  console.log("📥 Response:", res.status, res.statusText);
 
   // 7️⃣ Retry once if token expired (401)
   if (res.status === 401 && !options._retried) {
