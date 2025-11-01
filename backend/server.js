@@ -1020,10 +1020,22 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   const hasTopLevel = !!req.cookies.shopify_toplevel;
-  if (!hasTopLevel) return res.redirect(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`);
+  console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
+
+  if (!hasTopLevel) {
+    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
+    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
+  }
+
+  if (authInProgress.has(shop)) {
+    console.log(`⚠️ Auth already in progress for ${shop}`);
+    return res.status(200).send("OAuth in progress, please wait...");
+  }
+  authInProgress.add(shop);
 
   try {
-    // Begin OAuth flow
+    console.log("🚀 [INSTALL] Beginning Shopify OAuth");
+    
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1032,21 +1044,26 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    // --- FIX: widen OAuth cookies
+    // 🧠 Important: we must not touch headers after this point
+    // So the rest runs only if headers weren't sent yet
     if (!res.headersSent) {
       const cookies = res.getHeader("set-cookie") || [];
-      const fixedCookies = cookies.map(cookie =>
-        cookie.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
+      const widenedCookies = cookies.map(c =>
+        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
       );
-      res.setHeader("set-cookie", fixedCookies);
-      console.log("🍪 OAuth cookies widened:", fixedCookies);
+      res.setHeader("set-cookie", widenedCookies);
+      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
     } else {
-      console.log("ℹ️ Headers already sent by Shopify OAuth redirect");
+      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
     }
 
   } catch (err) {
-    console.error("❌ Shopify OAuth error:", err);
-    if (!res.headersSent) res.status(500).send("Error starting OAuth");
+    console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
+    if (!res.headersSent) {
+      res.status(500).send("Error starting Shopify OAuth");
+    }
+  } finally {
+    authInProgress.delete(shop);
   }
 });
 
@@ -1203,7 +1220,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     
-    const dashboardUrl = `https://www.botassistai.com/${user.username}/dashboard?shop=${encodeURIComponent(shop)}`;
+    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
     res.status(200).send(`
@@ -1221,8 +1238,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               forceRedirect: true,
             });
             const Redirect = AppBridge.actions.Redirect.create(app);
-         Redirect.dispatch(AppBridge.actions.Redirect.Action.REMOTE, "${dashboardUrl}");
-
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
           </script>
         </body>
       </html>
