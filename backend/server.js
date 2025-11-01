@@ -2431,7 +2431,7 @@ let user_id;
 const conversationId = `${user_id}-${generateRandomToken()}`;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-app.post("/ask-ai", verifySessionToken, async (req, res) => {
+app.post("/ask-ai", async (req, res) => {
   
   try {
       const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
