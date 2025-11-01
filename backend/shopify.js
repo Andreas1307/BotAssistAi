@@ -1,6 +1,6 @@
 require('@shopify/shopify-api/adapters/node');
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { storeCallback, loadCallback, deleteCallback } = require('../sessionStorage');
+const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
