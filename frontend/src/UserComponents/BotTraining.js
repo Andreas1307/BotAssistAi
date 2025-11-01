@@ -96,7 +96,7 @@ const SupportBotCustomization = () => {
           }
         );
 
-        const data = response.data.config || {};
+        const data = response.config || {};
   
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,

@@ -207,7 +207,6 @@ const [shopifyUser, setShopifyUser] = useState(false)
         const res = await fetchWithAuth(`/chat-history?userId=${userId}`, {
           method: "GET",
         });
-  console.log("ANAL?Y", res)
         if (res.messages) {
           const timeRanges = new Array(6).fill(0);
   
