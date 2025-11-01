@@ -60,16 +60,6 @@ const SupportBotCustomization = () => {
   };
 
   const [shopifyUser, setShopifyUser] = useState(false)
- 
-
-
-  
-  const activatePlan = async () => {
-    await handleBilling(user.user_id);
-  };
-
-
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -88,6 +78,12 @@ const SupportBotCustomization = () => {
     fetchUser();
   }, []);
 
+
+  
+  const activatePlan = async () => {
+    await handleBilling(user.user_id);
+  };
+
   useEffect(() => {
       if (!user?.username) return;
   
@@ -100,7 +96,7 @@ const SupportBotCustomization = () => {
           }
         );
 
-        const data = response.config || {};
+        const data = response.data.config || {};
   
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,
@@ -137,7 +133,6 @@ const SupportBotCustomization = () => {
         const response = await fetchWithAuth(`/get-membership?userId=${userId}`, {
           method: "GET",
         });
-
         if(response.message.subscription_plan === "Pro") {
           setMembership(true)
         } else {
@@ -204,10 +199,10 @@ const setFieldValue = (field, value) => {
     formData.append("file", file);
   
     try {
-      const response = await axios.post(`/upload-file`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      });
+      const response = await fetchWithAuth("/upload-file", {
+        method: "POST",
+        body: formData
+            });
   
       setUploadStatus("File uploaded successfully!");
     } catch (error) {

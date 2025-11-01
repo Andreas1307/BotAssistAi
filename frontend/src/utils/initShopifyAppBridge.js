@@ -118,10 +118,9 @@ export async function fetchWithAuth(url, options = {}) {
   try {
     const app = await getAppBridgeInstance();
     if (app) {
-      console.log("🪄 Requesting Shopify session token via App Bridge...");
       token = await getSessionToken(app);
-      console.log("✅ Received Shopify session JWT:", token ? token.slice(0, 25) + "..." : "(none)");
       window.sessionToken = token;
+      console.log("✅ Received Shopify session JWT:", token?.slice(0, 25) + "...");
     } else {
       console.warn("⚠️ App Bridge not initialized — cannot get JWT");
     }
@@ -130,25 +129,26 @@ export async function fetchWithAuth(url, options = {}) {
   }
 
   const headers = {
-    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
 
+  // Only set Content-Type to JSON if body exists and is NOT FormData
+  if (options.body && !(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const opts = {
-    method: options.method || "GET",
+    method: options.method || 'GET',
     headers,
-    credentials: "include",
+    credentials: 'include',
   };
 
   if (options.body) {
-    opts.body =
-      typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+    opts.body = options.body instanceof FormData ? options.body : JSON.stringify(options.body);
   }
 
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const fullUrl = url.startsWith('http') ? url : `${window.directory || 'https://api.botassistai.com'}${url}`;
 
   console.log("🌐 Fetching:", fullUrl, "\n🧾 Headers:", headers);
 
@@ -173,6 +173,7 @@ export async function fetchWithAuth(url, options = {}) {
     return null;
   }
 }
+
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
