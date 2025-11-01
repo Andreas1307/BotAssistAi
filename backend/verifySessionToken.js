@@ -1,14 +1,13 @@
-require('@shopify/shopify-api/adapters/node'); // Node adapter
+require('@shopify/shopify-api/adapters/node');
 
 const { shopifyApi } = require('@shopify/shopify-api');
-const { decodeSessionToken } = require('@shopify/shopify-api/runtime'); // ✅ Correct import
 const { storeCallback, loadCallback, deleteCallback } = require('./sessionStorage');
 
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_SCOPES.split(','),
-  hostName: "api.botassistai.com", // NO protocol
+  hostName: "api.botassistai.com",
   apiVersion: "2025-04",
   isEmbeddedApp: true,
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
@@ -17,6 +16,7 @@ const shopify = shopifyApi({
 module.exports = async function verifySessionToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader?.startsWith("Bearer ")) {
       req.shopify = null;
       return next();
@@ -25,8 +25,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     const token = authHeader.replace("Bearer ", "");
 
     try {
-      // ✅ Decode JWT token correctly
-      const payload = await decodeSessionToken(token);
+      // ✅ Decode the session token using shopify.Session.decode (v11+)
+      const payload = shopify.session.decode(token); // <-- the correct method
       console.log("🪞 Decoded JWT payload:", payload);
 
       const shop = payload.dest.replace(/^https:\/\//, "").toLowerCase();
