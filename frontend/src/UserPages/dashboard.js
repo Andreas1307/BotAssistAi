@@ -540,7 +540,7 @@ const setBotStatus = async (status) => {
 
 const handleLogout = async () => {
   try {
-    await fetchWithAuth(`/logout`);
+    await fetchWithAuth(`/logout`, { method: "POST"});
     navigate("/");
   } catch (error) {
     console.log("Logout failed", error);
