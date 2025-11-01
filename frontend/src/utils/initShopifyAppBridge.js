@@ -25,6 +25,7 @@ if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
   } catch {}
 }
 
+
   if (!shop) {
     console.error("❌ Missing 'shop' param, cannot init App Bridge");
     return null;

@@ -501,7 +501,7 @@ You received this email because you had an account with us.
 }
 });
 
-app.get('/chatbot-loader.js', verifySessionToken, async (req, res) => {
+app.get('/chatbot-loader.js', async (req, res) => {
   const shop = Array.isArray(req.query.shop) ? req.query.shop[0] : req.query.shop?.toLowerCase();
   if (!shop) return res.status(400).send('Missing or invalid shop');
 
@@ -2432,7 +2432,8 @@ const conversationId = `${user_id}-${generateRandomToken()}`;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post("/ask-ai", async (req, res) => {
-  
+  console.log("🧠 Incoming /ask-ai request body:", req.body);
+  console.log("🧾 Headers:", req.headers);
   try {
       const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
  
