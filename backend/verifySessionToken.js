@@ -1,5 +1,5 @@
 require('@shopify/shopify-api/adapters/node');
-const { Shopify } = require('@shopify/shopify-api');
+const jwt = require('jsonwebtoken'); 
 const { loadCallback } = require('./sessionStorage');
 
 module.exports = async function verifySessionToken(req, res, next) {
@@ -14,9 +14,11 @@ module.exports = async function verifySessionToken(req, res, next) {
   console.log('🧾 Received token:', token.slice(0, 25) + '...');
 
   try {
-    // ✅ v11.13.0: decodeJwt replaces decodeSessionToken
-    const payload = Shopify.Utils.decodeJwt(token, process.env.SHOPIFY_API_SECRET);
-    if (!payload) throw new Error('Invalid JWT payload');
+    // ✅ Decode and verify Shopify JWT
+    const payload = jwt.verify(token, process.env.SHOPIFY_API_SECRET, {
+      algorithms: ['HS256'],
+    });
+
     console.log('🪞 Decoded JWT payload:', payload);
 
     const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
