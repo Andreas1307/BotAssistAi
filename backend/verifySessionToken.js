@@ -5,8 +5,8 @@ const { loadCallback } = require('./sessionStorage');
 module.exports = async function verifySessionToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    req.shopify = null;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    req.shopify = null; // Explicitly mark as not a Shopify session
     return next();
   }
 
@@ -20,6 +20,12 @@ module.exports = async function verifySessionToken(req, res, next) {
     });
 
     console.log('🪞 Decoded JWT payload:', payload);
+
+    if (!payload.dest) {
+      console.warn('⚠️ Token does not contain "dest" — treating as non-Shopify JWT');
+      req.shopify = null;
+      return next();
+    }
 
     const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
     const onlineSessionId = `${shop}_${payload.sub}`;
