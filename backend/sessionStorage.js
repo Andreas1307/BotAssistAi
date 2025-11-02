@@ -69,7 +69,6 @@ module.exports = {
       onlineAccessInfo: data.onlineAccessInfo,
     });
 
-    console.log("🔍 Loaded session:", id);
     return session;
   },
 
