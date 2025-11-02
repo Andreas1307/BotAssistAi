@@ -83,7 +83,7 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 
-function safeRedirect(url) {
+export function safeRedirect(url) {
   const embedded = window.top !== window.self;
 
   // Create App Bridge instance if inside iframe
