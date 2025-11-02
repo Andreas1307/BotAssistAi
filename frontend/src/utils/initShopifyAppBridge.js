@@ -33,26 +33,21 @@ if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
 
   // Handle first load or missing host param
   if (!isEmbedded() || !host) {
-    console.warn("⚠️ Not embedded or missing host — redirecting to top-level auth");
-
-    // Top-level redirect (allowed)
+    const topLevelAuthUrl = `https://botassistai.com/auth?shop=${encodeURIComponent(shop)}`;
+  
     if (window.top === window.self) {
-      const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      
-      window.location.href = redirectUrl;
+      window.location.href = topLevelAuthUrl;
     } else {
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: host || "",
       });
       const redirect = Redirect.create(app);
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-      );
+      redirect.dispatch(Redirect.Action.REMOTE, topLevelAuthUrl);
     }
     return null;
   }
+  
 
   // Initialize App Bridge
   const app = createApp({
