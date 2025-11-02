@@ -458,6 +458,7 @@ const Integrations = () => {
     fetchBotStatus();
   }, [user]);
 
+
   const setBotStatus = async (status) => {
     if (!user) return;
     const userId = user.user_id;
@@ -466,8 +467,7 @@ const Integrations = () => {
         userId,
         aiBot: status ? 1 : 0, // convert boolean to 1/0
       }).toString();
-      
-      await fetchWithAuth(`/set-bot-status?queryParams=${queryParams}`);
+      await fetchWithAuth(`/set-bot-status?userId=${userId}&aiBot=${status ? 1 : 0}`);
     } catch (e) {
       console.log("Error occurred with setting bot on or off", e);
       showErrorNotification();
