@@ -23,19 +23,20 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // Only create App Bridge when embedded and host exists
+  // Embedded app with host → initialize App Bridge
   if (window.top !== window.self && host) {
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
-      forceRedirect: true,
+      forceRedirect: true, // forces safe redirect if needed
     });
+
     window.appBridge = app;
     return app;
   }
 
-  // Not embedded → nothing to initialize
   return null;
+
 }
 
 /**
@@ -67,7 +68,7 @@ export function safeRedirect(url) {
   const app = window.appBridge;
 
   if (app) {
-    // Inside Shopify iframe → always use App Bridge
+    // Inside Shopify admin iframe → always use App Bridge REMOTE redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
@@ -75,7 +76,6 @@ export function safeRedirect(url) {
     window.location.href = url;
   }
 }
-
 
 /**
  * Fetch with App Bridge auth token if inside Shopify
