@@ -7,7 +7,7 @@ export async function handleBilling(userId) {
   try {
     const res = await fetchWithAuth(`${directory}/create-subscription2`, {
       method: "POST",
-      body: userId
+      body: { userId }
     });
 
     const data = res;
