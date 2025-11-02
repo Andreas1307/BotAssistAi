@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Shopify Auth Redirect</title>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get("shop");
+
+      if (shop) {
+        // ✅ This safely redirects outside Shopify iframe
+        window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      } else {
+        document.body.innerText = "Missing shop parameter.";
+      }
+    </script>
+  </head>
+  <body></body>
+</html>

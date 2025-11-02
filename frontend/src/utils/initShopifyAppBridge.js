@@ -17,39 +17,39 @@ export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
   const host = params.get("host");
-  
-  // 🩹 Shopify Web Vitals bug workaround
-if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
-  try {
-    delete window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__;
-  } catch {}
-}
 
+  if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
+    try {
+      delete window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__;
+    } catch {}
+  }
 
   if (!shop) {
     console.error("❌ Missing 'shop' param, cannot init App Bridge");
     return null;
   }
 
-  // Handle first load or missing host param
+  // 🧭 Step 1: Handle top-level auth redirect
   if (!isEmbedded() || !host) {
     const topLevelAuthUrl = `https://botassistai.com/auth?shop=${encodeURIComponent(shop)}`;
-  
-    if (window.top === window.self) {
-      window.location.href = topLevelAuthUrl;
-    } else {
+
+    // Inside Shopify iframe
+    if (isEmbedded()) {
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: host || "",
       });
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, topLevelAuthUrl);
+    } else {
+      // Not inside iframe — direct redirect
+      window.location.href = topLevelAuthUrl;
     }
+
     return null;
   }
-  
 
-  // Initialize App Bridge
+  // 🧭 Step 2: Normal embedded app init
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
