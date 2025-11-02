@@ -18,24 +18,16 @@ export async function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  if (!shop) {
-    console.error("❌ Missing 'shop' param");
-    return null;
-  }
+  if (!shop || !host) return null;
 
-  // Embedded app with host → initialize App Bridge
-  if (window.top !== window.self && host) {
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true, // forces safe redirect if needed
-    });
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
 
-    window.appBridge = app;
-    return app;
-  }
-
-  return null;
+  window.appBridge = app;
+  return app;
 
 }
 
@@ -68,12 +60,10 @@ export function safeRedirect(url) {
   const app = window.appBridge;
 
   if (app) {
-    // Inside Shopify admin iframe → always use App Bridge REMOTE redirect
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
+    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ works inside iframe
   } else {
-    // Standalone → normal top-level redirect
-    window.location.href = url;
+    window.location.href = url; // ✅ standalone app fallback
   }
 }
 
