@@ -17,50 +17,33 @@ export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
   const host = params.get("host");
-  
-  // 🩹 Shopify Web Vitals bug workaround
-if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
-  try {
-    delete window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__;
-  } catch {}
-}
-
 
   if (!shop) {
-    console.error("❌ Missing 'shop' param, cannot init App Bridge");
+    console.error("❌ Missing 'shop' param");
     return null;
   }
 
-  // Handle first load or missing host param
-  if (!isEmbedded() || !host) {
-    console.warn("⚠️ Not embedded or missing host — redirecting to top-level auth");
+  const embedded = window.top !== window.self;
 
-    // Top-level redirect (allowed)
-    if (window.top === window.self) {
-      const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      
-      window.location.href = redirectUrl;
-    } else {
-      const app = createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host: host || "",
-      });
-      const redirect = Redirect.create(app);
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-      );
-    }
+  if (embedded && !host) {
+    // Embedded but missing host → use App Bridge REMOTE redirect
+    const app = createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: "" });
+    const redirect = Redirect.create(app);
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+    );
     return null;
   }
 
-  // Initialize App Bridge
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: true,
-  });
+  if (!embedded) {
+    // Standalone → use window.top.location.href
+    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    return null;
+  }
 
+  // Normal embedded initialization
+  const app = createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host, forceRedirect: true });
   window.appBridge = app;
   return app;
 }
@@ -93,11 +76,11 @@ export async function safeRedirect(url) {
   const app = await getAppBridgeInstance();
 
   if (app) {
-    // Inside Shopify admin iframe
+    // Embedded: use App Bridge redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Standalone / not embedded
+    // Standalone: top-level navigation
     window.top.location.href = url;
   }
 }
