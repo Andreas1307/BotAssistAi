@@ -40,11 +40,19 @@ export async function initShopifyAppBridge() {
       return null;
     }
 
-    // ✅ Not embedded → regular top-level redirect is allowed
-    if (!embedded) {
-      window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    if (embedded && !host) {
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: "",
+      });
+      const redirect = Redirect.create(app);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
       return null;
     }
+    
 
     // ✅ Normal embedded init path
     const app = createApp({
