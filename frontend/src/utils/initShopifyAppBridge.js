@@ -23,29 +23,19 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  const embedded = isEmbedded();
-
-  // Inside iframe but missing host → use App Bridge REMOTE redirect
-  if (embedded && !host) {
-    const app = createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: "" });
-    const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-    );
-    return null;
+  // Only create App Bridge when embedded and host exists
+  if (window.top !== window.self && host) {
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
+    window.appBridge = app;
+    return app;
   }
 
-  // Outside iframe → safe to top-level redirect
-  if (!embedded) {
-    window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    return null;
-  }
-
-  // Normal embedded initialization
-  const app = createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host, forceRedirect: true });
-  window.appBridge = app;
-  return app;
+  // Not embedded → nothing to initialize
+  return null;
 }
 
 /**
@@ -77,11 +67,11 @@ export function safeRedirect(url) {
   const app = window.appBridge;
 
   if (app) {
-    // Inside Shopify iframe → use App Bridge REMOTE redirect
+    // Inside Shopify iframe → always use App Bridge
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Standalone → top-level navigation is safe
+    // Standalone → normal top-level redirect
     window.location.href = url;
   }
 }
