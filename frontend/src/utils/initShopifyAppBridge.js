@@ -89,13 +89,15 @@ export async function getAppBridgeInstance() {
 /**
  * Safe redirect (embedded or standalone)
  */
-export function safeRedirect(url) {
-  const app = window.appBridge;
+export async function safeRedirect(url) {
+  const app = await getAppBridgeInstance();
 
-  if (isEmbedded() && app) {
+  if (app) {
+    // Inside Shopify admin iframe
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
+    // Standalone / not embedded
     window.top.location.href = url;
   }
 }
