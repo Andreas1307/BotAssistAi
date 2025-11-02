@@ -82,16 +82,22 @@ export async function getAppBridgeInstance() {
 /**
  * Safe redirect (embedded or standalone)
  */
-export async function safeRedirect(url) {
-  const app = window.appBridge || (isEmbedded() ? createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: '' }) : null);
 
-  if (app && isEmbedded()) {
-    // Use App Bridge to safely redirect the top window
+function safeRedirect(url) {
+  const embedded = window.top !== window.self;
+
+  // Create App Bridge instance if inside iframe
+  const app = embedded
+    ? createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: new URLSearchParams(window.location.search).get('host') || '' })
+    : null;
+
+  if (embedded && app) {
+    // Safe top-level redirect via Shopify
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Safe for standalone (not inside iframe)
-    window.top.location.href = url;
+    // Standalone (not embedded)
+    window.location.href = url;
   }
 }
 
