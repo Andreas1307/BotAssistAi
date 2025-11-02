@@ -19,6 +19,8 @@ export async function initShopifyAppBridge() {
   const host = params.get("host");
   const embedded = isEmbedded();
 
+  window.shopifyAppHost = host;
+  
   // 🧩 1️⃣ Case: Outside Shopify (standalone site)
   if (!embedded) {
     console.log("🌍 Running outside Shopify — App Bridge not required");

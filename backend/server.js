@@ -2353,9 +2353,8 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // ✅ Redirect to your frontend redirect page
     res.redirect(
-      `https://www.botassistai.com/billing-redirect.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      `https://admin.shopify.com/store/${shop.split('.')[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
 
   } catch (err) {
