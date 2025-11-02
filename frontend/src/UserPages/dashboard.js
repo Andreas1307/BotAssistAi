@@ -386,20 +386,20 @@ const Dashboard = () => {
               status: messages[i + 1].status || "Chatbot handled"
             });
           }
-          if (pairedConversations.length === 2) break; // Keep only the last two pairs
+          if (pairedConversations.length === 2) break;
         }
   
         setLastConv(pairedConversations)
         
-        if (response.data.messages?.length > 0) {
-          const data = response.data.messages.reduce(
+        if (response.messages?.length > 0) {
+          const data = response.messages.reduce(
             (sum, item) => sum + (Number(item.res_duration) || 0), 
             0
           );
           setResTime(data / 2);
         }
       } catch(e) {
-        console.log("Chat history fetch error:", e);
+        console.log("Response Time fetch error:", e);
         showErrorNotification()
       }
     }
