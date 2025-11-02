@@ -25,22 +25,27 @@ export async function initShopifyAppBridge() {
 
   const embedded = isEmbedded();
 
-  // 🔹 If embedded but no host → must top-level redirect
+  // 🧩 Case 1: inside iframe but missing host → needs top-level redirect
   if (embedded && !host) {
-    // Create minimal App Bridge just to use Redirect
+    // Wait a tick to ensure frame messaging is allowed
+    await new Promise((r) => setTimeout(r, 100));
+
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host: "",
     });
+
     const redirect = Redirect.create(app);
     redirect.dispatch(
       Redirect.Action.REMOTE,
       `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
     );
+
+    console.log("🪄 Dispatched App Bridge remote redirect");
     return null;
   }
 
-  // 🔹 If NOT embedded → safe normal redirect
+  // 🧩 Case 2: top-level (not embedded)
   if (!embedded) {
     window.top.location.assign(
       `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
@@ -48,7 +53,7 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // ✅ Fully embedded and has host → initialize normally
+  // ✅ Case 3: embedded and host exists — normal init
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -56,17 +61,16 @@ export async function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ Shopify App Bridge initialized");
+  console.log("✅ App Bridge initialized");
   return app;
 }
-
 /**
  * Returns existing App Bridge instance if available
  */
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
-
+// sa fac update 
 /**
  * Safe redirect (embedded or standalone)
  */
@@ -81,10 +85,7 @@ export function safeRedirect(url) {
     window.top.location.assign(url);
   }
 }
-/**
- * Fetch with App Bridge auth token if inside Shopify
- * Falls back to plain fetch when running standalone
- */
+
 export async function fetchWithAuth(url, options = {}) {
 
   // 1️⃣ Always try to get or reuse a Shopify session token
