@@ -73,18 +73,19 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 
-export async function safeRedirect(url) {
-  const app = await getAppBridgeInstance();
+export function safeRedirect(url) {
+  const app = window.appBridge;
 
   if (app) {
-    // Embedded → use App Bridge REMOTE redirect
+    // Inside Shopify iframe → use App Bridge REMOTE redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Standalone → safe top-level navigation
+    // Standalone → top-level navigation is safe
     window.location.href = url;
   }
 }
+
 
 /**
  * Fetch with App Bridge auth token if inside Shopify

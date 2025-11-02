@@ -7,17 +7,16 @@ export async function handleBilling(userId) {
   try {
     const res = await fetchWithAuth(`${directory}/create-subscription2`, {
       method: "POST",
-      body: { userId }
+      body: { userId },
     });
 
-    const data = res;
-
-    if (data?.confirmationUrl) {
-      safeRedirect(data.confirmationUrl);
+    const confirmationUrl = res?.confirmationUrl;
+    if (confirmationUrl) {
+      safeRedirect(confirmationUrl); // 🔹 THIS WORKS
     } else {
-      console.error("No confirmationUrl returned from backend", data);
+      console.error("No confirmationUrl returned", res);
     }
   } catch (err) {
-    console.error("❌ Billing activation failed:", err.response?.data || err.message);
+    console.error("Billing activation failed:", err.message);
   }
 }
