@@ -17,39 +17,44 @@ export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
   const host = params.get("host");
+  
+  // 🩹 Shopify Web Vitals bug workaround
+if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
+  try {
+    delete window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__;
+  } catch {}
+}
 
-  if (window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__) {
-    try {
-      delete window.__SHOPIFY_DEV_APP_BRIDGE_WEB_VITALS__;
-    } catch {}
-  }
 
   if (!shop) {
     console.error("❌ Missing 'shop' param, cannot init App Bridge");
     return null;
   }
 
-  // 🧭 Step 1: Handle top-level auth redirect
+  // Handle first load or missing host param
   if (!isEmbedded() || !host) {
-    const topLevelAuthUrl = `https://botassistai.com/auth?shop=${encodeURIComponent(shop)}`;
+    console.warn("⚠️ Not embedded or missing host — redirecting to top-level auth");
 
-    // Inside Shopify iframe
-    if (isEmbedded()) {
+    // Top-level redirect (allowed)
+    if (window.top === window.self) {
+      const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      
+      window.location.href = redirectUrl;
+    } else {
       const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: host || "",
       });
       const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, topLevelAuthUrl);
-    } else {
-      // Not inside iframe — direct redirect
-      window.location.href = topLevelAuthUrl;
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
     }
-
     return null;
   }
 
-  // 🧭 Step 2: Normal embedded app init
+  // Initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,

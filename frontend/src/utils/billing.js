@@ -1,14 +1,16 @@
 import { safeRedirect } from "./initShopifyAppBridge";
 import directory from "../directory";
 import axios from "axios";
+import { fetchWithAuth } from "./initShopifyAppBridge";
 
 export async function handleBilling(userId) {
   try {
-    const res = await axios.post(`${directory}/create-subscription2`, {
-      userId,
+    const res = await fetchWithAuth(`${directory}/create-subscription2`, {
+      method: "POST",
+      body: userId
     });
 
-    const data = res.data;
+    const data = res;
 
     if (data?.confirmationUrl) {
       safeRedirect(data.confirmationUrl);
