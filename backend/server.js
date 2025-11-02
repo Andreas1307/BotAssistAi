@@ -2987,9 +2987,7 @@ app.get("/get-bot-status", verifySessionToken, async (req, res) => {
 });
 
 app.get("/set-bot-status", verifySessionToken, async (req, res) => {
-  const { queryParams } = req.query;
-  const { userId, aiBot } = queryParams;
-
+  const { userId, aiBot } = req.query;
   try {
     await pool.query("UPDATE users SET apiBot = ? WHERE user_id = ?", [aiBot, userId]);
     return res.status(200).json({ message: "Change was successful" });
@@ -2998,6 +2996,7 @@ app.get("/set-bot-status", verifySessionToken, async (req, res) => {
     return res.status(500).json({ message: "Error occurred with setting bot on or off" });
   }
 });
+
 
 
 app.get("/get-queries", verifySessionToken, async (req, res) => {
