@@ -25,35 +25,25 @@ export async function initShopifyAppBridge() {
 
   const embedded = isEmbedded();
 
-  // Missing host inside iframe → use App Bridge remote redirect
+  // Inside iframe but missing host → use App Bridge REMOTE redirect
   if (embedded && !host) {
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: "",
-    });
-
+    const app = createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: "" });
     const redirect = Redirect.create(app);
     redirect.dispatch(
       Redirect.Action.REMOTE,
       `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
     );
-
     return null;
   }
 
-  // Standalone → top-level redirect is safe
+  // Outside iframe → safe to top-level redirect
   if (!embedded) {
-    window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     return null;
   }
 
   // Normal embedded initialization
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: true,
-  });
-
+  const app = createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host, forceRedirect: true });
   window.appBridge = app;
   return app;
 }
@@ -83,20 +73,15 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 
-export function safeRedirect(url) {
-  const embedded = window.top !== window.self;
+export async function safeRedirect(url) {
+  const app = await getAppBridgeInstance();
 
-  // Create App Bridge instance if inside iframe
-  const app = embedded
-    ? createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: new URLSearchParams(window.location.search).get('host') || '' })
-    : null;
-
-  if (embedded && app) {
-    // Safe top-level redirect via Shopify
+  if (app) {
+    // Embedded → use App Bridge REMOTE redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Standalone (not embedded)
+    // Standalone → safe top-level navigation
     window.location.href = url;
   }
 }
