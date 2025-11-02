@@ -56,16 +56,27 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 
-export function safeRedirect(url) {
-  const app = window.appBridge;
+export async function safeRedirect(url) {
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
+  const apiKey = process.env.REACT_APP_SHOPIFY_API_KEY;
 
-  if (app) {
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ works inside iframe
-  } else {
-    window.location.href = url; // ✅ standalone app fallback
+  try {
+    if (window.top === window.self) {
+      // ✅ Not embedded → normal navigation
+      window.location.assign(url);
+    } else {
+      // ✅ Inside iframe → use App Bridge redirect
+      const app = window.appBridge || createApp({ apiKey, host, forceRedirect: true });
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.REMOTE, url);
+    }
+  } catch (err) {
+    console.error("⚠️ safeRedirect failed, falling back:", err);
+    window.top.location.href = url; // fallback for broken app bridge
   }
 }
+
 
 /**
  * Fetch with App Bridge auth token if inside Shopify
