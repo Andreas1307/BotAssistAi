@@ -433,7 +433,7 @@ useEffect(() => {
     const userId = user.user_id;
     try {
 
-      const res = await fetchWithAuth(`/get-bot-status?${userId}`, {
+      const res = await fetchWithAuth(`/get-bot-status?userId=${userId}`, {
         method: "GET",
       });
       const botEnabled = !!res.bool; // Ensure boolean
