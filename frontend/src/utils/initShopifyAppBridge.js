@@ -83,12 +83,14 @@ export async function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 export async function safeRedirect(url) {
-  const app = window.appBridge;
+  const app = window.appBridge || (isEmbedded() ? createApp({ apiKey: process.env.REACT_APP_SHOPIFY_API_KEY, host: '' }) : null);
 
-  if (app) {
+  if (app && isEmbedded()) {
+    // Use App Bridge to safely redirect the top window
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
+    // Safe for standalone (not inside iframe)
     window.top.location.href = url;
   }
 }
