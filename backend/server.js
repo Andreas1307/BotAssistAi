@@ -2338,26 +2338,32 @@ app.post("/create-subscription2", verifySessionToken, async (req, res) => {
   }
 });
 
-app.get("/billing/callback", verifySessionToken, async (req, res) => {
+app.get("/billing/callback", async (req, res) => {
   try {
     const { userId, host } = req.query;
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
+    // ✅ Define shop from DB
+    const shop = rows[0].shopify_shop_domain;
+
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
+    // ✅ Redirect to your frontend redirect page
     res.redirect(
       `https://www.botassistai.com/billing-redirect.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
-    );  
+    );
+
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
