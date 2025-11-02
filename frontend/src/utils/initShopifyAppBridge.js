@@ -56,8 +56,9 @@ export async function initShopifyAppBridge() {
     console.log("✅ Bridge ready — performing remote redirect...");
     redirect.dispatch(
       Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      `https://www.botassistai.com/auth-redirect.html?shop=${encodeURIComponent(shop)}`
     );
+    
 
     return null;
   }

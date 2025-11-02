@@ -8,12 +8,14 @@
       const shop = params.get("shop");
 
       if (shop) {
-        // ✅ This safely redirects outside Shopify iframe
-        window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+        // ✅ Redirect top-level browser window to your backend (outside iframe)
+        window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
       } else {
         document.body.innerText = "Missing shop parameter.";
       }
     </script>
   </head>
-  <body></body>
+  <body>
+    <p>Redirecting to Shopify authentication...</p>
+  </body>
 </html>
