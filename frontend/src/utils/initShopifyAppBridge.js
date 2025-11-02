@@ -6,13 +6,13 @@ import directory from "../directory";
  * Detect if running inside Shopify iframe
  */
 function isEmbedded() {
-  return window.top !== window.self;
+  try {
+    return window.top !== window.self;
+  } catch {
+    return true;
+  }
 }
-/**
- * Initializes Shopify App Bridge safely.
- * - Skips if not embedded or missing params
- * - Avoids noisy Web Vitals errors
- */
+
 export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
@@ -25,35 +25,40 @@ export async function initShopifyAppBridge() {
 
   const embedded = isEmbedded();
 
-  // 🧩 Case 1: inside iframe but missing host → needs top-level redirect
+  // 🧩 Case 1: embedded but missing host → remote redirect after bridge ready
   if (embedded && !host) {
-    // Wait a tick to ensure frame messaging is allowed
-    await new Promise((r) => setTimeout(r, 100));
-
+    // Create minimal bridge first
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host: "",
     });
 
     const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-    );
 
-    console.log("🪄 Dispatched App Bridge remote redirect");
+    // Wait for bridge to handshake with Shopify Admin
+    app.subscribe("App::Ready", () => {
+      console.log("🪄 Bridge ready — sending remote redirect");
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
+    });
+
     return null;
   }
 
-  // 🧩 Case 2: top-level (not embedded)
+  // 🧩 Case 2: not embedded (direct in browser)
   if (!embedded) {
-    window.top.location.assign(
-      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-    );
+    // Must use top.location but wrapped in user gesture or setTimeout
+    setTimeout(() => {
+      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(
+        shop
+      )}`;
+    }, 100);
     return null;
   }
 
-  // ✅ Case 3: embedded and host exists — normal init
+  // ✅ Case 3: embedded + host → normal init
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -61,7 +66,7 @@ export async function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ App Bridge initialized");
+  console.log("✅ Shopify App Bridge initialized");
   return app;
 }
 /**
