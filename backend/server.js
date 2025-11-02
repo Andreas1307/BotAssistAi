@@ -2506,6 +2506,7 @@ app.post("/ask-ai", async (req, res) => {
       }
   
       if(accountType[0].apiBot === 0) {
+        console.log("ACC typr: ", accountType[0].apiBot)
         console.log("Invalid API key65")
         return res.status(400).json({ error: "Your bot is disabled" });
       }
