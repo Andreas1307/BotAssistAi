@@ -19,13 +19,34 @@ export async function initShopifyAppBridge() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
+    if (!shop) {
+      console.error("❌ Missing shop param — cannot initialize Shopify App Bridge");
       return null;
     }
-    
 
+    const embedded = isEmbedded();
+
+    // 🩹 FIX: inside iframe but missing host → use App Bridge remote redirect
+    if (embedded && !host) {
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: "",
+      });
+      const redirect = Redirect.create(app);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
+      return null;
+    }
+
+    // ✅ Not embedded → regular top-level redirect is allowed
+    if (!embedded) {
+      window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      return null;
+    }
+
+    // ✅ Normal embedded init path
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -33,24 +54,13 @@ export async function initShopifyAppBridge() {
     });
 
     window.appBridge = app;
-
-    // Silently try to initialize Web Vitals
-    try {
-      if (typeof app.initializeWebVitals === "function") {
-        app.initializeWebVitals();
-      }
-    } catch {
-      // ignore
-    }
-
-    console.log("✅ Shopify App Bridge initialized");
+    console.log("✅ App Bridge initialized");
     return app;
   } catch (err) {
     console.error("❌ Failed to init App Bridge:", err);
     return null;
   }
 }
-
 /**
  * Returns existing App Bridge instance if available
  */
@@ -62,16 +72,16 @@ export function getAppBridgeInstance() {
  * Safe redirect (embedded or standalone)
  */
 export function safeRedirect(url) {
-  const app = getAppBridgeInstance();
+  const app = window.appBridge;
 
-  if (isEmbedded() && app) {
+  if (app && window.top !== window.self) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url;
+    // Safe outside Shopify iframe
+    window.location.assign(url);
   }
 }
-
 
 /**
  * Fetch with App Bridge auth token if inside Shopify

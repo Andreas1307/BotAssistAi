@@ -2263,7 +2263,7 @@ try {
 
 
 
-app.post("/create-subscription2",  async (req, res) => {
+app.post("/create-subscription2", verifySessionToken, async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -2338,7 +2338,7 @@ app.post("/create-subscription2",  async (req, res) => {
   }
 });
 
-app.get("/billing/callback",  async (req, res) => {
+app.get("/billing/callback", verifySessionToken, async (req, res) => {
   try {
     const { userId, host } = req.query;
 
