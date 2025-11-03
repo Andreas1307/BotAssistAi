@@ -9,7 +9,7 @@
       const host = params.get("host");
 
       if (shop && host) {
-        window.top.location.href = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${encodeURIComponent("botassist-ai")}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        window.top.location.href = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${encodeURIComponent("botassistai")}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
       } else {
         document.body.innerText = "Missing shop or host parameter.";
       }
