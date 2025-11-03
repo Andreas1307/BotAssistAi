@@ -2,28 +2,31 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Redirecting...</title>
+    <title>Redirecting to Shopify App...</title>
     <script>
-      (function () {
+      document.addEventListener('DOMContentLoaded', function() {
         const params = new URLSearchParams(window.location.search);
         const shop = params.get("shop");
         const host = params.get("host");
 
         if (!shop || !host) {
-          document.body.innerText = "Missing shop or host parameter.";
+          document.body.innerText = "❌ Missing shop or host parameter.";
           return;
         }
 
         console.log("📦 Redirecting to Shopify admin app...");
 
-        // Escape iframe if embedded
+        // Build Shopify admin app URL
         const adminUrl = `https://admin.shopify.com/store/${shop.split('.')[0]}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+        // Escape iframe if embedded
         if (window.top !== window.self) {
+          console.log("🔁 Escaping iframe...");
           window.top.location.href = adminUrl;
         } else {
           window.location.href = adminUrl;
         }
-      })();
+      });
     </script>
   </head>
   <body>

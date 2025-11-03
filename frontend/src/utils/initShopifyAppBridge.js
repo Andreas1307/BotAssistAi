@@ -69,24 +69,7 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const frontendDomain = "https://www.botassistai.com";
-  const embedded = (() => {
-    try {
-      return window.top !== window.self;
-    } catch {
-      return true;
-    }
-  })();
-
-  console.log("🔁 [safeRedirect] Called with:", url);
-
-  // ❌ Prevent direct redirects to API domain
-  if (url.startsWith("https://api.botassistai.com")) {
-    console.warn("⚠️ Attempted to redirect to API domain — proxying via frontend...");
-    url = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
-  }
-
-  if (embedded) {
+  if (window.top !== window.self) {
     try {
       const app = window.appBridge || createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -95,13 +78,11 @@ export function safeRedirect(url) {
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, url);
       return;
-    } catch (err) {
-      console.warn("⚠️ [safeRedirect] App Bridge failed:", err);
-      window.location.href = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+    } catch {
+      window.top.location.href = url;
       return;
     }
   }
-
   window.location.href = url;
 }
 
