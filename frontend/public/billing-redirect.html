@@ -2,36 +2,31 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Finalizing Subscription...</title>
+    <title>Redirecting...</title>
     <script>
       (function () {
         const params = new URLSearchParams(window.location.search);
-        const userId = params.get("userId");
+        const shop = params.get("shop");
         const host = params.get("host");
 
-        if (!userId || !host) {
-          document.body.innerText = "Missing userId or host parameter.";
+        if (!shop || !host) {
+          document.body.innerText = "Missing shop or host parameter.";
           return;
         }
 
-        // 1️⃣ Call backend billing callback to finalize
-        fetch(`https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`)
-          .then(() => {
-            // 2️⃣ Escape iframe safely
-            const shop = new URLSearchParams(window.location.search).get("shop");
-            const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
-              `https://admin.shopify.com/store/${shop?.split(".")[0]}/apps/botassistai?shop=${shop}&host=${host}`
-            )}`;
-            window.top.location.href = escapeUrl;
-          })
-          .catch((err) => {
-            console.error("Billing callback failed:", err);
-            document.body.innerText = "Billing callback failed.";
-          });
+        console.log("📦 Redirecting to Shopify admin app...");
+
+        // Escape iframe if embedded
+        const adminUrl = `https://admin.shopify.com/store/${shop.split('.')[0]}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        if (window.top !== window.self) {
+          window.top.location.href = adminUrl;
+        } else {
+          window.location.href = adminUrl;
+        }
       })();
     </script>
   </head>
   <body>
-    <p>Finalizing your subscription...</p>
+    <p>Redirecting to Shopify app...</p>
   </body>
 </html>

@@ -2352,20 +2352,17 @@ app.get("/billing/callback", async (req, res) => {
     const { userId, host } = req.query;
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
-    if (rows.length === 0) return res.status(404).send("User not found");
-
-    // ✅ Define shop from DB
-    const shop = rows[0].shopify_shop_domain;
+    if (!rows.length) return res.status(404).send("User not found");
 
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
+    // Redirect merchant to frontend page (billing-redirect.html) after DB update
     res.redirect(
-      `https://www.botassistai.com/billing-redirect.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      `https://www.botassistai.com/billing-redirect.html?shop=${encodeURIComponent(rows[0].shopify_shop_domain)}&host=${encodeURIComponent(host)}`
     );
-
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
