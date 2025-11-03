@@ -91,24 +91,28 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const app = window.appBridge;
   const embedded = isEmbedded();
 
-  const isExternal = !url.includes("admin.shopify.com");
-
-  if (embedded && app && !isExternal) {
+  if (embedded) {
     try {
+      // Use App Bridge redirect for external URLs too
+      const app = window.appBridge || createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: window.shopifyAppHost,
+      });
       const redirect = Redirect.create(app);
+
       redirect.dispatch(Redirect.Action.REMOTE, url);
       return;
     } catch (err) {
-      console.warn("⚠️ App Bridge redirect failed — falling back", err);
+      console.warn("⚠️ App Bridge remote redirect failed — fallback:", err);
     }
   }
 
-  // 🧩 Always force top-level redirect for external links (like confirmationUrl)
-  window.top.location.href = url;
+  // Fallback (for standalone mode)
+  window.location.href = url;
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 
@@ -188,7 +192,6 @@ export async function fetchWithAuth(url, options = {}) {
   console.groupEnd();
   return data;
 }
-
 
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
