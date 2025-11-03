@@ -70,27 +70,35 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const embedded = isEmbedded();
+  const frontendDomain = "https://www.botassistai.com";
 
   if (embedded) {
     try {
-      // Use App Bridge redirect for external URLs too
+      // If the URL is pointing to a non-frontend domain, use a proxy redirect page
+      const isSameOrigin = url.startsWith(frontendDomain);
+
       const app = window.appBridge || createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: window.shopifyAppHost,
       });
       const redirect = Redirect.create(app);
 
-      redirect.dispatch(Redirect.Action.REMOTE, url);
+      if (!isSameOrigin) {
+        console.log("🧭 Redirecting via frontend proxy to avoid CSP block");
+        const proxyUrl = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+        redirect.dispatch(Redirect.Action.REMOTE, proxyUrl);
+      } else {
+        redirect.dispatch(Redirect.Action.REMOTE, url);
+      }
       return;
     } catch (err) {
       console.warn("⚠️ App Bridge remote redirect failed — fallback:", err);
     }
   }
 
-  // Fallback (for standalone mode)
+  // Fallback for non-embedded mode
   window.location.href = url;
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 

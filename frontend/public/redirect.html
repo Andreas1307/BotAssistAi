@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get("target");
+      if (target) {
+        console.log("Redirecting top window to:", target);
+        window.top.location.href = target; // Safe now, because it's top-level
+      } else {
+        document.body.innerText = "Missing target URL.";
+      }
+    </script>
+  </head>
+  <body>
+    <p>Redirecting...</p>
+  </body>
+</html>
