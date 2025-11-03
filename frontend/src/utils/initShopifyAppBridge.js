@@ -46,7 +46,6 @@ export async function initShopifyAppBridge() {
   }
   
 
-  // 🧩 3️⃣ Case: Embedded + host param exists → initialize normally
   if (embedded && host) {
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -58,7 +57,6 @@ export async function initShopifyAppBridge() {
     return app;
   }
 
-  // 🧩 4️⃣ Fallback
   console.warn("⚠️ Missing shop or host — skipping App Bridge init");
   return null;
 }
