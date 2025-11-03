@@ -20,7 +20,7 @@ export async function initShopifyAppBridge() {
   const embedded = isEmbedded();
 
   window.shopifyAppHost = host;
-  
+
   // 🧩 1️⃣ Case: Outside Shopify (standalone site)
   if (!embedded) {
     console.log("🌍 Running outside Shopify — App Bridge not required");
@@ -90,22 +90,24 @@ export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
-
 export function safeRedirect(url) {
   const app = window.appBridge;
   const embedded = isEmbedded();
 
-  if (embedded && app) {
+  const isExternal = !url.includes("admin.shopify.com");
+
+  if (embedded && app && !isExternal) {
     try {
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, url);
+      return;
     } catch (err) {
       console.warn("⚠️ App Bridge redirect failed — falling back", err);
-      window.location.href = url;
     }
-  } else {
-    window.location.href = url;
   }
+
+  // 🧩 Always force top-level redirect for external links (like confirmationUrl)
+  window.top.location.href = url;
 }
 
 export async function fetchWithAuth(url, options = {}) {
