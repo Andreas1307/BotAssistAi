@@ -4,20 +4,24 @@ import axios from "axios";
 import { fetchWithAuth } from "./initShopifyAppBridge";
 
 export async function handleBilling(userId) {
-  const host = window.shopifyAppHost; 
+  const host = window.shopifyAppHost;
+  console.log("💳 [handleBilling] Starting billing flow...");
+  console.log("🧑‍💻 [handleBilling] userId:", userId);
+  console.log("🏠 [handleBilling] host:", host);
 
   const res = await fetchWithAuth(`${directory}/create-subscription2`, {
     method: "POST",
-    body: { userId, host }, // pass host to backend
+    body: { userId, host },
   });
 
-  
+  console.log("📦 [handleBilling] Server response:", res);
+
   const confirmationUrl = res?.confirmationUrl;
-  console.log("Redirecting to confirmation URL:", confirmationUrl);
+  console.log("✅ [handleBilling] confirmationUrl:", confirmationUrl);
 
   if (confirmationUrl) {
     safeRedirect(confirmationUrl);
   } else {
-    console.error("No confirmationUrl returned", res);
+    console.error("❌ [handleBilling] No confirmationUrl returned", res);
   }
 }

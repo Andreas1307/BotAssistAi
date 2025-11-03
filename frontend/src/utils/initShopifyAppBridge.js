@@ -70,16 +70,43 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const frontendDomain = "https://www.botassistai.com";
+  const embedded = (() => {
+    try {
+      return window.top !== window.self;
+    } catch {
+      return true;
+    }
+  })();
 
-  // If inside Shopify iframe → escape using redirect.html on same origin
-  if (window.top !== window.self) {
-    console.log("🧭 Inside iframe — escaping to top window via redirect.html");
-    const escapeUrl = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
-    window.top.location.href = escapeUrl; // escape to top-level
-    return;
+  console.log("🔁 [safeRedirect] Called with:", url);
+  console.log("🧩 [safeRedirect] Embedded?", embedded);
+  console.log("🌍 [safeRedirect] Current origin:", window.location.origin);
+
+  // ✅ 1️⃣ Inside Shopify iframe
+  if (embedded) {
+    try {
+      const app = window.appBridge || createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: window.shopifyAppHost,
+        forceRedirect: true,
+      });
+      const redirect = Redirect.create(app);
+
+      // Shopify blocks direct top-level navigations from iframe
+      console.log("🧭 [safeRedirect] Using App Bridge redirect...");
+      redirect.dispatch(Redirect.Action.REMOTE, url);
+      return;
+    } catch (err) {
+      console.warn("⚠️ [safeRedirect] App Bridge redirect failed:", err);
+      console.log("🪜 [safeRedirect] Fallback → using redirect.html proxy...");
+      const proxy = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+      window.location.href = proxy;
+      return;
+    }
   }
 
-  // If already outside iframe
+  // ✅ 2️⃣ Outside iframe → normal navigation
+  console.log("🌐 [safeRedirect] Outside iframe, normal redirect");
   window.location.href = url;
 }
 

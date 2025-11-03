@@ -2310,6 +2310,13 @@ app.post("/create-subscription2", verifySessionToken, async (req, res) => {
       ],
     };
 
+
+    console.log("🧠 Creating subscription for:", shop);
+console.log("🔑 Access token found:", !!token);
+console.log("📤 GraphQL Request →", JSON.stringify({ query, variables }, null, 2));
+ 
+
+
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
       { query, variables },
@@ -2330,6 +2337,8 @@ app.post("/create-subscription2", verifySessionToken, async (req, res) => {
     }
 
     const confirmationUrl = data.appSubscriptionCreate.confirmationUrl;
+    console.log("📥 GraphQL Response:", JSON.stringify(response.data, null, 2));
+console.log("Confirm Url ", confirmationUrl)
     res.json({ confirmationUrl });
 
   } catch (err) {
