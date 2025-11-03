@@ -8,7 +8,7 @@
       const target = params.get("target");
       if (target) {
         console.log("Redirecting top window to:", target);
-        window.top.location.href = target; // Safe now, because it's top-level
+        window.top.location.href = target;
       } else {
         document.body.innerText = "Missing target URL.";
       }

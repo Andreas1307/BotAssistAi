@@ -4,17 +4,34 @@
     <meta charset="utf-8" />
     <title>Finalizing Subscription...</title>
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
-      const host = params.get("host");
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const shop = params.get("shop");
+        const host = params.get("host");
 
-      if (shop && host) {
-        // Send the user back into the embedded app in Shopify Admin
-        const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-        window.top.location.href = appUrl;
-      } else {
-        document.body.innerText = "Missing shop or host parameter.";
-      }
+        if (!shop || !host) {
+          document.body.innerText = "Missing shop or host parameter.";
+          return;
+        }
+
+        // Step 1: We’re inside an iframe — escape first.
+        if (window.top !== window.self) {
+          // Open a top-level redirect page that can safely redirect out of Shopify iframe
+          const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
+            `https://www.botassistai.com/billing-redirect.html?shop=${shop}&host=${host}`
+          )}`;
+          window.top.location.href = escapeUrl;
+          return;
+        }
+
+        // Step 2: Now we’re top-level, go back to the embedded app in Shopify Admin
+        const adminUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/botassistai?shop=${encodeURIComponent(
+          shop
+        )}&host=${encodeURIComponent(host)}`;
+
+        console.log("Redirecting to Shopify admin app:", adminUrl);
+        window.location.replace(adminUrl);
+      })();
     </script>
   </head>
   <body>
