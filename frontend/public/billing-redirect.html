@@ -9,7 +9,6 @@
       const host = params.get("host");
 
       if (shop && host) {
-        // ✅ Redirect the top-level window back into Shopify admin app
         window.top.location.href = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${encodeURIComponent("botassist-ai")}?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
       } else {
         document.body.innerText = "Missing shop or host parameter.";
