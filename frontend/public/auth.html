@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Shopify Auth Redirect</title>
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
-
-      if (shop) {
-        // ✅ Redirect top-level browser window to your backend (outside iframe)
-        window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      } else {
-        document.body.innerText = "Missing shop parameter.";
-      }
-    </script>
-  </head>
-  <body>
-    <p>Redirecting to Shopify authentication...</p>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <title>Redirecting to Shopify Auth</title>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    if (shop) {
+      // now it’s safe to hit your backend
+      window.location.href =
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    } else {
+      document.body.innerText = "Missing shop parameter.";
+    }
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
 </html>

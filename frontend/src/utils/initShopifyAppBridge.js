@@ -28,18 +28,17 @@ export async function initShopifyAppBridge() {
   }
 
   if (embedded && !host && shop) {
-    console.log("🧭 Embedded without host — performing top-level redirect to /shopify/auth...");
+    console.log("🧭 Embedded without host — requesting top-level redirect...");
   
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host: "",
     });
-  
     const redirect = Redirect.create(app);
   
     redirect.dispatch(
       Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      `https://www.botassistai.com/auth.html?shop=${encodeURIComponent(shop)}`
     );
   
     return null;
