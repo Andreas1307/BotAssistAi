@@ -76,7 +76,7 @@ export function safeRedirect(url) {
     try {
       // If the URL is pointing to a non-frontend domain, use a proxy redirect page to avoid CSP issues.
       const isSameOrigin = url.startsWith(frontendDomain);
-      
+
       const app = window.appBridge || createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: window.shopifyAppHost,
