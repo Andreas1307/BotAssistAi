@@ -11,7 +11,10 @@ export async function handleBilling(userId) {
     body: { userId, host }, // pass host to backend
   });
 
+  
   const confirmationUrl = res?.confirmationUrl;
+  console.log("Redirecting to confirmation URL:", confirmationUrl);
+
   if (confirmationUrl) {
     safeRedirect(confirmationUrl);
   } else {

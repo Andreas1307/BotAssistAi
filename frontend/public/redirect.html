@@ -4,14 +4,24 @@
     <meta charset="utf-8" />
     <title>Redirecting...</title>
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const target = params.get("target");
-      if (target) {
-        console.log("Redirecting top window to:", target);
-        window.top.location.href = target;
-      } else {
-        document.body.innerText = "Missing target URL.";
-      }
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const target = params.get("target");
+
+        if (!target) {
+          document.body.innerText = "Missing target URL.";
+          return;
+        }
+
+        console.log("Escaping iframe and redirecting top window to:", target);
+
+        // Always redirect via top window, but only if same origin allowed
+        if (window.top !== window.self) {
+          window.top.location.assign(target);
+        } else {
+          window.location.assign(target);
+        }
+      })();
     </script>
   </head>
   <body>
