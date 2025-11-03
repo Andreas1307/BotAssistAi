@@ -6,31 +6,28 @@
     <script>
       (function () {
         const params = new URLSearchParams(window.location.search);
-        const shop = params.get("shop");
+        const userId = params.get("userId");
         const host = params.get("host");
 
-        if (!shop || !host) {
-          document.body.innerText = "Missing shop or host parameter.";
+        if (!userId || !host) {
+          document.body.innerText = "Missing userId or host parameter.";
           return;
         }
 
-        // Step 1: We’re inside an iframe — escape first.
-        if (window.top !== window.self) {
-          // Step 1a: Escape to the top-level window and initiate a safe redirect.
-          const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
-            `https://www.botassistai.com/billing-redirect.html?shop=${shop}&host=${host}`
-          )}`;
-          window.top.location.href = escapeUrl;
-          return;
-        }
-
-        // Step 2: We're at the top level, perform final navigation to the Shopify app.
-        const adminUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/botassistai?shop=${encodeURIComponent(
-          shop
-        )}&host=${encodeURIComponent(host)}`;
-
-        console.log("Redirecting to Shopify admin app:", adminUrl);
-        window.location.replace(adminUrl); // Navigate directly to the Shopify app
+        // 1️⃣ Call backend billing callback to finalize
+        fetch(`https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`)
+          .then(() => {
+            // 2️⃣ Escape iframe safely
+            const shop = new URLSearchParams(window.location.search).get("shop");
+            const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
+              `https://admin.shopify.com/store/${shop?.split(".")[0]}/apps/botassistai?shop=${shop}&host=${host}`
+            )}`;
+            window.top.location.href = escapeUrl;
+          })
+          .catch((err) => {
+            console.error("Billing callback failed:", err);
+            document.body.innerText = "Billing callback failed.";
+          });
       })();
     </script>
   </head>
