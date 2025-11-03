@@ -16,7 +16,7 @@
 
         // Step 1: We’re inside an iframe — escape first.
         if (window.top !== window.self) {
-          // Open a top-level redirect page that can safely redirect out of Shopify iframe
+          // Step 1a: Escape to the top-level window and initiate a safe redirect.
           const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
             `https://www.botassistai.com/billing-redirect.html?shop=${shop}&host=${host}`
           )}`;
@@ -24,13 +24,13 @@
           return;
         }
 
-        // Step 2: Now we’re top-level, go back to the embedded app in Shopify Admin
+        // Step 2: We're at the top level, perform final navigation to the Shopify app.
         const adminUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/botassistai?shop=${encodeURIComponent(
           shop
         )}&host=${encodeURIComponent(host)}`;
 
         console.log("Redirecting to Shopify admin app:", adminUrl);
-        window.location.replace(adminUrl);
+        window.location.replace(adminUrl); // Navigate directly to the Shopify app
       })();
     </script>
   </head>

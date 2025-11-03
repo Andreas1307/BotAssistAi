@@ -5,6 +5,9 @@ import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
  */
+
+
+
 function isEmbedded() {
   try {
     return window.top !== window.self;
@@ -61,22 +64,19 @@ export async function initShopifyAppBridge() {
 }
 
 
-/**
- * Returns existing App Bridge instance if available
- */
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
 export function safeRedirect(url) {
-  const embedded = isEmbedded();
+  const embedded = isEmbedded(); // Check if we're inside the Shopify iframe
   const frontendDomain = "https://www.botassistai.com";
 
   if (embedded) {
     try {
-      // If the URL is pointing to a non-frontend domain, use a proxy redirect page
+      // If the URL is pointing to a non-frontend domain, use a proxy redirect page to avoid CSP issues.
       const isSameOrigin = url.startsWith(frontendDomain);
-
+      
       const app = window.appBridge || createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: window.shopifyAppHost,
@@ -86,9 +86,9 @@ export function safeRedirect(url) {
       if (!isSameOrigin) {
         console.log("🧭 Redirecting via frontend proxy to avoid CSP block");
         const proxyUrl = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
-        redirect.dispatch(Redirect.Action.REMOTE, proxyUrl);
+        redirect.dispatch(Redirect.Action.REMOTE, proxyUrl); // Proxy redirect for external URLs
       } else {
-        redirect.dispatch(Redirect.Action.REMOTE, url);
+        redirect.dispatch(Redirect.Action.REMOTE, url); // Direct redirect if same origin
       }
       return;
     } catch (err) {
@@ -96,9 +96,10 @@ export function safeRedirect(url) {
     }
   }
 
-  // Fallback for non-embedded mode
+  // Fallback for non-embedded mode (out of the iframe, like on a standalone page)
   window.location.href = url;
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 
