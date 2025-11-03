@@ -27,43 +27,24 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // 🧩 2️⃣ Case: Inside Shopify, but missing host param (needs top-level redirect)
   if (embedded && !host && shop) {
-    console.log("🧭 Embedded without host — requesting top-level redirect...");
-
-    // Create minimal App Bridge
+    console.log("🧭 Embedded without host — performing top-level redirect to /shopify/auth...");
+  
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host: "",
     });
-
+  
     const redirect = Redirect.create(app);
-
-    // 🔸 Wait for the bridge handshake
-    const waitForBridgeReady = new Promise((resolve) => {
-      let ready = false;
-      const unsub = app.subscribe("App::Ready", () => {
-        if (!ready) {
-          ready = true;
-          unsub(); // unsubscribe after one trigger
-          resolve();
-        }
-      });
-      // Safety fallback: resolve after 2 seconds max
-      setTimeout(resolve, 2000);
-    });
-
-    await waitForBridgeReady;
-
-    console.log("✅ Bridge ready — performing remote redirect...");
+  
     redirect.dispatch(
       Redirect.Action.REMOTE,
-      `https://www.botassistai.com/auth.html?shop=${encodeURIComponent(shop)}`
+      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
     );
-    
-
+  
     return null;
   }
+  
 
   // 🧩 3️⃣ Case: Embedded + host param exists → initialize normally
   if (embedded && host) {
