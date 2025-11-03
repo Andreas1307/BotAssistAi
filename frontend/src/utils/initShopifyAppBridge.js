@@ -69,34 +69,17 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const embedded = isEmbedded(); // Check if we're inside the Shopify iframe
   const frontendDomain = "https://www.botassistai.com";
 
-  if (embedded) {
-    try {
-      // If the URL is pointing to a non-frontend domain, use a proxy redirect page to avoid CSP issues.
-      const isSameOrigin = url.startsWith(frontendDomain);
-
-      const app = window.appBridge || createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host: window.shopifyAppHost,
-      });
-      const redirect = Redirect.create(app);
-
-      if (!isSameOrigin) {
-        console.log("🧭 Redirecting via frontend proxy to avoid CSP block");
-        const proxyUrl = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
-        redirect.dispatch(Redirect.Action.REMOTE, proxyUrl); // Proxy redirect for external URLs
-      } else {
-        redirect.dispatch(Redirect.Action.REMOTE, url); // Direct redirect if same origin
-      }
-      return;
-    } catch (err) {
-      console.warn("⚠️ App Bridge remote redirect failed — fallback:", err);
-    }
+  // If inside Shopify iframe → escape using redirect.html on same origin
+  if (window.top !== window.self) {
+    console.log("🧭 Inside iframe — escaping to top window via redirect.html");
+    const escapeUrl = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+    window.top.location.href = escapeUrl; // escape to top-level
+    return;
   }
 
-  // Fallback for non-embedded mode (out of the iframe, like on a standalone page)
+  // If already outside iframe
   window.location.href = url;
 }
 

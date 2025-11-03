@@ -15,11 +15,11 @@
 
         console.log("Escaping iframe and redirecting top window to:", target);
 
-        // Always redirect via top window, but only if same origin allowed
+        // Escape the iframe — this is the safe top-level redirect
         if (window.top !== window.self) {
-          window.top.location.assign(target);
+          window.top.location.href = target;
         } else {
-          window.location.assign(target);
+          window.location.href = target;
         }
       })();
     </script>
