@@ -69,23 +69,22 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
+  const frontendDomain = "https://www.botassistai.com";
+
   if (window.top !== window.self) {
-    try {
-      const app = window.appBridge || createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host: window.shopifyAppHost,
-      });
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, url);
-      return;
-    } catch {
-      window.top.location.href = url;
-      return;
-    }
+    console.log("🧭 Inside iframe — using same-origin redirect.html escape");
+    
+    // redirect.html lives on the SAME origin (botassistai.com)
+    const escapeUrl = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+    
+    // 🚀 Navigate the iframe to a same-origin page first
+    window.location.href = escapeUrl;
+    return;
   }
+
+  // If we're already outside Shopify's iframe
   window.location.href = url;
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 
