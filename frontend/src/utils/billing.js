@@ -16,18 +16,16 @@ function redirectToShopify(url) {
 
 export async function handleBilling(userId) {
   try {
-    const res = await fetchWithAuth(`${directory}/create-subscription2`, { 
+    const host = window.shopifyAppHost; // ✅ pass host
+    const res = await fetchWithAuth(`${directory}/create-subscription2`, {
       method: "POST",
-      body: { userId }
-     });
+      body: { userId, host }
+    });
+
     const confirmationUrl = res.confirmationUrl;
+    if (!confirmationUrl) return console.error("No confirmation URL returned", res);
 
-    if (!confirmationUrl) {
-      console.error("No confirmation URL returned from backend", res.data);
-      return;
-    }
-
-    redirectToShopify(confirmationUrl);
+    safeRedirect(confirmationUrl);
   } catch (err) {
     console.error("❌ Billing activation failed:", err.response?.data || err.message);
   }

@@ -2265,7 +2265,7 @@ try {
 
 app.post("/create-subscription2", async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, host } = req.body;
 
     // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
@@ -2348,7 +2348,7 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}`;
+    const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}`;
     res.redirect(appUrl);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
