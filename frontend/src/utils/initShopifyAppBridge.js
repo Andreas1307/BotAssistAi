@@ -71,11 +71,11 @@ export function getAppBridgeInstance() {
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
-  if (isEmbedded() && app) {
+  if (isEmbedded() && app && url.includes("admin.shopify.com")) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url;
+    window.top.location.href = url; // top-level navigation
   }
 }
 
