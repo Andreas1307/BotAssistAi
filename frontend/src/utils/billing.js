@@ -1,4 +1,4 @@
-import { getAppBridgeInstance, isEmbedded, fetchWithAuth } from "./initShopifyAppBridge";
+import { getAppBridgeInstance, isEmbedded, fetchWithAuth, safeRedirect } from "./initShopifyAppBridge";
 import { Redirect } from "@shopify/app-bridge/actions";
 import axios from "axios";
 import directory from "../directory";
