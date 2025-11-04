@@ -10,22 +10,22 @@
         const host = params.get("host");
         const shop = params.get("shop");
 
-        // Case 1 — first step (userId present)
+        // Step 1 — initial redirect after subscription confirmation
         if (userId && host) {
-          const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
-          console.log("🔁 Redirecting to billing callback:", callbackUrl);
-          window.top.location.href = callbackUrl;
+          const target = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
+          const proxy = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(target)}`;
+          console.log("🔁 Redirecting via frontend proxy:", proxy);
+          window.top.location.href = proxy; // ✅ allowed cross-origin jump
           return;
         }
 
-        // Case 2 — final return from callback (Shopify stripped userId)
+        // Step 2 — final return (Shopify stripped userId)
         if (shop && host) {
           document.body.innerText = "✅ Subscription completed! You can close this tab.";
-          console.log("✅ Final return detected — showing completion message.");
+          console.log("✅ Billing flow complete.");
           return;
         }
 
-        // Case 3 — error
         document.body.innerText = "❌ Missing parameters. Please try again.";
         console.warn("❌ Missing params:", { userId, host, shop });
       })();
