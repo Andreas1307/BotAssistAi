@@ -7,7 +7,15 @@
       (function () {
         const params = new URLSearchParams(window.location.search);
         const userId = params.get("userId");
-        const host = params.get("host");
+const host = params.get("host");
+const shop = params.get("shop");
+
+if (!userId && shop) {
+  // fallback: call API to find user by shop, or just display a message
+  document.body.innerText = "Subscription completed! You may close this tab.";
+  return;
+}
+
 
         if (!userId || !host) {
           // Safe check: only run this after DOM loaded

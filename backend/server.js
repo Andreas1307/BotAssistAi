@@ -2364,8 +2364,9 @@ app.get("/billing/callback", async (req, res) => {
     // Redirect merchant to frontend billing-redirect page
     const shop = rows[0].shopify_shop_domain;
     res.redirect(
-      `https://www.botassistai.com/billing-redirect.html?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      `https://www.botassistai.com/billing-redirect.html?userId=${encodeURIComponent(userId)}&shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
+    
 
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
