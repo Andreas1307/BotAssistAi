@@ -2,34 +2,36 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Redirecting to Shopify App...</title>
+    <title>Finalizing Subscription...</title>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      (function () {
         const params = new URLSearchParams(window.location.search);
-        const shop = params.get("shop");
+        const userId = params.get("userId");
         const host = params.get("host");
 
-        if (!shop || !host) {
-          document.body.innerText = "❌ Missing shop or host parameter.";
+        if (!userId || !host) {
+          document.body.innerText = "Missing userId or host parameter.";
           return;
         }
 
-        console.log("📦 Redirecting to Shopify admin app...");
-
-        // Build Shopify admin app URL
-        const adminUrl = `https://admin.shopify.com/store/${shop.split('.')[0]}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-        // Escape iframe if embedded
-        if (window.top !== window.self) {
-          console.log("🔁 Escaping iframe...");
-          window.top.location.href = adminUrl;
-        } else {
-          window.location.href = adminUrl;
-        }
-      });
+        // 1️⃣ Call backend billing callback to finalize
+        fetch(`https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`)
+          .then(() => {
+            // 2️⃣ Escape iframe safely
+            const shop = new URLSearchParams(window.location.search).get("shop");
+            const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
+              `https://admin.shopify.com/store/${shop?.split(".")[0]}/apps/botassistai?shop=${shop}&host=${host}`
+            )}`;
+            window.top.location.href = escapeUrl;
+          })
+          .catch((err) => {
+            console.error("Billing callback failed:", err);
+            document.body.innerText = "Billing callback failed.";
+          });
+      })();
     </script>
   </head>
   <body>
-    <p>Redirecting to Shopify app...</p>
+    <p>Finalizing your subscription...</p>
   </body>
 </html>

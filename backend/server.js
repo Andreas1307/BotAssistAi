@@ -2294,7 +2294,8 @@ app.post("/create-subscription2", verifySessionToken, async (req, res) => {
 
     const variables = {
         name: "BotAssist Pro Plan",
-        returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`,
+        returnUrl: `https://www.botassistai.com/billing-redirect.html?userId=${userId}&host=${encodeURIComponent(host)}`,
+
        lineItems: [
         {
           plan: {
