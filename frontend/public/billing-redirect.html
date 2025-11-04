@@ -14,20 +14,12 @@
           return;
         }
 
-        // 1️⃣ Call backend billing callback to finalize
-        fetch(`https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`)
-          .then(() => {
-            // 2️⃣ Escape iframe safely
-            const shop = new URLSearchParams(window.location.search).get("shop");
-            const escapeUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
-              `https://admin.shopify.com/store/${shop?.split(".")[0]}/apps/botassistai?shop=${shop}&host=${host}`
-            )}`;
-            window.top.location.href = escapeUrl;
-          })
-          .catch((err) => {
-            console.error("Billing callback failed:", err);
-            document.body.innerText = "Billing callback failed.";
-          });
+        // 🚀 Instead of fetch(), just do a normal redirect
+        const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
+        console.log("🔁 Redirecting to billing callback:", callbackUrl);
+
+        // This will perform a full-page redirect (not AJAX)
+        window.top.location.href = callbackUrl;
       })();
     </script>
   </head>
