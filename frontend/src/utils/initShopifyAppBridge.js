@@ -70,6 +70,8 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const frontendDomain = "https://www.botassistai.com";
+
+  // Detect if running inside Shopify iframe
   const embedded = (() => {
     try {
       return window.top !== window.self;
@@ -78,31 +80,33 @@ export function safeRedirect(url) {
     }
   })();
 
-  console.log("🔁 [safeRedirect] Called with:", url);
+  console.log("🔁 [safeRedirect] redirecting to:", url);
 
-  // ❌ Prevent direct redirects to API domain
+  // Always proxy API domain redirects through frontend
   if (url.startsWith("https://api.botassistai.com")) {
-    console.warn("⚠️ Attempted to redirect to API domain — proxying via frontend...");
     url = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
   }
 
   if (embedded) {
     try {
-      const app = window.appBridge || createApp({
+      const app = createApp({
         apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
         host: window.shopifyAppHost,
       });
+
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, url);
       return;
     } catch (err) {
       console.warn("⚠️ [safeRedirect] App Bridge failed:", err);
-      window.location.href = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+      // Fallback: use same-origin proxy to break out
+      window.location.assign(`${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`);
       return;
     }
   }
 
-  window.location.href = url;
+  // Not embedded → normal navigation
+  window.location.assign(url);
 }
 
 export async function fetchWithAuth(url, options = {}) {

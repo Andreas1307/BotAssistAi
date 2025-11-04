@@ -5,17 +5,11 @@
     <title>Redirecting...</title>
     <script>
       (function () {
-        const params = new URLSearchParams(window.location.search);
-        const target = params.get("target");
+        const target = new URLSearchParams(window.location.search).get("target");
+        if (!target) return (document.body.textContent = "Missing target URL.");
 
-        if (!target) {
-          document.body.innerText = "Missing target URL.";
-          return;
-        }
+        console.log("➡️ Escaping iframe →", target);
 
-        console.log("Escaping iframe →", target);
-
-        // Escape Shopify iframe by forcing top-level redirect
         if (window.top !== window.self) {
           window.top.location.assign(target);
         } else {
@@ -24,7 +18,5 @@
       })();
     </script>
   </head>
-  <body>
-    <p>Redirecting...</p>
-  </body>
+  <body><p>Redirecting...</p></body>
 </html>
