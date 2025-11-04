@@ -10,28 +10,18 @@
         const host = params.get("host");
         const shop = params.get("shop");
 
-        // Step 1 — initial redirect after confirmation (has userId + host)
+        // Step 1 — initial redirect after Shopify billing
         if (userId && host) {
-          const target = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
-          const proxy = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(target)}`;
-          console.log("🔁 Redirecting via frontend proxy:", proxy);
-          window.top.location.href = proxy;
+          const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
+          console.log("🔁 Redirecting to billing callback:", callbackUrl);
+          window.top.location.href = callbackUrl;
           return;
         }
 
-        // Step 2 — final return (Shopify stripped userId)
-        if (shop && host) {
-          console.log("✅ Final return detected — showing completion message.");
-          window.addEventListener("DOMContentLoaded", () => {
-            document.body.innerText = "✅ Subscription completed! You can close this tab.";
-          });
-          return;
-        }
-
-        // Step 3 — fallback
-        console.warn("❌ Missing params:", { userId, host, shop });
+        // Step 2 — safety (if something fails)
+        console.warn("⚠️ Missing userId or host, showing fallback message");
         window.addEventListener("DOMContentLoaded", () => {
-          document.body.innerText = "❌ Missing parameters. Please try again.";
+          document.body.innerText = "Please wait... finalizing your subscription.";
         });
       })();
     </script>

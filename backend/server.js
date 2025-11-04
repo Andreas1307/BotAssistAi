@@ -2355,25 +2355,26 @@ app.get("/billing/callback", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
 
-    // Update subscription info
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
-    // Redirect merchant to frontend billing-redirect page
     const shop = rows[0].shopify_shop_domain;
-    res.redirect(
-      `https://www.botassistai.com/billing-redirect.html?shop=${encodeURIComponent(
-        shop
-      )}&host=${encodeURIComponent(host)}`
-    );
+    const adminRedirect = `https://admin.shopify.com/store/${shop.replace(
+      ".myshopify.com",
+      ""
+    )}/apps/botassistai?host=${encodeURIComponent(host)}`;
 
+    console.log("✅ Redirecting merchant to Shopify Admin app:", adminRedirect);
+
+    res.redirect(adminRedirect);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
