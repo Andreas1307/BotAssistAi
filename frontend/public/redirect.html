@@ -13,9 +13,9 @@
           return;
         }
 
-        console.log("Escaping iframe and redirecting to:", target);
+        console.log("Escaping iframe →", target);
 
-        // Always assign to top window
+        // Escape Shopify iframe by forcing top-level redirect
         if (window.top !== window.self) {
           window.top.location.assign(target);
         } else {

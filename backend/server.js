@@ -2366,8 +2366,7 @@ app.get("/billing/callback", async (req, res) => {
       ""
     )}/apps/botassistai?host=${encodeURIComponent(host)}`;
 
-    console.log("✅ Redirecting merchant to Shopify Admin app:", adminRedirect);
-
+    console.log("✅ Redirecting merchant to:", adminRedirect);
     res.redirect(adminRedirect);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
