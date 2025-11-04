@@ -2350,10 +2350,8 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // Redirect back into Shopify iframe
-    res.redirect(
-      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${host}`
-    );    
+    const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}`;
+    res.redirect(appUrl);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
@@ -2960,7 +2958,7 @@ Never refer users to another page unless explicitly asked.`;
       console.error("❌ Error:", error);
       res.status(500).json({ error: "AI request failed" });
   }
-  });
+});
 
 
 

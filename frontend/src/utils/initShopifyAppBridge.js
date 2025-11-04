@@ -8,7 +8,7 @@ import directory from "../directory";
 
 
 
-function isEmbedded() {
+export function isEmbedded() {
   try {
     return window.top !== window.self;
   } catch {
