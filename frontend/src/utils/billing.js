@@ -14,6 +14,6 @@ export async function handleBilling(userId) {
   const confirmationUrl = res?.confirmationUrl;
   if (!confirmationUrl) return console.error("No confirmation URL returned", res);
 
-  // ✅ Use App Bridge for Shopify admin URLs
+  // ✅ Redirect safely
   safeRedirect(confirmationUrl);
 }

@@ -73,16 +73,15 @@ export function safeRedirect(url) {
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host: window.shopifyAppHost,
   });
-
   const redirect = Redirect.create(app);
 
-  // ✅ If it’s a Shopify admin URL, use App Bridge
+  // Use App Bridge for Shopify admin URLs
   if (url.includes("admin.shopify.com")) {
     redirect.dispatch(Redirect.Action.REMOTE, url);
     return;
   }
 
-  // ✅ Otherwise, normal navigation (your API/backend)
+  // Use normal navigation for your backend URLs
   window.location.assign(url);
 }
 
