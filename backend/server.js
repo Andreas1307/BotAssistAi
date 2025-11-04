@@ -2263,9 +2263,9 @@ try {
 
 
 
-app.post("/create-subscription2", verifySessionToken, async (req, res) => {
+app.post("/create-subscription2", async (req, res) => {
   try {
-    const { userId, host } = req.body;
+    const { userId } = req.body;
 
     // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
@@ -2293,10 +2293,9 @@ app.post("/create-subscription2", verifySessionToken, async (req, res) => {
     `;
 
     const variables = {
-        name: "BotAssist Pro Plan",
-        returnUrl: `https://www.botassistai.com/billing-redirect.html?userId=${userId}&host=${encodeURIComponent(host)}`,
-
-       lineItems: [
+      name: "BotAssist Pro Plan",
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
+      lineItems: [
         {
           plan: {
             appRecurringPricingDetails: {
@@ -2310,13 +2309,6 @@ app.post("/create-subscription2", verifySessionToken, async (req, res) => {
         },
       ],
     };
-
-
-    console.log("🧠 Creating subscription for:", shop);
-console.log("🔑 Access token found:", !!token);
-console.log("📤 GraphQL Request →", JSON.stringify({ query, variables }, null, 2));
- 
-
 
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
@@ -2338,8 +2330,6 @@ console.log("📤 GraphQL Request →", JSON.stringify({ query, variables }, nul
     }
 
     const confirmationUrl = data.appSubscriptionCreate.confirmationUrl;
-    console.log("📥 GraphQL Response:", JSON.stringify(response.data, null, 2));
-console.log("Confirm Url ", confirmationUrl)
     res.json({ confirmationUrl });
 
   } catch (err) {
@@ -2353,28 +2343,22 @@ app.get("/billing/callback", async (req, res) => {
     const { userId, host } = req.query;
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
-    if (!rows.length) return res.status(404).send("User not found");
+    if (rows.length === 0) return res.status(404).send("User not found");
 
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
-    const shop = rows[0].shopify_shop_domain;
-    const adminRedirect = `https://admin.shopify.com/store/${shop.replace(
-      ".myshopify.com",
-      ""
-    )}/apps/botassistai?host=${encodeURIComponent(host)}`;
-
-    // ✅ Shopify Admin redirect (safe inside iframe)
-    res.redirect(adminRedirect);
+    // Redirect back into Shopify iframe
+    res.redirect(
+      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${host}`
+    );    
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
-
-
 
 
 

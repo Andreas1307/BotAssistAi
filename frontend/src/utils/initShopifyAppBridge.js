@@ -69,20 +69,14 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host: window.shopifyAppHost,
-  });
-  const redirect = Redirect.create(app);
+  const app = getAppBridgeInstance();
 
-  // Use App Bridge for Shopify admin URLs
-  if (url.includes("admin.shopify.com")) {
+  if (isEmbedded() && app) {
+    const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
-    return;
+  } else {
+    window.top.location.href = url;
   }
-
-  // Use normal navigation for your backend URLs
-  window.location.assign(url);
 }
 
 export async function fetchWithAuth(url, options = {}) {

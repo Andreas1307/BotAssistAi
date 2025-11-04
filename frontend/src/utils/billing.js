@@ -1,19 +1,21 @@
 import { safeRedirect } from "./initShopifyAppBridge";
 import directory from "../directory";
 import axios from "axios";
-import { fetchWithAuth } from "./initShopifyAppBridge";
 
 export async function handleBilling(userId) {
-  const host = window.shopifyAppHost;
+  try {
+    const res = await axios.post(`${directory}/create-subscription2`, {
+      userId,
+    });
 
-  const res = await fetchWithAuth(`${directory}/create-subscription2`, {
-    method: "POST",
-    body: { userId, host },
-  });
+    const data = res.data;
 
-  const confirmationUrl = res?.confirmationUrl;
-  if (!confirmationUrl) return console.error("No confirmation URL returned", res);
-
-  // ✅ Redirect safely
-  safeRedirect(confirmationUrl);
+    if (data?.confirmationUrl) {
+      safeRedirect(data.confirmationUrl);
+    } else {
+      console.error("No confirmationUrl returned from backend", data);
+    }
+  } catch (err) {
+    console.error("❌ Billing activation failed:", err.response?.data || err.message);
+  }
 }
