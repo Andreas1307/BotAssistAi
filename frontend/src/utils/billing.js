@@ -7,17 +7,21 @@ import directory from "../directory";
 export async function handleBilling(userId) {
   try {
     const host = window.shopifyAppHost;
-    const res = await axios.post(`${directory}/create-subscription2`, { userId, host });
+    const res = await fetch(`${directory}/create-subscription2`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, host }),
+    }).then(r => r.json());
 
-    const confirmationUrl = res.data?.confirmationUrl;
+    const confirmationUrl = res.confirmationUrl;
     if (!confirmationUrl) {
-      console.error("No confirmation URL returned", res.data);
+      console.error("No confirmation URL returned", res);
       return;
     }
 
-    // Use safe redirect to escape iframe if needed
+    // ✅ Use App Bridge safe redirect
     safeRedirect(confirmationUrl);
   } catch (err) {
-    console.error("❌ Billing activation failed:", err.response?.data || err.message);
+    console.error("❌ Billing activation failed:", err.message);
   }
-}
+} 

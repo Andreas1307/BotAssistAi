@@ -71,11 +71,13 @@ export function getAppBridgeInstance() {
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
-  if (isEmbedded() && app && url.includes("admin.shopify.com")) {
+  if (isEmbedded() && app) {
+    // ✅ This is the correct Shopify App Bridge redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url; // top-level navigation
+    // Fallback for standalone / non-embedded
+    window.location.assign(url);
   }
 }
 
