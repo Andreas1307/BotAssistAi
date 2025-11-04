@@ -2365,13 +2365,14 @@ app.get("/billing/callback", async (req, res) => {
       ".myshopify.com",
       ""
     )}/apps/botassistai?host=${encodeURIComponent(host)}`;
+
+    // ✅ Shopify Admin redirect (safe inside iframe)
     res.redirect(adminRedirect);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 

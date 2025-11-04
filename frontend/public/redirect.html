@@ -6,12 +6,15 @@
   <script>
     (function () {
       const target = new URLSearchParams(window.location.search).get("target");
-      if (!target) return (document.body.textContent = "Missing target URL.");
+      if (!target) {
+        document.body.textContent = "Missing target URL.";
+        return;
+      }
 
       console.log("➡️ Redirecting through proxy →", target);
 
+      // Force top-level navigation
       if (window.top !== window.self) {
-        // Shopify allows navigating top window via same-origin page
         window.top.location.assign(target);
       } else {
         window.location.assign(target);
