@@ -71,7 +71,12 @@ export function getAppBridgeInstance() {
 export function safeRedirect(url) {
   const frontendDomain = "https://www.botassistai.com";
 
-  // Detect if running inside Shopify iframe
+  // If the URL points to your backend, always wrap through proxy
+  if (url.startsWith("https://api.botassistai.com")) {
+    url = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+  }
+
+  // Detect if embedded
   const embedded = (() => {
     try {
       return window.top !== window.self;
@@ -82,11 +87,6 @@ export function safeRedirect(url) {
 
   console.log("🔁 [safeRedirect] redirecting to:", url);
 
-  // Always proxy API domain redirects through frontend
-  if (url.startsWith("https://api.botassistai.com")) {
-    url = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
-  }
-
   if (embedded) {
     try {
       const app = createApp({
@@ -95,12 +95,19 @@ export function safeRedirect(url) {
       });
 
       const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, url);
+
+      // Only use App Bridge for URLs that are Shopify/admin safe
+      if (url.startsWith("https://admin.shopify.com") || url.startsWith(frontendDomain)) {
+        redirect.dispatch(Redirect.Action.REMOTE, url);
+        return;
+      }
+
+      // For API URLs, use proxy
+      window.location.assign(url);
       return;
     } catch (err) {
-      console.warn("⚠️ [safeRedirect] App Bridge failed:", err);
-      // Fallback: use same-origin proxy to break out
-      window.location.assign(`${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`);
+      console.warn("⚠️ [safeRedirect] App Bridge failed, fallback to proxy:", err);
+      window.location.assign(url);
       return;
     }
   }
@@ -108,6 +115,7 @@ export function safeRedirect(url) {
   // Not embedded → normal navigation
   window.location.assign(url);
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 
