@@ -10,15 +10,18 @@
         const host = params.get("host");
 
         if (!userId || !host) {
-          document.body.innerText = "Missing userId or host parameter.";
+          // Safe check: only run this after DOM loaded
+          window.addEventListener("DOMContentLoaded", () => {
+            document.body.innerText = "Missing userId or host parameter.";
+          });
           return;
         }
 
-        // 🚀 Instead of fetch(), just do a normal redirect
+        // 🚀 Redirect to your backend callback (not AJAX)
         const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
         console.log("🔁 Redirecting to billing callback:", callbackUrl);
 
-        // This will perform a full-page redirect (not AJAX)
+        // Perform a full-page redirect outside iframe
         window.top.location.href = callbackUrl;
       })();
     </script>
