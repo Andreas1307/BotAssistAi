@@ -14,7 +14,6 @@ export async function handleBilling(userId) {
   const confirmationUrl = res?.confirmationUrl;
   if (!confirmationUrl) return console.error("No confirmation URL returned", res);
 
-  // ✅ Always go through proxy for cross-origin URL
-  const proxyUrl = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(confirmationUrl)}`;
-  window.location.assign(proxyUrl);
+  // ✅ Use App Bridge for Shopify admin URLs
+  safeRedirect(confirmationUrl);
 }

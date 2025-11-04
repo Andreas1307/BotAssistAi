@@ -69,53 +69,22 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const frontendDomain = "https://www.botassistai.com";
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host: window.shopifyAppHost,
+  });
 
-  // If the URL points to your backend, always wrap through proxy
-  if (url.startsWith("https://api.botassistai.com")) {
-    url = `${frontendDomain}/redirect.html?target=${encodeURIComponent(url)}`;
+  const redirect = Redirect.create(app);
+
+  // ✅ If it’s a Shopify admin URL, use App Bridge
+  if (url.includes("admin.shopify.com")) {
+    redirect.dispatch(Redirect.Action.REMOTE, url);
+    return;
   }
 
-  // Detect if embedded
-  const embedded = (() => {
-    try {
-      return window.top !== window.self;
-    } catch {
-      return true;
-    }
-  })();
-
-  console.log("🔁 [safeRedirect] redirecting to:", url);
-
-  if (embedded) {
-    try {
-      const app = createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host: window.shopifyAppHost,
-      });
-
-      const redirect = Redirect.create(app);
-
-      // Only use App Bridge for URLs that are Shopify/admin safe
-      if (url.startsWith("https://admin.shopify.com") || url.startsWith(frontendDomain)) {
-        redirect.dispatch(Redirect.Action.REMOTE, url);
-        return;
-      }
-
-      // For API URLs, use proxy
-      window.location.assign(url);
-      return;
-    } catch (err) {
-      console.warn("⚠️ [safeRedirect] App Bridge failed, fallback to proxy:", err);
-      window.location.assign(url);
-      return;
-    }
-  }
-
-  // Not embedded → normal navigation
+  // ✅ Otherwise, normal navigation (your API/backend)
   window.location.assign(url);
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 
