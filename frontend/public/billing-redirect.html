@@ -10,28 +10,24 @@
         const host = params.get("host");
         const shop = params.get("shop");
 
-        // ✅ Case 1: only shop exists (Shopify redirected without userId)
-        if (!userId && shop) {
-          document.body.innerText = "✅ Subscription completed! You may close this tab.";
-          console.log("No userId, but shop param found — stopping here.");
+        // Case 1 — first step (userId present)
+        if (userId && host) {
+          const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
+          console.log("🔁 Redirecting to billing callback:", callbackUrl);
+          window.top.location.href = callbackUrl;
           return;
         }
 
-        // ✅ Case 2: still missing something critical
-        else if (!userId || !host) {
-          window.addEventListener("DOMContentLoaded", () => {
-            document.body.innerText = "❌ Missing userId or host parameter.";
-          });
-          console.warn("Missing userId or host:", { userId, host, shop });
+        // Case 2 — final return from callback (Shopify stripped userId)
+        if (shop && host) {
+          document.body.innerText = "✅ Subscription completed! You can close this tab.";
+          console.log("✅ Final return detected — showing completion message.");
           return;
         }
 
-        // ✅ Case 3: everything is fine → redirect
-        const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
-        console.log("🔁 Redirecting to billing callback:", callbackUrl);
-
-        // Perform a full-page redirect outside iframe
-        window.top.location.href = callbackUrl;
+        // Case 3 — error
+        document.body.innerText = "❌ Missing parameters. Please try again.";
+        console.warn("❌ Missing params:", { userId, host, shop });
       })();
     </script>
   </head>
