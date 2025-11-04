@@ -2340,14 +2340,20 @@ app.get("/billing/callback", async (req, res) => {
   try {
     const { userId, host } = req.query;
 
+    // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
+    const user = rows[0];
+    const shop = user.shopify_shop_domain; // <-- define shop here!
+
+    // Update subscription info
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
+    // Redirect back into Shopify app
     const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}`;
     res.redirect(appUrl);
   } catch (err) {
@@ -2355,6 +2361,7 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
