@@ -1,39 +1,27 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Finalizing Subscription...</title>
-    <script>
-      (function () {
-        const params = new URLSearchParams(window.location.search);
-        const userId = params.get("userId");
-        const host = params.get("host");
-        const shop = params.get("shop");
+<head>
+  <meta charset="utf-8">
+  <title>Billing Redirect</title>
+  <script type="module">
+    import createApp from "@shopify/app-bridge";
+    import { Redirect } from "@shopify/app-bridge/actions";
 
-        if (userId && host) {
-          // 1️⃣ Construct API callback URL
-          const target = `https://api.botassistai.com/billing/callback?userId=${encodeURIComponent(
-            userId
-          )}&host=${encodeURIComponent(host)}`;
+    const params = new URLSearchParams(window.location.search);
+    const confirmationUrl = params.get("confirmationUrl");
+    const host = params.get("host");
 
-          // 2️⃣ Wrap through same-origin proxy to escape iframe
-          const proxy = `https://www.botassistai.com/redirect.html?target=${encodeURIComponent(
-            target
-          )}`;
+    const app = createApp({
+      apiKey: "YOUR_SHOPIFY_API_KEY",
+      host,
+      forceRedirect: true
+    });
 
-          console.log("🔁 Escaping iframe via proxy:", proxy);
-          window.location.href = proxy; // safe navigation inside iframe
-          return;
-        }
-
-        console.warn("⚠️ Missing userId/host params");
-        document.addEventListener("DOMContentLoaded", () => {
-          document.body.innerText = "Missing billing parameters.";
-        });
-      })();
-    </script>
-  </head>
-  <body>
-    <p>Finalizing your subscription...</p>
-  </body>
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+  </script>
+</head>
+<body>
+  <p>Redirecting to Shopify to finalize subscription…</p>
+</body>
 </html>

@@ -20,7 +20,7 @@ export async function handleBilling(userId) {
       method: "POST",
       body: { userId }
      });
-    const confirmationUrl = res.data?.confirmationUrl;
+    const confirmationUrl = res.confirmationUrl;
 
     if (!confirmationUrl) {
       console.error("No confirmation URL returned from backend", res.data);
