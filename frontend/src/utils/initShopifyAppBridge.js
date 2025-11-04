@@ -72,12 +72,10 @@ export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
   if (isEmbedded() && app) {
-    // ✅ This is the correct Shopify App Bridge redirect
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
+    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ Shopify-approved redirect
   } else {
-    // Fallback for standalone / non-embedded
-    window.location.assign(url);
+    window.location.assign(url); // Fallback for standalone site
   }
 }
 

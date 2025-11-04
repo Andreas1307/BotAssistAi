@@ -7,7 +7,7 @@ import directory from "../directory";
 export async function handleBilling(userId) {
   try {
     const host = window.shopifyAppHost;
-    const res = await fetch(`${directory}/create-subscription2`, {
+    const res = await fetch(`/create-subscription2`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, host }),
@@ -19,9 +19,9 @@ export async function handleBilling(userId) {
       return;
     }
 
-    // ✅ Use App Bridge safe redirect
+    // ✅ Use safe redirect
     safeRedirect(confirmationUrl);
   } catch (err) {
     console.error("❌ Billing activation failed:", err.message);
   }
-} 
+}
