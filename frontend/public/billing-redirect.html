@@ -7,25 +7,26 @@
       (function () {
         const params = new URLSearchParams(window.location.search);
         const userId = params.get("userId");
-const host = params.get("host");
-const shop = params.get("shop");
+        const host = params.get("host");
+        const shop = params.get("shop");
 
-if (!userId && shop) {
-  // fallback: call API to find user by shop, or just display a message
-  document.body.innerText = "Subscription completed! You may close this tab.";
-  return;
-}
-
-
-        if (!userId || !host) {
-          // Safe check: only run this after DOM loaded
-          window.addEventListener("DOMContentLoaded", () => {
-            document.body.innerText = "Missing userId or host parameter.";
-          });
+        // ✅ Case 1: only shop exists (Shopify redirected without userId)
+        if (!userId && shop) {
+          document.body.innerText = "✅ Subscription completed! You may close this tab.";
+          console.log("No userId, but shop param found — stopping here.");
           return;
         }
 
-        // 🚀 Redirect to your backend callback (not AJAX)
+        // ✅ Case 2: still missing something critical
+        else if (!userId || !host) {
+          window.addEventListener("DOMContentLoaded", () => {
+            document.body.innerText = "❌ Missing userId or host parameter.";
+          });
+          console.warn("Missing userId or host:", { userId, host, shop });
+          return;
+        }
+
+        // ✅ Case 3: everything is fine → redirect
         const callbackUrl = `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`;
         console.log("🔁 Redirecting to billing callback:", callbackUrl);
 
