@@ -31,19 +31,15 @@ export async function initShopifyAppBridge() {
   }
 
   if (embedded && !host && shop) {
-    console.log("🧭 Embedded without host — requesting top-level redirect...");
+    console.log("🧭 Embedded without host — redirecting to top-level auth...");
   
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host, // must be Shopify host query param
-      forceRedirect: true,
-    });
-    const redirect = Redirect.create(app);
-  
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://www.botassistai.com/auth.html?shop=${encodeURIComponent(shop)}`
-    );
+    // Use window.top to break out of iframe safely
+    const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    if (window.top) {
+      window.top.location.href = redirectUrl;
+    } else {
+      window.location.href = redirectUrl;
+    }
   
     return null;
   }
@@ -71,14 +67,14 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
-
   if (app) {
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ Shopify-approved redirect
+    redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.location.assign(url); // fallback if not embedded
+    window.top.location.href = url; // fallback outside Shopify iframe
   }
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 
