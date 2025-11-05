@@ -18,16 +18,16 @@ export async function initShopifyAppBridge() {
       return null;
     }
 
+    // 🔹 Break out from Shopify iframe if no host
     if (isEmbedded() && !host) {
-      const topLevelUrl = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
-      const breakoutUrl = `https://www.botassistai.com/redirect?target=${encodeURIComponent(topLevelUrl)}`;
+      const topLevelAuth = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
+      const breakoutUrl = `https://www.botassistai.com/redirect?target=${encodeURIComponent(topLevelAuth)}`;
       console.log("🔄 Breaking out via", breakoutUrl);
-      window.location.assign(breakoutUrl);
+      window.location.href = breakoutUrl; // ← safe
       return null;
-    } 
-    
+    }
 
-    // 🚀 If we’re outside iframe (or already have host), safe to continue
+    // 🚀 Safe: outside iframe or already have host
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -51,7 +51,6 @@ export async function initShopifyAppBridge() {
     return null;
   }
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
