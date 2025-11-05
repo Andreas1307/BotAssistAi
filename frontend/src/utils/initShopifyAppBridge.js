@@ -30,21 +30,13 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-if (embedded && !host && shop) {
-  console.log("🔐 Missing host param — breaking out of iframe safely");
-
-  // Construct full absolute URL to your /auth page on *the same domain*
-  const authPage = `https://botassistai.com/auth?shop=${encodeURIComponent(shop)}`;
-
-  // Break out of iframe by telling the *top window* to navigate
-  if (window.top !== window.self) {
-    window.top.location.href = authPage;
-  } else {
-    window.location.href = authPage;
+  // 🧭 Embedded, but missing host — must break out of iframe safely
+  if (embedded && !host && shop) {
+    console.log("🔐 Missing host param — redirecting to top-level auth helper");
+    // Redirect within same domain (allowed) — this page will do top-level redirect
+    window.location.assign(`/auth?shop=${encodeURIComponent(shop)}`);
+    return null;
   }
-  return null;
-}
-
 
   // ✅ Embedded with host → initialize App Bridge
   if (embedded && host) {
