@@ -23,8 +23,8 @@ export async function handleBilling(userId) {
       throw new Error("No confirmationUrl returned");
     }
 
-    // ✅ App Bridge redirect (stays inside Shopify)
-    safeRedirect(confirmationUrl);
+    safeRedirect(`/redirect?target=${encodeURIComponent(confirmationUrl)}`);
+
   } catch (err) {
     console.error("❌ Billing activation failed:", err.message);
   }

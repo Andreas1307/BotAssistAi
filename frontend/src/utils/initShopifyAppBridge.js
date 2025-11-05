@@ -30,13 +30,14 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // 🧭 Embedded, but missing host — must break out of iframe safely
   if (embedded && !host && shop) {
-    console.log("🔐 Missing host param — redirecting to top-level auth helper");
-    // Redirect within same domain (allowed) — this page will do top-level redirect
-    window.location.assign(`/auth?shop=${encodeURIComponent(shop)}`);
+    console.log("🔐 Missing host param — redirecting to top-level auth route (safe)");
+  
+    // ✅ Always redirect through your own domain (same origin)
+    window.top.location.href = `/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
     return null;
   }
+  
 
   // ✅ Embedded with host → initialize App Bridge
   if (embedded && host) {
@@ -64,11 +65,14 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // fallback when not embedded
-    window.location.assign(url);
+    // fallback (top-level redirect)
+    if (window.top !== window.self) {
+      window.top.location.href = url;
+    } else {
+      window.location.href = url;
+    }
   }
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 
