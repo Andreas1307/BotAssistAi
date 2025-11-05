@@ -17,16 +17,18 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // If embedded **and no host**, go through your breakout page
+  // If embedded AND no host, break out via your domain page
   if (window.top !== window.self && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     const breakout = `https://www.botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
     console.log("🔄 Breaking out via", breakout);
-    window.location.href = breakout; // ✅ safe
+
+    // ✅ Use window.location.href, not window.top.href
+    window.location.href = breakout;
     return null;
   }
 
-  // Otherwise safe to initialize App Bridge
+  // Otherwise safe: outside iframe or already have host
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -36,7 +38,6 @@ export async function initShopifyAppBridge() {
   window.appBridge = app;
   return app;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
