@@ -2,57 +2,50 @@ import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
 import directory from "../directory";
-/**
- * Detect if running inside Shopify iframe
- */
 
 
 
-export function isEmbedded() {
-  try {
-    return window.top !== window.self;
-  } catch {
-    return true;
-  }
+function isEmbedded() {
+  return window.top !== window.self;
 }
 
+
 export async function initShopifyAppBridge() {
-  const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-  const host = params.get("host");
-  const embedded = isEmbedded();
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
 
-  window.shopifyAppHost = host;
+    if (!isEmbedded() || !shop || !host) {
+      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
+      return null;
+    }
+    
 
-  // 🌍 Running outside Shopify
-  if (!embedded) {
-    console.log("🌍 Outside Shopify — no App Bridge needed");
-    return null;
-  }
-
-  if (embedded && !host && shop) {
-    console.log("🔐 Missing host param — redirecting to top-level auth route (safe)");
-  
-    // ✅ Always redirect through your own domain (same origin)
-    window.top.location.href = `/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
-    return null;
-  }
-  
-
-  // ✅ Embedded with host → initialize App Bridge
-  if (embedded && host) {
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
       forceRedirect: true,
     });
+
     window.appBridge = app;
+
+    // Silently try to initialize Web Vitals
+    try {
+      if (typeof app.initializeWebVitals === "function") {
+        app.initializeWebVitals();
+      }
+    } catch {
+      // ignore
+    }
+
     console.log("✅ Shopify App Bridge initialized");
     return app;
+  } catch (err) {
+    console.error("❌ Failed to init App Bridge:", err);
+    return null;
   }
-
-  console.warn("⚠️ Missing shop or host — skipping App Bridge init");
-  return null;
 }
 
 export function getAppBridgeInstance() {
@@ -61,12 +54,12 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
-  if (app) {
+
+  if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // fallback when not embedded
-    window.location.assign(url);
+    window.top.location.href = url;
   }
 }
 
