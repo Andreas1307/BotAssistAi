@@ -2341,7 +2341,6 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
-// sa fac update la tot
 
 
 

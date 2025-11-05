@@ -11,9 +11,10 @@
           return;
         }
 
-        // 🚀 Perform safe top-level redirect to your API
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
         console.log("Redirecting to OAuth:", authUrl);
+
+        // Now safe to redirect cross-origin, because we're top-level
         window.location.href = authUrl;
       })();
     </script>
