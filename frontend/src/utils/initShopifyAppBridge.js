@@ -14,18 +14,18 @@ export async function initShopifyAppBridge() {
 
   if (!shop) return null;
 
-  // ❌ DO NOT set window.top.location.href from inside Shopify iframe
+  // ❌ DO NOT set window.top.location.href directly inside iframe
   if (window.top !== window.self && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     const breakout = `https://www.botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
     console.log("🔄 Breaking out via", breakout);
 
-    // ✅ Safe redirect inside iframe
+    // ✅ Safe redirect
     window.location.href = breakout;
     return null;
   }
 
-  // ✅ Safe if not embedded or host already exists
+  // ✅ Safe if not embedded or host exists
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -35,6 +35,7 @@ export async function initShopifyAppBridge() {
   window.appBridge = app;
   return app;
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
