@@ -2306,7 +2306,7 @@ app.post("/create-subscription2", async (req, res) => {
         },
       ],
     };
-    
+
 
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
@@ -2337,30 +2337,29 @@ app.post("/create-subscription2", async (req, res) => {
 });
 
 app.get("/billing/callback", async (req, res) => {
+  const { userId, host } = req.query;
   try {
-    const { userId, host } = req.query;
-
-    // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
     const user = rows[0];
-    const shop = user.shopify_shop_domain; // <-- define shop here!
+    const shop = user.shopify_shop_domain;
 
-    // Update subscription info
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
-    // Redirect back into Shopify app
+    // Redirect back into Shopify app using host
     const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}`;
     res.redirect(appUrl);
+
   } catch (err) {
-    console.error("❌ Billing callback failed:", err.response?.data || err.message);
+    console.error(err);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 

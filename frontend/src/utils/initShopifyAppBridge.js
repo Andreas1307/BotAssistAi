@@ -35,7 +35,8 @@ export async function initShopifyAppBridge() {
   
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: "",
+      host, // must be Shopify host query param
+      forceRedirect: true,
     });
     const redirect = Redirect.create(app);
   
@@ -70,11 +71,12 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
+
   if (app) {
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ safe
+    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ Shopify-approved redirect
   } else {
-    window.location.assign(url); 
+    window.location.assign(url); // fallback if not embedded
   }
 }
 
