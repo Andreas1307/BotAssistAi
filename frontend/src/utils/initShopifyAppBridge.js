@@ -16,11 +16,30 @@ export async function initShopifyAppBridge() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
+    if (!shop) {
+      console.warn("Missing shop param — cannot continue");
       return null;
     }
+    
+    if (!isEmbedded()) {
+      // Safe, because we're top-level
+      window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      return null;
+    }
+    
+    // Embedded but missing host → break out via proxy page
+    if (isEmbedded() && !host) {
+      const breakoutUrl = `/redirect?target=${encodeURIComponent(
+        `https://api.botassistai.com/shopify/auth?shop=${shop}`
+      )}`;
+      if (window.top !== window.self) {
+        window.top.location.assign(breakoutUrl);
+      } else {
+        window.location.assign(breakoutUrl);
+      }
+      return null;
+    }
+    
     
 
     const app = createApp({
@@ -59,7 +78,12 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url;
+    // Safe top-level navigation
+    if (window.top !== window.self) {
+      window.top.location.assign(url);
+    } else {
+      window.location.assign(url);
+    }
   }
 }
 
