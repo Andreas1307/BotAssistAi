@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Redirecting…</title>
-  </head>
-  <body>
-    <p>Redirecting…</p>
-    <script>
-      const target = new URLSearchParams(window.location.search).get("target");
-      if (!target) {
-        document.body.textContent = "Missing target URL.";
-      } else {
-        console.log("🧭 Breaking out of iframe →", target);
-        // Only allowed because this page is on your domain
-        window.top.location.href = target;
-      }
-    </script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting…</title>
+</head>
+<body>
+  <p>Redirecting…</p>
+  <script>
+    const target = new URLSearchParams(window.location.search).get("target");
+    if (!target) {
+      document.body.textContent = "Missing target URL.";
+    } else {
+      // 🔹 This works because the page is on your domain
+      window.top.location.href = target;
+    }
+  </script>
+</body>
 </html>
