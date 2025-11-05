@@ -7,7 +7,7 @@ export async function handleBilling(userId) {
   try {
     const host = window.shopifyAppHost;
 
-    const response = await fetch(`/create-subscription2`, {
+    const response = await fetch(`${directory}/create-subscription2`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, host }),
