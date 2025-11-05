@@ -24,27 +24,32 @@ export async function initShopifyAppBridge() {
 
   window.shopifyAppHost = host;
 
-  // 🧩 1️⃣ Case: Outside Shopify (standalone site)
+  // 🌍 1️⃣ Running outside Shopify (direct URL visit)
   if (!embedded) {
-    console.log("🌍 Running outside Shopify — App Bridge not required");
+    console.log("🌍 Running outside Shopify — no App Bridge needed");
     return null;
   }
 
+  // 🧭 2️⃣ Embedded inside Shopify but missing host (OAuth needed)
   if (embedded && !host && shop) {
-    console.log("🧭 Embedded without host — redirecting to top-level auth...");
-  
-    // Use window.top to break out of iframe safely
-    const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    if (window.top) {
-      window.top.location.href = redirectUrl;
-    } else {
-      window.location.href = redirectUrl;
-    }
-  
+    console.log("🔐 Redirecting to top-level auth (forceRedirect)...");
+
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host: shop, // just to initialize app
+      forceRedirect: true, // <- THIS tells Shopify to break out of iframe safely
+    });
+
+    const redirect = Redirect.create(app);
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+    );
+
     return null;
   }
-  
 
+  // ✅ 3️⃣ Inside Shopify iframe with valid host
   if (embedded && host) {
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -52,14 +57,13 @@ export async function initShopifyAppBridge() {
       forceRedirect: true,
     });
     window.appBridge = app;
-    console.log("✅ Shopify App Bridge initialized successfully");
+    console.log("✅ App Bridge initialized successfully");
     return app;
   }
 
   console.warn("⚠️ Missing shop or host — skipping App Bridge init");
   return null;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
@@ -71,7 +75,7 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url; // fallback outside Shopify iframe
+    window.location.href = url;
   }
 }
 
