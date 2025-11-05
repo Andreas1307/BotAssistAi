@@ -65,14 +65,11 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // fallback (top-level redirect)
-    if (window.top !== window.self) {
-      window.top.location.href = url;
-    } else {
-      window.location.href = url;
-    }
+    // fallback when not embedded
+    window.location.assign(url);
   }
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 
