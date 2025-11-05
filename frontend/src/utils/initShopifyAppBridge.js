@@ -70,12 +70,11 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
-
-  if (isEmbedded() && app) {
+  if (app) {
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ Shopify-approved redirect
+    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ safe
   } else {
-    window.location.assign(url); // Fallback for standalone site
+    window.location.assign(url); 
   }
 }
 
