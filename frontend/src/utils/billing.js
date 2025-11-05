@@ -18,17 +18,13 @@ export async function handleBilling(userId) {
       throw new Error(`Server returned ${response.status}: ${text}`);
     }
 
-    const data = await response.json();
-    const confirmationUrl = data.confirmationUrl;
-
+    const { confirmationUrl } = await response.json();
     if (!confirmationUrl) {
-      console.error("No confirmation URL returned from backend", data);
-      return;
+      throw new Error("No confirmationUrl returned");
     }
 
-    // ✅ Use App Bridge to redirect safely inside Shopify iframe
+    // ✅ App Bridge redirect (stays inside Shopify)
     safeRedirect(confirmationUrl);
-
   } catch (err) {
     console.error("❌ Billing activation failed:", err.message);
   }

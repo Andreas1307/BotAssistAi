@@ -2261,13 +2261,12 @@ try {
 
 
 
-
+const APP_URL = "https://api.botassistai.com";
+const APP_HANDLE = process.env.SHOPIFY_APP_HANDLE;
 
 app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId, host } = req.body;
-
-    // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
@@ -2275,26 +2274,18 @@ app.post("/create-subscription2", async (req, res) => {
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
 
-    // GraphQL mutation
     const query = `
       mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
         appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
-          userErrors {
-            field
-            message
-          }
-          appSubscription {
-            id
-            name
-          }
+          userErrors { field message }
+          appSubscription { id name }
           confirmationUrl
         }
-      }
-    `;
+      }`;
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://${req.headers.host}/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
+      returnUrl: `${APP_URL}/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
       lineItems: [
         {
           plan: {
@@ -2307,7 +2298,6 @@ app.post("/create-subscription2", async (req, res) => {
       ],
     };
 
-
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
       { query, variables },
@@ -2319,17 +2309,11 @@ app.post("/create-subscription2", async (req, res) => {
       }
     );
 
-    const { data } = response.data;
-    const errors = data.appSubscriptionCreate.userErrors;
+    const errors = response.data.data.appSubscriptionCreate.userErrors;
+    if (errors.length > 0) return res.status(400).json({ errors });
 
-    if (errors.length > 0) {
-      console.error("Shopify errors:", errors);
-      return res.status(400).json({ errors });
-    }
-
-    const confirmationUrl = data.appSubscriptionCreate.confirmationUrl;
+    const confirmationUrl = response.data.data.appSubscriptionCreate.confirmationUrl;
     res.json({ confirmationUrl });
-
   } catch (err) {
     console.error("❌ Error creating subscription:", err.response?.data || err.message);
     res.status(500).send("Failed to create subscription");
@@ -2340,7 +2324,7 @@ app.get("/billing/callback", async (req, res) => {
   const { userId, host } = req.query;
   try {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
-    if (rows.length === 0) return res.status(404).send("User not found");
+    if (!rows.length) return res.status(404).send("User not found");
 
     const user = rows[0];
     const shop = user.shopify_shop_domain;
@@ -2350,15 +2334,14 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // Redirect back into Shopify app using host
-    const appUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}`;
-    res.redirect(appUrl);
-
+    const redirectUrl = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}`;
+    res.redirect(redirectUrl);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Billing callback failed:", err.message);
     res.status(500).send("Billing callback failed");
   }
 });
+// sa fac update la tot
 
 
 

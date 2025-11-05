@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>Redirecting to Shopify Auth</title>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    if (shop) {
-      // now it’s safe to hit your backend
-      window.location.href =
-        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    } else {
-      document.body.innerText = "Missing shop parameter.";
-    }
-  </script>
-</head>
-<body>
-  <p>Redirecting...</p>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Authorizing Shopify App…</title>
+    <script>
+      (function () {
+        const shop = new URLSearchParams(window.location.search).get("shop");
+        if (!shop) {
+          document.body.textContent = "Missing shop parameter.";
+          return;
+        }
+
+        // 🚀 Perform safe top-level redirect to your API
+        const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+        console.log("Redirecting to OAuth:", authUrl);
+        window.location.href = authUrl;
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to Shopify for authentication…</p>
+  </body>
 </html>

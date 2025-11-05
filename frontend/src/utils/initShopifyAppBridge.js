@@ -24,32 +24,21 @@ export async function initShopifyAppBridge() {
 
   window.shopifyAppHost = host;
 
-  // 🌍 1️⃣ Running outside Shopify (direct URL visit)
+  // 🌍 Running outside Shopify
   if (!embedded) {
-    console.log("🌍 Running outside Shopify — no App Bridge needed");
+    console.log("🌍 Outside Shopify — no App Bridge needed");
     return null;
   }
 
-  // 🧭 2️⃣ Embedded inside Shopify but missing host (OAuth needed)
+  // 🧭 Embedded, but missing host — must break out of iframe safely
   if (embedded && !host && shop) {
-    console.log("🔐 Redirecting to top-level auth (forceRedirect)...");
-
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: shop, // just to initialize app
-      forceRedirect: true, // <- THIS tells Shopify to break out of iframe safely
-    });
-
-    const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-    );
-
+    console.log("🔐 Missing host param — redirecting to top-level auth helper");
+    // Redirect within same domain (allowed) — this page will do top-level redirect
+    window.location.assign(`/auth?shop=${encodeURIComponent(shop)}`);
     return null;
   }
 
-  // ✅ 3️⃣ Inside Shopify iframe with valid host
+  // ✅ Embedded with host → initialize App Bridge
   if (embedded && host) {
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -57,7 +46,7 @@ export async function initShopifyAppBridge() {
       forceRedirect: true,
     });
     window.appBridge = app;
-    console.log("✅ App Bridge initialized successfully");
+    console.log("✅ Shopify App Bridge initialized");
     return app;
   }
 
@@ -75,7 +64,8 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.location.href = url;
+    // fallback when not embedded
+    window.location.assign(url);
   }
 }
 
