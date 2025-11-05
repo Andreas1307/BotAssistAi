@@ -3,8 +3,6 @@ import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
 import directory from "../directory";
 
-
-
 function isEmbedded() {
   return window.top !== window.self;
 }
@@ -20,13 +18,14 @@ export async function initShopifyAppBridge() {
       return null;
     }
 
-    // 🚪 If we’re inside Shopify’s iframe, break out first
     if (isEmbedded() && !host) {
       const topLevelUrl = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
-      console.log("🔄 Redirecting to top-level auth:", topLevelUrl);
-      window.top.location.href = topLevelUrl;
+      const breakoutUrl = `https://www.botassistai.com/redirect?target=${encodeURIComponent(topLevelUrl)}`;
+      console.log("🔄 Breaking out via", breakoutUrl);
+      window.location.assign(breakoutUrl);
       return null;
-    }
+    } 
+    
 
     // 🚀 If we’re outside iframe (or already have host), safe to continue
     const app = createApp({

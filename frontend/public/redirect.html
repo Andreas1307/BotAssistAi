@@ -10,6 +10,7 @@
       } else {
         console.log("🧭 Breaking out of iframe →", target);
         if (window.top !== window.self) {
+          // This happens on your own domain — allowed ✅
           window.top.location.assign(target);
         } else {
           window.location.assign(target);
