@@ -9,7 +9,6 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-
 export async function initShopifyAppBridge() {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -17,31 +16,19 @@ export async function initShopifyAppBridge() {
     const host = params.get("host");
 
     if (!shop) {
-      console.warn("Missing shop param — cannot continue");
+      console.warn("⚠️ Missing shop param — cannot continue");
       return null;
     }
-    
-    if (!isEmbedded()) {
-      // Safe, because we're top-level
-      window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      return null;
-    }
-    
-    // Embedded but missing host → break out via proxy page
-    if (isEmbedded() && !host) {
-      const breakoutUrl = `/redirect?target=${encodeURIComponent(
-        `https://api.botassistai.com/shopify/auth?shop=${shop}`
-      )}`;
-      if (window.top !== window.self) {
-        window.top.location.assign(breakoutUrl);
-      } else {
-        window.location.assign(breakoutUrl);
-      }
-      return null;
-    }
-    
-    
 
+    // 🚪 If we’re inside Shopify’s iframe, break out first
+    if (isEmbedded() && !host) {
+      const topLevelUrl = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
+      console.log("🔄 Redirecting to top-level auth:", topLevelUrl);
+      window.top.location.href = topLevelUrl;
+      return null;
+    }
+
+    // 🚀 If we’re outside iframe (or already have host), safe to continue
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -50,13 +37,12 @@ export async function initShopifyAppBridge() {
 
     window.appBridge = app;
 
-    // Silently try to initialize Web Vitals
     try {
       if (typeof app.initializeWebVitals === "function") {
         app.initializeWebVitals();
       }
     } catch {
-      // ignore
+      /* ignore */
     }
 
     console.log("✅ Shopify App Bridge initialized");
@@ -66,6 +52,7 @@ export async function initShopifyAppBridge() {
     return null;
   }
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
