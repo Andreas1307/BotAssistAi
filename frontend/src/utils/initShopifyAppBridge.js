@@ -14,7 +14,7 @@ export async function initShopifyAppBridge() {
 
   if (!shop) return null;
 
-  // ❌ Don’t set window.top.location.href directly from inside Shopify iframe
+  // ❌ DO NOT set window.top.location.href from inside Shopify iframe
   if (window.top !== window.self && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     const breakout = `https://www.botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
@@ -25,7 +25,7 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // ✅ Safe if not embedded or already has host
+  // ✅ Safe if not embedded or host already exists
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -35,7 +35,6 @@ export async function initShopifyAppBridge() {
   window.appBridge = app;
   return app;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
