@@ -22,33 +22,30 @@ export async function initShopifyAppBridge() {
 
   if (isEmbedded() && !host) {
     const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-  
-    // Replace page content with a manual button prompt
     document.body.innerHTML = `
       <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
         <h3>BotAssistAI needs permission to continue</h3>
         <p>Click below to finish authentication.</p>
-        <button id="continue" 
-          style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
-          Continue
-        </button>
-      </div>`;
-      
+        <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">Continue</button>
+      </div>
+    `;
     document.getElementById("continue").addEventListener("click", () => {
-      // ✅ Works because it's inside a user gesture
       window.open(breakoutUrl, "_top");
     });
-    
     return null;
   }
-  
-  return createApp({
+
+  const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: true,
   });
-}
 
+  // ✅ store it globally so others can access it
+  window.appBridge = app;
+
+  return app;
+}
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;

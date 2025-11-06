@@ -121,10 +121,13 @@ const Dashboard = () => {
 
   const activatePlan = async () => {
     const app = await initShopifyAppBridge();
-if (!app) return; // wait until host is available
+    if (!app) {
+      console.warn("⚠️ App Bridge not ready yet. Retry after redirect or host param appears.");
+      return;
+    }
     await handleBilling(user.user_id);
   };
-
+  
   /*
   useShopifyInstallRedirect();
 
