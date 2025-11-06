@@ -24,35 +24,36 @@ export async function initShopifyAppBridge() {
       return null;
     }
 
+    // 🧱 Step 1: Inside iframe but missing host → breakout (needs user click)
     if (isEmbedded() && !host) {
       const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-    
+
       document.body.innerHTML = `
         <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>BotAssistAI needs permission to continue</h3>
           <p>Click below to finish authentication.</p>
-          <button id="continue">Continue</button>
+          <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
+            Continue
+          </button>
         </div>`;
-    
+
       document.getElementById("continue").onclick = () => {
         // ✅ user click allows top-level navigation
-        window.top.location.href = breakoutUrl;
+        window.open(breakoutUrl, "_top");
       };
-    
-      return null; // stop further code execution
-    }
-    
 
-    // 🧩 Step 2: Normal embedded case — safe to initialize App Bridge
+      return null;
+    }
+
+    // 🧩 Step 2: Initialize App Bridge normally
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
-      forceRedirect: true, // automatically redirect if not authorized
+      forceRedirect: true,
     });
 
     window.appBridge = app;
     console.log("✅ Shopify App Bridge initialized");
-
     return app;
   } catch (err) {
     console.error("❌ Failed to init App Bridge:", err);
@@ -68,10 +69,12 @@ export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
   if (isEmbedded() && app) {
+    // ✅ Correct way to redirect inside Shopify iframe
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.href = url;
+    // ✅ Top-level navigation (safe)
+    window.location.assign(url);
   }
 }
 

@@ -8,9 +8,9 @@
       if (shop) {
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
         window.location.assign(authUrl); // ✅ safe because now top-level
+      } else {
+        document.body.textContent = "Missing shop parameter.";
       }
     </script>
-    
-      
   </body>
 </html>
