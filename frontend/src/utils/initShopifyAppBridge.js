@@ -59,18 +59,21 @@ export function safeRedirect(url) {
   const embedded = isEmbedded();
 
   try {
-    // 1️⃣ Inside Shopify iframe → use App Bridge for Shopify/admin URLs
-    if (embedded && app && (url.includes("admin.shopify.com") || url.includes("/apps/"))) {
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, url);
+    const isAdmin = url.includes("admin.shopify.com");
+    const isApp = url.includes("/apps/");
+
+    // 1️⃣ If inside iframe AND this is a Shopify admin or confirmation URL
+    // → breakout via redirect.html instead of App Bridge
+    if (embedded && (isAdmin || isApp)) {
+      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
+      window.top.location.href = breakoutUrl; // ⬅️ Force top-level breakout
       return;
     }
 
-    // 2️⃣ Inside iframe but external URL (your API or site) → breakout page
-    if (embedded && !url.includes("admin.shopify.com")) {
+    // 2️⃣ Inside iframe but external URL (your API or site)
+    if (embedded && !isAdmin) {
       const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, breakoutUrl);
+      window.top.location.href = breakoutUrl;
       return;
     }
 
@@ -81,7 +84,6 @@ export function safeRedirect(url) {
     window.location.assign(url);
   }
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 

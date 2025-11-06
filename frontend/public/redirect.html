@@ -8,35 +8,13 @@
     <h3>Redirecting…</h3>
     <script>
       const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
       const target = params.get("target");
 
-      const dest =
-        target ??
-        (shop
-          ? `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-          : null);
-
-      if (!dest) {
+      if (!target) {
         document.body.textContent = "Missing redirect parameters.";
       } else {
-        // Always break out to the top window, even if this page is still in an iframe
-        try {
-          if (window.top === window.self) {
-            // Already top-level
-            window.location.replace(dest);
-          } else {
-            // 🔹 Force top-level navigation from iframe context
-            window.top.location.replace(dest);
-          }
-        } catch (err) {
-          console.warn("Top-level redirect blocked, falling back:", err);
-          const a = document.createElement("a");
-          a.href = dest;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.click();
-        }
+        // Always open top-level
+        window.top.location.href = target;
       }
     </script>
   </body>
