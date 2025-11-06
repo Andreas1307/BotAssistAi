@@ -120,13 +120,28 @@ const Dashboard = () => {
 
 
   const activatePlan = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
+  
     const app = await initShopifyAppBridge();
+  
     if (!app) {
-      console.warn("⚠️ App Bridge not ready yet. Retry after redirect or host param appears.");
+      console.warn("⚠️ App Bridge not ready yet. Redirecting to top-level auth…");
+  
+      // Force top-level auth breakout
+      if (shop) {
+        window.open(`https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`, "_top");
+      } else {
+        alert("Missing shop parameter. Please reopen the app from your Shopify admin.");
+      }
       return;
     }
+  
+    // ✅ AppBridge initialized properly, safe to proceed
     await handleBilling(user.user_id);
   };
+  
   
   /*
   useShopifyInstallRedirect();

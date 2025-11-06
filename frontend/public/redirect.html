@@ -6,7 +6,12 @@
     <script>
       const target = new URLSearchParams(location.search).get("target");
       if (target) location.replace(target);
-      else document.body.textContent = "Missing redirect parameters.";
+      else {
+        const shop = new URLSearchParams(location.search).get("shop");
+        if (shop)
+          location.replace(`https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`);
+        else document.body.textContent = "Missing redirect parameters.";
+      }
     </script>
   </body>
 </html>
