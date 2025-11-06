@@ -69,14 +69,15 @@ export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
   if (isEmbedded() && app) {
-    // ✅ Correct way to redirect inside Shopify iframe
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
-  } else {
-    // ✅ Top-level navigation (safe)
-    window.location.assign(url);
+    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ Shopify-approved
+    return;
   }
+
+  // ✅ Only if top-level (not embedded)
+  if (!isEmbedded()) window.location.assign(url);
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 

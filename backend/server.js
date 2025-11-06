@@ -2267,7 +2267,7 @@ try {
 
 app.post("/create-subscription2", async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, host } = req.body;
 
     // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
@@ -2296,15 +2296,12 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
       lineItems: [
         {
           plan: {
             appRecurringPricingDetails: {
-              price: {
-                amount: 19.99,
-                currencyCode: "EUR",
-              },
+              price: { amount: 19.99, currencyCode: "EUR" },
               interval: "EVERY_30_DAYS",
             },
           },

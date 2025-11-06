@@ -1,11 +1,15 @@
-import { safeRedirect } from "./initShopifyAppBridge";
+import { fetchWithAuth, safeRedirect } from "./initShopifyAppBridge";
 import directory from "../directory";
 import axios from "axios";
 
 export async function handleBilling(userId) {
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
+
   try {
-    const res = await axios.post(`${directory}/create-subscription2`, {
-      userId,
+    const res = await fetchWithAuth(`${directory}/create-subscription2`, {
+      method: "POST",
+      body: { userId, host } // ✅ send host along
     });
 
     const data = res.data;
@@ -19,3 +23,4 @@ export async function handleBilling(userId) {
     console.error("❌ Billing activation failed:", err.response?.data || err.message);
   }
 }
+
