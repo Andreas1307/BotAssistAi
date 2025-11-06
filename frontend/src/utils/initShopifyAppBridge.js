@@ -16,15 +16,15 @@ export async function initShopifyAppBridge() {
 
   if (window.top !== window.self && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    const breakout = `https://botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`; // ✅ SAME origin as embedded app
+    // 🔹 this breakout page is same-origin as iframe — SAFE
+    const breakout = `/redirect?target=${encodeURIComponent(oauthUrl)}`;
     console.log("🔄 Breaking out via", breakout);
   
-    window.location.assign(breakout); // safer than href
+    // only a normal redirect inside iframe
+    window.location.href = breakout;
     return null;
   }
   
-
-  // ✅ Safe if not embedded or host exists
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
