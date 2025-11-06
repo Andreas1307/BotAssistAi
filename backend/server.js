@@ -1035,7 +1035,8 @@ app.get("/shopify/install", async (req, res) => {
 
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
-    
+
+    // --- Start OAuth (shopify-api sends redirect)
     await shopify.auth.begin({
       shop,
       isOnline: true,
@@ -1101,6 +1102,20 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
 
+    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
+      console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
+      const shop = req.query.shop;
+      return res.status(200).send(`
+        <html><body>
+          <script>
+            const target = "${abs(`/shopify/top-level-auth?shop=${encodeURIComponent(req.query.shop)}`)}";
+            if (window.top === window.self) window.location.href = target;
+            else window.top.location.href = target;
+          </script>
+        </body></html>
+      `);
+    }
+    
   
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
@@ -1121,16 +1136,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     const shop = session.shop;
     const host = req.query.host ? decodeURIComponent(req.query.host) : '';
-
-    res.cookie('shopify_online_session', session.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'None',
-      path: '/',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    });
-    console.log('🍪 shopify_online_session cookie set (using accessToken) for', session.shop);
-    
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
