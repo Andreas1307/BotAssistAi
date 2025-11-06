@@ -17,24 +17,27 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  if (window.top !== window.self && !host) {
-    const breakout = `https://botassistai.com/redirect.html?shop=${shop}`;
+  // 🧩 Step 1: If we're inside Shopify and missing host → break out
+  if (isEmbedded() && !host) {
+    const topLevelUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
+    console.log("🔄 Redirecting to top-level auth:", topLevelUrl);
+
+    // ❗ This MUST be window.top.location.href — but only from user-initiated context
+    // So we show a button first:
     document.body.innerHTML = `
       <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
-        <h3>BotAssistAI needs permission to continue</h3>
-        <p>Click below to finish authentication.</p>
-        <button id="continue"
-          style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
+        <h3>BotAssistAI needs to finish authentication</h3>
+        <p>Please click below to continue.</p>
+        <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
           Continue
         </button>
-      </div>`;
+      </div>
+    `;
     document.getElementById("continue").onclick = () => {
-      // ✅ user action → allowed
-      window.top.location.href = breakout;
+      window.top.location.href = topLevelUrl;
     };
-    return;
+    return null;
   }
-  
 
   // 🧩 Step 2: Normal embedded case — safe to initialize App Bridge
   const app = createApp({
