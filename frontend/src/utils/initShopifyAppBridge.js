@@ -19,7 +19,7 @@ export async function initShopifyAppBridge() {
 
   // 🧩 Step 1: If we're inside Shopify and missing host → break out
   if (isEmbedded() && !host) {
-    const topLevelUrl = `https://botassistai.com/redirect?shop=${encodeURIComponent(shop)}`;
+    const topLevelUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
     console.log("🔄 Redirecting to top-level auth:", topLevelUrl);
 
     // ❗ This MUST be window.top.location.href — but only from user-initiated context
