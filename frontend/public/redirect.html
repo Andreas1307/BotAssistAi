@@ -6,7 +6,7 @@
     <script>
       const shop = new URLSearchParams(window.location.search).get("shop");
       if (shop) {
-        // ✅ now top-level, safe to go to your API
+        // ✅ now top-level → allowed
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
         window.location.assign(authUrl);
       } else {

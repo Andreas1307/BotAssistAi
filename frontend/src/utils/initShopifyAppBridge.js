@@ -29,7 +29,7 @@ export async function initShopifyAppBridge() {
         </button>
       </div>`;
     document.getElementById("continue").onclick = () => {
-      // ✅ user-initiated → allowed
+      // ✅ user action → allowed
       window.top.location.href = breakout;
     };
     return;
