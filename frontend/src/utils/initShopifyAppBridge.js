@@ -19,13 +19,34 @@ export async function initShopifyAppBridge() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (!isEmbedded() || !shop || !host) {
-      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
+    if (!shop) {
+      console.warn("❌ Missing shop param.");
       return null;
     }
-    
 
+    // 🧱 Step 1: Inside iframe but missing host → breakout
+    if (isEmbedded() && !host) {
+      const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
+      console.log("🔄 Breaking out to:", breakoutUrl);
+
+      // Render a manual button (user click = allowed)
+      document.body.innerHTML = `
+        <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
+          <h3>BotAssistAI needs permission to continue</h3>
+          <p>Click below to finish authentication.</p>
+          <button id="continue"
+            style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
+            Continue
+          </button>
+        </div>`;
+      document.getElementById("continue").onclick = () => {
+        // ✅ Allowed cross-origin navigation
+        window.top.location.href = breakoutUrl;
+      };
+      return;
+    }
+
+    // 🧩 Step 2: Initialize App Bridge normally
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -33,16 +54,6 @@ export async function initShopifyAppBridge() {
     });
 
     window.appBridge = app;
-
-    // Silently try to initialize Web Vitals
-    try {
-      if (typeof app.initializeWebVitals === "function") {
-        app.initializeWebVitals();
-      }
-    } catch {
-      // ignore
-    }
-
     console.log("✅ Shopify App Bridge initialized");
     return app;
   } catch (err) {
@@ -51,16 +62,21 @@ export async function initShopifyAppBridge() {
   }
 }
 
-/**
- * Returns existing App Bridge instance if available
- */
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
-/**
- * Safe redirect (embedded or standalone)
- */
+export function safeRedirect(url) {
+  const app = window.appBridge;
+  if (app) {
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, url);
+  } else {
+    window.location.assign(url);
+  }
+}
+
+
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
