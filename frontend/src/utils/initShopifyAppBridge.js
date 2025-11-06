@@ -14,17 +14,24 @@ export async function initShopifyAppBridge() {
 
   if (!shop) return null;
 
+  // ✅ If we are embedded but missing host, trigger breakout
   if (isEmbedded() && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-  
-    // 👇 Bounce through a same-origin (botassistai.com) page
     const breakout = `https://botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
-    console.log("🧩 Breaking out via", breakout);
-  
-    window.location.assign(breakout); // safe within iframe
+
+    // ✅ use App Bridge Redirect instead of window.location
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host: host || "",
+      forceRedirect: true,
+    });
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, breakout);
+
     return null;
-  }  
-  
+  }
+
+  // ✅ Normal init
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -34,7 +41,6 @@ export async function initShopifyAppBridge() {
   window.appBridge = app;
   return app;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
@@ -46,8 +52,7 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Fallback for top-level
-    window.top.location.href = url; // Only works if already on your domain
+    window.top.location.href = url;
   }
 }
 
