@@ -2,18 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Continue to BotAssistAI</title>
+    <title>Redirecting…</title>
   </head>
   <body style="font-family:sans-serif;text-align:center;margin-top:30vh">
-    <h2>Continue to BotAssistAI</h2>
-    <p>Click the button below to continue authorization.</p>
-    <button
-      id="continue"
-      style="padding:12px 22px;font-size:16px;border-radius:10px;cursor:pointer;"
-    >
-      Continue
-    </button>
-
+    <h3>Redirecting…</h3>
     <script>
       const params = new URLSearchParams(window.location.search);
       const shop = params.get("shop");
@@ -28,10 +20,23 @@
       if (!dest) {
         document.body.textContent = "Missing redirect parameters.";
       } else {
-        document.getElementById("continue").addEventListener("click", () => {
-          // ✅ This runs in direct response to a user gesture → allowed to break out
-          window.open(dest, "_top");
-        });
+        // Always break out to the top window, even if this page is still in an iframe
+        try {
+          if (window.top === window.self) {
+            // Already top-level
+            window.location.replace(dest);
+          } else {
+            // 🔹 Force top-level navigation from iframe context
+            window.top.location.replace(dest);
+          }
+        } catch (err) {
+          console.warn("Top-level redirect blocked, falling back:", err);
+          const a = document.createElement("a");
+          a.href = dest;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.click();
+        }
       }
     </script>
   </body>
