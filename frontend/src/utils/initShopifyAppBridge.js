@@ -54,35 +54,46 @@ export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
+export function breakoutTo(url) {
+  // Create an intermediate HTML page so we never touch window.top directly
+  const redirectPage = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
+
+  // Always open it by user gesture if possible
+  const openInTop = () => {
+    window.open(redirectPage, "_top");
+  };
+
+  // If this function is called automatically (no user click),
+  // fall back to App-Bridge redirect instead of touching window.top.
+  try {
+    const app = getAppBridgeInstance();
+    if (app) {
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.REMOTE, redirectPage);
+    } else {
+      // last-chance fallback
+      openInTop();
+    }
+  } catch (e) {
+    openInTop();
+  }
+}
+
 export function safeRedirect(url) {
-  const app = getAppBridgeInstance();
+  const isAdmin = url.includes("admin.shopify.com");
   const embedded = isEmbedded();
 
-  try {
-    const isAdmin = url.includes("admin.shopify.com");
-    const isApp = url.includes("/apps/");
-
-    // 1️⃣ If inside iframe AND this is a Shopify admin or confirmation URL
-    // → breakout via redirect.html instead of App Bridge
-    if (embedded && (isAdmin || isApp)) {
-      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
-      window.top.location.href = breakoutUrl; // ⬅️ Force top-level breakout
-      return;
-    }
-
-    // 2️⃣ Inside iframe but external URL (your API or site)
-    if (embedded && !isAdmin) {
-      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
-      window.top.location.href = breakoutUrl;
-      return;
-    }
-
-    // 3️⃣ Outside Shopify → normal redirect
-    window.location.assign(url);
-  } catch (err) {
-    console.error("❌ safeRedirect failed:", err);
-    window.location.assign(url);
+  if (embedded && isAdmin) {
+    breakoutTo(url);        // ✅ no window.top here
+    return;
   }
+
+  if (embedded) {
+    breakoutTo(url);
+    return;
+  }
+
+  window.location.assign(url);
 }
 
 export async function fetchWithAuth(url, options = {}) {

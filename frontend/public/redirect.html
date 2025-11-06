@@ -1,21 +1,12 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Redirecting…</title>
-  </head>
-  <body style="font-family:sans-serif;text-align:center;margin-top:30vh">
+  <head><meta charset="utf-8"><title>Redirecting…</title></head>
+  <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const target = params.get("target");
-
-      if (!target) {
-        document.body.textContent = "Missing redirect parameters.";
-      } else {
-        // Always open top-level
-        window.top.location.href = target;
-      }
+      const target = new URLSearchParams(location.search).get("target");
+      if (target) location.replace(target);
+      else document.body.textContent = "Missing redirect parameters.";
     </script>
   </body>
 </html>
