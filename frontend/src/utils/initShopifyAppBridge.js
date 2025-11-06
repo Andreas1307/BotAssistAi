@@ -24,28 +24,26 @@ export async function initShopifyAppBridge() {
       return null;
     }
 
-    // 🧱 Step 1: Inside iframe but missing host → breakout (needs user click)
+    // 🧱 Inside iframe but missing host → show breakout screen
     if (isEmbedded() && !host) {
       const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-
       document.body.innerHTML = `
         <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>BotAssistAI needs permission to continue</h3>
           <p>Click below to finish authentication.</p>
-          <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
+          <button id="continue"
+            style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
             Continue
           </button>
         </div>`;
-
-      document.getElementById("continue").onclick = () => {
-        // ✅ user click allows top-level navigation
+      document.getElementById("continue").addEventListener("click", () => {
+        // ✅ must be user-initiated to escape iframe
         window.open(breakoutUrl, "_top");
-      };
-
+      });
       return null;
     }
 
-    // 🧩 Step 2: Initialize App Bridge normally
+    // 🧩 Normal case — initialize App Bridge
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
@@ -67,15 +65,12 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
-
   if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url); // ✅ Shopify-approved
-    return;
+    redirect.dispatch(Redirect.Action.REMOTE, url);
+  } else {
+    window.top.location.href = url; // ✅ must be top-level, not self
   }
-
-  // ✅ Only if top-level (not embedded)
-  if (!isEmbedded()) window.location.assign(url);
 }
 
 
