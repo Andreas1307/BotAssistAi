@@ -12,31 +12,34 @@ export async function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  if (!shop) return null;
+  if (!shop) {
+    console.warn("❌ Missing shop param.");
+    return null;
+  }
 
-  // ✅ Case: in iframe and missing host → show breakout UI
+  // 🧩 Step 1: If we're inside Shopify and missing host → break out
   if (isEmbedded() && !host) {
-    const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    const breakout = `https://botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
-    console.log("🔐 Need top-level redirect:", breakout);
+    const topLevelUrl = `https://botassistai.com/redirect?shop=${encodeURIComponent(shop)}`;
+    console.log("🔄 Redirecting to top-level auth:", topLevelUrl);
 
-    // Stop automatic redirect; show manual breakout button instead
+    // ❗ This MUST be window.top.location.href — but only from user-initiated context
+    // So we show a button first:
     document.body.innerHTML = `
-      <div style="font-family:sans-serif;text-align:center;margin-top:30vh">
-        <h3>BotAssist needs permission to continue</h3>
-        <p>Click below to finish authentication.</p>
-        <button id="continue" style="padding:10px 18px;font-size:16px;cursor:pointer;border-radius:8px;">
+      <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
+        <h3>BotAssistAI needs to finish authentication</h3>
+        <p>Please click below to continue.</p>
+        <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
           Continue
         </button>
       </div>
     `;
     document.getElementById("continue").onclick = () => {
-      window.top.location.href = breakout; // ✅ user-activated → allowed
+      window.top.location.href = topLevelUrl;
     };
     return null;
   }
 
-  // ✅ Normal initialization
+  // 🧩 Step 2: Normal embedded case — safe to initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -44,6 +47,7 @@ export async function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
+  console.log("✅ App Bridge initialized.");
   return app;
 }
 
