@@ -11,10 +11,9 @@
       if (!shop) {
         document.body.textContent = "Missing shop parameter.";
       } else {
-        // ✅ this page is NOT inside the Shopify iframe anymore,
-        // so it can safely redirect to your backend auth route.
+        // ✅ Top-level navigation (avoids SecurityError)
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-        window.location.replace(authUrl);
+        window.top.location.href = authUrl; // ← use _top, not window.location
       }
     </script>
   </body>

@@ -14,40 +14,26 @@ function isEmbedded() {
  * - Avoids noisy Web Vitals errors
  */
 export async function initShopifyAppBridge() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
 
-    if (!shop) {
-      console.warn("❌ Missing shop param.");
-      return null;
-    }
+  if (!shop) return null;
 
-    if (isEmbedded() && !host) {
-      const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-      document.getElementById("continue").addEventListener("click", () => {
-        // ✅ must be top-level, user gesture required
-        window.open(breakoutUrl, "_top");
-      });
-    }
-    
-
-    // 🧩 Normal case — initialize App Bridge
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-
-    window.appBridge = app;
-    console.log("✅ Shopify App Bridge initialized");
-    return app;
-  } catch (err) {
-    console.error("❌ Failed to init App Bridge:", err);
+  // If embedded but missing host, force top-level redirect
+  if (isEmbedded() && !host) {
+    const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
+    window.open(breakoutUrl, "_top"); // ✅ top-level user gesture
     return null;
   }
+
+  return createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
