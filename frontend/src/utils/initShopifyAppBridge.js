@@ -35,22 +35,24 @@ export async function initShopifyAppBridge() {
         </div>`;
     
       document.getElementById("continue").onclick = () => {
-        window.top.location.href = breakoutUrl; // ✅ user click allowed
+        // ✅ user click allows top-level navigation
+        window.top.location.href = breakoutUrl;
       };
     
-      return; // stop further code
+      return null; // stop further code execution
     }
     
-    
-    // 🧩 Step 2: Initialize App Bridge normally
+
+    // 🧩 Step 2: Normal embedded case — safe to initialize App Bridge
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
-      forceRedirect: true,
+      forceRedirect: true, // automatically redirect if not authorized
     });
 
     window.appBridge = app;
     console.log("✅ Shopify App Bridge initialized");
+
     return app;
   } catch (err) {
     console.error("❌ Failed to init App Bridge:", err);
