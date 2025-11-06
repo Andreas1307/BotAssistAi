@@ -2,16 +2,23 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Redirecting…</title>
+    <title>Continue to BotAssistAI</title>
   </head>
   <body style="font-family:sans-serif;text-align:center;margin-top:30vh">
-    <h3>Redirecting…</h3>
+    <h2>Continue to BotAssistAI</h2>
+    <p>Click the button below to continue authorization.</p>
+    <button
+      id="continue"
+      style="padding:12px 22px;font-size:16px;border-radius:10px;cursor:pointer;"
+    >
+      Continue
+    </button>
+
     <script>
       const params = new URLSearchParams(window.location.search);
       const shop = params.get("shop");
       const target = params.get("target");
 
-      // Only code that can safely use window.top
       const dest =
         target ??
         (shop
@@ -19,10 +26,12 @@
           : null);
 
       if (!dest) {
-        document.body.textContent = "Missing redirect target.";
+        document.body.textContent = "Missing redirect parameters.";
       } else {
-        // Top-level navigation (outside iframe)
-        window.top.location.assign(dest);
+        document.getElementById("continue").addEventListener("click", () => {
+          // ✅ This runs in direct response to a user gesture → allowed to break out
+          window.open(dest, "_top");
+        });
       }
     </script>
   </body>
