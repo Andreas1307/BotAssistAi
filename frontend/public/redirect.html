@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Redirecting…</title>
-  </head>
+  <head><meta charset="utf-8" /><title>Redirecting…</title></head>
   <body style="font-family:sans-serif;text-align:center;margin-top:30vh">
     <h3>Redirecting to Shopify authentication…</h3>
     <script>
@@ -11,9 +8,9 @@
       if (!shop) {
         document.body.textContent = "Missing shop parameter.";
       } else {
-        // ✅ Top-level navigation (avoids SecurityError)
+        // ✅ Fully safe top-level redirect
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-        window.top.location.href = authUrl; // ← use _top, not window.location
+        window.top.location.href = authUrl;
       }
     </script>
   </body>
