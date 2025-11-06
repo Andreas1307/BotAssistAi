@@ -26,20 +26,10 @@ export async function initShopifyAppBridge() {
 
     if (isEmbedded() && !host) {
       const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-      document.body.innerHTML = `
-        <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
-          <h3>BotAssistAI needs permission to continue</h3>
-          <p>Click below to finish authentication.</p>
-          <button id="continue"
-            style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
-            Continue
-          </button>
-        </div>`;
       document.getElementById("continue").addEventListener("click", () => {
-        // ✅ user gesture required to escape iframe
+        // ✅ must be top-level, user gesture required
         window.open(breakoutUrl, "_top");
       });
-      return null;
     }
     
 
