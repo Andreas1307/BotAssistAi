@@ -26,17 +26,21 @@ export async function initShopifyAppBridge() {
 
     if (isEmbedded() && !host) {
       const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
+    
       document.body.innerHTML = `
         <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>BotAssistAI needs permission to continue</h3>
           <p>Click below to finish authentication.</p>
           <button id="continue">Continue</button>
         </div>`;
+    
       document.getElementById("continue").onclick = () => {
-        window.top.location.href = breakoutUrl; // ✅ user click = allowed
+        window.top.location.href = breakoutUrl; // ✅ user click allowed
       };
-      return;
+    
+      return; // stop further code
     }
+    
     
     // 🧩 Step 2: Initialize App Bridge normally
     const app = createApp({
