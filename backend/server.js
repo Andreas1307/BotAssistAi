@@ -2320,6 +2320,13 @@ app.post("/create-subscription2", async (req, res) => {
       }
     );
 
+    const gqlData = response.data.data.appSubscriptionCreate;
+
+    if (gqlData.userErrors.length > 0) {
+      console.error("Shopify billing errors:", gqlData.userErrors);
+      return res.status(400).json({ errors: gqlData.userErrors });
+    }
+
     const { data } = response.data;
     const errors = data.appSubscriptionCreate.userErrors;
 

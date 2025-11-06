@@ -7,20 +7,20 @@ export async function handleBilling(userId) {
   const host = params.get("host");
 
   try {
+    // 🔹 fetchWithAuth already returns the JSON body (not { data })
     const res = await fetchWithAuth(`${directory}/create-subscription2`, {
       method: "POST",
-      body: { userId, host } // ✅ send host along
+      body: { userId, host },
     });
 
-    const data = res.data;
-
-    if (data?.confirmationUrl) {
-      safeRedirect(data.confirmationUrl);
+    // res === { confirmationUrl: "https://..." } or { errors: [...] }
+    if (res?.confirmationUrl) {
+      safeRedirect(res.confirmationUrl);
     } else {
-      console.error("No confirmationUrl returned from backend", data);
+      console.error("❌ No confirmationUrl returned from backend", res);
+      alert("Failed to create subscription. Please try again or contact support.");
     }
   } catch (err) {
-    console.error("❌ Billing activation failed:", err.response?.data || err.message);
+    console.error("❌ Billing activation failed:", err);
   }
 }
-
