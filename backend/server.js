@@ -2356,10 +2356,10 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // Redirect back into Shopify iframe
+    const hostParam = req.query.host || encodeURIComponent(Buffer.from(`shop=${rows[0].shopify_shop_domain}`).toString('base64'));
     res.redirect(
-      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${host}`
-    );    
+      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${hostParam}`
+    );  
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
