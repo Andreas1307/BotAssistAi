@@ -2356,19 +2356,23 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // ✅ Always have a valid host for App Bridge
-    const hostParam = host && host !== 'null'
-      ? host
-      : encodeURIComponent(Buffer.from(`shop=${rows[0].shopify_shop_domain}`).toString('base64'));
+    const shop = rows[0].shopify_shop_domain;
+    const shopSubdomain = shop.split(".")[0];
+    const hostParam =
+      host && host !== "null"
+        ? host
+        : encodeURIComponent(Buffer.from(`shop=${shop}`).toString("base64"));
 
-    res.redirect(
-      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${hostParam}`
-    );
+    const finalShopifyUrl = `https://admin.shopify.com/store/${shopSubdomain}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${hostParam}`;
+
+    // 🔹 Redirect to breakout page (not admin directly)
+    res.redirect(`https://botassistai.com/redirect.html?target=${encodeURIComponent(finalShopifyUrl)}`);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
