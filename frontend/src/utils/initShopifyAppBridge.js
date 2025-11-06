@@ -67,17 +67,6 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const app = window.appBridge;
-  if (app) {
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
-  } else {
-    window.location.assign(url);
-  }
-}
-
-
-export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
   if (isEmbedded() && app) {
