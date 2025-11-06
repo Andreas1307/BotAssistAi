@@ -8,12 +8,13 @@
     <h3>Redirecting to Shopify authentication…</h3>
     <script>
       const shop = new URLSearchParams(window.location.search).get("shop");
-      if (shop) {
-        const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-        // ✅ Now safe: redirect.html is not in iframe anymore
-        window.location.replace(authUrl);
-      } else {
+      if (!shop) {
         document.body.textContent = "Missing shop parameter.";
+      } else {
+        // ✅ this page is NOT inside the Shopify iframe anymore,
+        // so it can safely redirect to your backend auth route.
+        const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+        window.location.replace(authUrl);
       }
     </script>
   </body>

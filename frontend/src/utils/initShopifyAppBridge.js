@@ -24,7 +24,6 @@ export async function initShopifyAppBridge() {
       return null;
     }
 
-    // 🧱 Inside iframe but missing host → show breakout screen
     if (isEmbedded() && !host) {
       const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
       document.body.innerHTML = `
@@ -37,11 +36,12 @@ export async function initShopifyAppBridge() {
           </button>
         </div>`;
       document.getElementById("continue").addEventListener("click", () => {
-        // ✅ must be user-initiated to escape iframe
+        // ✅ user gesture required to escape iframe
         window.open(breakoutUrl, "_top");
       });
       return null;
     }
+    
 
     // 🧩 Normal case — initialize App Bridge
     const app = createApp({
