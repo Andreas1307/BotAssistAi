@@ -2,15 +2,20 @@
 <html>
   <head><meta charset="utf-8" /><title>Redirecting…</title></head>
   <body style="font-family:sans-serif;text-align:center;margin-top:30vh">
-    <h3>Redirecting to Shopify authentication…</h3>
+    <h3>Redirecting…</h3>
     <script>
-      const shop = new URLSearchParams(window.location.search).get("shop");
-      if (!shop) {
-        document.body.textContent = "Missing shop parameter.";
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get("shop");
+      const target = params.get("target");
+
+      if (target) {
+        // Used for billing/auth redirects
+        window.top.location.href = decodeURIComponent(target);
+      } else if (shop) {
+        // Used for initial auth
+        window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
       } else {
-        // ✅ Fully safe top-level redirect
-        const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-        window.top.location.href = authUrl;
+        document.body.textContent = "Missing parameters.";
       }
     </script>
   </body>
