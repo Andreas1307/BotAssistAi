@@ -2,62 +2,69 @@ import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
 import directory from "../directory";
-
+/**
+ * Detect if running inside Shopify iframe
+ */
 function isEmbedded() {
   return window.top !== window.self;
 }
-
+/**
+ * Initializes Shopify App Bridge safely.
+ * - Skips if not embedded or missing params
+ * - Avoids noisy Web Vitals errors
+ */
 export async function initShopifyAppBridge() {
-  const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-  const host = params.get("host");
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
 
-  if (!shop) {
-    console.warn("❌ Missing shop param.");
+    if (!isEmbedded() || !shop || !host) {
+      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
+      return null;
+    }
+    
+
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
+
+    window.appBridge = app;
+
+    // Silently try to initialize Web Vitals
+    try {
+      if (typeof app.initializeWebVitals === "function") {
+        app.initializeWebVitals();
+      }
+    } catch {
+      // ignore
+    }
+
+    console.log("✅ Shopify App Bridge initialized");
+    return app;
+  } catch (err) {
+    console.error("❌ Failed to init App Bridge:", err);
     return null;
   }
-
-  // 🧩 Step 1: If we're inside Shopify and missing host → break out
-  if (isEmbedded() && !host) {
-    const topLevelUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-    console.log("🔄 Redirecting to top-level auth:", topLevelUrl);
-
-    // ❗ This MUST be window.top.location.href — but only from user-initiated context
-    // So we show a button first:
-    document.body.innerHTML = `
-      <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
-        <h3>BotAssistAI needs to finish authentication</h3>
-        <p>Please click below to continue.</p>
-        <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">
-          Continue
-        </button>
-      </div>
-    `;
-    document.getElementById("continue").onclick = () => {
-      window.top.location.href = topLevelUrl;
-    };
-    return null;
-  }
-
-  // 🧩 Step 2: Normal embedded case — safe to initialize App Bridge
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: true,
-  });
-
-  window.appBridge = app;
-  console.log("✅ App Bridge initialized.");
-  return app;
 }
 
+/**
+ * Returns existing App Bridge instance if available
+ */
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
+/**
+ * Safe redirect (embedded or standalone)
+ */
 export function safeRedirect(url) {
-  const app = window.appBridge;
-  if (app) {
+  const app = getAppBridgeInstance();
+
+  if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {

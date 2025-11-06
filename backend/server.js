@@ -2260,7 +2260,6 @@ try {
 })
 
 
-
 app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId } = req.body;
@@ -2357,7 +2356,6 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 
