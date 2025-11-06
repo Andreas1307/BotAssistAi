@@ -14,16 +14,16 @@ export async function initShopifyAppBridge() {
 
   if (!shop) return null;
 
-  if (window.top !== window.self && !host) {
+  if (isEmbedded() && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    // 🔹 this breakout page is same-origin as iframe — SAFE
-    const breakout = `/redirect?target=${encodeURIComponent(oauthUrl)}`;
-    console.log("🔄 Breaking out via", breakout);
   
-    // only a normal redirect inside iframe
-    window.location.href = breakout;
+    // 👇 Bounce through a same-origin (botassistai.com) page
+    const breakout = `https://botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
+    console.log("🧩 Breaking out via", breakout);
+  
+    window.location.assign(breakout); // safe within iframe
     return null;
-  }
+  }  
   
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,

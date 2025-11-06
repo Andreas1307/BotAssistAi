@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Redirecting...</title>
-  </head>
+  <head><meta charset="utf-8"><title>Redirecting…</title></head>
   <body>
-    <p>Redirecting...</p>
+    <p>Redirecting…</p>
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const target = params.get("target");
-      if (!target) {
-        document.body.textContent = "Missing target URL.";
-      } else {
-        // ✅ Now outside Shopify iframe, we can safely redirect top
+      const target = new URLSearchParams(window.location.search).get("target");
+      if (target) {
+        // ✅ now outside iframe (top-level), we can safely go to api.botassistai.com
         window.top.location.href = target;
+      } else {
+        document.body.textContent = "Missing target URL.";
       }
     </script>
   </body>
