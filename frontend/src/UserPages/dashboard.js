@@ -120,7 +120,8 @@ const Dashboard = () => {
 
 
   const activatePlan = async () => {
-    await initShopifyAppBridge()
+    const app = await initShopifyAppBridge();
+if (!app) return; // wait until host is available
     await handleBilling(user.user_id);
   };
 

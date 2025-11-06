@@ -80,20 +80,33 @@ export function breakoutTo(url) {
 }
 
 export function safeRedirect(url) {
-  const isAdmin = url.includes("admin.shopify.com");
   const embedded = isEmbedded();
+  const isAdmin = url.includes("admin.shopify.com");
 
-  if (embedded && isAdmin) {
-    breakoutTo(url);        // ✅ no window.top here
-    return;
+  try {
+    const app = getAppBridgeInstance();
+
+    // ✅ Use App Bridge Redirect (this is the official safe way)
+    if (app) {
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.REMOTE, url);
+      return;
+    }
+
+    // ✅ Fallback: open via breakout page (never window.top directly)
+    if (embedded) {
+      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
+      window.open(breakoutUrl, "_top");
+      return;
+    }
+
+    // ✅ Only use normal redirect when outside Shopify iframe
+    window.location.href = url;
+  } catch (err) {
+    console.error("❌ safeRedirect failed:", err);
+    // last resort fallback
+    window.open(`https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`, "_top");
   }
-
-  if (embedded) {
-    breakoutTo(url);
-    return;
-  }
-
-  window.location.assign(url);
 }
 
 export async function fetchWithAuth(url, options = {}) {
