@@ -14,24 +14,29 @@ export async function initShopifyAppBridge() {
 
   if (!shop) return null;
 
-  // ✅ If we are embedded but missing host, trigger breakout
+  // ✅ Case: in iframe and missing host → show breakout UI
   if (isEmbedded() && !host) {
     const oauthUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
     const breakout = `https://botassistai.com/redirect?target=${encodeURIComponent(oauthUrl)}`;
+    console.log("🔐 Need top-level redirect:", breakout);
 
-    // ✅ use App Bridge Redirect instead of window.location
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: host || "",
-      forceRedirect: true,
-    });
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, breakout);
-
+    // Stop automatic redirect; show manual breakout button instead
+    document.body.innerHTML = `
+      <div style="font-family:sans-serif;text-align:center;margin-top:30vh">
+        <h3>BotAssist needs permission to continue</h3>
+        <p>Click below to finish authentication.</p>
+        <button id="continue" style="padding:10px 18px;font-size:16px;cursor:pointer;border-radius:8px;">
+          Continue
+        </button>
+      </div>
+    `;
+    document.getElementById("continue").onclick = () => {
+      window.top.location.href = breakout; // ✅ user-activated → allowed
+    };
     return null;
   }
 
-  // ✅ Normal init
+  // ✅ Normal initialization
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
