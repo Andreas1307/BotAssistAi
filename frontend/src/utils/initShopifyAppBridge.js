@@ -59,28 +59,26 @@ export function safeRedirect(url) {
   const embedded = isEmbedded();
 
   try {
-    // If we’re inside Shopify iframe and redirect is to admin/shopify domain — use App Bridge
     if (embedded && app && url.includes("admin.shopify.com")) {
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, url);
       return;
     }
 
-    // If it’s a third-party domain (like your api.botassistai.com), do a top-level breakout
-    if (embedded && !url.includes("admin.shopify.com")) {
-      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
-      window.open(breakoutUrl, "_top"); // must be top-level
+    // Break out of the iframe for any non-Shopify URL
+    if (embedded) {
+      const breakout = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
+      window.location.assign(breakout);
       return;
     }
 
-    // If not embedded, just navigate normally
-    window.location.href = url;
+    // Already top-level
+    window.location.assign(url);
   } catch (err) {
-    console.error("❌ safeRedirect failed:", err);
-    window.location.href = url;
+    console.error("safeRedirect failed:", err);
+    window.location.assign(url);
   }
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 

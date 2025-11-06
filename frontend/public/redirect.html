@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
-  <head><meta charset="utf-8" /><title>Redirecting…</title></head>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+  </head>
   <body style="font-family:sans-serif;text-align:center;margin-top:30vh">
     <h3>Redirecting…</h3>
     <script>
@@ -8,14 +11,18 @@
       const shop = params.get("shop");
       const target = params.get("target");
 
-      if (target) {
-        // Used for billing/auth redirects
-        window.top.location.href = decodeURIComponent(target);
-      } else if (shop) {
-        // Used for initial auth
-        window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      // Only code that can safely use window.top
+      const dest =
+        target ??
+        (shop
+          ? `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+          : null);
+
+      if (!dest) {
+        document.body.textContent = "Missing redirect target.";
       } else {
-        document.body.textContent = "Missing parameters.";
+        // Top-level navigation (outside iframe)
+        window.top.location.assign(dest);
       }
     </script>
   </body>
