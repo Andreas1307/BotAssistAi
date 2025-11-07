@@ -20,46 +20,52 @@ function getShopFromHost(h) {
 }
 
 export async function initShopifyAppBridge() {
-  let params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
   let host = params.get("host");
   let shop = params.get("shop");
 
-  // ✅ 1: Try Shopify injected global
+  // 1: Try injected host
   if (!host && window.__SHOPIFY_DEV_HOST) {
     host = window.__SHOPIFY_DEV_HOST;
   }
 
-  // ✅ 2: Try recovering from already-created AppBridge state
+  // 2: Recover from existing AppBridge
   if (!host && window.appBridge) {
     try {
       const state = await window.appBridge.getState();
       host = state.context.host;
-    } catch {}
-  }
-
-  // ✅ 3: Derive shop from host
-  if (!shop && host) {
-    try {
-      shop = atob(host.replace(/-/g, "+").replace(/_/g, "/")).split("/")[0];
+      shop = getShopFromHost(host);
     } catch {}
   }
 
   console.log("INIT_STAGE_1 →", { shop, host });
 
-  // ✅ 4: If STILL missing host → DO NOT create AppBridge
-  // Instead force Shopify to reload app with host param
+  // ✅ Shopify reparative reload (prevents empty shop/host)
   if (!host) {
-    console.warn("❌ Missing host param → must restart top-level auth");
-
-    window.open(
-      `https://botassistai.com/redirect.html?shop=${shop || ""}`,
-      "_top"
-    );
-
-    return null; // ✅ Stop here — do NOT create AppBridge
+    const repaired = params.get("shopify_repair");
+    if (!repaired) {
+      const repairUrl = `/apps/botassistai?shopify_repair=1${shop ? `&shop=${shop}` : ""}`;
+      window.open(repairUrl, "_top");
+      return null;
+    }
   }
 
-  // ✅ 5: NOW SAFE TO CREATE APPBRIDGE
+  // ✅ If STILL no host → only now use redirect.html
+  if (!host) {
+    console.warn("Missing host → using redirect.html");
+
+    if (shop) {
+      window.open(
+        `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`,
+        "_top"
+      );
+    } else {
+      window.open("/?shopify_repair=1", "_top");
+    }
+    return null;
+  }
+
+  // ✅ Safe to initialize AppBridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -69,6 +75,7 @@ export async function initShopifyAppBridge() {
   window.appBridge = app;
   return app;
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;

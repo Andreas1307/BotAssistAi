@@ -4,14 +4,24 @@
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
-      const target = new URLSearchParams(location.search).get("target");
-      if (target) location.replace(target);
-      else {
-        const shop = new URLSearchParams(location.search).get("shop");
-        if (shop)
-          location.replace(`https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`);
-        else document.body.textContent = "Missing redirect parameters.";
+      const url = new URL(location.href);
+      const params = url.searchParams;
+    
+      const target = params.get("target");
+      const shop = params.get("shop");
+    
+      if (target) {
+        location.replace(target);
+      } else if (shop) {
+        location.replace(
+          `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`
+        );
+      } else {
+        // Try to recover via Shopify
+        const fallback = url.searchParams.get("origin") || "/?shopify_repair=1";
+        location.replace(fallback);
       }
     </script>
+    
   </body>
 </html>
