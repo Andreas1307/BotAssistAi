@@ -1036,14 +1036,14 @@ app.get("/shopify/install", async (req, res) => {
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
 
-    // --- Start OAuth (shopify-api sends redirect)
-    await shopify.auth.begin({
+    return shopify.auth.begin({
       shop,
+      callbackPath: `/shopify/callback?host=${req.query.host}`,
       isOnline: true,
-      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
+    
 
     // 🧠 Important: we must not touch headers after this point
     // So the rest runs only if headers weren't sent yet
@@ -1135,7 +1135,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host ? decodeURIComponent(req.query.host) : '';
+    const host = req.query.host || Buffer.from(`${shop}/admin`, "utf8").toString("base64");
+
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1243,7 +1244,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               forceRedirect: true,
             });
             const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
+            Redirect.dispatch(
+  AppBridge.actions.Redirect.Action.REMOTE,
+  'https://${shop}/admin/apps/botassistai'
+);
+
           </script>
         </body>
       </html>
