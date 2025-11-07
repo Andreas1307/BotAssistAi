@@ -1038,7 +1038,7 @@ app.get("/shopify/install", async (req, res) => {
 
     return shopify.auth.begin({
       shop,
-      callbackPath: `/shopify/callback?host=${req.query.host}`,
+      callbackPath: "/shopify/callback",
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
