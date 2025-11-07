@@ -20,17 +20,16 @@ function getShopFromHost(h) {
 }
 
 export async function initShopifyAppBridge() {
-  const params = new URLSearchParams(window.location.search);
-
+  let params = new URLSearchParams(window.location.search);
   let host = params.get("host");
   let shop = params.get("shop");
 
-  // ✅ Try Shopify injected global (MOST RELIABLE)
+  // ✅ 1: Try Shopify injected global
   if (!host && window.__SHOPIFY_DEV_HOST) {
     host = window.__SHOPIFY_DEV_HOST;
   }
 
-  // ✅ Try recovering from App Bridge (second fallback)
+  // ✅ 2: Try recovering from already-created AppBridge state
   if (!host && window.appBridge) {
     try {
       const state = await window.appBridge.getState();
@@ -38,32 +37,29 @@ export async function initShopifyAppBridge() {
     } catch {}
   }
 
-  // ✅ Derive shop from host
+  // ✅ 3: Derive shop from host
   if (!shop && host) {
-    shop = getShopFromHost(host);
-  }
-
-  console.log("INIT_final →", { shop, host });
-
-  // ✅ If still missing — ABSOLUTE fallback: ask Shopify App Bridge
-  if (!shop || !host) {
     try {
-      const app = createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        forceRedirect: true
-      });
-
-      const state = await app.getState();
-      host = state.context.host;
-      shop = getShopFromHost(host);
-      window.appBridge = app;
-    } catch (err) {
-      console.error("FINAL FAIL (cannot recover host/shop):", err);
-      return null;
-    }
+      shop = atob(host.replace(/-/g, "+").replace(/_/g, "/")).split("/")[0];
+    } catch {}
   }
 
-  // ✅ FINAL App Bridge instance
+  console.log("INIT_STAGE_1 →", { shop, host });
+
+  // ✅ 4: If STILL missing host → DO NOT create AppBridge
+  // Instead force Shopify to reload app with host param
+  if (!host) {
+    console.warn("❌ Missing host param → must restart top-level auth");
+
+    window.open(
+      `https://botassistai.com/redirect.html?shop=${shop || ""}`,
+      "_top"
+    );
+
+    return null; // ✅ Stop here — do NOT create AppBridge
+  }
+
+  // ✅ 5: NOW SAFE TO CREATE APPBRIDGE
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
