@@ -21,32 +21,19 @@ function getShopFromHost(host) {
 
 export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-
   let shop = params.get("shop");
   const host = params.get("host");
 
-  // ✅ If Shopify didn't provide ?shop=, extract from host
+  console.log("INIT → raw:", { shop, host });
+
+  // ✅ ALWAYS decode host BEFORE giving up
   if (!shop && host) {
     shop = getShopFromHost(host);
+    console.log("INIT → extracted shop from host:", shop);
   }
 
-  if (!shop) return null;
-
-  if (isEmbedded() && !host) {
-    const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-
-    document.body.innerHTML = `
-      <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
-        <h3>BotAssistAI needs permission to continue</h3>
-        <p>Click below to finish authentication.</p>
-        <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">Continue</button>
-      </div>
-    `;
-
-    document.getElementById("continue").onclick = () => {
-      window.open(breakoutUrl, "_top");
-    };
-
+  if (!shop) {
+    console.error("❌ No shop found even after decoding host");
     return null;
   }
 
