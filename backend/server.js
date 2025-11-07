@@ -1036,14 +1036,14 @@ app.get("/shopify/install", async (req, res) => {
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
 
-    return shopify.auth.begin({
+    // --- Start OAuth (shopify-api sends redirect)
+    await shopify.auth.begin({
       shop,
-      callbackPath: "/shopify/callback",
       isOnline: true,
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
     });
-    
 
     // 🧠 Important: we must not touch headers after this point
     // So the rest runs only if headers weren't sent yet
@@ -1135,8 +1135,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host || Buffer.from(`${shop}/admin`, "utf8").toString("base64");
-
+    const host = req.query.host ? decodeURIComponent(req.query.host) : '';
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1229,12 +1228,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
-    const adminUrl =
-    `https://admin.shopify.com/store/${
-      shop.replace(".myshopify.com", "")
-    }/apps/botassistai?host=${encodeURIComponent(host)}&shop=${encodeURIComponent(shop)}`;
-  
-
     res.status(200).send(`
       <!doctype html>
       <html>
@@ -1250,11 +1243,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               forceRedirect: true,
             });
             const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(
-  AppBridge.actions.Redirect.Action.REMOTE,
-  ${adminUrl}
-);
-
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, ${dashboardUrl});
           </script>
         </body>
       </html>
@@ -2367,23 +2356,22 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    const shop = rows[0].shopify_shop_domain;
-    const shopSubdomain = shop.split(".")[0];
-    const hostParam =
-      host && host !== "null"
-        ? host
-        : encodeURIComponent(Buffer.from(`shop=${shop}`).toString("base64"));
+    // ✅ Always have a valid host for App Bridge
+    const hostParam = host && host !== 'null'
+      ? host
+      : encodeURIComponent(Buffer.from(`shop=${rows[0].shopify_shop_domain}`).toString('base64'));
 
-    const finalShopifyUrl = `https://admin.shopify.com/store/${shopSubdomain}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${hostParam}`;
-
-    // 🔹 Redirect to breakout page (not admin directly)
-    res.redirect(`https://botassistai.com/redirect.html?target=${encodeURIComponent(finalShopifyUrl)}`);
+      res.redirect(
+        `https://botassistai.com/redirect.html?target=${encodeURIComponent(
+          `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${hostParam}`
+        )}`
+      );
+      
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 
