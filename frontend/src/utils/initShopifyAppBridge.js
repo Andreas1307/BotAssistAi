@@ -9,12 +9,18 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
+function normalizeHost(host) {
+  return host.replace(/-/g, "+").replace(/_/g, "/");
+}
+
 function getShopFromHost(host) {
   try {
-    const decoded = atob(host); // ex: "andrei-store185.myshopify.com/admin/apps/botassistai"
-    const shop = decoded.split("/")[0]; // extract domain
-    return shop.includes(".myshopify.com") ? shop : null;
-  } catch {
+    const normalized = normalizeHost(host);
+    const decoded = atob(normalized);  // → "shop.myshopify.com/admin"
+    const shop = decoded.split("/")[0];
+    return shop.endsWith(".myshopify.com") ? shop : null;
+  } catch (err) {
+    console.error("Host decode failed:", err);
     return null;
   }
 }
@@ -26,14 +32,14 @@ export async function initShopifyAppBridge() {
 
   console.log("INIT → raw:", { shop, host });
 
-  // ✅ ALWAYS decode host BEFORE giving up
+  // ✅ ALWAYS decode host
   if (!shop && host) {
     shop = getShopFromHost(host);
-    console.log("INIT → extracted shop from host:", shop);
+    console.log("INIT → extracted shop:", shop);
   }
 
-  if (!shop) {
-    console.error("❌ No shop found even after decoding host");
+  if (!shop || !host) {
+    console.error("❌ Missing shop or host → cannot init app bridge");
     return null;
   }
 
