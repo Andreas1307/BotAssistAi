@@ -15,31 +15,39 @@ function normalizeHost(host) {
 
 function getShopFromHost(host) {
   try {
-    const normalized = normalizeHost(host);
-    const decoded = atob(normalized);  // → "shop.myshopify.com/admin"
-    const shop = decoded.split("/")[0];
-    return shop.endsWith(".myshopify.com") ? shop : null;
-  } catch (err) {
-    console.error("Host decode failed:", err);
+    const decoded = atob(normalizeHost(host));
+    return decoded.split("/")[0];
+  } catch {
     return null;
   }
 }
 
 export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
+
+  let host = params.get("host");
   let shop = params.get("shop");
-  const host = params.get("host");
 
-  console.log("INIT → raw:", { shop, host });
-
-  // ✅ ALWAYS decode host
-  if (!shop && host) {
-    shop = getShopFromHost(host);
-    console.log("INIT → extracted shop:", shop);
+  // ✅ If missing (happens on reload), try to recover host from App Bridge
+  if (!host && window.appBridge) {
+    try {
+      const state = await window.appBridge.getState();
+      host = state.context.host;
+      console.log("Recovered host from App Bridge:", host);
+    } catch (err) {
+      console.warn("Could not recover host:", err);
+    }
   }
 
+  // ✅ Extract shop from host if missing
+  if (!shop && host) {
+    shop = getShopFromHost(host);
+  }
+
+  console.log("INIT → final:", { shop, host });
+
   if (!shop || !host) {
-    console.error("❌ Missing shop or host → cannot init app bridge");
+    console.error("❌ Cannot initialize app bridge (missing shop/host)");
     return null;
   }
 
