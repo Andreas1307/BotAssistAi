@@ -1242,7 +1242,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               forceRedirect: true,
             });
             const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(AppBridge.actions.Redirect.Action.ADMIN_PATH, "/apps/botassistai");
+            Redirect.dispatch(
+  AppBridge.actions.Redirect.Action.REMOTE,
+  "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com', '')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}"
+);
+
           </script>
         </body>
       </html>
