@@ -1226,34 +1226,29 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     
-    const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
-    console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-
+    const storeName = shop.replace('.myshopify.com', '');
+    const finalUrl = `https://admin.shopify.com/store/${storeName}/apps/botassistai?host=${encodeURIComponent(host)}&shop=${encodeURIComponent(shop)}`;
+    
     res.status(200).send(`
       <!doctype html>
       <html>
         <head><meta charset="utf-8" /></head>
         <body>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge"></script>
           <script>
-            const AppBridge = window["app-bridge"];
-            const createApp = AppBridge.default || AppBridge;
-            const app = createApp({
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var app = createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               host: "${host}",
               forceRedirect: true,
             });
-            const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(
-  AppBridge.actions.Redirect.Action.REMOTE,
-  adminUrl
-);
-
+            var Redirect = AppBridge.actions.Redirect.create(app);
+            Redirect.dispatch(AppBridge.actions.Redirect.Action.REMOTE, "${finalUrl}");
           </script>
         </body>
       </html>
     `);
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
