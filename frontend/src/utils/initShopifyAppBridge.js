@@ -11,9 +11,9 @@ function isEmbedded() {
 
 function getShopFromHost(host) {
   try {
-    const decoded = atob(host);
-    const params = new URLSearchParams(decoded);
-    return params.get("shop");
+    const decoded = atob(host); // ex: "andrei-store185.myshopify.com/admin/apps/botassistai"
+    const shop = decoded.split("/")[0]; // extract domain
+    return shop.includes(".myshopify.com") ? shop : null;
   } catch {
     return null;
   }
