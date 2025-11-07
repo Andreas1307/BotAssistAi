@@ -9,17 +9,14 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-function normalizeHost(host) {
-  return host.replace(/-/g, "+").replace(/_/g, "/");
+function normalizeHost(h) {
+  return h.replace(/-/g, "+").replace(/_/g, "/");
 }
 
-function getShopFromHost(host) {
+function getShopFromHost(h) {
   try {
-    const decoded = atob(normalizeHost(host));
-    return decoded.split("/")[0];
-  } catch {
-    return null;
-  }
+    return atob(normalizeHost(h)).split("/")[0];
+  } catch { return null; }
 }
 
 export async function initShopifyAppBridge() {
@@ -28,29 +25,45 @@ export async function initShopifyAppBridge() {
   let host = params.get("host");
   let shop = params.get("shop");
 
-  // ✅ If missing (happens on reload), try to recover host from App Bridge
+  // ✅ Try Shopify injected global (MOST RELIABLE)
+  if (!host && window.__SHOPIFY_DEV_HOST) {
+    host = window.__SHOPIFY_DEV_HOST;
+  }
+
+  // ✅ Try recovering from App Bridge (second fallback)
   if (!host && window.appBridge) {
     try {
       const state = await window.appBridge.getState();
       host = state.context.host;
-      console.log("Recovered host from App Bridge:", host);
-    } catch (err) {
-      console.warn("Could not recover host:", err);
-    }
+    } catch {}
   }
 
-  // ✅ Extract shop from host if missing
+  // ✅ Derive shop from host
   if (!shop && host) {
     shop = getShopFromHost(host);
   }
 
-  console.log("INIT → final:", { shop, host });
+  console.log("INIT_final →", { shop, host });
 
+  // ✅ If still missing — ABSOLUTE fallback: ask Shopify App Bridge
   if (!shop || !host) {
-    console.error("❌ Cannot initialize app bridge (missing shop/host)");
-    return null;
+    try {
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        forceRedirect: true
+      });
+
+      const state = await app.getState();
+      host = state.context.host;
+      shop = getShopFromHost(host);
+      window.appBridge = app;
+    } catch (err) {
+      console.error("FINAL FAIL (cannot recover host/shop):", err);
+      return null;
+    }
   }
 
+  // ✅ FINAL App Bridge instance
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,

@@ -120,27 +120,36 @@ const Dashboard = () => {
 
 
   const activatePlan = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
-  
+    // ✅ First: initialize App Bridge (this now recovers shop/host reliably)
     const app = await initShopifyAppBridge();
   
+    // ✅ If App Bridge failed (extremely rare), try one last recovery
     if (!app) {
-      console.warn("⚠️ App Bridge not ready yet. Redirecting to top-level auth…");
+      console.warn("App Bridge not ready — forcing top-level auth.");
   
-      // Force top-level auth breakout
-      if (shop) {
-        window.open(`https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`, "_top");
-      } else {
-        alert("Missing shop parameter. Please reopen the app from your Shopify admin.");
+      // Recover host/shop from Shopify globals
+      const recoveredHost = window.__SHOPIFY_DEV_HOST || null;
+      const recoveredShop = recoveredHost 
+        ? atob(recoveredHost.replace(/-/g, "+").replace(/_/g, "/")).split("/")[0]
+        : null;
+  
+      if (recoveredShop) {
+        window.open(
+          `https://botassistai.com/redirect.html?shop=${encodeURIComponent(recoveredShop)}`,
+          "_top"
+        );
+        return;
       }
+  
+      // ✅ FINAL fallback (this should basically never run now)
+      alert("Shop session missing. Please reopen the app from your Shopify Admin.");
       return;
     }
   
-    // ✅ AppBridge initialized properly, safe to proceed
+    // ✅ App Bridge ready → continue safely
     await handleBilling(user.user_id);
   };
+  
   
   
   /*
