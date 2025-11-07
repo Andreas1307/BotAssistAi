@@ -1229,9 +1229,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://www.botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
 
-    const adminUrl = "https://admin.shopify.com/store/" +
-  "${shop}".replace(".myshopify.com", "") +
-  "/apps/botassistai?host=${host}&shop=${shop}";
+    const adminUrl =
+    `https://admin.shopify.com/store/${
+      shop.replace(".myshopify.com", "")
+    }/apps/botassistai?host=${encodeURIComponent(host)}&shop=${encodeURIComponent(shop)}`;
+  
 
     res.status(200).send(`
       <!doctype html>
@@ -1250,7 +1252,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
             const Redirect = AppBridge.actions.Redirect.create(app);
         Redirect.dispatch(
   AppBridge.actions.Redirect.Action.REMOTE,
-  adminUrl
+  ${adminUrl}
 );
 
           </script>
