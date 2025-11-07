@@ -8,20 +8,33 @@ import directory from "../directory";
 function isEmbedded() {
   return window.top !== window.self;
 }
-/**
- * Initializes Shopify App Bridge safely.
- * - Skips if not embedded or missing params
- * - Avoids noisy Web Vitals errors
- */
+
+function getShopFromHost(host) {
+  try {
+    const decoded = atob(host);
+    const params = new URLSearchParams(decoded);
+    return params.get("shop");
+  } catch {
+    return null;
+  }
+}
+
 export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
+
+  let shop = params.get("shop");
   const host = params.get("host");
+
+  // ✅ If Shopify didn't provide ?shop=, extract from host
+  if (!shop && host) {
+    shop = getShopFromHost(host);
+  }
 
   if (!shop) return null;
 
   if (isEmbedded() && !host) {
     const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
+
     document.body.innerHTML = `
       <div style="text-align:center;margin-top:30vh;font-family:sans-serif">
         <h3>BotAssistAI needs permission to continue</h3>
@@ -29,9 +42,11 @@ export async function initShopifyAppBridge() {
         <button id="continue" style="padding:10px 18px;font-size:16px;border-radius:8px;cursor:pointer">Continue</button>
       </div>
     `;
-    document.getElementById("continue").addEventListener("click", () => {
+
+    document.getElementById("continue").onclick = () => {
       window.open(breakoutUrl, "_top");
-    });
+    };
+
     return null;
   }
 
@@ -41,9 +56,7 @@ export async function initShopifyAppBridge() {
     forceRedirect: true,
   });
 
-  // ✅ store it globally so others can access it
   window.appBridge = app;
-
   return app;
 }
 
