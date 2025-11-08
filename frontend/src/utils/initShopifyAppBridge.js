@@ -49,16 +49,16 @@ export function safeRedirect(url) {
   const host = params.get("host");
 
   if (app && host) {
-    // ✅ Embedded → use App Bridge redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
-    // 🔹 Not embedded yet → break out to top-level redirect page
+    // top-level redirect page
     window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
     console.error("❌ Cannot redirect: missing shop and App Bridge not ready");
   }
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 
