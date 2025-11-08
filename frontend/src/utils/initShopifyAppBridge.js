@@ -60,11 +60,10 @@ export function safeRedirect(url) {
   const app = window.appBridge;
   if (app) {
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url);
+    redirect.dispatch(Redirect.Action.REMOTE, url); // Allowed for Shopify URLs
   } else {
-    // fallback: if appBridge is not ready, send to your top-level redirect page
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
+    // If App Bridge is not initialized yet, break out to top-level
+    const shop = new URLSearchParams(window.location.search).get("shop");
     window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   }
 }
