@@ -2270,10 +2270,11 @@ try {
 
 
 
-
 app.get("/start-billing", async (req, res) => {
   try {
     const { shop } = req.query;
+    if (!shop) return res.status(400).json({ error: "Missing shop" });
+
     const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain=?", [shop]);
     if (rows.length === 0) return res.status(404).json({ error: "User not found" });
 
@@ -2281,11 +2282,20 @@ app.get("/start-billing", async (req, res) => {
     const token = user.shopify_access_token;
 
     const query = `
-      mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
+      mutation AppSubscriptionCreate(
+        $name: String!, 
+        $returnUrl: URL!, 
+        $lineItems: [AppSubscriptionLineItemInput!]!
+      ) {
+        appSubscriptionCreate(
+          name: $name, 
+          returnUrl: $returnUrl, 
+          lineItems: $lineItems, 
+          test: true
+        ) {
           userErrors { field message }
-          appSubscription { id name }
           confirmationUrl
+          appSubscription { id name }
         }
       }
     `;
@@ -2308,19 +2318,37 @@ app.get("/start-billing", async (req, res) => {
     const gqlResponse = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
       { query, variables },
-      { headers: { "X-Shopify-Access-Token": token, "Content-Type": "application/json" } }
+      {
+        headers: {
+          "X-Shopify-Access-Token": token,
+          "Content-Type": "application/json",
+        },
+      }
     );
 
-    const data = gqlResponse.data?.data?.appSubscriptionCreate;
-    if (!data || data.userErrors?.length) {
-      console.error("Billing errors:", data?.userErrors);
-      return res.status(400).json({ error: "Shopify billing failed", details: data.userErrors });
+    const appSub = gqlResponse.data?.data?.appSubscriptionCreate;
+
+    if (!appSub) {
+      console.error("⚠️ Invalid Shopify response:", gqlResponse.data);
+      return res.status(500).json({ error: "Invalid response from Shopify API" });
     }
 
-    const confirmationUrl = data.confirmationUrl;
+    if (appSub.userErrors && appSub.userErrors.length > 0) {
+      console.error("Shopify billing errors:", appSub.userErrors);
+      return res.status(400).json({ error: "Shopify billing failed", details: appSub.userErrors });
+    }
+
+    const confirmationUrl = appSub.confirmationUrl;
+    if (!confirmationUrl) {
+      console.error("❌ No confirmationUrl in response:", appSub);
+      return res.status(500).json({ error: "Missing confirmationUrl" });
+    }
+
+    console.log("✅ Billing confirmation URL:", confirmationUrl);
     return res.json({ confirmationUrl });
+
   } catch (err) {
-    console.error("Billing start failed:", err.response?.data || err.message);
+    console.error("❌ Billing start failed:", err.response?.data || err.message);
     res.status(500).json({ error: "Billing start failed" });
   }
 });
