@@ -9,12 +9,16 @@
   <script>
     const params = new URLSearchParams(location.search);
     const target = params.get("target");
+    const shop = params.get("shop");
 
     if (target) {
       // ✅ Top-level navigation allowed
       window.location.replace(decodeURIComponent(target));
+    } else if (shop) {
+      // Fallback: go to Shopify admin home for this shop
+      window.location.replace(`https://${shop}/admin`);
     } else {
-      document.body.textContent = "Missing redirect target.";
+      document.body.textContent = "Missing redirect target and shop.";
     }
   </script>
 </body>

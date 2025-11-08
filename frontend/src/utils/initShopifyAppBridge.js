@@ -47,13 +47,22 @@ export function safeRedirect(url) {
   const shop = params.get("shop");
   const host = params.get("host");
 
+  if (!url) {
+    console.error("❌ safeRedirect called without URL");
+    return;
+  }
+
   if (app && host) {
+    // ✅ Embedded → App Bridge redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
-    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
+    // 🔹 Top-level redirect page
+    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
-    console.error("❌ Cannot redirect: missing shop and App Bridge not ready");
+    // ❌ No shop, cannot redirect
+    console.error("❌ Cannot redirect: missing shop. Falling back to direct URL.");
+    window.location.href = url; // last-resort fallback
   }
 }
 
