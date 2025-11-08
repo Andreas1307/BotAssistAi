@@ -15,35 +15,32 @@ export async function initShopifyAppBridge() {
   const host = params.get("host");
 
   if (!shop) {
-    console.error("❌ Missing shop parameter");
+    console.error("❌ Missing shop parameter in URL");
     return null;
   }
 
-  // 🚀 Case 1: Embedded but no host — use App Bridge safe redirect
+  // 🚨 Embedded but missing host → breakout via redirect.html
   if (isEmbedded() && !host) {
-    console.log("🧭 No host, embedded → using AppBridge safe redirect");
+    console.log("🧭 Embedded without host → breaking out via redirect.html");
     const tempApp = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host: "",
     });
-
     const redirect = Redirect.create(tempApp);
     redirect.dispatch(
       Redirect.Action.REMOTE,
       `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`
     );
-
     return null;
   }
 
-  // 🚀 Case 2: Not embedded → top-level (safe) redirect
-  if (!isEmbedded()) {
-    console.log("🔝 Top-level → redirect to auth");
-    window.location.replace(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
+  // 🚨 Never redirect here; just return null if not embedded
+  if (!isEmbedded() && !host) {
+    console.log("🔝 Top-level → allow redirect.html to handle auth");
     return null;
   }
 
-  // ✅ Case 3: Normal embedded context with host
+  // ✅ Normal embedded context with host
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -60,13 +57,13 @@ export function getAppBridgeInstance() {
 }
 
 export function safeRedirect(url) {
-  const app = getAppBridgeInstance();
-
+  const app = window.appBridge;
   if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.top.location.replace(url);
+    // Only run outside iframe (e.g. in redirect.html)
+    window.location.replace(url);
   }
 }
 
@@ -152,3 +149,4 @@ export async function fetchWithAuth(url, options = {}) {
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
+

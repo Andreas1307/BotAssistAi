@@ -6,7 +6,7 @@
     <script>
       const shop = new URLSearchParams(location.search).get("shop");
       if (shop) {
-        // ✅ Safely redirect to your backend auth from top-level
+        // ✅ Runs at top-level only
         location.replace(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
       } else {
         document.body.textContent = "Missing shop parameter.";
