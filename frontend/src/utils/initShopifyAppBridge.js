@@ -9,132 +9,59 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-function normalizeHost(h) {
-  return h.replace(/-/g, "+").replace(/_/g, "/");
-}
-
-function getShopFromHost(h) {
-  try {
-    return atob(normalizeHost(h)).split("/")[0];
-  } catch { return null; }
-}
-
 export async function initShopifyAppBridge() {
-  const params = new URLSearchParams(window.location.search);
-  let host = params.get("host");
-  let shop = params.get("shop");
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
 
-  // 1: Try injected host
-  if (!host && window.__SHOPIFY_DEV_HOST) {
-    host = window.__SHOPIFY_DEV_HOST;
-  }
-
-  // 2: Recover from existing AppBridge
-  if (!host && window.appBridge) {
-    try {
-      const state = await window.appBridge.getState();
-      host = state.context.host;
-      shop = getShopFromHost(host);
-    } catch {}
-  }
-
-  console.log("INIT_STAGE_1 →", { shop, host });
-
-  // ✅ Shopify reparative reload (prevents empty shop/host)
-  if (!host) {
-    const repaired = params.get("shopify_repair");
-    if (!repaired) {
-      const repairUrl = `/apps/botassistai?shopify_repair=1${shop ? `&shop=${shop}` : ""}`;
-      window.open(repairUrl, "_top");
+    if (!isEmbedded() || !shop || !host) {
+      window.top.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+      console.info("ℹ️ Running outside Shopify iframe — skipping App Bridge");
       return null;
     }
-  }
+    
 
-  // ✅ If STILL no host → only now use redirect.html
-  if (!host) {
-    console.warn("Missing host → using redirect.html");
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
 
-    if (shop) {
-      window.open(
-        `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`,
-        "_top"
-      );
-    } else {
-      window.open("/?shopify_repair=1", "_top");
+    window.appBridge = app;
+
+    // Silently try to initialize Web Vitals
+    try {
+      if (typeof app.initializeWebVitals === "function") {
+        app.initializeWebVitals();
+      }
+    } catch {
+      // ignore
     }
+
+    console.log("✅ Shopify App Bridge initialized");
+    return app;
+  } catch (err) {
+    console.error("❌ Failed to init App Bridge:", err);
     return null;
   }
-
-  // ✅ Safe to initialize AppBridge
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: true,
-  });
-
-  window.appBridge = app;
-  return app;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
-export function breakoutTo(url) {
-  // Create an intermediate HTML page so we never touch window.top directly
-  const redirectPage = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
-
-  // Always open it by user gesture if possible
-  const openInTop = () => {
-    window.open(redirectPage, "_top");
-  };
-
-  // If this function is called automatically (no user click),
-  // fall back to App-Bridge redirect instead of touching window.top.
-  try {
-    const app = getAppBridgeInstance();
-    if (app) {
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, redirectPage);
-    } else {
-      // last-chance fallback
-      openInTop();
-    }
-  } catch (e) {
-    openInTop();
-  }
-}
-
 export function safeRedirect(url) {
-  const embedded = isEmbedded();
-  const isAdmin = url.includes("admin.shopify.com");
+  const app = getAppBridgeInstance();
 
-  try {
-    const app = getAppBridgeInstance();
-
-    // ✅ Use App Bridge Redirect (this is the official safe way)
-    if (app) {
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, url);
-      return;
-    }
-
-    // ✅ Fallback: open via breakout page (never window.top directly)
-    if (embedded) {
-      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`;
-      window.open(breakoutUrl, "_top");
-      return;
-    }
-
-    // ✅ Only use normal redirect when outside Shopify iframe
-    window.location.href = url;
-  } catch (err) {
-    console.error("❌ safeRedirect failed:", err);
-    // last resort fallback
-    window.open(`https://botassistai.com/redirect.html?target=${encodeURIComponent(url)}`, "_top");
+  if (isEmbedded() && app) {
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, url);
+  } else {
+    window.top.location.href = url;
   }
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
 

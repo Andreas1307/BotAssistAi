@@ -1,32 +1,22 @@
-import { fetchWithAuth } from "./initShopifyAppBridge";
+import { safeRedirect, fetchWithAuth } from "./initShopifyAppBridge";
+import directory from "../directory";
+import axios from "axios";
 
 export async function handleBilling(userId) {
-  const params = new URLSearchParams(window.location.search);
-  const host = params.get("host");
-
   try {
-    const res = await fetchWithAuth(`https://api.botassistai.com/create-subscription2`, {
+    const res = await fetchWithAuth(`${directory}/create-subscription2`, {
       method: "POST",
-      body: { userId, host },
+      body: { userId }
     });
 
-    if (res?.confirmationUrl) {
-      console.log("✅ Billing confirmation URL:", res.confirmationUrl);
+    const data = res.data;
 
-      // 🧩 Shopify-safe redirect breakout
-      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(
-        res.confirmationUrl
-      )}`;
-
-      // Always open this via user gesture (button click)
-      window.open(breakoutUrl, "_top");
-      return;
+    if (data?.confirmationUrl) {
+      safeRedirect(data.confirmationUrl);
+    } else {
+      console.error("No confirmationUrl returned from backend", data);
     }
-
-    console.error("❌ No confirmationUrl returned:", res);
-    alert("Failed to create subscription. Please try again.");
   } catch (err) {
-    console.error("❌ handleBilling failed:", err);
-    alert("Billing setup failed. Check console for details.");
+    console.error("❌ Billing activation failed:", err.response?.data || err.message);
   }
 }

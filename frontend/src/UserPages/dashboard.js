@@ -120,15 +120,8 @@ const Dashboard = () => {
 
 
   const activatePlan = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const host = params.get("host");
-    const shop = params.get("shop");
-  
-    // Break out immediately (user gesture!)
-    const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&step=billing`;
-    window.open(breakoutUrl, "_top");
+    await handleBilling(user.user_id);
   };
-  
   
   
   
