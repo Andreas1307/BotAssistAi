@@ -2272,8 +2272,6 @@ try {
 app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId } = req.body;
-
-    // Lookup user/shop from DB
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
@@ -2281,18 +2279,11 @@ app.post("/create-subscription2", async (req, res) => {
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
 
-    // GraphQL mutation
     const query = `
       mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
         appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
-          userErrors {
-            field
-            message
-          }
-          appSubscription {
-            id
-            name
-          }
+          userErrors { field message }
+          appSubscription { id name }
           confirmationUrl
         }
       }
@@ -2305,10 +2296,7 @@ app.post("/create-subscription2", async (req, res) => {
         {
           plan: {
             appRecurringPricingDetails: {
-              price: {
-                amount: 19.99,
-                currencyCode: "EUR",
-              },
+              price: { amount: 19.99, currencyCode: "EUR" },
               interval: "EVERY_30_DAYS",
             },
           },
@@ -2327,17 +2315,27 @@ app.post("/create-subscription2", async (req, res) => {
       }
     );
 
-    const { data } = response.data;
-    const errors = data.appSubscriptionCreate.userErrors;
+    const appSubCreate = response.data?.data?.appSubscriptionCreate;
 
-    if (errors.length > 0) {
-      console.error("Shopify errors:", errors);
-      return res.status(400).json({ errors });
+    if (!appSubCreate) {
+      console.error("⚠️ Invalid Shopify response:", response.data);
+      return res.status(500).json({ error: "Invalid response from Shopify API" });
     }
 
-    const confirmationUrl = data.appSubscriptionCreate.confirmationUrl;
-    res.json({ confirmationUrl });
+    if (appSubCreate.userErrors && appSubCreate.userErrors.length > 0) {
+      console.error("Shopify billing errors:", appSubCreate.userErrors);
+      return res.status(400).json({ errors: appSubCreate.userErrors });
+    }
 
+    const confirmationUrl = appSubCreate.confirmationUrl;
+
+    if (!confirmationUrl) {
+      console.error("❌ Missing confirmationUrl:", appSubCreate);
+      return res.status(500).json({ error: "Missing confirmationUrl" });
+    }
+
+    console.log("✅ Billing confirmation URL:", confirmationUrl);
+    res.json({ confirmationUrl });
   } catch (err) {
     console.error("❌ Error creating subscription:", err.response?.data || err.message);
     res.status(500).send("Failed to create subscription");
