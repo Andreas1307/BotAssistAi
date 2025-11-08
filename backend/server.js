@@ -2291,7 +2291,7 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host || "")}`,
       lineItems: [
         {
           plan: {
@@ -2303,6 +2303,7 @@ app.post("/create-subscription2", async (req, res) => {
         },
       ],
     };
+    
 
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,

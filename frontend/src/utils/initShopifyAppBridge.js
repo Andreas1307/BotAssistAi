@@ -14,37 +14,39 @@ export async function initShopifyAppBridge() {
   const shop = params.get("shop");
   const host = params.get("host");
 
-  // ✅ Handle missing params safely
   if (!shop) {
-    console.error("❌ Missing shop param in URL");
+    console.error("❌ Missing shop parameter in URL");
     return null;
   }
 
-  // ✅ If not embedded (first load outside Shopify admin)
+  // ✅ If outside Shopify (first load)
   if (!isEmbedded()) {
-    window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-    return null;
-  }
-
-  // ✅ If embedded (Shopify Admin iframe)
-  if (!host) {
-    // Redirect using App Bridge instead of window.top
-    const tempApp = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: "",
-      forceRedirect: true,
-    });
-
-    const redirect = Redirect.create(tempApp);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
+    // Safe — we're top-level already
+    window.location.assign(
       `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
     );
-
     return null;
   }
 
-  // ✅ Initialize App Bridge properly
+  // ✅ If inside Shopify Admin but no host → use App Bridge redirect
+  if (!host) {
+    try {
+      const tempApp = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host: "",
+      });
+      const redirect = Redirect.create(tempApp);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+      );
+    } catch (err) {
+      console.error("❌ Failed to dispatch AppBridge redirect:", err);
+    }
+    return null;
+  }
+
+  // ✅ Normal init inside iframe
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -64,11 +66,12 @@ export function safeRedirect(url) {
   const app = getAppBridgeInstance();
 
   if (isEmbedded() && app) {
+    // Use Shopify's built-in redirect for iframe-safe navigation
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // fallback when outside iframe
-    window.location.href = url;
+    // Use normal browser redirect outside iframe
+    window.location.assign(url);
   }
 }
 
