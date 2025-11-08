@@ -2268,6 +2268,63 @@ try {
 })
 
 
+
+
+
+app.get("/start-billing", async (req, res) => {
+  try {
+    const { shop } = req.query;
+    const [rows] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain=?", [shop]);
+    if (rows.length === 0) return res.status(404).json({ error: "User not found" });
+
+    const user = rows[0];
+    const token = user.shopify_access_token;
+
+    const query = `
+      mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
+          userErrors { field message }
+          appSubscription { id name }
+          confirmationUrl
+        }
+      }
+    `;
+
+    const variables = {
+      name: "BotAssist Pro Plan",
+      returnUrl: `https://api.botassistai.com/billing/callback?shop=${shop}`,
+      lineItems: [
+        {
+          plan: {
+            appRecurringPricingDetails: {
+              price: { amount: 19.99, currencyCode: "EUR" },
+              interval: "EVERY_30_DAYS",
+            },
+          },
+        },
+      ],
+    };
+
+    const gqlResponse = await axios.post(
+      `https://${shop}/admin/api/2025-01/graphql.json`,
+      { query, variables },
+      { headers: { "X-Shopify-Access-Token": token, "Content-Type": "application/json" } }
+    );
+
+    const data = gqlResponse.data?.data?.appSubscriptionCreate;
+    if (!data || data.userErrors?.length) {
+      console.error("Billing errors:", data?.userErrors);
+      return res.status(400).json({ error: "Shopify billing failed", details: data.userErrors });
+    }
+
+    const confirmationUrl = data.confirmationUrl;
+    return res.json({ confirmationUrl });
+  } catch (err) {
+    console.error("Billing start failed:", err.response?.data || err.message);
+    res.status(500).json({ error: "Billing start failed" });
+  }
+});
+
 app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId, host } = req.body;
