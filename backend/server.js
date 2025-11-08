@@ -2354,32 +2354,38 @@ app.get("/billing/callback", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
+    const shop = rows[0].shopify_shop_domain;
+
+    // ✅ Mark subscription
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
-    // ✅ Always have a valid host for App Bridge
-    const hostParam = host && host !== 'null'
-      ? host
-      : encodeURIComponent(Buffer.from(`shop=${rows[0].shopify_shop_domain}`).toString('base64'));
+    // ✅ Host must ALWAYS be valid
+    const validatedHost =
+      host && host !== "null"
+        ? host
+        : Buffer.from(`${shop}/admin`)
+            .toString("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_");
 
-      res.redirect(
-        `https://botassistai.com/redirect.html?target=${encodeURIComponent(
-          `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${hostParam}`
-        )}`
-      );
-      
+    // ✅ Build the final target URL that App Bridge will open
+    const finalTarget = `https://admin.shopify.com/store/${shop.split(".")[0]}/apps/${
+      process.env.SHOPIFY_APP_HANDLE
+    }?shop=${shop}&host=${validatedHost}`;
+
+    // ✅ Send to redirect.html USING ?target=
+    res.redirect(
+      `https://botassistai.com/redirect.html?target=${encodeURIComponent(finalTarget)}&host=${validatedHost}`
+    );
+
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
-
-
-
-
-
 
 
 
