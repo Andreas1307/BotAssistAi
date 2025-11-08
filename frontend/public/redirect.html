@@ -3,45 +3,17 @@
   <head><meta charset="utf-8"><title>Redirecting…</title></head>
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
-
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge-utils"></script>
-
     <script>
       const params = new URLSearchParams(location.search);
       const target = params.get("target");
       const shop = params.get("shop");
-      const apiKey = "YOUR_SHOPIFY_API_KEY";
 
-      // ✅ If a direct target exists → use App Bridge REMOTE redirect
       if (target) {
-        const host = params.get("host");
-        if (!host) {
-          // Try to decode host from target (best effort)
-        }
-
-        const app = window.appBridge = AppBridge.createApp({
-          apiKey,
-          host: host || "",
-          forceRedirect: true,
-        });
-
-        const Redirect = AppBridge.actions.Redirect;
-        const redirect = Redirect.create(app);
-
-        // ✅ THIS breaks out of iframe into Shopify Admin (required for billing)
-        redirect.dispatch(Redirect.Action.REMOTE, target);
-      }
-
-      // ✅ If no target but shop exists → top-level OAuth
-      else if (shop) {
-        location.replace(
-          `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`
-        );
-      }
-
-      // ❌ No params at all
-      else {
+        // ✅ This line is what actually navigates the top window to Shopify’s billing screen
+        window.top.location.href = target;
+      } else if (shop) {
+        window.top.location.href = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;
+      } else {
         document.body.textContent = "Missing redirect parameters.";
       }
     </script>
