@@ -15,25 +15,35 @@ export async function initShopifyAppBridge() {
   const host = params.get("host");
 
   if (!shop) {
-    console.error("❌ Missing shop parameter in URL");
+    console.error("❌ Missing shop parameter");
     return null;
   }
 
-  // 🧭 Case 1: Embedded but no host → breakout to redirect.html
+  // 🚀 Case 1: Embedded but no host — use App Bridge safe redirect
   if (isEmbedded() && !host) {
-    console.log("🔄 Embedded without host → breakout to redirect.html");
-    window.top.location.assign(`https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`);
+    console.log("🧭 No host, embedded → using AppBridge safe redirect");
+    const tempApp = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host: "",
+    });
+
+    const redirect = Redirect.create(tempApp);
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`
+    );
+
     return null;
   }
 
-  // 🧩 Case 2: Not embedded → safe to redirect to auth
+  // 🚀 Case 2: Not embedded → top-level (safe) redirect
   if (!isEmbedded()) {
-    console.log("🔄 Top-level → redirecting to auth");
-    window.location.assign(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
+    console.log("🔝 Top-level → redirect to auth");
+    window.location.replace(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
     return null;
   }
 
-  // ✅ Case 3: Normal Shopify iframe with host
+  // ✅ Case 3: Normal embedded context with host
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -51,11 +61,12 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = getAppBridgeInstance();
+
   if (isEmbedded() && app) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    window.location.href = url;
+    window.top.location.replace(url);
   }
 }
 

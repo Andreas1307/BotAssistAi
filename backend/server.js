@@ -2346,7 +2346,6 @@ app.post("/create-subscription2", async (req, res) => {
   }
 });
 
-
 app.get("/billing/callback", async (req, res) => {
   try {
     const { userId, host } = req.query;
