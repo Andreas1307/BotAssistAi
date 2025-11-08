@@ -19,20 +19,21 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // 🧭 If embedded but missing host → breakout to top-level redirect
+  // 🧭 Case 1: Embedded but no host → breakout to redirect.html
   if (isEmbedded() && !host) {
-    const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
-    window.top.location.href = breakoutUrl;
+    console.log("🔄 Embedded without host → breakout to redirect.html");
+    window.top.location.assign(`https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`);
     return null;
   }
 
-  // 🧩 If not embedded (top-level) and missing session → trigger auth
+  // 🧩 Case 2: Not embedded → safe to redirect to auth
   if (!isEmbedded()) {
-    window.location.href = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+    console.log("🔄 Top-level → redirecting to auth");
+    window.location.assign(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
     return null;
   }
 
-  // ✅ Normal App Bridge init
+  // ✅ Case 3: Normal Shopify iframe with host
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
