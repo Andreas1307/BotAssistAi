@@ -4,12 +4,20 @@
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
-      const shop = new URLSearchParams(location.search).get("shop");
-      if (shop) {
-        // ✅ Runs at top-level only
-        location.replace(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
+      const params = new URLSearchParams(location.search);
+      const shop = params.get("shop");
+      const target = params.get("target");
+
+      const dest = target
+        ? decodeURIComponent(target)
+        : shop
+          ? `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+          : null;
+
+      if (dest) {
+        location.replace(dest);
       } else {
-        document.body.textContent = "Missing shop parameter.";
+        document.body.textContent = "Missing redirect target.";
       }
     </script>
   </body>
