@@ -10,16 +10,16 @@
     const params = new URLSearchParams(location.search);
     const target = params.get("target");
     const shop = params.get("shop");
-
+  
     if (target) {
-      // ✅ Top-level navigation allowed
       window.location.replace(decodeURIComponent(target));
     } else if (shop) {
-      // Fallback: go to Shopify admin home for this shop
       window.location.replace(`https://${shop}/admin`);
     } else {
-      document.body.textContent = "Missing redirect target and shop.";
+      // ✅ Fallback: send to your app landing page
+      window.location.replace("https://botassistai.com/");
     }
   </script>
+  
 </body>
 </html>

@@ -41,10 +41,10 @@ export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
-export function safeRedirect(url) {
+export function safeRedirect(url, fallbackShop = null) {
   const app = window.appBridge;
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
+  const shop = params.get("shop") || fallbackShop;
   const host = params.get("host");
 
   if (!url) {
@@ -53,16 +53,13 @@ export function safeRedirect(url) {
   }
 
   if (app && host) {
-    // ✅ Embedded → App Bridge redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
-    // 🔹 Top-level redirect page
     window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
-    // ❌ No shop, cannot redirect
-    console.error("❌ Cannot redirect: missing shop. Falling back to direct URL.");
-    window.location.href = url; // last-resort fallback
+    console.warn("⚠️ Missing shop even in safeRedirect. Falling back to direct URL.");
+    window.location.href = url;
   }
 }
 

@@ -2267,6 +2267,12 @@ try {
 }
 })
 
+app.get("/get-shop", async (req, res) => {
+  const { userId } = req.query;
+  const [rows] = await pool.query("SELECT shopify_shop_domain FROM users WHERE user_id=?", [userId]);
+  if (rows.length === 0) return res.status(404).json({ shop: null });
+  res.json({ shop: rows[0].shopify_shop_domain });
+});
 
 
 app.post("/create-subscription2", async (req, res) => {
