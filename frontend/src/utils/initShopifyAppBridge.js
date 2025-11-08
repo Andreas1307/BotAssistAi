@@ -9,7 +9,7 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export async function initShopifyAppBridge() {
+export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop");
   const host = params.get("host");
@@ -19,28 +19,14 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  // 🚨 Embedded but missing host → breakout via redirect.html
-  if (isEmbedded() && !host) {
-    console.log("🧭 Embedded without host → breaking out via redirect.html");
-    const tempApp = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: "",
-    });
-    const redirect = Redirect.create(tempApp);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`
-    );
+  if (!host) {
+    // Not embedded properly → redirect to top-level
+    console.log("🧭 Missing host → redirect to top-level");
+    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
     return null;
   }
 
-  // 🚨 Never redirect here; just return null if not embedded
-  if (!isEmbedded() && !host) {
-    console.log("🔝 Top-level → allow redirect.html to handle auth");
-    return null;
-  }
-
-  // ✅ Normal embedded context with host
+  // ✅ Normal embedded context
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -63,11 +49,11 @@ export function safeRedirect(url) {
   const host = params.get("host");
 
   if (app && host) {
-    // ✅ Embedded app with host — safe to redirect via App Bridge
+    // ✅ Embedded → use App Bridge redirect
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
-    // 🔹 Not embedded yet or missing App Bridge — redirect via your top-level page
+    // 🔹 Not embedded yet → break out to top-level redirect page
     window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
     console.error("❌ Cannot redirect: missing shop and App Bridge not ready");
