@@ -4,42 +4,13 @@
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
-      (async () => {
-        const params = new URLSearchParams(location.search);
-        const target = params.get("target");
-        const shop = params.get("shop");
-        const step = params.get("step");
-
-        // Case 1 — normal breakout
-        if (target) {
-          window.top.location.href = target;
-          return;
-        }
-
-        // Case 2 — coming from Activate button (run billing flow outside iframe)
-        if (step === "billing" && shop) {
-          try {
-            const resp = await fetch(`https://api.botassistai.com/start-billing?shop=${shop}`);
-            const data = await resp.json();
-
-            if (data.confirmationUrl) {
-              window.top.location.href = data.confirmationUrl;
-            } else {
-              document.body.textContent = "Failed to get billing confirmation URL.";
-            }
-          } catch (err) {
-            document.body.textContent = "Billing error: " + err.message;
-          }
-          return;
-        }
-
-        // Case 3 — fallback
-        if (shop) {
-          window.top.location.href = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;
-        } else {
-          document.body.textContent = "Missing redirect parameters.";
-        }
-      })();
+      const shop = new URLSearchParams(location.search).get("shop");
+      if (shop) {
+        // ✅ Safely redirect to your backend auth from top-level
+        location.replace(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
+      } else {
+        document.body.textContent = "Missing shop parameter.";
+      }
     </script>
   </body>
 </html>
