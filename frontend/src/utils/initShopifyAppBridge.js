@@ -58,17 +58,14 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = window.appBridge;
-  const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-  const host = params.get("host");
-
-  if (app && host) {
+  if (app) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Break out safely through redirect.html (same-origin)
-    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
-    window.location.href = redirectUrl;
+    // fallback: if appBridge is not ready, send to your top-level redirect page
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   }
 }
 
