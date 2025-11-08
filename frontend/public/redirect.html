@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <head><meta charset="utf-8"><title>Redirecting…</title></head>
-  <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-    <h3>Redirecting…</h3>
-    <script>
-      const params = new URLSearchParams(location.search);
-      const target = params.get("target");
-      if (target) {
-        window.location.replace(decodeURIComponent(target));
-      } else {
-        document.body.textContent = "Missing redirect target.";
-      }
-      </script>
-      
-  </body>
+<head><meta charset="utf-8"><title>Redirecting…</title></head>
+<body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+<h3>Redirecting…</h3>
+<script>
+const params = new URLSearchParams(location.search);
+const target = params.get("target");
+if (target) {
+  // ✅ Top-level navigation is allowed
+  window.location.replace(decodeURIComponent(target));
+} else {
+  document.body.textContent = "Missing redirect target.";
+}
+</script>
+</body>
 </html>

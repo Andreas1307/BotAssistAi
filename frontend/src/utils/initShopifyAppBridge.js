@@ -58,11 +58,13 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = window.appBridge;
+
   if (app) {
+    // ✅ Embedded in Shopify admin
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, url); // Allowed for Shopify URLs
+    redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // If App Bridge is not initialized yet, break out to top-level
+    // 🔹 Not embedded or appBridge not ready: top-level redirect page
     const shop = new URLSearchParams(window.location.search).get("shop");
     window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   }
