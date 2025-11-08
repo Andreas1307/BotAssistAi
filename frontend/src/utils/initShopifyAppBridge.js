@@ -58,15 +58,19 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = window.appBridge;
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
 
-  if (app) {
-    // ✅ Embedded in Shopify admin
+  if (app && host) {
+    // ✅ Embedded app with host — safe to redirect via App Bridge
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
+  } else if (shop) {
+    // 🔹 Not embedded yet or missing App Bridge — redirect via your top-level page
+    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
-    // 🔹 Not embedded or appBridge not ready: top-level redirect page
-    const shop = new URLSearchParams(window.location.search).get("shop");
-    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
+    console.error("❌ Cannot redirect: missing shop and App Bridge not ready");
   }
 }
 

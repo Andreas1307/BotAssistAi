@@ -6,8 +6,9 @@
 <script>
 const params = new URLSearchParams(location.search);
 const target = params.get("target");
+
 if (target) {
-  // ✅ Top-level navigation is allowed
+  // ✅ Top-level navigation allowed
   window.location.replace(decodeURIComponent(target));
 } else {
   document.body.textContent = "Missing redirect target.";
