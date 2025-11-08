@@ -2271,7 +2271,7 @@ try {
 
 app.post("/create-subscription2", async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, host } = req.body; // 👈 add host here
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
@@ -2280,7 +2280,11 @@ app.post("/create-subscription2", async (req, res) => {
     const token = user.shopify_access_token;
 
     const query = `
-      mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
+      mutation AppSubscriptionCreate(
+        $name: String!, 
+        $returnUrl: URL!, 
+        $lineItems: [AppSubscriptionLineItemInput!]!
+      ) {
         appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
           userErrors { field message }
           appSubscription { id name }
@@ -2303,7 +2307,6 @@ app.post("/create-subscription2", async (req, res) => {
         },
       ],
     };
-    
 
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
@@ -2323,7 +2326,7 @@ app.post("/create-subscription2", async (req, res) => {
       return res.status(500).json({ error: "Invalid response from Shopify API" });
     }
 
-    if (appSubCreate.userErrors && appSubCreate.userErrors.length > 0) {
+    if (appSubCreate.userErrors?.length) {
       console.error("Shopify billing errors:", appSubCreate.userErrors);
       return res.status(400).json({ errors: appSubCreate.userErrors });
     }
@@ -2342,6 +2345,7 @@ app.post("/create-subscription2", async (req, res) => {
     res.status(500).send("Failed to create subscription");
   }
 });
+
 
 app.get("/billing/callback", async (req, res) => {
   try {
