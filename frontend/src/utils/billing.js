@@ -1,41 +1,39 @@
+// billing.js
 import axios from "axios";
-import { safeRedirect } from "./initShopifyAppBridge";
+import { safeRedirect, initShopifyAppBridge, isEmbedded } from "./initShopifyAppBridge";
 import directory from "../directory";
 
 export async function handleBilling(userId) {
   try {
-    const params = new URLSearchParams(window.location.search);
+    let params = new URLSearchParams(window.location.search);
+    let shop = params.get("shop");
     let host = params.get("host");
-    const shop = params.get("shop");
 
+    // Initialize App Bridge if embedded
+    initShopifyAppBridge();
+
+    // If shop is missing → redirect to get it
     if (!shop) {
-      console.error("❌ Cannot handle billing: missing shop in URL");
+      console.error("❌ Cannot handle billing: missing shop in URL → redirecting to top-level");
+      window.top.location.href = `https://botassistai.com/redirect.html`;
       return;
     }
 
     // Call backend
     const res = await axios.post(`${directory}/create-subscription2`, { userId, host });
-    const data = res.data;
+    const confirmationUrl = res.data?.confirmationUrl;
 
-    if (!data?.confirmationUrl) {
-      console.error("❌ No confirmationUrl returned from backend", data);
+    if (!confirmationUrl) {
+      console.error("❌ No confirmationUrl returned from backend", res.data);
       return;
     }
 
-    console.log("✅ Got billing URL:", data.confirmationUrl);
+    console.log("✅ Got billing URL:", confirmationUrl);
 
-    // Ensure host is set for embedded redirect
-    if (!host && window.top !== window.self) {
-      // try to grab host from App Bridge if possible
-      const app = window.appBridge;
-      host = app?.host;
-    }
-
-    // Always pass shop + host to safeRedirect
-    safeRedirect(data.confirmationUrl);
+    // Redirect safely
+    safeRedirect(confirmationUrl);
 
   } catch (err) {
     console.error("❌ Billing activation failed:", err.response?.data || err.message);
   }
-};
-
+}

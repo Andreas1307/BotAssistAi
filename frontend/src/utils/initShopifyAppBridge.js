@@ -11,22 +11,21 @@ function isEmbedded() {
 
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop");
-  const host = params.get("host");
+  let shop = params.get("shop");
+  let host = params.get("host");
 
-  if (!shop) {
-    console.error("❌ Missing shop parameter in URL");
+  // If missing shop or host in embedded context → breakout via redirect
+  if (!shop || (!host && isEmbedded())) {
+    console.log("🧭 Missing shop/host → breakout to redirect.html");
+    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}`;
     return null;
   }
 
   if (!host) {
-    // Not embedded properly → redirect to top-level
-    console.log("🧭 Missing host → redirect to top-level");
-    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}`;
+    // top-level, let redirect.html handle it
     return null;
   }
 
-  // ✅ Normal embedded context
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -52,13 +51,11 @@ export function safeRedirect(url) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
-    // top-level redirect page
     window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
     console.error("❌ Cannot redirect: missing shop and App Bridge not ready");
   }
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 
