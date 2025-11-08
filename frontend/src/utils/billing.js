@@ -4,9 +4,8 @@ import axios from "axios";
 
 export async function handleBilling(userId) {
   try {
-    const res = await fetchWithAuth(`${directory}/create-subscription2`, {
-      method: "POST",
-      body: { userId }
+    const res = await axios.post(`${directory}/create-subscription2`, {
+      userId,
     });
 
     const data = res.data;
