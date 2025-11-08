@@ -2272,7 +2272,7 @@ app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId, host } = req.body;
 
-    // Lookup user/shop from DB
+    // 🔍 Lookup user/shop
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
@@ -2280,7 +2280,7 @@ app.post("/create-subscription2", async (req, res) => {
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
 
-    // GraphQL mutation
+    // 🧠 GraphQL mutation for recurring billing
     const query = `
       mutation AppSubscriptionCreate($name: String!, $returnUrl: URL!, $lineItems: [AppSubscriptionLineItemInput!]!) {
         appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
@@ -2312,7 +2312,7 @@ app.post("/create-subscription2", async (req, res) => {
       ],
     };
 
-    const response = await axios.post(
+    const gqlResponse = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
       { query, variables },
       {
@@ -2323,24 +2323,26 @@ app.post("/create-subscription2", async (req, res) => {
       }
     );
 
-    const gqlData = response.data.data.appSubscriptionCreate;
-
-    if (gqlData.userErrors.length > 0) {
-      console.error("Shopify billing errors:", gqlData.userErrors);
-      return res.status(400).json({ errors: gqlData.userErrors });
+    // ✅ Parse response properly
+    const appSubCreate = gqlResponse.data?.data?.appSubscriptionCreate;
+    if (!appSubCreate) {
+      console.error("⚠️ Invalid GraphQL response:", gqlResponse.data);
+      return res.status(500).send("Invalid response from Shopify API");
     }
 
-    const { data } = response.data;
-    const errors = data.appSubscriptionCreate.userErrors;
-
-    if (errors.length > 0) {
-      console.error("Shopify errors:", errors);
-      return res.status(400).json({ errors });
+    if (appSubCreate.userErrors?.length > 0) {
+      console.error("Shopify billing errors:", appSubCreate.userErrors);
+      return res.status(400).json({ errors: appSubCreate.userErrors });
     }
 
-    const confirmationUrl = data.appSubscriptionCreate.confirmationUrl;
+    const confirmationUrl = appSubCreate.confirmationUrl;
+    if (!confirmationUrl) {
+      console.error("❌ Missing confirmationUrl in GraphQL result:", appSubCreate);
+      return res.status(500).send("Missing confirmationUrl");
+    }
+
+    console.log("✅ Returning confirmationUrl:", confirmationUrl);
     res.json({ confirmationUrl });
-
   } catch (err) {
     console.error("❌ Error creating subscription:", err.response?.data || err.message);
     res.status(500).send("Failed to create subscription");
