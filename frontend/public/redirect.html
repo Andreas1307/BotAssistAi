@@ -7,18 +7,16 @@
       const params = new URLSearchParams(location.search);
       const shop = params.get("shop");
       const target = params.get("target");
-
-      const dest = target
-        ? decodeURIComponent(target)
-        : shop
-          ? `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-          : null;
-
-      if (dest) {
-        location.replace(dest);
+    
+      // This page is top-level, not inside admin.shopify.com
+      if (target) {
+        window.location.replace(decodeURIComponent(target));
+      } else if (shop) {
+        window.location.replace(`https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`);
       } else {
         document.body.textContent = "Missing redirect target.";
       }
     </script>
+    
   </body>
 </html>

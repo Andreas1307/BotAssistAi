@@ -58,21 +58,19 @@ export function getAppBridgeInstance() {
 
 export function safeRedirect(url) {
   const app = window.appBridge;
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop");
+  const host = params.get("host");
 
-  if (isEmbedded() && app) {
+  if (app && host) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // ✅ fallback — safely open top-level redirect
-    try {
-      window.open(url, "_top");
-    } catch (e) {
-      console.error("Redirect failed:", e);
-    }
+    // Break out safely through redirect.html (same-origin)
+    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
+    window.location.href = redirectUrl;
   }
-  
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 
