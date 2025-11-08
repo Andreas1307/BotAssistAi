@@ -59,24 +59,18 @@ export function getAppBridgeInstance() {
 export function safeRedirect(url) {
   const app = window.appBridge;
 
-  if (isEmbedded()) {
-    if (app) {
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, url);
-    } else {
-      console.log("⚠️ App Bridge not ready yet. Using top-level breakout via redirect.html");
-      const shop = new URLSearchParams(window.location.search).get("shop");
-      if (shop) {
-        // Safely breakout to top-level first
-        window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
-      } else {
-        console.error("❌ Missing shop parameter, cannot breakout");
-      }
-    }
+  if (isEmbedded() && app) {
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, url);
   } else {
-    // Safe to navigate when top-level
-    window.location.replace(url);
+    // ✅ fallback — safely open top-level redirect
+    try {
+      window.open(url, "_top");
+    } catch (e) {
+      console.error("Redirect failed:", e);
+    }
   }
+  
 }
 
 
