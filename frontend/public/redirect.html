@@ -9,7 +9,6 @@
       const shop = params.get("shop");
 
       if (target) {
-        // ✅ This line is what actually navigates the top window to Shopify’s billing screen
         window.top.location.href = target;
       } else if (shop) {
         window.top.location.href = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;

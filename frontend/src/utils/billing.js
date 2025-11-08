@@ -1,3 +1,5 @@
+import { getAppBridgeInstance } from "./initShopifyAppBridge";
+import { Redirect } from "@shopify/app-bridge/actions";
 import { fetchWithAuth } from "./initShopifyAppBridge";
 
 export async function handleBilling(userId) {
@@ -11,9 +13,17 @@ export async function handleBilling(userId) {
     });
 
     if (res?.confirmationUrl) {
-      // ✅ ALWAYS break out to top-level using redirect.html
-      const breakoutUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(res.confirmationUrl)}&host=${encodeURIComponent(host)}`;
-      window.open(breakoutUrl, "_top"); // 🔥 critical line
+      console.log("➡️ Confirmation URL:", res.confirmationUrl);
+
+      // ✅ Use App Bridge Redirect (required for billing)
+      const app = getAppBridgeInstance();
+      if (app) {
+        const redirect = Redirect.create(app);
+        redirect.dispatch(Redirect.Action.REMOTE, res.confirmationUrl);
+      } else {
+        // fallback: breakout to top level if App Bridge missing
+        window.open(res.confirmationUrl, "_top");
+      }
     } else {
       console.error("❌ No confirmationUrl returned:", res);
       alert("Failed to create subscription. Please try again.");
