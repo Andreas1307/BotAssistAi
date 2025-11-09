@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>Redirecting…</title>
-</head>
-<body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-  <h3>Redirecting…</h3>
-  <script>
-    const params = new URLSearchParams(location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
-    const target = params.get("target");
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+  </head>
+  <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+    <h3>Redirecting…</h3>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const shop = params.get("shop");
+      const host = params.get("host");
+      const target = params.get("target");
 
-    if (target) {
-      // Always open target in same window (we're already outside the iframe)
-      location.replace(decodeURIComponent(target));
-    } else if (shop) {
-      const safeHost = host || btoa(`${shop}/admin`);
-      location.replace(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
-    } else {
-      location.replace("https://botassistai.com/");
-    }
-  </script>
-</body>
+      if (target) {
+        // ✅ This breaks out of the iframe
+        location.replace(decodeURIComponent(target));
+      } else if (shop) {
+        // ✅ Safely re-open app in Shopify Admin
+        const safeHost = host || btoa(`${shop}/admin`);
+        location.replace(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
+      } else {
+        location.replace("https://botassistai.com/");
+      }
+    </script>
+  </body>
 </html>
