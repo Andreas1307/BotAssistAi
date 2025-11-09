@@ -10,18 +10,21 @@
     const params = new URLSearchParams(location.search);
     const shop = params.get("shop");
     const host = params.get("host");
-  
-    if (shop && host) {
-      // ✅ Bring user back inside the Shopify embedded app
-      window.location.replace(`https://${shop}/admin/apps/YOUR_APP_HANDLE?shop=${shop}&host=${host}`);
+    const target = params.get("target");
+
+    if (target) {
+      // Direct external target (billing confirmation, etc.)
+      window.location.replace(decodeURIComponent(target));
     } else if (shop) {
-      // Fallback if host is missing
-      window.location.replace(`https://${shop}/admin/apps/YOUR_APP_HANDLE`);
+      // ✅ Construct safe fallback host if missing
+      const safeHost = host || btoa(`${shop}/admin`);
+      window.location.replace(
+        `https://${shop}/admin/apps/YOUR_APP_HANDLE?shop=${shop}&host=${safeHost}`
+      );
     } else {
-      // Final fallback
+      // ❌ No shop info — fallback to homepage
       window.location.replace("https://botassistai.com/");
     }
   </script>
-  
 </body>
 </html>

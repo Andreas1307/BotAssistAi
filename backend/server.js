@@ -2368,12 +2368,12 @@ app.get("/billing/callback", async (req, res) => {
 
     const shop = rows[0].shopify_shop_domain;
 
-    // ✅ Instead of redirecting to admin.shopify.com directly, 
-    // redirect to your own trampoline page
+    // ✅ Ensure both shop and host are always present
     const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host || "")}`;
+      shop || ""
+    )}&host=${encodeURIComponent(host || btoa(`${shop}/admin`))}`;
 
+    console.log("✅ Billing callback redirecting to:", redirectUrl);
     res.redirect(redirectUrl);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
