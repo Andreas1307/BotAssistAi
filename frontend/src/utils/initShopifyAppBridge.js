@@ -28,16 +28,18 @@ export function initShopifyAppBridge() {
   }
 
   if (window.top !== window.self && !host) {
-    // Only breakout for OAuth/install flow, not billing
+    // Only breakout for OAuth/install flow
     if (window.location.pathname.includes("/shopify/install")) {
       const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-      window.top.location.href = target;
+      // ✅ Redirect through our own domain to break out safely
+      window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(target)}`;
       return null;
     } else {
       console.warn("⚠️ Missing host but not install flow, skipping breakout");
       return null;
     }
   }
+  
   
   
   if (!host) return null;
