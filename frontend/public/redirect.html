@@ -8,19 +8,18 @@
   <h3>Redirecting…</h3>
   <script>
     const params = new URLSearchParams(location.search);
-    const target = params.get("target");
     const shop = params.get("shop");
-
+    const target = params.get("target");
+  
     if (target) {
-      // ✅ Top-level navigation to the confirmation URL
       window.location.replace(decodeURIComponent(target));
     } else if (shop) {
-      // Fallback to Shopify admin
-      window.location.replace(`https://${shop}/admin`);
+      // Reload app in embedded mode
+      window.location.replace(`https://${shop}/admin/apps/YOUR_APP_HANDLE`);
     } else {
-      // Final fallback: home
       window.location.replace("https://botassistai.com/");
     }
   </script>
+  
 </body>
 </html>

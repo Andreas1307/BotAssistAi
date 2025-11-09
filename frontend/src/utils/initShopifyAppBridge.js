@@ -14,17 +14,27 @@ export function initShopifyAppBridge() {
   let shop = params.get("shop");
   let host = params.get("host");
 
-  // If missing shop or host in embedded context → breakout via redirect
-  if (!shop || (!host && isEmbedded())) {
+  // Restore from sessionStorage if missing
+  if (!host && sessionStorage.getItem("shopify_host")) {
+    host = sessionStorage.getItem("shopify_host");
+  } else if (host) {
+    sessionStorage.setItem("shopify_host", host);
+  }
+
+  // Same for shop param
+  if (!shop && sessionStorage.getItem("shopify_shop")) {
+    shop = sessionStorage.getItem("shopify_shop");
+  } else if (shop) {
+    sessionStorage.setItem("shopify_shop", shop);
+  }
+
+  if (!shop || (!host && window.top !== window.self)) {
     console.log("🧭 Missing shop/host → breakout to redirect.html");
     window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}`;
     return null;
   }
 
-  if (!host) {
-    // top-level, let redirect.html handle it
-    return null;
-  }
+  if (!host) return null;
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,

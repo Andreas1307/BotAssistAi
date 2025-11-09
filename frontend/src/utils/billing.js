@@ -2,6 +2,8 @@ import axios from "axios";
 import { safeRedirect, initShopifyAppBridge } from "./initShopifyAppBridge";
 import directory from "../directory";
 
+import { Redirect } from "@shopify/app-bridge/actions";
+
 export async function handleBilling(userId) {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -12,19 +14,21 @@ export async function handleBilling(userId) {
     const confirmationUrl = res.data?.confirmationUrl;
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
-    // ✅ Always break out to top-level page on same domain
+    const app = window.appBridge;
+
+    if (app && host) {
+      // ✅ Use Shopify App Bridge Redirect — safest method
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+      return;
+    }
+
+    // Fallback (not embedded)
     const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
       shop
     )}&target=${encodeURIComponent(confirmationUrl)}`;
 
-    // Always redirect the top-level window
-    if (window.top === window.self) {
-      // Not embedded — safe to navigate directly
-      window.location.href = redirectUrl;
-    } else {
-      // Embedded — escape the iframe to top-level redirect page
-      window.top.location.assign(redirectUrl);
-    }
+    window.location.href = redirectUrl;
   } catch (err) {
     console.error("Billing activation failed:", err);
   }
