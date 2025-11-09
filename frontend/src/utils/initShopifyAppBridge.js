@@ -27,17 +27,19 @@ export function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_shop", shop);
   }
 
-  // ✅ If we are inside an iframe and host is missing → breakout first
   if (window.top !== window.self && !host) {
-    console.log("🧭 No host param inside iframe — breaking out to redirect.html");
-    const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-    window.location.assign(
-      `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(target)}`
-    );
-    return null;
+    // Only breakout for OAuth/install flow, not billing
+    if (location.pathname.includes("/shopify/install")) {
+      const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
+      window.top.location.href = target;
+      return null;
+    } else {
+      // If host missing but not install → probably billing callback, don't breakout
+      console.warn("⚠️ Missing host but not install flow, skipping breakout");
+      return null;
+    }
   }
-
-  // ✅ Outside iframe but no host? Do nothing — we’ll reinit later
+  
   if (!host) return null;
 
   // ✅ Safe to init App Bridge now
