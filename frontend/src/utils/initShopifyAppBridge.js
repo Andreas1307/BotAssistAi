@@ -12,17 +12,23 @@ function isEmbedded() {
 export function beginAuth(shop) {
   const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
   const app = getAppBridgeInstance();
-  const host = new URLSearchParams(window.location.search).get("host");
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
 
-  if (app && host) {
-    // ✅ SAFE: Use App Bridge redirect to escape iframe
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, authUrl);
-  } else {
-    // ✅ SAFE fallback: use redirect.html outside the iframe
-    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-      shop
-    )}&target=${encodeURIComponent(authUrl)}`;
+  try {
+    if (app && host) {
+      // ✅ Safe inside iframe (uses App Bridge)
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.REMOTE, authUrl);
+    } else {
+      // ✅ Force breakout to your redirect.html (outside iframe)
+      window.location.assign(
+        `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(authUrl)}`
+      );
+    }
+  } catch (err) {
+    console.error("⚠️ beginAuth failed, fallback to top-level redirect:", err);
+    window.open(authUrl, "_top");
   }
 }
 
@@ -47,10 +53,11 @@ export function initShopifyAppBridge() {
 
   if (!shop || (!host && window.top !== window.self)) {
     console.log("🧭 Missing shop/host → breakout to redirect.html");
-    // use current window, not top (Shopify blocks top redirect here)
-    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}`;
+    const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
+    window.location.assign(`https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(authUrl)}`);
     return null;
   }
+  
   
 
   if (!host) return null;
