@@ -12,15 +12,17 @@
       const host = params.get("host");
       const target = params.get("target");
 
+      const go = (url) => {
+        setTimeout(() => location.replace(url), 100);
+      };
+
       if (target) {
-        // ✅ This breaks out of the iframe
-        location.replace(decodeURIComponent(target));
+        go(decodeURIComponent(target));
       } else if (shop) {
-        // ✅ Safely re-open app in Shopify Admin
         const safeHost = host || btoa(`${shop}/admin`);
-        location.replace(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
+        go(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
       } else {
-        location.replace("https://botassistai.com/");
+        go("https://botassistai.com/");
       }
     </script>
   </body>

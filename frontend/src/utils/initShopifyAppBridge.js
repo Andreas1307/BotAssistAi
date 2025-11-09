@@ -9,6 +9,23 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
+export function beginAuth(shop) {
+  const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+  const app = getAppBridgeInstance();
+  const host = new URLSearchParams(window.location.search).get("host");
+
+  if (app && host) {
+    // ✅ SAFE: Use App Bridge redirect to escape iframe
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, authUrl);
+  } else {
+    // ✅ SAFE fallback: use redirect.html outside the iframe
+    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+      shop
+    )}&target=${encodeURIComponent(authUrl)}`;
+  }
+}
+
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
