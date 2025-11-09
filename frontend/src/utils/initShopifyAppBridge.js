@@ -65,13 +65,15 @@ export function safeRedirect(url, fallbackShop = null) {
   }
 
   if (app && host) {
+    // ✅ use App Bridge to redirect cleanly
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
+    // ✅ route through redirect.html to escape iframe
     window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
   } else {
-    console.warn("⚠️ Missing shop even in safeRedirect. Falling back to direct URL.");
-    window.location.href = url;
+    // ✅ fallback, not top.href
+    window.open(url, "_top");
   }
 }
 

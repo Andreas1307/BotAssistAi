@@ -12,28 +12,19 @@
     const host = params.get("host");
     const target = params.get("target");
 
+    const go = (url) => {
+      // always open outside the Shopify admin iframe
+      window.open(url, "_top");
+    };
+
     if (target) {
       const decoded = decodeURIComponent(target);
-
-      // ✅ Safe breakout logic
-      if (decoded.includes("api.botassistai.com")) {
-        // if inside Shopify admin iframe, use window.location not top
-        if (window.top !== window.self) {
-          window.location.assign(decoded);
-        } else {
-          window.location.replace(decoded);
-        }
-      } else {
-        // For Shopify/admin URLs, safely open top frame
-        window.top.location.replace(decoded);
-      }
+      go(decoded);
     } else if (shop) {
       const safeHost = host || btoa(`${shop}/admin`);
-      window.top.location.replace(
-        `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`
-      );
+      go(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
     } else {
-      window.location.replace("https://botassistai.com/");
+      go("https://botassistai.com/");
     }
   </script>
 </body>
