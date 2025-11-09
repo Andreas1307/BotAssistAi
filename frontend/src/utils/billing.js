@@ -15,19 +15,13 @@ export async function handleBilling(userId) {
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
     const app = getAppBridgeInstance();
-
     if (app && host) {
-      // ✅ Use App Bridge redirect (safe inside iframe)
+      // ✅ Use App Bridge redirect inside iframe
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-    } else if (shop) {
-      // ✅ Use redirect.html to escape iframe (outside App Bridge)
-      window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-        shop
-      )}&target=${encodeURIComponent(confirmationUrl)}`;
     } else {
-      // ✅ Safe fallback
-      window.open(confirmationUrl, "_top");
+      // ✅ Fallback outside iframe
+      window.top.location.href = confirmationUrl; // instead of redirect.html
     }
   } catch (err) {
     console.error("Billing activation failed:", err);
