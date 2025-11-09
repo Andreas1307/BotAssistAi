@@ -12,14 +12,14 @@
     const shop = params.get("shop");
 
     if (target) {
-      // top-level navigation allowed — direct to the Shopify confirmation URL
-      location.replace(decodeURIComponent(target));
+      // ✅ Top-level navigation to the confirmation URL
+      window.location.replace(decodeURIComponent(target));
     } else if (shop) {
-      // fallback: go to admin home for this shop
-      location.replace(`https://${shop}/admin`);
+      // Fallback to Shopify admin
+      window.location.replace(`https://${shop}/admin`);
     } else {
-      // final fallback: app landing
-      location.replace("https://botassistai.com/");
+      // Final fallback: home
+      window.location.replace("https://botassistai.com/");
     }
   </script>
 </body>
