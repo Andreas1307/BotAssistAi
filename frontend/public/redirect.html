@@ -12,19 +12,14 @@
     const host = params.get("host");
     const target = params.get("target");
 
-    const go = (url) => {
-      // always open outside the Shopify admin iframe
-      window.open(url, "_top");
-    };
-
     if (target) {
-      const decoded = decodeURIComponent(target);
-      go(decoded);
+      // Always open target in same window (we're already outside the iframe)
+      location.replace(decodeURIComponent(target));
     } else if (shop) {
       const safeHost = host || btoa(`${shop}/admin`);
-      go(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
+      location.replace(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
     } else {
-      go("https://botassistai.com/");
+      location.replace("https://botassistai.com/");
     }
   </script>
 </body>

@@ -4,6 +4,7 @@ import directory from "../directory";
 
 import { Redirect } from "@shopify/app-bridge/actions";
 
+
 export async function handleBilling(userId) {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -17,12 +18,12 @@ export async function handleBilling(userId) {
     const app = getAppBridgeInstance();
 
     if (app && host) {
-      // ✅ In embedded app, tell Shopify to open this outside the iframe
+      // ✅ SAFE WAY – tell Shopify to open the confirmation URL
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
     } else {
-      // ✅ If outside iframe, just open it in top window
-      window.top.location.href = confirmationUrl;
+      // ✅ Non-embedded fallback (e.g. testing outside Shopify)
+      window.location.href = confirmationUrl;
     }
   } catch (err) {
     console.error("Billing activation failed:", err);
