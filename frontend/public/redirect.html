@@ -17,10 +17,10 @@
       window.top.location.replace(decodeURIComponent(target));
     } else if (shop) {
       const safeHost = host || btoa(`${shop}/admin`);
-      // ✅ Replace with your REAL app handle (for example "botassist-ai")
       window.top.location.replace(
-        `https://${shop}/admin/apps/botassist-ai?shop=${shop}&host=${safeHost}`
-      );
+  `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`
+);
+
     } else {
       window.top.location.replace("https://botassistai.com/");
     }
