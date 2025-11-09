@@ -2366,15 +2366,21 @@ app.get("/billing/callback", async (req, res) => {
       [userId]
     );
 
-    // Redirect back into Shopify iframe
-    res.redirect(
-      `https://admin.shopify.com/store/${rows[0].shopify_shop_domain.split(".")[0]}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${rows[0].shopify_shop_domain}&host=${host}`
-    );    
+    const shop = rows[0].shopify_shop_domain;
+
+    // ✅ Instead of redirecting to admin.shopify.com directly, 
+    // redirect to your own trampoline page
+    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+      shop
+    )}&host=${encodeURIComponent(host || "")}`;
+
+    res.redirect(redirectUrl);
   } catch (err) {
     console.error("❌ Billing callback failed:", err.response?.data || err.message);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 

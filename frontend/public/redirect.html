@@ -9,14 +9,16 @@
   <script>
     const params = new URLSearchParams(location.search);
     const shop = params.get("shop");
-    const target = params.get("target");
+    const host = params.get("host");
   
-    if (target) {
-      window.location.replace(decodeURIComponent(target));
+    if (shop && host) {
+      // ✅ Bring user back inside the Shopify embedded app
+      window.location.replace(`https://${shop}/admin/apps/YOUR_APP_HANDLE?shop=${shop}&host=${host}`);
     } else if (shop) {
-      // Reload app in embedded mode
+      // Fallback if host is missing
       window.location.replace(`https://${shop}/admin/apps/YOUR_APP_HANDLE`);
     } else {
+      // Final fallback
       window.location.replace("https://botassistai.com/");
     }
   </script>
