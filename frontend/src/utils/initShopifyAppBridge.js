@@ -29,16 +29,16 @@ export function initShopifyAppBridge() {
 
   if (window.top !== window.self && !host) {
     // Only breakout for OAuth/install flow, not billing
-    if (location.pathname.includes("/shopify/install")) {
+    if (window.location.pathname.includes("/shopify/install")) {
       const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
       window.top.location.href = target;
       return null;
     } else {
-      // If host missing but not install → probably billing callback, don't breakout
       console.warn("⚠️ Missing host but not install flow, skipping breakout");
       return null;
     }
   }
+  
   
   if (!host) return null;
 
