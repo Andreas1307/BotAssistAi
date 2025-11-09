@@ -10,16 +10,17 @@
     const params = new URLSearchParams(location.search);
     const target = params.get("target");
     const shop = params.get("shop");
-  
+
     if (target) {
-      window.location.replace(decodeURIComponent(target));
+      // top-level navigation allowed — direct to the Shopify confirmation URL
+      location.replace(decodeURIComponent(target));
     } else if (shop) {
-      window.location.replace(`https://${shop}/admin`);
+      // fallback: go to admin home for this shop
+      location.replace(`https://${shop}/admin`);
     } else {
-      // ✅ Fallback: send to your app landing page
-      window.location.replace("https://botassistai.com/");
+      // final fallback: app landing
+      location.replace("https://botassistai.com/");
     }
   </script>
-  
 </body>
 </html>
