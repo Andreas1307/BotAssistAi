@@ -16,7 +16,7 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { safeRedirect, initShopifyAppBridge, fetchWithAuth, beginAuth } from "../utils/initShopifyAppBridge";
+import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
 const Homepage = () => {
@@ -69,12 +69,12 @@ const Homepage = () => {
       console.warn("❌ Missing shop parameter in URL");
       return;
     }
-    if (!document.cookie.includes("shopify_toplevel") || !hostParam) {
-      // Break out safely via redirect.html
-      beginAuth(shopParam);
+    if (!document.cookie.includes("shopify_toplevel")) {
+      window.top.location.href = `${directory}/shopify/auth?shop=${shopParam}`;
       return;
-    }    
-    
+    }
+  
+    // Initialize Shopify App Bridge
     (async () => {
       const app = await initShopifyAppBridge();
       if (!app) {

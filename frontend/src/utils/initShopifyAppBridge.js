@@ -9,22 +9,6 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export function beginAuth(shop) {
-  const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-  const app = getAppBridgeInstance();
-  const host = new URLSearchParams(window.location.search).get("host");
-
-  if (app && host) {
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, authUrl);
-  } else {
-    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-      shop
-    )}&target=${encodeURIComponent(authUrl)}`;
-  }
-}
-
-
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
@@ -67,6 +51,7 @@ export function initShopifyAppBridge() {
   console.log("✅ Shopify App Bridge initialized");
   return app;
 }
+
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
