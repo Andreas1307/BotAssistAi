@@ -69,12 +69,12 @@ const Homepage = () => {
       console.warn("❌ Missing shop parameter in URL");
       return;
     }
-    if (!document.cookie.includes("shopify_toplevel")) {
-      // Use safe breakout instead of directly setting top.location.href
+    if (!document.cookie.includes("shopify_toplevel") || !hostParam) {
+      // Break out safely via redirect.html
       beginAuth(shopParam);
       return;
-    }
-    // Initialize Shopify App Bridge
+    }    
+    
     (async () => {
       const app = await initShopifyAppBridge();
       if (!app) {

@@ -60,7 +60,7 @@ export function initShopifyAppBridge() {
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: false, // ⚠️ <--- KEY CHANGE
+    forceRedirect: true, // ⚠️ <--- KEY CHANGE
   });
 
   window.appBridge = app;
