@@ -2368,16 +2368,18 @@ app.get("/billing/callback", async (req, res) => {
 
     const shop = rows[0].shopify_shop_domain;
 
-    // ✅ Make sure host is correctly set
+    // ✅ Redirect back into Shopify embedded app
     const safeHost = host || btoa(`${shop}/admin`);
-
-    // ✅ Redirect directly into the embedded app
     const dashboardUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
-    console.log("✅ Billing callback redirecting to:", dashboardUrl);
-    res.redirect(dashboardUrl);
+
+    // Important: redirect inside the Shopify iframe via redirect.html if necessary
+    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(dashboardUrl)}`;
+
+    console.log("✅ Billing callback redirecting to:", redirectUrl);
+    res.redirect(redirectUrl);
 
   } catch (err) {
-    console.error("❌ Billing callback failed:", err.response?.data || err.message);
+    console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
   }
 });

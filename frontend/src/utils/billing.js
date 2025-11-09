@@ -15,13 +15,19 @@ export async function handleBilling(userId) {
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
     const app = getAppBridgeInstance();
+
     if (app && host) {
-      // ✅ Use App Bridge redirect inside iframe
+      // ✅ Inside Shopify iframe → use App Bridge redirect
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+    } else if (shop) {
+      // ✅ Outside iframe → route through redirect.html
+      window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+        shop
+      )}&target=${encodeURIComponent(confirmationUrl)}`;
     } else {
-      // ✅ Fallback outside iframe
-      window.top.location.href = confirmationUrl; // instead of redirect.html
+      // ✅ Last resort fallback
+      window.open(confirmationUrl, "_top");
     }
   } catch (err) {
     console.error("Billing activation failed:", err);
