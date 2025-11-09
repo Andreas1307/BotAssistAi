@@ -990,7 +990,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
-
+console.log(" I have been HITYTTTTTTTTTTTTTTTT")
   console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
 
   res.cookie("shopify_toplevel", "true", {

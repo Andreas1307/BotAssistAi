@@ -12,25 +12,18 @@ function isEmbedded() {
 export function beginAuth(shop) {
   const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
   const app = getAppBridgeInstance();
-  const params = new URLSearchParams(window.location.search);
-  const host = params.get("host");
+  const host = new URLSearchParams(window.location.search).get("host");
 
-  try {
-    if (app && host) {
-      // ✅ Safe inside iframe (uses App Bridge)
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, authUrl);
-    } else {
-      // ✅ Force breakout to your redirect.html (outside iframe)
-      window.location.assign(
-        `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(authUrl)}`
-      );
-    }
-  } catch (err) {
-    console.error("⚠️ beginAuth failed, fallback to top-level redirect:", err);
-    window.open(authUrl, "_top");
+  if (app && host) {
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, authUrl);
+  } else {
+    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+      shop
+    )}&target=${encodeURIComponent(authUrl)}`;
   }
 }
+
 
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
@@ -44,35 +37,36 @@ export function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_host", host);
   }
 
-  // Same for shop param
   if (!shop && sessionStorage.getItem("shopify_shop")) {
     shop = sessionStorage.getItem("shopify_shop");
   } else if (shop) {
     sessionStorage.setItem("shopify_shop", shop);
   }
 
-  if (!shop || (!host && window.top !== window.self)) {
-    console.log("🧭 Missing shop/host → breakout to redirect.html");
-    const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-    window.location.assign(`https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(authUrl)}`);
+  // ✅ If we are inside an iframe and host is missing → breakout first
+  if (window.top !== window.self && !host) {
+    console.log("🧭 No host param inside iframe — breaking out to redirect.html");
+    const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
+    window.location.assign(
+      `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(target)}`
+    );
     return null;
   }
-  
-  
 
+  // ✅ Outside iframe but no host? Do nothing — we’ll reinit later
   if (!host) return null;
 
+  // ✅ Safe to init App Bridge now
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true,
+    forceRedirect: false, // ⚠️ <--- KEY CHANGE
   });
 
   window.appBridge = app;
   console.log("✅ Shopify App Bridge initialized");
   return app;
 }
-
 export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
@@ -183,4 +177,3 @@ export async function fetchWithAuth(url, options = {}) {
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
-

@@ -16,7 +16,7 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
+import { safeRedirect, initShopifyAppBridge, fetchWithAuth, beginAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
 const Homepage = () => {
@@ -70,10 +70,10 @@ const Homepage = () => {
       return;
     }
     if (!document.cookie.includes("shopify_toplevel")) {
-      window.top.location.href = `${directory}/shopify/auth?shop=${shopParam}`;
+      // Use safe breakout instead of directly setting top.location.href
+      beginAuth(shopParam);
       return;
     }
-  
     // Initialize Shopify App Bridge
     (async () => {
       const app = await initShopifyAppBridge();
