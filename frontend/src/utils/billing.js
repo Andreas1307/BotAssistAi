@@ -17,15 +17,12 @@ export async function handleBilling(userId) {
     const app = getAppBridgeInstance();
 
     if (app && host) {
-      // ✅ Use App Bridge Redirect — safe for embedded apps
+      // ✅ In embedded app, tell Shopify to open this outside the iframe
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
     } else {
-      // Non-embedded fallback
-      const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-        shop
-      )}&target=${encodeURIComponent(confirmationUrl)}`;
-      window.location.href = redirectUrl;
+      // ✅ If outside iframe, just open it in top window
+      window.top.location.href = confirmationUrl;
     }
   } catch (err) {
     console.error("Billing activation failed:", err);

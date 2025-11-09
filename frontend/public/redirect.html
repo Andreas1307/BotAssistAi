@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Redirecting…</title>
 </head>
 <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
@@ -13,17 +13,15 @@
     const target = params.get("target");
 
     if (target) {
-      // Direct external target (billing confirmation, etc.)
-      window.location.replace(decodeURIComponent(target));
+      // Always open billing/confirmation outside the iframe
+      window.top.location.replace(decodeURIComponent(target));
     } else if (shop) {
-      // ✅ Construct safe fallback host if missing
       const safeHost = host || btoa(`${shop}/admin`);
-      window.location.replace(
+      window.top.location.replace(
         `https://${shop}/admin/apps/YOUR_APP_HANDLE?shop=${shop}&host=${safeHost}`
       );
     } else {
-      // ❌ No shop info — fallback to homepage
-      window.location.replace("https://botassistai.com/");
+      window.top.location.replace("https://botassistai.com/");
     }
   </script>
 </body>
