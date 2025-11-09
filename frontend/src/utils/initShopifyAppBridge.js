@@ -30,9 +30,11 @@ export function initShopifyAppBridge() {
 
   if (!shop || (!host && window.top !== window.self)) {
     console.log("🧭 Missing shop/host → breakout to redirect.html");
-    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}`;
+    // use current window, not top (Shopify blocks top redirect here)
+    window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}`;
     return null;
   }
+  
 
   if (!host) return null;
 
