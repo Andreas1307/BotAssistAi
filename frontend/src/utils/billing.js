@@ -1,7 +1,7 @@
 import axios from "axios";
 import { safeRedirect, initShopifyAppBridge } from "./initShopifyAppBridge";
 import directory from "../directory";
-import { Redirect } from "@shopify/app-bridge/actions";
+
 
 export async function handleBilling(userId) {
   try {
@@ -14,16 +14,9 @@ export async function handleBilling(userId) {
 
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
-    const app = window.appBridge; // initialized via initShopifyAppBridge()
-
-    if (app && host) {
-      // Embedded context — use App Bridge redirect
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-    } else {
-      // Top-level context — safe redirect
-      window.location.href = confirmationUrl;
-    }
+    // ✅ Always break out to top-level redirect.html (same origin)
+    // This avoids the X-Frame-Options "deny" error completely
+    window.top.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(confirmationUrl)}`;
   } catch (err) {
     console.error("Billing activation failed:", err);
   }
