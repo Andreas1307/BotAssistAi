@@ -13,14 +13,21 @@
     const target = params.get("target");
 
     if (target) {
-      // Always open billing/confirmation outside the iframe
-      window.top.location.replace(decodeURIComponent(target));
+      const decoded = decodeURIComponent(target);
+
+      // ✅ Safe breakout logic
+      if (decoded.includes("api.botassistai.com")) {
+        // External (backend) URL — open directly
+        window.location.replace(decoded);
+      } else {
+        // Shopify/admin domain — open top frame
+        window.top.location.replace(decoded);
+      }
     } else if (shop) {
       const safeHost = host || btoa(`${shop}/admin`);
       window.top.location.replace(
-  `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`
-);
-
+        `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`
+      );
     } else {
       window.top.location.replace("https://botassistai.com/");
     }
