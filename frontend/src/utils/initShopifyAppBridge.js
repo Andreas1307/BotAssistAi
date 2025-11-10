@@ -34,10 +34,20 @@ export function initShopifyAppBridge() {
     const shopParam = encodeURIComponent(shop || "");
     const redirectUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&install=1`;
   
-    console.log("🪟 Breaking out to top-level redirect.html:", redirectUrl);
-    window.location.assign(redirectUrl);
+    console.log("🪟 Breaking out via App Bridge Redirect:", redirectUrl);
+  
+    // Use App Bridge redirect if possible
+    const tempApp = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host: btoa(`${shop}/admin`),
+      forceRedirect: true,
+    });
+  
+    const redirect = Redirect.create(tempApp);
+    redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
     return null;
   }
+  
   
   
   if (!host) {
