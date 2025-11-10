@@ -31,20 +31,14 @@ export function initShopifyAppBridge() {
   const embedded = window.top !== window.self;
   const isInstall = window.location.pathname.includes("/shopify/install");
   if (embedded && !host && isInstall) {
-    const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-    const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(authUrl)}`;
+    const shopParam = encodeURIComponent(shop || "");
+    const redirectUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&install=1`;
   
-    console.log("🪟 Sending breakout message to parent:", breakoutUrl);
-  
-    // ✅ DO NOT set window.top.href — Shopify blocks that!
-    // Instead, send a message to the parent frame (Shopify admin)
-    window.parent.postMessage(
-      JSON.stringify({ event: "redirect", target: breakoutUrl }),
-      "*"
-    );
-  
+    console.log("🪟 Breaking out to top-level redirect.html:", redirectUrl);
+    window.location.assign(redirectUrl);
     return null;
   }
+  
   
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
