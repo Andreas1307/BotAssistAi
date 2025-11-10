@@ -30,24 +30,21 @@ export function initShopifyAppBridge() {
   // 🔹 Only break out if this is FIRST install (no host + path includes /install)
   const embedded = window.top !== window.self;
   const isInstall = window.location.pathname.includes("/shopify/install");
-
   if (embedded && !host && isInstall) {
-    const auth = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-    const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-      shop || ""
-    )}&target=${encodeURIComponent(auth)}`;
-
-    console.log("🔁 Breaking out to install:", breakout);
-
-    // ✅ Use postMessage to parent
-    window.parent.postMessage(
-      JSON.stringify({ event: "redirect", target: breakout }),
-      "*"
-    );
+    const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
+    const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(authUrl)}`;
+    
+    console.log("🪟 Breaking out to redirect.html:", breakoutUrl);
+  
+    // ✅ use top-level redirect.html instead of directly setting window.top.href
+    if (window.top) {
+      window.top.location.href = breakoutUrl;
+    } else {
+      window.location.href = breakoutUrl;
+    }
     return null;
   }
-
-  // 🔹 If still no host → skip init, but don’t redirect
+  
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
