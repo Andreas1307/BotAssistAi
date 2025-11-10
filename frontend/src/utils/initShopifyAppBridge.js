@@ -30,26 +30,25 @@ export function initShopifyAppBridge() {
   // 🔹 Only break out if this is FIRST install (no host + path includes /install)
   const embedded = window.top !== window.self;
   const isInstall = window.location.pathname.includes("/shopify/install");
-  if (embedded && !host && isInstall) {
-    const shopParam = encodeURIComponent(shop || "");
-    const redirectUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&install=1`;
-  
-    console.log("🪟 Breaking out via App Bridge Redirect:", redirectUrl);
-  
-    // Use App Bridge redirect if possible
-    const tempApp = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host: btoa(`${shop}/admin`),
-      forceRedirect: true,
-    });
-  
-    const redirect = Redirect.create(tempApp);
-    redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
-    return null;
-  }
-  
-  
-  
+
+if (embedded && !host && isInstall) {
+  const shopParam = encodeURIComponent(shop || "");
+  const redirectUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&install=1`;
+
+  console.log("🪟 Breaking out to top-level redirect.html via App Bridge:", redirectUrl);
+
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host: btoa(`${shop}/admin`),
+    forceRedirect: true,
+  });
+
+  const redirect = Redirect.create(app);
+  redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
+
+  return null;
+}
+
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
