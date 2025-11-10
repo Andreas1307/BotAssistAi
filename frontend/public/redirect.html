@@ -7,11 +7,28 @@
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
-      const params = new URLSearchParams(location.search);
+      const params = new URLSearchParams(window.location.search);
       const target = params.get("target");
-      if (target) window.top.location.href = decodeURIComponent(target);
-      else window.top.location.href = "https://botassistai.com/";
+      const shop = params.get("shop");
+
+      // Allow messages from the embedded iframe
+      window.addEventListener("message", (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event === "redirect" && data.target) {
+            window.top.location.href = data.target;
+          }
+        } catch {}
+      });
+
+      // Direct redirect if loaded directly
+      if (target) {
+        window.top.location.href = decodeURIComponent(target);
+      } else if (shop) {
+        window.top.location.href = `https://${shop}/admin/apps/botassistai?shop=${shop}`;
+      } else {
+        window.top.location.href = "https://botassistai.com/";
+      }
     </script>
-    
   </body>
 </html>

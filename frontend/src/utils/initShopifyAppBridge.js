@@ -31,23 +31,14 @@ export function initShopifyAppBridge() {
     const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
     const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(target)}`;
   
-    console.log("🔁 Breaking out of iframe to:", breakout);
+    console.log("🔁 Breaking out of Shopify iframe to:", breakout);
   
-    // ✅ Fix: use App Bridge-safe redirect if embedded, else use top-level redirect via redirect.html
-    if (window.ShopifyApp) {
-      const redirect = window.ShopifyApp.Redirect.create(window.ShopifyApp);
-      redirect.dispatch(window.ShopifyApp.Redirect.Action.REMOTE, breakout);
-    } else {
-      // Must be triggered from a user gesture (like a button click) — fallback
-      document.body.innerHTML = `
-        <div style="font-family:sans-serif;text-align:center;margin-top:30vh">
-          <h3>App needs permission to open the Shopify install flow.</h3>
-          <button id="continue" style="padding:10px 20px;font-size:16px;cursor:pointer">Continue</button>
-        </div>`;
-      document.getElementById("continue").addEventListener("click", () => {
-        window.open(breakout, "_top");
-      });
-    }
+    // 🚨 Shopify blocks direct iframe -> external redirects
+    // ✅ So we must use postMessage to our top-level redirect.html
+    window.parent.postMessage(
+      JSON.stringify({ event: "redirect", target: breakout }),
+      "*"
+    );
   
     return null;
   }
