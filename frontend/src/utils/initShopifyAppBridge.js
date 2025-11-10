@@ -14,38 +14,46 @@ export function initShopifyAppBridge() {
   let shop = params.get("shop");
   let host = params.get("host");
 
-  // 🔹 restore from storage if present
-  if (!shop && sessionStorage.getItem("shopify_shop"))
+  // 🔹 Restore from storage if present
+  if (!shop && sessionStorage.getItem("shopify_shop")) {
     shop = sessionStorage.getItem("shopify_shop");
-  else if (shop)
+  } else if (shop) {
     sessionStorage.setItem("shopify_shop", shop);
+  }
 
-  if (!host && sessionStorage.getItem("shopify_host"))
+  if (!host && sessionStorage.getItem("shopify_host")) {
     host = sessionStorage.getItem("shopify_host");
-  else if (host)
+  } else if (host) {
     sessionStorage.setItem("shopify_host", host);
+  }
 
-  // 🔹 only break out if this is FIRST install (no host + path includes /install)
-  const isEmbedded = window.top !== window.self;
-  const isInstall = location.pathname.includes("/shopify/install");
+  // 🔹 Only break out if this is FIRST install (no host + path includes /install)
+  const embedded = window.top !== window.self;
+  const isInstall = window.location.pathname.includes("/shopify/install");
 
-  if (isEmbedded && !host && isInstall) {
+  if (embedded && !host && isInstall) {
     const auth = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-    const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(auth)}`;
+    const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+      shop || ""
+    )}&target=${encodeURIComponent(auth)}`;
+
     console.log("🔁 Breaking out to install:", breakout);
 
-    // use postMessage to parent
-    window.parent.postMessage(JSON.stringify({ event: "redirect", target: breakout }), "*");
+    // ✅ Use postMessage to parent
+    window.parent.postMessage(
+      JSON.stringify({ event: "redirect", target: breakout }),
+      "*"
+    );
     return null;
   }
 
-  // 🔹 if still no host → skip init, but don't redirect
+  // 🔹 If still no host → skip init, but don’t redirect
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
   }
 
-  // ✅ init App Bridge normally
+  // ✅ Init App Bridge normally
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -53,7 +61,7 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ Shopify App Bridge initialized");
+  console.log("✅ Shopify App Bridge initialized with host:", host);
   return app;
 }
 
@@ -73,7 +81,9 @@ export function safeRedirect(url, fallbackShop = null) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
   } else if (shop) {
-    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(url)}`;
+    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+      shop
+    )}&target=${encodeURIComponent(url)}`;
     window.location.assign(redirectUrl);
   } else {
     window.open(url, "_top");
