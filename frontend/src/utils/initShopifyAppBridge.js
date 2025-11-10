@@ -31,23 +31,18 @@ export function initShopifyAppBridge() {
   const embedded = window.top !== window.self;
   const isInstall = window.location.pathname.includes("/shopify/install");
 
-if (embedded && !host && isInstall) {
-  const shopParam = encodeURIComponent(shop || "");
-  const redirectUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&install=1`;
-
-  console.log("🪟 Breaking out to top-level redirect.html via App Bridge:", redirectUrl);
-
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host: btoa(`${shop}/admin`),
-    forceRedirect: true,
-  });
-
-  const redirect = Redirect.create(app);
-  redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
-
-  return null;
-}
+  if (embedded && !host && isInstall) {
+    const shopParam = encodeURIComponent(shop || "");
+    const target = encodeURIComponent(`https://api.botassistai.com/shopify/auth?shop=${shopParam}`);
+    const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${shopParam}&target=${target}`;
+  
+    console.log("🪟 Breaking out via bounce page:", bounceUrl);
+  
+    // ✅ Open bounce page (Shopify allows this because it's same-origin)
+    window.location.href = bounceUrl;
+    return null;
+  }
+  
 
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");

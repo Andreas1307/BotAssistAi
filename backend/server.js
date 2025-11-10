@@ -2268,7 +2268,26 @@ try {
 })
 
 
+app.get("/shopify/bounce", (req, res) => {
+  const shop = req.query.shop;
+  const target = req.query.target;
+  const safeTarget = target
+    ? decodeURIComponent(target)
+    : `https://${shop}/admin/apps/botassistai?shop=${shop}`;
 
+  res.setHeader("Content-Type", "text/html");
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <script>
+          console.log("🪟 Bouncing to:", ${JSON.stringify(safeTarget)});
+          window.top.location.href = ${JSON.stringify(safeTarget)};
+        </script>
+      </body>
+    </html>
+  `);
+});
 
 app.get("/get-shop", async (req, res) => {
   const { userId } = req.query;
