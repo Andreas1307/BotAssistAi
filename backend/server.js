@@ -2282,6 +2282,7 @@ app.get("/shopify/bounce", (req, res) => {
       <body>
         <script>
           console.log("🪟 Bouncing to:", ${JSON.stringify(safeTarget)});
+          // Use top-level navigation safely
           window.top.location.href = ${JSON.stringify(safeTarget)};
         </script>
       </body>
@@ -2391,10 +2392,11 @@ app.get("/billing/callback", async (req, res) => {
     const safeHost = host || btoa(`${shop}/admin`);
     const dashboardUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
 
-    // ✅ Redirect through redirect.html so it's outside iframe
-const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(dashboardUrl)}`;
-console.log("✅ Billing callback redirecting to:", redirectUrl);
-res.redirect(redirectUrl);
+    const target = encodeURIComponent(dashboardUrl);
+    const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(shop)}&target=${target}`;
+    console.log("✅ Billing callback bouncing to:", bounceUrl);
+    res.redirect(bounceUrl);
+    
 
 
   } catch (err) {
