@@ -33,15 +33,16 @@ export function initShopifyAppBridge() {
   if (embedded && !host && isInstall) {
     const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
     const breakoutUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(authUrl)}`;
-    
-    console.log("🪟 Breaking out to redirect.html:", breakoutUrl);
   
-    // ✅ use top-level redirect.html instead of directly setting window.top.href
-    if (window.top) {
-      window.top.location.href = breakoutUrl;
-    } else {
-      window.location.href = breakoutUrl;
-    }
+    console.log("🪟 Sending breakout message to parent:", breakoutUrl);
+  
+    // ✅ DO NOT set window.top.href — Shopify blocks that!
+    // Instead, send a message to the parent frame (Shopify admin)
+    window.parent.postMessage(
+      JSON.stringify({ event: "redirect", target: breakoutUrl }),
+      "*"
+    );
+  
     return null;
   }
   

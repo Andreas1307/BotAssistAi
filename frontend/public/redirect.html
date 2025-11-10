@@ -1,27 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"/><title>Redirecting…</title></head>
-<body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-  <h3>Redirecting…</h3>
-  <script>
-    const p = new URLSearchParams(location.search);
-    const target = p.get("target");
-    const shop = p.get("shop");
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const target = params.get("target");
+  const shop = params.get("shop");
 
-    // receive message from embedded iframe
-    window.addEventListener("message", (e) => {
-      try {
-        const d = JSON.parse(e.data);
-        if (d.event === "redirect" && d.target) {
-          top.location.replace(d.target);
-        }
-      } catch {}
-    });
+  // ✅ Listen for messages from iframe (Shopify admin)
+  window.addEventListener("message", (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.event === "redirect" && data.target) {
+        console.log("🪟 redirect.html received message:", data.target);
+        window.location.href = data.target;
+      }
+    } catch {}
+  });
 
-    // direct navigation if opened directly
-    if (target) top.location.replace(decodeURIComponent(target));
-    else if (shop) top.location.replace(`https://${shop}/admin/apps/botassistai?shop=${shop}`);
-    else top.location.replace("https://botassistai.com/");
-  </script>
-</body>
-</html>
+  // ✅ If opened directly (not via message)
+  if (target) {
+    window.location.href = decodeURIComponent(target);
+  } else if (shop) {
+    window.location.href = `https://${shop}/admin/apps/botassistai?shop=${shop}`;
+  } else {
+    window.location.href = "https://botassistai.com/";
+  }
+</script>
