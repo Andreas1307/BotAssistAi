@@ -9,19 +9,9 @@
     <script>
       const params = new URLSearchParams(location.search);
       const target = params.get("target");
-      const shop = params.get("shop");
-      const host = params.get("host");
-
-      const go = (url) => setTimeout(() => location.replace(url), 100);
-
-      if (target) {
-        go(decodeURIComponent(target));
-      } else if (shop) {
-        const safeHost = host || btoa(`${shop}/admin`);
-        go(`https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`);
-      } else {
-        go("https://botassistai.com/");
-      }
+      if (target) window.top.location.href = decodeURIComponent(target);
+      else window.top.location.href = "https://botassistai.com/";
     </script>
+    
   </body>
 </html>

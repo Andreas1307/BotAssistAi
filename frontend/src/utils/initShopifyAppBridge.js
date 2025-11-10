@@ -27,15 +27,32 @@ export function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_host", host);
   }
 
-  // ✅ If embedded in iframe but missing host → breakout through redirect.html
   if (window.top !== window.self && !host) {
     const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
     const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(target)}`;
+  
     console.log("🔁 Breaking out of iframe to:", breakout);
-    window.location.assign(breakout);
+  
+    // ✅ Fix: use App Bridge-safe redirect if embedded, else use top-level redirect via redirect.html
+    if (window.ShopifyApp) {
+      const redirect = window.ShopifyApp.Redirect.create(window.ShopifyApp);
+      redirect.dispatch(window.ShopifyApp.Redirect.Action.REMOTE, breakout);
+    } else {
+      // Must be triggered from a user gesture (like a button click) — fallback
+      document.body.innerHTML = `
+        <div style="font-family:sans-serif;text-align:center;margin-top:30vh">
+          <h3>App needs permission to open the Shopify install flow.</h3>
+          <button id="continue" style="padding:10px 20px;font-size:16px;cursor:pointer">Continue</button>
+        </div>`;
+      document.getElementById("continue").addEventListener("click", () => {
+        window.open(breakout, "_top");
+      });
+    }
+  
     return null;
   }
-
+  
+  
   if (!host) {
     console.warn("⚠️ Missing host, cannot init App Bridge");
     return null;
