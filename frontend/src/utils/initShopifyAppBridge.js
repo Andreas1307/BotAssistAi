@@ -14,42 +14,38 @@ export function initShopifyAppBridge() {
   let shop = params.get("shop");
   let host = params.get("host");
 
-  // Restore missing params from sessionStorage
-  if (!shop && sessionStorage.getItem("shopify_shop")) {
+  // 🔹 restore from storage if present
+  if (!shop && sessionStorage.getItem("shopify_shop"))
     shop = sessionStorage.getItem("shopify_shop");
-  } else if (shop) {
+  else if (shop)
     sessionStorage.setItem("shopify_shop", shop);
-  }
 
-  if (!host && sessionStorage.getItem("shopify_host")) {
+  if (!host && sessionStorage.getItem("shopify_host"))
     host = sessionStorage.getItem("shopify_host");
-  } else if (host) {
+  else if (host)
     sessionStorage.setItem("shopify_host", host);
-  }
 
-  if (window.top !== window.self && !host) {
-    const target = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
-    const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(target)}`;
-  
-    console.log("🔁 Breaking out of Shopify iframe to:", breakout);
-  
-    // 🚨 Shopify blocks direct iframe -> external redirects
-    // ✅ So we must use postMessage to our top-level redirect.html
-    window.parent.postMessage(
-      JSON.stringify({ event: "redirect", target: breakout }),
-      "*"
-    );
-  
+  // 🔹 only break out if this is FIRST install (no host + path includes /install)
+  const isEmbedded = window.top !== window.self;
+  const isInstall = location.pathname.includes("/shopify/install");
+
+  if (isEmbedded && !host && isInstall) {
+    const auth = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop || "")}`;
+    const breakout = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop || "")}&target=${encodeURIComponent(auth)}`;
+    console.log("🔁 Breaking out to install:", breakout);
+
+    // use postMessage to parent
+    window.parent.postMessage(JSON.stringify({ event: "redirect", target: breakout }), "*");
     return null;
   }
-  
-  
+
+  // 🔹 if still no host → skip init, but don't redirect
   if (!host) {
-    console.warn("⚠️ Missing host, cannot init App Bridge");
+    console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
   }
 
-  // ✅ Safe to init App Bridge
+  // ✅ init App Bridge normally
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -57,7 +53,7 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ Shopify App Bridge initialized with host:", host);
+  console.log("✅ Shopify App Bridge initialized");
   return app;
 }
 
