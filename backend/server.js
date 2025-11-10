@@ -2372,11 +2372,11 @@ app.get("/billing/callback", async (req, res) => {
     const safeHost = host || btoa(`${shop}/admin`);
     const dashboardUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
 
-    // Important: redirect inside the Shopify iframe via redirect.html if necessary
-    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(dashboardUrl)}`;
+    // ✅ Redirect through redirect.html so it's outside iframe
+const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(dashboardUrl)}`;
+console.log("✅ Billing callback redirecting to:", redirectUrl);
+res.redirect(redirectUrl);
 
-    console.log("✅ Billing callback redirecting to:", redirectUrl);
-    res.redirect(redirectUrl);
 
   } catch (err) {
     console.error("❌ Billing callback failed:", err);

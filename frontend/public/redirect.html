@@ -8,13 +8,11 @@
     <h3>Redirecting…</h3>
     <script>
       const params = new URLSearchParams(location.search);
+      const target = params.get("target");
       const shop = params.get("shop");
       const host = params.get("host");
-      const target = params.get("target");
 
-      const go = (url) => {
-        setTimeout(() => location.replace(url), 100);
-      };
+      const go = (url) => setTimeout(() => location.replace(url), 100);
 
       if (target) {
         go(decodeURIComponent(target));
