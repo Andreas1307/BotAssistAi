@@ -36,9 +36,9 @@ export function initShopifyAppBridge() {
     const target = encodeURIComponent(`https://api.botassistai.com/shopify/auth?shop=${shopParam}`);
     const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${shopParam}&target=${target}`;
   
-    console.log("🪟 Requesting breakout via postMessage:", bounceUrl);
+    console.log("🪟 Requesting breakout to top window:", bounceUrl);
   
-    // ✅ Tell the parent window to redirect top-level
+    // 🔹 Tell parent window (Shopify admin) to perform the redirect
     window.parent.postMessage(
       { type: "botassistai_redirect", target: bounceUrl },
       "*"
@@ -46,8 +46,6 @@ export function initShopifyAppBridge() {
     return null;
   }
   
-  
-
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
