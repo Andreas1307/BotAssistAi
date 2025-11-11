@@ -2275,6 +2275,8 @@ try {
 })
 
 
+
+
 app.get("/shopify/bounce", (req, res) => {
   const shop = req.query.shop;
   const target = req.query.target;
@@ -2389,6 +2391,7 @@ app.get("/billing/callback", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
+    // ✅ Update user's subscription
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
@@ -2397,23 +2400,26 @@ app.get("/billing/callback", async (req, res) => {
     const shop = rows[0].shopify_shop_domain;
     const safeHost = host || btoa(`${shop}/admin`);
 
-  // break out of iframe to your own top-level domain first
-const redirectUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(appUrl)}&shop=${encodeURIComponent(shop)}`;
+    // ✅ Define appUrl first
+    const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
 
-res.setHeader("Content-Type", "text/html");
-res.send(`
-  <!DOCTYPE html>
-  <html>
-    <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-      <h3>Redirecting back to BotAssistAI…</h3>
-      <script>
-        console.log("✅ Returning via redirect.html:", ${JSON.stringify(redirectUrl)});
-        window.open(${JSON.stringify(redirectUrl)}, "_top");
-      </script>
-    </body>
-  </html>
-`);
+    // ✅ Then build redirectUrl for top-level breakout
+    const redirectUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(appUrl)}&shop=${encodeURIComponent(shop)}`;
 
+    // ✅ Return HTML that safely opens redirect.html at top level
+    res.setHeader("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+          <h3>Redirecting back to BotAssistAI…</h3>
+          <script>
+            console.log("✅ Returning via redirect.html:", ${JSON.stringify(redirectUrl)});
+            window.open(${JSON.stringify(redirectUrl)}, "_top");
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
