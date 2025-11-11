@@ -79,5 +79,14 @@
 
     
 
+    <script>
+      window.addEventListener("message", (event) => {
+        if (event?.data?.type === "botassistai_redirect" && event.data.target) {
+          console.log("🔁 Top-level redirecting to:", event.data.target);
+          window.top.location.href = event.data.target;
+        }
+      });
+    </script>
+    
   </body>
 </html>

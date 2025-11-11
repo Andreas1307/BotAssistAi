@@ -36,12 +36,16 @@ export function initShopifyAppBridge() {
     const target = encodeURIComponent(`https://api.botassistai.com/shopify/auth?shop=${shopParam}`);
     const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${shopParam}&target=${target}`;
   
-    console.log("🪟 Breaking out via bounce page:", bounceUrl);
+    console.log("🪟 Requesting breakout via postMessage:", bounceUrl);
   
-    // ✅ Open bounce page (Shopify allows this because it's same-origin)
-    window.location.href = bounceUrl;
+    // ✅ Tell the parent window to redirect top-level
+    window.parent.postMessage(
+      { type: "botassistai_redirect", target: bounceUrl },
+      "*"
+    );
     return null;
   }
+  
   
 
   if (!host) {
