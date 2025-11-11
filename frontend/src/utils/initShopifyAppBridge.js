@@ -38,8 +38,11 @@ export function initShopifyAppBridge() {
     console.log("🪟 Breaking out via bounce page:", bounceUrl);
   
     const redirectUrl = `https://botassistai.com/redirect.html?install=true&shop=${shopParam}`;
-window.location.href = redirectUrl;
-
+    console.log("🪟 Opening top-level breakout window:", redirectUrl);
+    
+    // ✅ Must open new top-level context
+    window.open(redirectUrl, "_top");
+    
     return null;
   }  
   
@@ -90,11 +93,10 @@ export function safeRedirect(url, fallbackShop = null) {
     )}&target=${encodeURIComponent(url)}`;
 
     console.log("🪟 Safe redirect via bounce:", bounceUrl);
-    window.location.assign(bounceUrl);
+    window.open(bounceUrl, "_top");
     return;
   }
 
-  // ✅ Outside iframe → direct redirect
   window.location.href = url;
 }
 
