@@ -1,6 +1,6 @@
 import axios from "axios";
-import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import directory from "../directory";
 
 export async function handleBilling(userId) {
@@ -14,28 +14,23 @@ export async function handleBilling(userId) {
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
     const app = getAppBridgeInstance();
+    const isEmbedded = window.top !== window.self;
 
-    // ✅ Case 1: inside iframe with working App Bridge
     if (app && host) {
+      // ✅ Preferred: App Bridge handles breakout correctly
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
       return;
     }
 
-    // ✅ Case 2: inside iframe, but App Bridge didn’t initialize
-    const embedded = window.top !== window.self;
-    if (embedded && shop) {
-      const target = encodeURIComponent(confirmationUrl);
-
-      // 🔹 We go through botassistai.com (not api.botassistai.com)
-      const safeRedirect = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${target}`;
-
-      console.log("🪟 Redirecting via redirect.html →", safeRedirect);
-      window.location.assign(safeRedirect);
+    if (isEmbedded) {
+      // ✅ Force open in top window
+      console.log("🪟 Forcing top-level navigation to:", confirmationUrl);
+      window.open(confirmationUrl, "_top");
       return;
     }
 
-    // ✅ Case 3: outside Shopify admin
+    // ✅ Normal case (not embedded)
     window.location.href = confirmationUrl;
   } catch (err) {
     console.error("❌ Billing activation failed:", err);
