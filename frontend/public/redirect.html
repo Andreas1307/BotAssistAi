@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
-  <head><meta charset="utf-8" /><title>Redirecting…</title></head>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+  </head>
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
@@ -10,21 +13,18 @@
       const install = params.get("install");
 
       if (install && shop) {
-        // 🟢 First-time OAuth install
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
         console.log("➡️ Redirecting to OAuth:", authUrl);
         window.top.location.href = authUrl;
       } else if (target) {
-        // 🟢 General or billing redirect
         const decoded = decodeURIComponent(target);
         console.log("➡️ Redirecting to:", decoded);
         window.top.location.href = decoded;
       } else if (shop) {
-        // 🟢 Default return to app inside Shopify admin
-        const url = `https://${shop}/admin/apps/botassistai?shop=${shop}`;
-        window.top.location.href = url;
+        const fallback = `https://${shop}/admin/apps/botassistai?shop=${shop}`;
+        console.log("➡️ Redirecting fallback to:", fallback);
+        window.top.location.href = fallback;
       } else {
-        // Fallback
         window.top.location.href = "https://botassistai.com/";
       }
     </script>

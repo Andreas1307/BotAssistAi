@@ -1,8 +1,7 @@
 import axios from "axios";
-import { safeRedirect, initShopifyAppBridge, getAppBridgeInstance } from "./initShopifyAppBridge";
-import directory from "../directory";
-
+import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import { Redirect } from "@shopify/app-bridge/actions";
+import directory from "../directory";
 
 export async function handleBilling(userId) {
   try {
@@ -16,28 +15,30 @@ export async function handleBilling(userId) {
 
     const app = getAppBridgeInstance();
 
+    // ✅ Case 1: inside iframe with working App Bridge
     if (app && host) {
-      // ✅ Inside Shopify iframe → use App Bridge redirect (preferred)
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
       return;
     }
 
+    // ✅ Case 2: inside iframe, but App Bridge didn’t initialize
     const embedded = window.top !== window.self;
-
     if (embedded && shop) {
-      // 🪟 Step through a same-origin redirect.html on botassistai.com
       const target = encodeURIComponent(confirmationUrl);
-      const safeBounce = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${target}`;
 
-      console.log("🪟 Embedded breakout via redirect.html →", safeBounce);
-      window.location.assign(safeBounce);
+      // 🔹 We go through botassistai.com (not api.botassistai.com)
+      const safeRedirect = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${target}`;
+
+      console.log("🪟 Redirecting via redirect.html →", safeRedirect);
+      window.location.assign(safeRedirect);
       return;
     }
 
-    // ✅ Outside iframe (normal browser tab)
+    // ✅ Case 3: outside Shopify admin
     window.location.href = confirmationUrl;
   } catch (err) {
-    console.error("Billing activation failed:", err);
+    console.error("❌ Billing activation failed:", err);
+    alert("Billing failed — check console for details");
   }
 }
