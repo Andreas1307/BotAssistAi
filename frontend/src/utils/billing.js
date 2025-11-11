@@ -20,15 +20,25 @@ export async function handleBilling(userId) {
       // ✅ Inside Shopify iframe → use App Bridge redirect
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
-    } else if (shop) {
-      // ✅ Outside iframe → route through redirect.html
-      window.location.href = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-        shop
-      )}&target=${encodeURIComponent(confirmationUrl)}`;
-    } else {
-      // ✅ Last resort fallback
-      window.open(confirmationUrl, "_top");
+      return;
     }
+
+    // 🪟 Embedded but AppBridge failed → use breakout message
+    const embedded = window.top !== window.self;
+    if (embedded && shop) {
+      const target = encodeURIComponent(confirmationUrl);
+      const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(shop)}&target=${target}`;
+
+      console.log("🪟 Sending breakout request for billing:", bounceUrl);
+      window.parent.postMessage(
+        { type: "botassistai_redirect", target: bounceUrl },
+        "*"
+      );
+      return;
+    }
+
+    // ✅ Outside iframe → direct navigation
+    window.location.href = confirmationUrl;
   } catch (err) {
     console.error("Billing activation failed:", err);
   }
