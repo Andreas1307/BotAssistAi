@@ -12,17 +12,15 @@
       const target = params.get("target");
     
       if (target) {
-        // for billing or manual redirects
         const decoded = decodeURIComponent(target);
         console.log("➡️ Redirecting to:", decoded);
-        window.top.location.href = decoded;
+        window.location.href = decoded;
       } else if (shop) {
-        // fallback for install — go to top-level-auth instead
         const topAuth = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
         console.log("➡️ Redirecting to top-level auth:", topAuth);
-        window.top.location.href = topAuth;
+        window.location.href = topAuth;
       } else {
-        window.top.location.href = "https://botassistai.com/";
+        window.location.href = "https://botassistai.com/";
       }
     </script>
     

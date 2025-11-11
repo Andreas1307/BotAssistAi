@@ -2286,11 +2286,13 @@ app.get("/shopify/bounce", (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
-      <body>
-        <h3>Redirecting…</h3>
+      <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+        <h3>Redirecting safely…</h3>
         <script>
-          // ✅ This runs in its own top-level context, not inside Shopify admin
-          window.top.location.href = ${JSON.stringify(safeTarget)};
+          const target = ${JSON.stringify(safeTarget)};
+          console.log("Redirecting to", target);
+          // ✅ At this point, we’re already outside admin.shopify.com
+          window.location.href = target;
         </script>
       </body>
     </html>
