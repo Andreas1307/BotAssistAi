@@ -9,22 +9,18 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const shop = params.get("shop");
-      const install = params.get("install");
       const target = params.get("target");
     
-      if (install && shop) {
-        // ✅ This runs in *your own* domain, safe to break out
-        const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
-        console.log("➡️ Redirecting to OAuth:", authUrl);
-        window.top.location.href = authUrl;
-      } else if (target) {
+      if (target) {
+        // for billing or manual redirects
         const decoded = decodeURIComponent(target);
         console.log("➡️ Redirecting to:", decoded);
         window.top.location.href = decoded;
       } else if (shop) {
-        const fallback = `https://${shop}/admin/apps/botassistai?shop=${shop}`;
-        console.log("➡️ Redirecting fallback to:", fallback);
-        window.top.location.href = fallback;
+        // fallback for install — go to top-level-auth instead
+        const topAuth = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
+        console.log("➡️ Redirecting to top-level auth:", topAuth);
+        window.top.location.href = topAuth;
       } else {
         window.top.location.href = "https://botassistai.com/";
       }

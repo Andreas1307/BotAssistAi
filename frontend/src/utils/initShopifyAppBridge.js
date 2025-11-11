@@ -29,22 +29,16 @@ export function initShopifyAppBridge() {
   // 🔹 Only break out if this is FIRST install (no host + path includes /install)
   const embedded = window.top !== window.self;
   const isInstall = window.location.pathname.includes("/shopify/install");
-
   if (embedded && !host && isInstall) {
     const shopParam = encodeURIComponent(shop || "");
-    const target = encodeURIComponent(`https://api.botassistai.com/shopify/auth?shop=${shopParam}`);
-    const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${shopParam}&target=${target}`;
-    
-    console.log("🪟 Breaking out via bounce page:", bounceUrl);
+    const topAuth = `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
   
-    const redirectUrl = `https://botassistai.com/redirect.html?install=true&shop=${shopParam}`;
-    console.log("🪟 Opening top-level breakout window:", redirectUrl);
-    
-    // ✅ Must open new top-level context
-    window.open(redirectUrl, "_top");
-    
+    console.log("🪟 Forcing breakout to top-level auth:", topAuth);
+  
+    // ✅ Always open top-level auth in new context (not iframe)
+    window.open(topAuth, "_top");
     return null;
-  }  
+  }
   
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
