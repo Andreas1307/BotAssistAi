@@ -31,12 +31,16 @@ export function initShopifyAppBridge() {
   const isInstall = window.location.pathname.includes("/shopify/install");
   if (embedded && !host && isInstall) {
     const shopParam = encodeURIComponent(shop || "");
-    const topAuth = `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
+    
+    // ✅ Step 1: bounce to your top-level domain first
+    const bounceUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&target=${encodeURIComponent(
+      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`
+    )}`;
   
-    console.log("🪟 Forcing breakout to top-level auth:", topAuth);
+    console.log("🪟 Breaking out of iframe safely via redirect.html:", bounceUrl);
   
-    // ✅ Always open top-level auth in new context (not iframe)
-    window.open(topAuth, "_top");
+    // ✅ Step 2: open bounce in top-level window
+    window.open(bounceUrl, "_top");
     return null;
   }
   
