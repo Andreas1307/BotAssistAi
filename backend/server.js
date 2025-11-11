@@ -2396,35 +2396,23 @@ app.get("/billing/callback", async (req, res) => {
     const shop = rows[0].shopify_shop_domain;
     const safeHost = host || btoa(`${shop}/admin`);
 
-    // ✅ Define appUrl first
     const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
-
-    // ✅ Then build redirectUrl for top-level breakout
     const redirectUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(appUrl)}&shop=${encodeURIComponent(shop)}`;
-
-    // ✅ Return HTML that safely opens redirect.html at top level
-    res.setHeader("Content-Type", "text/html");
+    
     res.send(`
       <!DOCTYPE html>
       <html>
         <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>Redirecting back to BotAssistAI…</h3>
-         <script>
-  const redirectUrl = ${JSON.stringify(redirectUrl)};
-
-  // Force top-level navigation safely
-  if (window.top === window.self) {
-    // Already top-level
-    window.location.href = redirectUrl;
-  } else {
-    // Inside iframe, force top-level
-    window.top.location.replace(redirectUrl);
-  }
-</script>
-
+          <script>
+            const redirectUrl = ${JSON.stringify(redirectUrl)};
+            console.log("✅ Redirecting to redirect.html:", redirectUrl);
+            window.top.location.href = redirectUrl;
+          </script>
         </body>
       </html>
     `);
+    
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
