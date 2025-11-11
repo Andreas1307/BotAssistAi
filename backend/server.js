@@ -970,9 +970,10 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  console.log(`🪟 [TOP] Breaking out of iframe for ${shop}`);
-
-  const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+  // ✅ Redirect to our top-level redirect page first
+  const bounceUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(
+    `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
+  )}`;
 
   res.setHeader("Content-Type", "text/html");
   res.send(`
@@ -981,13 +982,8 @@ app.get("/shopify/top-level-auth", (req, res) => {
       <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
         <h3>Redirecting to Shopify OAuth…</h3>
         <script>
-          const target = ${JSON.stringify(authUrl)};
-          // ✅ Now we are outside admin.shopify.com → allowed to redirect
-          if (window.top === window.self) {
-            window.location.href = target;
-          } else {
-            window.top.location.href = target;
-          }
+          console.log("Redirecting via bounce page:", ${JSON.stringify(bounceUrl)});
+          window.top.location.href = ${JSON.stringify(bounceUrl)};
         </script>
       </body>
     </html>
