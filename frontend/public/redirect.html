@@ -9,10 +9,11 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const shop = params.get("shop");
-      const target = params.get("target");
       const install = params.get("install");
-
+      const target = params.get("target");
+    
       if (install && shop) {
+        // ✅ This runs in *your own* domain, safe to break out
         const authUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
         console.log("➡️ Redirecting to OAuth:", authUrl);
         window.top.location.href = authUrl;
@@ -28,5 +29,6 @@
         window.top.location.href = "https://botassistai.com/";
       }
     </script>
+    
   </body>
 </html>

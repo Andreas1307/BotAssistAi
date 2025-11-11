@@ -37,9 +37,9 @@ export function initShopifyAppBridge() {
     
     console.log("🪟 Breaking out via bounce page:", bounceUrl);
   
-    // ✅ This navigates *this* iframe (under admin.shopify.com)
-    // to your backend’s bounce page, which safely performs top-level redirect
-    window.location.href = bounceUrl;
+    const redirectUrl = `https://botassistai.com/redirect.html?install=true&shop=${shopParam}`;
+window.location.href = redirectUrl;
+
     return null;
   }  
   
