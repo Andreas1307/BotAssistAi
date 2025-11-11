@@ -14,7 +14,6 @@ export function initShopifyAppBridge() {
   let shop = params.get("shop");
   let host = params.get("host");
 
-  // 🔹 Restore from storage if present
   if (!shop && sessionStorage.getItem("shopify_shop")) {
     shop = sessionStorage.getItem("shopify_shop");
   } else if (shop) {
@@ -35,16 +34,14 @@ export function initShopifyAppBridge() {
     const shopParam = encodeURIComponent(shop || "");
     const target = encodeURIComponent(`https://api.botassistai.com/shopify/auth?shop=${shopParam}`);
     const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${shopParam}&target=${target}`;
+    
+    console.log("🪟 Breaking out via bounce page:", bounceUrl);
   
-    console.log("🪟 Requesting breakout to top window:", bounceUrl);
-  
-    // 🔹 Tell parent window (Shopify admin) to perform the redirect
-    window.parent.postMessage(
-      { type: "botassistai_redirect", target: bounceUrl },
-      "*"
-    );
+    // ✅ This navigates *this* iframe (under admin.shopify.com)
+    // to your backend’s bounce page, which safely performs top-level redirect
+    window.location.href = bounceUrl;
     return null;
-  }
+  }  
   
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");

@@ -2280,9 +2280,9 @@ app.get("/shopify/bounce", (req, res) => {
     <!DOCTYPE html>
     <html>
       <body>
+        <h3>Redirecting…</h3>
         <script>
-          console.log("🪟 Bouncing to:", ${JSON.stringify(safeTarget)});
-          // Use top-level navigation safely
+          // ✅ This runs in its own top-level context, not inside Shopify admin
           window.top.location.href = ${JSON.stringify(safeTarget)};
         </script>
       </body>
