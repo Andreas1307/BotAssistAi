@@ -2334,7 +2334,7 @@ app.post("/create-subscription2", async (req, res) => {
           },
         },
       ],
-    };
+    };    
 
     const response = await axios.post(
       `https://${shop}/admin/api/2025-01/graphql.json`,
@@ -2377,7 +2377,6 @@ app.post("/create-subscription2", async (req, res) => {
 app.get("/billing/callback", async (req, res) => {
   try {
     const { userId, host } = req.query;
-
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (rows.length === 0) return res.status(404).send("User not found");
 
@@ -2387,18 +2386,25 @@ app.get("/billing/callback", async (req, res) => {
     );
 
     const shop = rows[0].shopify_shop_domain;
-
-    // ✅ Redirect back into Shopify embedded app
     const safeHost = host || btoa(`${shop}/admin`);
-    const dashboardUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
 
-    const target = encodeURIComponent(dashboardUrl);
-    const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(shop)}&target=${target}`;
-    console.log("✅ Billing callback bouncing to:", bounceUrl);
-    res.redirect(bounceUrl);
-    
+    // ✅ Go back directly to the embedded app inside Shopify
+    const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
 
-
+    // ✅ Output a small HTML breakout script
+    res.setHeader("Content-Type", "text/html");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+          <h3>Redirecting back to BotAssistAI…</h3>
+          <script>
+            console.log("✅ Returning to embedded app:", ${JSON.stringify(appUrl)});
+            window.top.location.href = ${JSON.stringify(appUrl)};
+          </script>
+        </body>
+      </html>
+    `);
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");

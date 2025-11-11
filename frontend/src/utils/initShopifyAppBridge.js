@@ -73,19 +73,32 @@ export function safeRedirect(url, fallbackShop = null) {
   const host = params.get("host");
   const app = window.appBridge;
 
-  if (!url) return console.error("❌ safeRedirect called without URL");
+  if (!url) {
+    console.error("❌ safeRedirect called without URL");
+    return;
+  }
 
+  // ✅ If App Bridge is initialized (inside iframe)
   if (app && host) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
-  } else if (shop) {
-    const redirectUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+    return;
+  }
+
+  // ✅ If embedded but AppBridge failed → use safe backend bounce page
+  const isEmbedded = window.top !== window.self;
+  if (isEmbedded && shop) {
+    const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(
       shop
     )}&target=${encodeURIComponent(url)}`;
-    window.location.assign(redirectUrl);
-  } else {
-    window.open(url, "_top");
+
+    console.log("🪟 Safe redirect via bounce:", bounceUrl);
+    window.location.assign(bounceUrl);
+    return;
   }
+
+  // ✅ Outside iframe → direct redirect
+  window.location.href = url;
 }
 
 export async function fetchWithAuth(url, options = {}) {
