@@ -2397,23 +2397,23 @@ app.get("/billing/callback", async (req, res) => {
     const shop = rows[0].shopify_shop_domain;
     const safeHost = host || btoa(`${shop}/admin`);
 
-    // ✅ Go back directly to the embedded app inside Shopify
-    const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
+  // break out of iframe to your own top-level domain first
+const redirectUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(appUrl)}&shop=${encodeURIComponent(shop)}`;
 
-    // ✅ Output a small HTML breakout script
-    res.setHeader("Content-Type", "text/html");
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-          <h3>Redirecting back to BotAssistAI…</h3>
-          <script>
-            console.log("✅ Returning to embedded app:", ${JSON.stringify(appUrl)});
-            window.top.location.href = ${JSON.stringify(appUrl)};
-          </script>
-        </body>
-      </html>
-    `);
+res.setHeader("Content-Type", "text/html");
+res.send(`
+  <!DOCTYPE html>
+  <html>
+    <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+      <h3>Redirecting back to BotAssistAI…</h3>
+      <script>
+        console.log("✅ Returning via redirect.html:", ${JSON.stringify(redirectUrl)});
+        window.open(${JSON.stringify(redirectUrl)}, "_top");
+      </script>
+    </body>
+  </html>
+`);
+
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");

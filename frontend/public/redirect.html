@@ -8,13 +8,13 @@
     <h3>Redirecting…</h3>
     <script>
       const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
       const target = params.get("target");
+      const shop = params.get("shop");
     
       if (target) {
         const decoded = decodeURIComponent(target);
         console.log("➡️ Redirecting to:", decoded);
-        window.location.href = decoded;
+        window.location.href = decoded; // ✅ not window.top
       } else if (shop) {
         const topAuth = `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
         console.log("➡️ Redirecting to top-level auth:", topAuth);
@@ -23,6 +23,5 @@
         window.location.href = "https://botassistai.com/";
       }
     </script>
-    
-  </body>
+    </body>
 </html>
