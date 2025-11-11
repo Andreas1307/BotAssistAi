@@ -2409,10 +2409,19 @@ app.get("/billing/callback", async (req, res) => {
       <html>
         <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>Redirecting back to BotAssistAI…</h3>
-          <script>
-            console.log("✅ Returning via redirect.html:", ${JSON.stringify(redirectUrl)});
-            window.open(${JSON.stringify(redirectUrl)}, "_top");
-          </script>
+         <script>
+  const redirectUrl = ${JSON.stringify(redirectUrl)};
+
+  // Force top-level navigation safely
+  if (window.top === window.self) {
+    // Already top-level
+    window.location.href = redirectUrl;
+  } else {
+    // Inside iframe, force top-level
+    window.top.location.replace(redirectUrl);
+  }
+</script>
+
         </body>
       </html>
     `);
