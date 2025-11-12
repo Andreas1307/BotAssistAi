@@ -72,31 +72,18 @@ const Homepage = () => {
       return;
     }
     if (!document.cookie.includes("shopify_toplevel")) {
-      const bounceUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shopParam)}&target=${encodeURIComponent(
-        `${directory}/shopify/auth?shop=${shopParam}`
-      )}`;
+      // 🧭 Bounce through your API domain (not the frontend domain!)
+      const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(
+        shopParam
+      )}&target=${encodeURIComponent(`${directory}/shopify/auth?shop=${shopParam}`)}`;
     
-      const hostParam = params.get("host");
+      console.log("🪟 Forcing top-level breakout via backend bounce:", bounceUrl);
     
-      console.log("🪟 Handling toplevel breakout:", { shopParam, hostParam, bounceUrl });
-    
-      try {
-        // 🧩 CASE 1: Embedded (we already have host → use App Bridge)
-        if (hostParam && window.appBridge) {
-          const redirect = Redirect.create(window.appBridge);
-          redirect.dispatch(Redirect.Action.REMOTE, bounceUrl);
-        } else {
-          // 🧩 CASE 2: Pre-install (no host yet → direct breakout)
-          console.log("⚙️ No host yet — forcing top-level navigation");
-          window.top.location.href = bounceUrl;
-        }
-      } catch (err) {
-        console.warn("⚠️ Redirect failed, fallback to window.open:", err);
-        window.open(bounceUrl, "_top");
-      }
-    
+      // ✅ Must always use _top to break out of iframe
+      window.open(bounceUrl, "_top");
       return;
     }
+    
     
     // Initialize Shopify App Bridge
     (async () => {
