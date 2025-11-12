@@ -74,20 +74,19 @@ export function safeRedirect(url, fallbackShop = null) {
   if (!url) return console.error("❌ safeRedirect called without URL");
 
   if (app && host) {
-    // App Bridge redirect — always preferred
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
     return;
   }
 
-  // 🪟 Still embedded? → use safe bounce page
+  // 🪟 If still inside iframe, bounce to your top-level domain (botassistai.com)
   if (window.top !== window.self && shop) {
-    const bounce = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(
+    const bounce = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
       shop
     )}&target=${encodeURIComponent(url)}`;
 
     console.log("🪟 Opening bounce in top context:", bounce);
-    window.open(bounce, "_top"); // ⬅️ key fix: open new top-level page
+    window.open(bounce, "_top");
     return;
   }
 
