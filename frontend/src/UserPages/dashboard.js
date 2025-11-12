@@ -285,6 +285,8 @@ const Dashboard = () => {
     };
     fetchUser();
   }, []);
+
+  console.log("WHAT IS SHOPIFY USER", shopifyUser)
   //fETCH QUERIES
   useEffect(() => {
     const fetchQueries = async () => {
@@ -654,7 +656,6 @@ const fetchConvHistory = async (loadAllChats = false) => {
     fetchConvHistory();
   }, [user]);
 
-  // LOADING
   useEffect(() => {
     if (loading) return; 
   
@@ -820,7 +821,7 @@ if (loading) {
 
 
 
-{!membership ? (
+{shopifyUser && !membership ? (
   <button className="upgrade-btn" onClick={activatePlan}>
     Activate Plan
   </button>
