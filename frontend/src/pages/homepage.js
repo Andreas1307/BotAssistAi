@@ -19,6 +19,7 @@ import axios from "../utils/axiosShopify";
 import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 import { getAppBridgeInstance } from "../utils/initShopifyAppBridge";
+import { Redirect } from "@shopify/app-bridge/actions";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
