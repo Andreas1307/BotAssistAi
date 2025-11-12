@@ -18,6 +18,7 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify";
 import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
+import { getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -73,11 +74,26 @@ const Homepage = () => {
       const bounceUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shopParam)}&target=${encodeURIComponent(
         `${directory}/shopify/auth?shop=${shopParam}`
       )}`;
-      console.log("🪟 Breaking out of iframe via redirect.html:", bounceUrl);
-      window.top.location.href = bounceUrl;
+    
+      console.log("🪟 Requesting Shopify App Bridge to redirect top-level:", bounceUrl);
+    
+      // ✅ Use Shopify App Bridge redirect if available (Shopify-safe)
+      try {
+        const app = window.appBridge || getAppBridgeInstance();
+        if (app) {
+          const redirect = Redirect.create(app);
+          redirect.dispatch(Redirect.Action.REMOTE, bounceUrl);
+        } else {
+          // Fallback: still try to open top window
+          window.open(bounceUrl, "_top");
+        }
+      } catch (err) {
+        console.warn("⚠️ App Bridge redirect failed, falling back to window.open", err);
+        window.open(bounceUrl, "_top");
+      }
+    
       return;
     }
-    
     
     // Initialize Shopify App Bridge
     (async () => {
