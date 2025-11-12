@@ -2397,28 +2397,26 @@ app.get("/billing/callback", async (req, res) => {
     const safeHost = host || btoa(`${shop}/admin`);
 
     const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
-    const redirectUrl = `https://botassistai.com/redirect.html?target=${encodeURIComponent(appUrl)}&shop=${encodeURIComponent(shop)}`;
-    
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-          <h3>Redirecting back to BotAssistAI…</h3>
-          <script>
-            const redirectUrl = ${JSON.stringify(redirectUrl)};
-            console.log("✅ Redirecting to redirect.html:", redirectUrl);
-            window.top.location.href = redirectUrl;
-          </script>
-        </body>
-      </html>
-    `);
-    
+
+res.send(`
+  <!DOCTYPE html>
+  <html>
+    <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+      <h3>Redirecting back to BotAssistAI…</h3>
+      <script>
+        console.log("✅ Redirecting directly to:", ${JSON.stringify(appUrl)});
+        // Use top window to break out safely
+        window.top.location.href = ${JSON.stringify(appUrl)};
+      </script>
+    </body>
+  </html>
+`);
+
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 
