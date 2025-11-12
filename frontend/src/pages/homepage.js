@@ -76,20 +76,22 @@ const Homepage = () => {
         `${directory}/shopify/auth?shop=${shopParam}`
       )}`;
     
-      console.log("🪟 Requesting Shopify App Bridge to redirect top-level:", bounceUrl);
+      const hostParam = params.get("host");
     
-      // ✅ Use Shopify App Bridge redirect if available (Shopify-safe)
+      console.log("🪟 Handling toplevel breakout:", { shopParam, hostParam, bounceUrl });
+    
       try {
-        const app = window.appBridge || getAppBridgeInstance();
-        if (app) {
-          const redirect = Redirect.create(app);
+        // 🧩 CASE 1: Embedded (we already have host → use App Bridge)
+        if (hostParam && window.appBridge) {
+          const redirect = Redirect.create(window.appBridge);
           redirect.dispatch(Redirect.Action.REMOTE, bounceUrl);
         } else {
-          // Fallback: still try to open top window
-          window.open(bounceUrl, "_top");
+          // 🧩 CASE 2: Pre-install (no host yet → direct breakout)
+          console.log("⚙️ No host yet — forcing top-level navigation");
+          window.top.location.href = bounceUrl;
         }
       } catch (err) {
-        console.warn("⚠️ App Bridge redirect failed, falling back to window.open", err);
+        console.warn("⚠️ Redirect failed, fallback to window.open:", err);
         window.open(bounceUrl, "_top");
       }
     
