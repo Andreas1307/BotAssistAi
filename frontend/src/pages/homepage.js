@@ -70,10 +70,14 @@ const Homepage = () => {
       return;
     }
     if (!document.cookie.includes("shopify_toplevel")) {
-      window.top.location.href = `${directory}/shopify/auth?shop=${shopParam}`;
+      const bounceUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shopParam)}&target=${encodeURIComponent(
+        `${directory}/shopify/auth?shop=${shopParam}`
+      )}`;
+      console.log("🪟 Breaking out of iframe via redirect.html:", bounceUrl);
+      window.top.location.href = bounceUrl;
       return;
     }
-  
+    
     // Initialize Shopify App Bridge
     (async () => {
       const app = await initShopifyAppBridge();
