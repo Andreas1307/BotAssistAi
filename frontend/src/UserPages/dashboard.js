@@ -820,7 +820,7 @@ if (loading) {
 
 
 
-{shopifyUser && !membership ? (
+{!membership ? (
   <button className="upgrade-btn" onClick={activatePlan}>
     Activate Plan
   </button>
