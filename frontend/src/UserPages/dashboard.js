@@ -287,7 +287,7 @@ const Dashboard = () => {
     fetchUser();
   }, []);
 
-  console.log("WHAT IS SHOPIFY USER", shopifyUser)
+  console.log("WHAT IS SHOPIFY USER", shopifyUser, "dsaaaaaaaaaaa", membership )
   //fETCH QUERIES
   useEffect(() => {
     const fetchQueries = async () => {
@@ -828,7 +828,7 @@ if (loading) {
   </button>
 ) : membership ? (
   <Link to={`/${user?.username}/upgrade-plan`}>
-    <button className="upgrade-btn">Upgrade Plan</button>
+    <button className="upgrade-btn">Upgrade Planaaaa</button>
   </Link>
 ) : null}
 
