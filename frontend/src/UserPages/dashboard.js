@@ -826,11 +826,12 @@ if (loading) {
   <button className="upgrade-btn" onClick={activatePlan}>
     Activate Plan
   </button>
-) : (
+) : membership ? (
   <Link to={`/${user?.username}/upgrade-plan`}>
-  <button className="upgrade-btn">Upgrade Plan</button>
-</Link>
-)}
+    <button className="upgrade-btn">Upgrade Plan</button>
+  </Link>
+) : null}
+
 </aside>
 
 <div className="main-content">  
