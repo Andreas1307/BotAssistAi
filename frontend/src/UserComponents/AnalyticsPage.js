@@ -67,7 +67,6 @@ const [shopifyUser, setShopifyUser] = useState(false)
         } else {
           setShopifyUser(false)
         }
-        setRenew(res.showRenewalModal)
       } catch (error) {
         setUser(null);
         showErrorNotification()
