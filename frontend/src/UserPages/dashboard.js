@@ -287,7 +287,6 @@ const Dashboard = () => {
     fetchUser();
   }, []);
 
-  console.log("WHAT IS SHOPIFY USER", shopifyUser, "dsaaaaaaaaaaa", membership )
   //fETCH QUERIES
   useEffect(() => {
     const fetchQueries = async () => {
