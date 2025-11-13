@@ -14,29 +14,23 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-  <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-  <script>
-    // Shopify automated checker looks for this pattern!
-    document.addEventListener("DOMContentLoaded", function() {
-      const AppBridge = window["app-bridge"];
-      if (AppBridge) {
-        const createApp = AppBridge.default || AppBridge;
-        const params = new URLSearchParams(window.location.search);
-        const host = params.get("host");
-        if (host) {
-          window.shopifyAppBridgeCheckApp = createApp({
-            apiKey: document
-              .querySelector('meta[name="shopify-api-key"]')
-              .getAttribute("content"),
-            host: host,
-            forceRedirect: true,
-          });
-          console.log("✅ AppBridge check initialized:", window.shopifyAppBridgeCheckApp);
-        }
+    <script>
+      // Don't load App Bridge CDN during OAuth/Install
+      const params = new URLSearchParams(window.location.search);
+      const path = window.location.pathname;
+    
+      const isOAuthInstall =
+        path.includes("/shopify/install") ||
+        params.get("hmac") || 
+        params.get("timestamp");
+    
+      if (!isOAuthInstall) {
+        const script = document.createElement("script");
+        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        document.head.appendChild(script);
       }
-    });
-  </script>
-
+    </script>
+    
 
 
 
