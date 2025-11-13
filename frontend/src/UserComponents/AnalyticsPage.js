@@ -362,7 +362,8 @@ const [shopifyUser, setShopifyUser] = useState(false)
   </div>
   </div>
 
-  {shopifyUser && !membership ? (
+
+{shopifyUser && !membership ? (
   // 🟢 Case 1: Shopify user, not Pro yet → activate plan
   <div onClick={activatePlan} className="upgrade-div">
     <span>Upgrade Plan To See More</span>
