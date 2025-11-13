@@ -1414,15 +1414,6 @@ app.post("/paypal/webhook", verifySessionToken, async (req, res) => {
 
 
 
-//daca e,  sa fac ctrl z pe init ca iara imi arata pagina aia non existent pentru o sec si dupa la dash
-
-
-
-
-
-
-
-
 
 
 app.get("/payed-membership", verifySessionToken, async (req, res) => {
@@ -3205,7 +3196,6 @@ const userId = user.user_id;
   }
 });
 
-
 app.post("/ping-client", verifySessionToken, async (req, res) => {
   const { apiKey } = req.body;
 
@@ -3239,7 +3229,6 @@ app.post("/ping-client", verifySessionToken, async (req, res) => {
   }
 });
 
-
 app.get("/get-connected", verifySessionToken, async (req, res) => {
   const { userId } = req.query;
   try {
@@ -3258,7 +3247,6 @@ const user = rows[0];
     return res.status(500).json({ connected: false });
   }
 });
-
 
 app.get("/daily-messages", verifySessionToken, async (req, res) => {
 try {
