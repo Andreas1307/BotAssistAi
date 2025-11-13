@@ -60,19 +60,23 @@ const [shopifyUser, setShopifyUser] = useState(false)
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await fetchWithAuth("/auth-check");        
-        setUser(data.user);
+        const res = await fetchWithAuth("/auth-check"); 
+        setUser(res.user);
+        if(res.user.shopify_access_token){
+          setShopifyUser(true)
+        } else {
+          setShopifyUser(false)
+        }
+        setRenew(res.showRenewalModal)
       } catch (error) {
-        console.error("❌ Auth check error:", error);
         setUser(null);
+        showErrorNotification()
       } finally {
         setLoading(false);
       }
     };
-  
     fetchUser();
   }, []);
-
 
   // FETCH MEMBERSHIP
   useEffect(() => {
@@ -357,17 +361,14 @@ const [shopifyUser, setShopifyUser] = useState(false)
   </div>
 
   {shopifyUser && !membership ? (
-  // Shopify user without active plan → show activate button
-  <div onClick={activatePlan} className="upgrade-div" style={{ cursor: "pointer" }}>
-    <span>Activate Plan To See More</span>
-  </div>
-) : shopifyUser && membership === "Pro" ? null : (
-  // Non-Shopify or not pro → send to upgrade page
-  <Link to={`/${user?.username}/upgrade-plan`} className="upgrade-div">
-    <span style={{ marginLeft: "20px" }}>Upgrade Plan To See More</span>
-  </Link>
+        <div onClick={activatePlan} className='upgrade-div'>
+        <span>Upgrade Plan To See More</span>
+       </div>
+) : (
+<div className='upgrade-div'>
+     <span style={{marginLeft: "20px"}} to={`/${user?.username}/upgrade-plan`}>Upgrade Plan To See More</span>
+    </div>
 )}
-
  
     </div>
   );
