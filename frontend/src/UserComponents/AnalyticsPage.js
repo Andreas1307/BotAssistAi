@@ -357,14 +357,17 @@ const [shopifyUser, setShopifyUser] = useState(false)
   </div>
 
   {shopifyUser && !membership ? (
-        <div onClick={activatePlan} className='upgrade-div'>
-        <span>Upgrade Plan To See More</span>
-       </div>
-) : (
-<div className='upgrade-div'>
-     <span style={{marginLeft: "20px"}} to={`/${user?.username}/upgrade-plan`}>Upgrade Plan To See More</span>
-    </div>
+  // Shopify user without active plan → show activate button
+  <div onClick={activatePlan} className="upgrade-div" style={{ cursor: "pointer" }}>
+    <span>Activate Plan To See More</span>
+  </div>
+) : shopifyUser && membership === "Pro" ? null : (
+  // Non-Shopify or not pro → send to upgrade page
+  <Link to={`/${user?.username}/upgrade-plan`} className="upgrade-div">
+    <span style={{ marginLeft: "20px" }}>Upgrade Plan To See More</span>
+  </Link>
 )}
+
  
     </div>
   );
