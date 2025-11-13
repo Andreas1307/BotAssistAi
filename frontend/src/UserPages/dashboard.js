@@ -826,11 +826,12 @@ if (loading) {
   <button className="upgrade-btn" onClick={activatePlan}>
     Activate Plan
   </button>
-) : membership ? (
+) : !shopifyUser && !membership ? (
   <Link to={`/${user?.username}/upgrade-plan`}>
-    <button className="upgrade-btn">Upgrade Planaaaa</button>
+    <button className="upgrade-btn">Upgrade Plan</button>
   </Link>
 ) : null}
+
 
 </aside>
 
