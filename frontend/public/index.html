@@ -14,24 +14,18 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge@3"></script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const host = params.get("host");
-      const shop = params.get("shop");
+      // Delay NPM App Bridge until CDN is loaded
+      window.__SHOPIFY_CDN_APPBRIDGE_READY__ = false;
     
-      // Only initialize if embedded and host exists
-      if (window.top !== window.self && host) {
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default || AppBridge;
-        const app = createApp({
-          apiKey: "%REACT_APP_SHOPIFY_API_KEY%",
-          host,
-          forceRedirect: true,
-        });
-        window.appBridge = app;
-      }
+      window.addEventListener("load", () => {
+        if (window["app-bridge"]) {
+          window.__SHOPIFY_CDN_APPBRIDGE_READY__ = true;
+        }
+      });
     </script>
+    
     
 
 

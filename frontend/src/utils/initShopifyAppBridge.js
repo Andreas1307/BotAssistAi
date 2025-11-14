@@ -1,9 +1,7 @@
 
 import { getSessionToken } from "@shopify/app-bridge-utils";
-const AppBridge = window['app-bridge'];
-const createApp = AppBridge?.default || AppBridge;
-const Redirect = AppBridge?.actions?.Redirect;
-
+import { Redirect } from "@shopify/app-bridge/actions";
+import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
  */
@@ -45,13 +43,33 @@ export function initShopifyAppBridge() {
     window.open(bounceUrl, "_top");
     return null;
   }
+  if (window.top !== window.self && !host) {
+    console.warn("⚠️ Missing host – waiting for Shopify to add host param");
+    return null;
+  }
+  
   
   if (!host) {
     console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
   }
 
-  // ✅ Init App Bridge normally
+  // Wait for CDN version before using NPM version
+  if (!window.__SHOPIFY_CDN_APPBRIDGE_READY__) {
+    console.warn("⏳ Waiting for Shopify CDN App Bridge...");
+    return null;
+  }
+
+  // Use CDN version **not** NPM version
+  const AppBridge = window["app-bridge"];
+
+  if (!AppBridge) {
+    console.error("❌ CDN App Bridge not loaded yet.");
+    return null;
+  }
+
+  const createApp = AppBridge.default || AppBridge;
+
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
