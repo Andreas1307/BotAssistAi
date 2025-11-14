@@ -966,21 +966,6 @@ function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 const authInProgress = new Set();
-
-app.get("*", (req, res) => {
-  const ua = req.headers['user-agent'] || "";
-  
-  if (ua.includes("Shopify")) {
-    console.log("🟢 Shopify Embedded App Check Detected!", {
-      url: req.originalUrl,
-      ua,
-      time: new Date().toISOString()
-    });
-  }
-
-  res.sendFile(path.join(__dirname, "build/index.html"));
-}); 
-
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
