@@ -1,36 +1,15 @@
+import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
 import directory from "../directory";
-
-let createApp = null;
-
-if (window["app-bridge"]) {
-  // Shopify CDN version
-  createApp = window["app-bridge"].default || window["app-bridge"];
-} else {
-  // Fallback to NPM version for non-shopify users
-  createApp = require("@shopify/app-bridge").default;
-}
-
-export async function waitForAppBridge() {
-  if (window["app-bridge"]) return window["app-bridge"];
-  return new Promise(resolve => {
-    const interval = setInterval(() => {
-      if (window["app-bridge"]) {
-        clearInterval(interval);
-        resolve(window["app-bridge"]);
-      }
-    }, 20);
-  });
-}
-
-
+/**
+ * Detect if running inside Shopify iframe
+ */
 function isEmbedded() {
   return window.top !== window.self;
 }
 
-export async function initShopifyAppBridge() {
-  await waitForAppBridge();
+export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
   let host = params.get("host");
@@ -70,9 +49,8 @@ export async function initShopifyAppBridge() {
     return null;
   }
 
-  const create = window["app-bridge"]?.default || window["app-bridge"] || createApp;
-
-const app = create({
+  // ✅ Init App Bridge normally
+  const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: true,
