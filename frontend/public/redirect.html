@@ -7,39 +7,9 @@
   <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
     <h3>Redirecting…</h3>
     <script>
-      (function () {
-        const params = new URLSearchParams(window.location.search);
-        const target = params.get("target");
-        const shop = params.get("shop");
-    
-        // Sanity: must start from your own domain
-        console.log("🪟 redirect.html loaded from", window.location.origin);
-    
-        if (target) {
-          const decoded = decodeURIComponent(target);
-          console.log("➡️ Redirecting safely to:", decoded);
-    
-          // ✅ Always use window.top to ensure top-level breakout
-          if (window.top === window.self) {
-            // Already top-level, safe to go directly
-            window.location.href = decoded;
-          } else {
-            // Inside iframe — bounce one more time through your own domain
-            const safetyBounce = `https://botassistai.com/redirect.html?target=${encodeURIComponent(decoded)}&shop=${encodeURIComponent(shop || "")}`;
-            console.log("🧩 Still embedded; rebouncing to:", safetyBounce);
-            window.top.location.href = safetyBounce;
-          }
-        } else if (shop) {
-          const topAuth = `https://botassistai.com/redirect.html?target=${encodeURIComponent(
-            `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`
-          )}&shop=${shop}`;
-          console.log("➡️ No target; fallback to top-level auth:", topAuth);
-          window.location.href = topAuth;
-        } else {
-          window.location.href = "https://botassistai.com/";
-        }
-      })();
+      const url = new URL(window.location.href);
+      const target = url.searchParams.get("target");
+      if (target) window.top.location.href = target;
     </script>
-    
     </body>
 </html>

@@ -12,15 +12,25 @@ if (window["app-bridge"]) {
   createApp = require("@shopify/app-bridge").default;
 }
 
+export async function waitForAppBridge() {
+  if (window["app-bridge"]) return window["app-bridge"];
+  return new Promise(resolve => {
+    const interval = setInterval(() => {
+      if (window["app-bridge"]) {
+        clearInterval(interval);
+        resolve(window["app-bridge"]);
+      }
+    }, 20);
+  });
+}
 
-/**
- * Detect if running inside Shopify iframe
- */
+
 function isEmbedded() {
   return window.top !== window.self;
 }
 
-export function initShopifyAppBridge() {
+export async function initShopifyAppBridge() {
+  await waitForAppBridge();
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
   let host = params.get("host");
