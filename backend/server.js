@@ -1039,8 +1039,6 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    // 🧠 Important: we must not touch headers after this point
-    // So the rest runs only if headers weren't sent yet
     if (!res.headersSent) {
       const cookies = res.getHeader("set-cookie") || [];
       const widenedCookies = cookies.map(c =>

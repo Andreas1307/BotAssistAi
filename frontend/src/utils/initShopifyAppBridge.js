@@ -1,7 +1,9 @@
-import createApp from "@shopify/app-bridge";
+
 import { getSessionToken } from "@shopify/app-bridge-utils";
-import { Redirect } from "@shopify/app-bridge/actions";
-import directory from "../directory";
+const AppBridge = window['app-bridge'];
+const createApp = AppBridge?.default || AppBridge;
+const Redirect = AppBridge?.actions?.Redirect;
+
 /**
  * Detect if running inside Shopify iframe
  */
