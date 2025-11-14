@@ -5,10 +5,6 @@ const { loadCallback } = require('./sessionStorage');
 module.exports = async function verifySessionToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
-
-  console.log("🛠️ Shopify Automated Check HIT → JWT received:", req.headers.authorization);
-
-  
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     req.shopify = null; // Explicitly mark as not a Shopify session
     return next();
