@@ -16,22 +16,29 @@
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
     <script>
       const params = new URLSearchParams(window.location.search);
-      const path = window.location.pathname;
+      const host = params.get("host");
+      const shop = params.get("shop");
     
-      // During OAuth/install we must NOT load App Bridge
-      const isOAuthInstall =
-        path.includes("/shopify/install") ||
-        path.includes("/shopify/auth") ||
-        path.includes("/shopify/top-level-auth") ||
+      const isInShopifyAdmin =
+        window.top !== window.self &&
+        host &&
+        shop &&
+        window.location.pathname === "/" &&
+        !window.location.pathname.includes("/shopify/");
+    
+      const isOAuthFlow =
+        window.location.pathname.includes("/shopify/") ||
         params.get("hmac") ||
         params.get("timestamp");
     
-      if (!isOAuthInstall) {
-        const script = document.createElement("script");
-        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-        document.head.appendChild(script);
+      // ⛔ Do NOT load App Bridge during OAuth (breaks iframe)
+      if (!isOAuthFlow && isInShopifyAdmin) {
+        const s = document.createElement("script");
+        s.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        document.head.appendChild(s);
       }
     </script>
+    
     
 
 
