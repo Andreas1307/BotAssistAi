@@ -1,3 +1,7 @@
+import { getSessionToken } from "@shopify/app-bridge-utils";
+import { Redirect } from "@shopify/app-bridge/actions";
+import directory from "../directory";
+
 let createApp = null;
 
 if (window["app-bridge"]) {
@@ -8,9 +12,7 @@ if (window["app-bridge"]) {
   createApp = require("@shopify/app-bridge").default;
 }
 
-import { getSessionToken } from "@shopify/app-bridge-utils";
-import { Redirect } from "@shopify/app-bridge/actions";
-import directory from "../directory";
+
 /**
  * Detect if running inside Shopify iframe
  */
