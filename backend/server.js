@@ -970,23 +970,14 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  // ✅ Redirect to our top-level redirect page first
-  const bounceUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(
-    `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-  )}`;
+  const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
-  res.setHeader("Content-Type", "text/html");
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-        <h3>Redirecting to Shopify OAuth…</h3>
-        <script>
-          console.log("Redirecting via bounce page:", ${JSON.stringify(bounceUrl)});
-          window.top.location.href = ${JSON.stringify(bounceUrl)};
-        </script>
-      </body>
-    </html>
+    <html><body>
+      <script>
+        window.top.location.href = "${redirectUrl}";
+      </script>
+    </body></html>
   `);
 });
 
