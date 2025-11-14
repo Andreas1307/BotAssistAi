@@ -19,25 +19,16 @@
       const host = params.get("host");
       const shop = params.get("shop");
     
-      const isInShopifyAdmin =
-        window.top !== window.self &&
-        host &&
-        shop &&
-        window.location.pathname === "/" &&
-        !window.location.pathname.includes("/shopify/");
+      const isEmbedded = window.top !== window.self;
     
-      const isOAuthFlow =
-        window.location.pathname.includes("/shopify/") ||
-        params.get("hmac") ||
-        params.get("timestamp");
-    
-      // ⛔ Do NOT load App Bridge during OAuth (breaks iframe)
-      if (!isOAuthFlow && isInShopifyAdmin) {
+      // Load App Bridge ONLY when embedded AND host exists
+      if (isEmbedded && host) {
         const s = document.createElement("script");
         s.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
         document.head.appendChild(s);
       }
     </script>
+    
     
     
 
