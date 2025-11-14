@@ -15,21 +15,22 @@
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
     <script>
-      // Don't load App Bridge CDN during OAuth/Install
-      const params = new URLSearchParams(window.location.search);
+      // Only skip App Bridge on TOP-LEVEL OAuth pages (your own domain)
       const path = window.location.pathname;
     
-      const isOAuthInstall =
+      const isOAuthFlow =
         path.includes("/shopify/install") ||
-        params.get("hmac") || 
-        params.get("timestamp");
+        path.includes("/shopify/auth") ||
+        path.includes("/shopify/top-level-auth");
     
-      if (!isOAuthInstall) {
+      if (!isOAuthFlow) {
         const script = document.createElement("script");
         script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        script.async = true;
         document.head.appendChild(script);
       }
     </script>
+    
     
 
 

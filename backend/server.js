@@ -962,17 +962,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  if (
-    req.headers['user-agent']?.includes('Shopify') &&
-    req.query.shop &&
-    req.query.host
-  ) {
-    console.log("🕵️ Shopify Embedded App Check detected for shop:", req.query.shop);
-  }
-  next();
-}); 
-
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }

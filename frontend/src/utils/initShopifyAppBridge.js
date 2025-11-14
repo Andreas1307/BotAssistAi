@@ -1,4 +1,13 @@
-import createApp from "@shopify/app-bridge";
+let createApp = null;
+
+if (window["app-bridge"]) {
+  // Shopify CDN version
+  createApp = window["app-bridge"].default || window["app-bridge"];
+} else {
+  // Fallback to NPM version for non-shopify users
+  createApp = require("@shopify/app-bridge").default;
+}
+
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
 import directory from "../directory";
@@ -49,8 +58,9 @@ export function initShopifyAppBridge() {
     return null;
   }
 
-  // ✅ Init App Bridge normally
-  const app = createApp({
+  const create = window["app-bridge"]?.default || window["app-bridge"] || createApp;
+
+const app = create({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: true,
