@@ -14,6 +14,20 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
+    <script>
+      const createApp = window['app-bridge'].default || window['app-bridge'];
+      const app = createApp({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: "${host}",
+        forceRedirect: true,
+      });
+      const Redirect = app.actions.Redirect.create(app);
+      Redirect.dispatch(
+        app.actions.Redirect.Action.REMOTE,
+        "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com', '')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}"
+      );
+    </script>
+    
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 
 
