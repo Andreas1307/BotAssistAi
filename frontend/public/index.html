@@ -14,15 +14,23 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script
-  src="https://cdn.shopify.com/shopifycloud/app-bridge@3"
-  onload="window.__shopify_app_bridge_cdn_loaded = true"
-  data-shopify-block="true"
-></script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge@3"></script>
+<script>
+  const AppBridge = window["app-bridge"];
+  const createApp = AppBridge.default || AppBridge;
 
+  const app = createApp({
+    apiKey: "{{API_KEY}}",
+    host: "{{HOST}}",
+    forceRedirect: true,
+  });
 
-    
-
+  const Redirect = AppBridge.actions.Redirect.create(app);
+  Redirect.dispatch(
+    AppBridge.actions.Redirect.Action.REMOTE,
+    "https://admin.shopify.com/store/{{store}}/apps/botassistai?shop={{shop}}&host={{host}}"
+  );
+</script>
 
 
 
