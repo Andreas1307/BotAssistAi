@@ -14,18 +14,8 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <script>
-      // Delay NPM App Bridge until CDN is loaded
-      window.__SHOPIFY_CDN_APPBRIDGE_READY__ = false;
-    
-      window.addEventListener("load", () => {
-        if (window["app-bridge"]) {
-          window.__SHOPIFY_CDN_APPBRIDGE_READY__ = true;
-        }
-      });
-    </script>
-    
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge@3"></script>
+
     
 
 

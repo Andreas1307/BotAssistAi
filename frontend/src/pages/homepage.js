@@ -20,6 +20,7 @@ import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/init
 import { Helmet } from "react-helmet";
 import { getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { initAppBridge } from "../utils/app-bridge";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -60,6 +61,14 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+
+  useEffect(() => {
+    const app = initAppBridge();
+    if (app) {
+      console.log("App Bridge Initialized ✔");
+    }
+  }, []);
+  
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
