@@ -962,6 +962,22 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+const buildPath = path.join(process.cwd(), "build");
+
+// Serve static files
+app.use(express.static(buildPath));
+
+// Shopify embedded app entrypoint
+app.get("/apps/botassistai", (req, res) => {
+  res.sendFile(path.join(buildPath, "index.html"));
+});
+
+// Fallback route for React Router
+app.get("*", (req, res) => {
+  res.sendFile(path.join(buildPath, "index.html"));
+});
+
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
