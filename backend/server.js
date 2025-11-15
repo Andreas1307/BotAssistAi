@@ -966,15 +966,6 @@ app.use(express.urlencoded({ extended: true }));
 const buildPath = path.join(__dirname, '../frontend/build'); // <-- correct path
 app.use(express.static(buildPath));
 
-app.get('/apps/botassistai', (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
-});
-
-
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
@@ -1297,6 +1288,16 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
+app.get('/apps/botassistai', (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'));
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'));
+});
+
+
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
