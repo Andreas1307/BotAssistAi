@@ -962,10 +962,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-const buildPath = path.join(__dirname, '../frontend/build'); // <-- correct path
-app.use(express.static(buildPath));
-
 function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
@@ -1287,15 +1283,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     `);
   }
   
-});
-
-app.get('/apps/botassistai', (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
-});
-
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/shopify')) return next(); // Skip Shopify routes
-  res.sendFile(path.join(buildPath, 'index.html'));
 });
 
 app.get("/debug/cookies", (req, res) => {
