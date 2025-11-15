@@ -14,24 +14,25 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge@3"></script>
+  
 <script>
-  const AppBridge = window["app-bridge"];
-  const createApp = AppBridge.default || AppBridge;
-
-  const app = createApp({
-    apiKey: "{{API_KEY}}",
-    host: "{{HOST}}",
-    forceRedirect: true,
-  });
-
-  const Redirect = AppBridge.actions.Redirect.create(app);
-  Redirect.dispatch(
-    AppBridge.actions.Redirect.Action.REMOTE,
-    "https://admin.shopify.com/store/{{store}}/apps/botassistai?shop={{shop}}&host={{host}}"
-  );
+  // Hide App Bridge global to avoid conflict
+  window.__SHOPIFY_APP_BRIDGE_GLOBAL__ = window['app-bridge'];
+  delete window['app-bridge'];
 </script>
 
+<!-- Load Shopify’s required App Bridge global -->
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
+        onload="window.appBridgeCDNLoaded = true;">
+</script>
+
+<script>
+  // Restore your React App Bridge after CDN loads
+  Object.defineProperty(window, 'app-bridge', {
+    get() { return window.__SHOPIFY_APP_BRIDGE_GLOBAL__; },
+    configurable: false
+  });
+</script>
 
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
