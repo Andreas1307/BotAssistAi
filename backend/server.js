@@ -963,7 +963,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-const buildPath = path.join(process.cwd(), "build");
+const buildPath = path.join(__dirname, "../frontend/build");
+
 
 // Serve static files
 app.use(express.static(buildPath));
