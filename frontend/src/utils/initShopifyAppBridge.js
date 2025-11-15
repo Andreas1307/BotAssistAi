@@ -1,6 +1,7 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { loadAppBridge } from "./loadAppBridge";
 import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
@@ -49,15 +50,18 @@ export function initShopifyAppBridge() {
     return null;
   }
 
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: true,
+  loadAppBridge(process.env.REACT_APP_SHOPIFY_API_KEY, (AppBridge) => {
+    const createApp = AppBridge.default || AppBridge;
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
+    window.appBridge = app;
+    console.log("✅ Shopify App Bridge initialized", app);
+    return app;
   });
 
-  window.appBridge = app;
-  console.log("✅ Shopify App Bridge initialized with host:", host);
-  return app;
 }
 
 export function getAppBridgeInstance() {

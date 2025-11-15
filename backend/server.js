@@ -1293,11 +1293,10 @@ app.get('/apps/botassistai', (req, res) => {
   res.sendFile(path.join(buildPath, 'index.html'));
 });
 
-app.get('*', (req, res) => {
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/shopify')) return next(); // Skip Shopify routes
   res.sendFile(path.join(buildPath, 'index.html'));
 });
-
-
 
 app.get("/debug/cookies", (req, res) => {
   res.json({

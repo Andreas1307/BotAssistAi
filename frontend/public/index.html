@@ -14,25 +14,7 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <script>
-      window.addEventListener('load', function() {
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default || AppBridge;
-
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true,
-        });
-
-        const Redirect = AppBridge.actions.Redirect.create(app);
-        Redirect.dispatch(
-          AppBridge.actions.Redirect.Action.REMOTE,
-          "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com', '')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}"
-        );
-      });
-    </script>
+    
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
