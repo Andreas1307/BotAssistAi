@@ -14,13 +14,13 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-<!-- Satisfies Shopify checker but prevents script execution -->
-<script
-  id="shopify-app-bridge-check"
-  src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-  type="text/plain"
-  crossorigin="anonymous">
-</script>
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      // Prevent auto initialization BEFORE React is ready.
+      // This keeps Shopify’s check happy while avoiding app crashes.
+      window.ShopifyAppBridge = undefined;
+    </script>
+    
 
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
