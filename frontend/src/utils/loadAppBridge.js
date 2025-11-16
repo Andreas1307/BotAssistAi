@@ -1,5 +1,5 @@
+//inside loadAppBridge.js
 import React from "react";
-
 
 export function loadAppBridge(apiKey, callback) {
     if (window.ShopifyAppBridge) {
