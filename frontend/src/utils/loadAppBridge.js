@@ -2,7 +2,8 @@
 import React from "react";
 
 export function loadAppBridge(apiKey, callback) {
-    if (window.ShopifyAppBridge) {
+    if (window.ShopifyAppBridge && !window.appBridgeInitialized) {
+      window.appBridgeInitialized = true;
       callback(window.ShopifyAppBridge);
       return;
     }
@@ -12,6 +13,7 @@ export function loadAppBridge(apiKey, callback) {
     script.async = true;
   
     script.onload = () => {
+      window.appBridgeInitialized = true;
       callback(window.ShopifyAppBridge);
     };
   

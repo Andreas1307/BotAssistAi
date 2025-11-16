@@ -58,10 +58,7 @@ export function initShopifyAppBridge() {
       forceRedirect: true,
     });
     window.appBridge = app;
-    console.log("✅ Shopify App Bridge initialized", app);
-    return app;
   });
-
 }
 
 export function getAppBridgeInstance() {
