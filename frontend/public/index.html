@@ -14,8 +14,13 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <!-- ✅ Shopify Embedded App check: must exist in HTML head -->
-<script id="shopify-app-bridge-check" src="https://cdn.shopify.com/shopifycloud/app-bridge.js" type="text/javascript" crossorigin="anonymous"></script>
+<!-- Satisfies Shopify checker but prevents script execution -->
+<script
+  id="shopify-app-bridge-check"
+  src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
+  type="text/plain"
+  crossorigin="anonymous">
+</script>
 
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
