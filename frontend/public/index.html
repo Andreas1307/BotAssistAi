@@ -14,17 +14,14 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    <script>
-      // Stop automatic initialization — but keep object for Shopify embed checks
-      Object.defineProperty(window, "appBridge", {
-        value: null,
-        writable: false,
-      });
-    
-      // Stops Shopify from triggering auto init inside iframe
-      window.__SHOPIFY_DEV_TRANSPORT_SIGNAL__ = () => {};
-    </script>
+
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+
+<script>
+  // Prevent Shopify’s auto-initialization
+  window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
+</script>
+
     
 
 
