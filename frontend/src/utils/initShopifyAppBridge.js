@@ -1,7 +1,6 @@
 import createApp from "@shopify/app-bridge";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Redirect } from "@shopify/app-bridge/actions";
-import { loadAppBridge } from "./loadAppBridge";
 import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
@@ -57,7 +56,8 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  window.getSessionToken = () => getSessionToken(app);
+  console.log("✅ Shopify App Bridge initialized with host:", host);
+  return app;
 }
 
 export function getAppBridgeInstance() {
@@ -93,28 +93,11 @@ export function safeRedirect(url, fallbackShop = null) {
   window.location.href = url;
 }
 
-async function waitForAppBridge(timeout = 5000) {
-  const interval = 50;
-  const maxTries = timeout / interval;
-  let tries = 0;
-
-  return new Promise((resolve, reject) => {
-    const check = () => {
-      if (window.appBridge && window.getSessionToken) return resolve(window.appBridge);
-      tries++;
-      if (tries >= maxTries) return reject(new Error("App Bridge not initialized"));
-      setTimeout(check, interval);
-    };
-    check();
-  });
-}
-
 export async function fetchWithAuth(url, options = {}) {
 
   // 1️⃣ Always try to get or reuse a Shopify session token
   let token = window.sessionToken || null;
   try {
-    await waitForAppBridge();
     const app = await getAppBridgeInstance();
     if (app) {
       token = await getSessionToken(app);
