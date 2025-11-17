@@ -1,11 +1,8 @@
-
+import createApp from "@shopify/app-bridge";
+import { getSessionToken } from "@shopify/app-bridge-utils";
+import { Redirect } from "@shopify/app-bridge/actions";
 import { loadAppBridge } from "./loadAppBridge";
 import directory from "../directory";
-
-const createApp = window.ShopifyAppBridge.default;
-const Redirect = window.ShopifyAppBridge.actions.Redirect;
-const getSessionToken = window.ShopifyAppBridgeUtils.getSessionToken;
-
 /**
  * Detect if running inside Shopify iframe
  */
@@ -30,40 +27,37 @@ export function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_host", host);
   }
 
+  // 🔹 Only break out if this is FIRST install (no host + path includes /install)
   const embedded = window.top !== window.self;
   const isInstall = window.location.pathname.includes("/shopify/install");
-
-  // Break out of iframe on first install
   if (embedded && !host && isInstall) {
     const shopParam = encodeURIComponent(shop || "");
+    
+    // ✅ Step 1: bounce to your top-level domain first
     const bounceUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&target=${encodeURIComponent(
       `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`
     )}`;
-
+  
+    console.log("🪟 Breaking out of iframe safely via redirect.html:", bounceUrl);
+  
+    // ✅ Step 2: open bounce in top-level window
     window.open(bounceUrl, "_top");
-    return;
+    return null;
+  }
+  
+  if (!host) {
+    console.warn("⚠️ Missing host; waiting until host param is available");
+    return null;
   }
 
-  if (!host) return; // don't init until host is present
-
-  // ⭐ Load App Bridge scripts dynamically
-  loadAppBridge(() => {
-    const AppBridge = window.ShopifyAppBridge;
-    const Utils = window.ShopifyAppBridgeUtils;
-
-    if (!AppBridge || !Utils) {
-      console.error("❌ App Bridge scripts not loaded");
-      return;
-    }
-
-    const app = AppBridge.createApp({
+  loadAppBridge(process.env.REACT_APP_SHOPIFY_API_KEY, (AppBridge) => {
+    const createApp = AppBridge.default || AppBridge;
+    const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
       forceRedirect: true,
     });
-
     window.appBridge = app;
-    window.appBridgeUtils = Utils;
   });
 }
 
@@ -107,8 +101,7 @@ export async function fetchWithAuth(url, options = {}) {
   try {
     const app = await getAppBridgeInstance();
     if (app) {
-      token = await window.appBridgeUtils.getSessionToken(app);
-
+      token = await getSessionToken(app);
       window.sessionToken = token;
     } else {
       console.warn("⚠️ App Bridge not initialized — cannot get JWT");
