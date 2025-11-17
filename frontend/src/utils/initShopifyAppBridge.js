@@ -53,15 +53,18 @@ export function initShopifyAppBridge() {
     return null;
   }
 
-  loadAppBridge(process.env.REACT_APP_SHOPIFY_API_KEY, (AppBridge) => {
-    const createApp = AppBridge.default || AppBridge;
-    const app = createApp({
+  loadAppBridge(() => {
+    const AppBridge = window.ShopifyAppBridge;
+    const utils = window.ShopifyAppBridgeUtils;
+  
+    const app = AppBridge.createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
       host,
-      forceRedirect: true,
     });
+  
     window.appBridge = app;
   });
+  
 }
 
 export function getAppBridgeInstance() {
