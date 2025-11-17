@@ -1,6 +1,7 @@
-import createApp from "@shopify/app-bridge";
-import { getSessionToken } from "@shopify/app-bridge-utils";
-import { Redirect } from "@shopify/app-bridge/actions";
+const createApp = window.ShopifyAppBridge.default;
+const Redirect = window.ShopifyAppBridge.actions.Redirect;
+const getSessionToken = window.ShopifyAppBridgeUtils.getSessionToken;
+
 import { loadAppBridge } from "./loadAppBridge";
 import directory from "../directory";
 /**
