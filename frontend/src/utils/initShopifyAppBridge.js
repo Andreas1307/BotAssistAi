@@ -50,15 +50,14 @@ export function initShopifyAppBridge() {
     return null;
   }
 
-  loadAppBridge(process.env.REACT_APP_SHOPIFY_API_KEY, (AppBridge) => {
-    const createApp = AppBridge.default || AppBridge;
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-    window.appBridge = app;
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
   });
+
+  window.appBridge = app;
+  window.getSessionToken = () => getSessionToken(app);
 }
 
 export function getAppBridgeInstance() {
@@ -94,11 +93,28 @@ export function safeRedirect(url, fallbackShop = null) {
   window.location.href = url;
 }
 
+async function waitForAppBridge(timeout = 5000) {
+  const interval = 50;
+  const maxTries = timeout / interval;
+  let tries = 0;
+
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      if (window.appBridge && window.getSessionToken) return resolve(window.appBridge);
+      tries++;
+      if (tries >= maxTries) return reject(new Error("App Bridge not initialized"));
+      setTimeout(check, interval);
+    };
+    check();
+  });
+}
+
 export async function fetchWithAuth(url, options = {}) {
 
   // 1️⃣ Always try to get or reuse a Shopify session token
   let token = window.sessionToken || null;
   try {
+    await waitForAppBridge();
     const app = await getAppBridgeInstance();
     if (app) {
       token = await getSessionToken(app);
