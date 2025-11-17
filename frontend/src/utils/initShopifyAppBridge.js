@@ -1,9 +1,11 @@
+
+import { loadAppBridge } from "./loadAppBridge";
+import directory from "../directory";
+
 const createApp = window.ShopifyAppBridge.default;
 const Redirect = window.ShopifyAppBridge.actions.Redirect;
 const getSessionToken = window.ShopifyAppBridgeUtils.getSessionToken;
 
-import { loadAppBridge } from "./loadAppBridge";
-import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
  */
