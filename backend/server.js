@@ -1224,25 +1224,15 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <html>
         <head><meta charset="utf-8" /></head>
         <body>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
-            const AppBridge = window["app-bridge"];
-            const createApp = AppBridge.default || AppBridge;
-            const app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true,
-            });
-            const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(
-  AppBridge.actions.Redirect.Action.REMOTE,
-  "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com', '')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}"
-);
-
+            // Perform redirect WITHOUT loading App Bridge from CDN
+            window.top.location.href =
+              "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com','')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}";
           </script>
         </body>
       </html>
     `);
+    
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
