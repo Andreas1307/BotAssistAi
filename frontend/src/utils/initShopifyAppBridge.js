@@ -27,11 +27,10 @@ export function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_host", host);
   }
 
-  const embedded = window.top !== window.self;
-
-  // Only redirect if missing host AND we are in the OAuth install route.
   const isInstall = window.location.pathname.includes("/shopify/install");
+  const isEmbedded = window.top !== window.self;
 
+  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
   if (!host && isInstall) {
     const shopParam = encodeURIComponent(shop || "");
     window.top.location.href =
@@ -39,11 +38,13 @@ export function initShopifyAppBridge() {
     return null;
   }
 
+  // If still no host, wait
   if (!host) {
-    console.warn("Waiting for App Bridge CDN to inject host param...");
+    console.warn("⏳ No host param yet — waiting for Shopify redirect");
     return null;
   }
 
+  // Initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -51,7 +52,7 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("App Bridge initialized with host:", host);
+  console.log("✅ App Bridge initialized:", host);
 
   return app;
 }
