@@ -14,6 +14,7 @@ export function initShopifyAppBridge() {
   let shop = params.get("shop");
   let host = params.get("host");
 
+  // Restore from session
   if (!shop && sessionStorage.getItem("shopify_shop")) {
     shop = sessionStorage.getItem("shopify_shop");
   } else if (shop) {
@@ -26,17 +27,23 @@ export function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_host", host);
   }
 
-  // ❗ FIX for host-loss problem (causes Shopify 404)
-  if (!host) {
-    console.warn("❗ Missing host param — redirecting to top-level auth");
+  const embedded = window.top !== window.self;
 
+  // Only redirect if missing host AND we are in the OAuth install route.
+  const isInstall = window.location.pathname.includes("/shopify/install");
+
+  if (!host && isInstall) {
     const shopParam = encodeURIComponent(shop || "");
     window.top.location.href =
       `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
     return null;
   }
 
-  // Normal App Bridge initialization
+  if (!host) {
+    console.warn("Waiting for App Bridge CDN to inject host param...");
+    return null;
+  }
+
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -44,7 +51,8 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
-  console.log("✅ Shopify App Bridge initialized with host:", host);
+  console.log("App Bridge initialized with host:", host);
+
   return app;
 }
 
@@ -66,16 +74,6 @@ export function safeRedirect(url, fallbackShop = null) {
     return;
   }
 
-  // 🪟 If still inside iframe, bounce to your top-level domain (botassistai.com)
-  if (window.top !== window.self && shop) {
-    const bounce = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
-      shop
-    )}&target=${encodeURIComponent(url)}`;
-
-    console.log("🪟 Opening bounce in top context:", bounce);
-    window.open(bounce, "_top");
-    return;
-  }
 
   // Normal redirect
   window.location.href = url;
