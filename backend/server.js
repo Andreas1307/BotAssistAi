@@ -1275,6 +1275,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   
 });
 
+
+
 app.get("/debug/cookies", (req, res) => {
   res.json({
     headersCookie: req.headers.cookie || null,
