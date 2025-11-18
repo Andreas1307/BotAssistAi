@@ -18,9 +18,6 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify";
 import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
-import { getAppBridgeInstance } from "../utils/initShopifyAppBridge";
-import { Redirect } from "@shopify/app-bridge/actions";
-import { initAppBridge } from "../utils/app-bridge";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -63,7 +60,7 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    const app = initAppBridge();
+    const app = initShopifyAppBridge();
     if (app) {
       console.log("App Bridge Initialized ✔");
     }
