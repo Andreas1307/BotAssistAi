@@ -1236,7 +1236,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
             // Perform redirect WITHOUT loading App Bridge from CDN
             window.top.location.href =
-              "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com','')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}";
+  "https://botassistai.com/${username}/dashboard?shop=${session.shop}";
+
           </script>
         </body>
       </html>
