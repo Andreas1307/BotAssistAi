@@ -1229,21 +1229,21 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     res.status(200).send(`
       <!doctype html>
       <html>
-        <head><meta charset="utf-8" /></head>
+        <head>
+          <meta charset="utf-8" />
+          <script>
+            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+            window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
+          </script>
+        </head>
         <body>
           <script>
-           window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-    window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-            // Perform redirect WITHOUT loading App Bridge from CDN
-            window.top.location.href =
-  "https://botassistai.com/${username}/dashboard?shop=${session.shop}";
-
+            window.top.location.href = "https://botassistai.com/${username}/dashboard?shop=${session.shop}";
           </script>
         </body>
       </html>
-    `);
-    
-
+      `);
+      
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
