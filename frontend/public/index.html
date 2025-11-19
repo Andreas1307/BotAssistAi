@@ -15,26 +15,30 @@
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
 
-    <!-- Shopify requires this to exist statically -->
-    <script
-      src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-      data-shopify-app-init="false"
-    ></script>
-    
     <script>
-      window.__shouldInitAppBridge = false;
+      (function() {
+        const path = window.location.pathname;
     
-      const url = new URL(window.location.href);
-      const host = url.searchParams.get("host");
-      const isEmbedded = window.top !== window.self;
+        // ❌ Never load App Bridge on OAuth routes
+        if (
+          path.startsWith("/shopify/auth") ||
+          path.startsWith("/shopify/install") ||
+          path.startsWith("/shopify/callback") ||
+          path.startsWith("/shopify/top-level-auth")
+        ) {
+          console.warn("⛔ Blocking App Bridge on OAuth route:", path);
+          window.__BLOCK_SHOPIFY_APP_BRIDGE__ = true;
+          return;
+        }
     
-      // Enable App Bridge only when we're inside Shopify admin
-      if (host && isEmbedded) {
-        window.__shouldInitAppBridge = true;
-      }
+        // ✔ load App Bridge normally ONLY inside embedded app
+        const script = document.createElement("script");
+        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        document.head.appendChild(script);
+      })();
     </script>
     
-
+  
 
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
