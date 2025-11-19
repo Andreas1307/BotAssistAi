@@ -17,13 +17,21 @@
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
 
     <script>
-      // Only load App Bridge inside Shopify admin iframe
-      if (window !== window.top && window.Shopify && Shopify.shop) {
-        var script = document.createElement("script");
-        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-        document.head.appendChild(script);
+      // Disable App Bridge ONLY on OAuth/redirect pages
+      const path = window.location.pathname;
+    
+      if (
+        path.startsWith('/shopify/top-level-auth') ||
+        path.startsWith('/shopify/auth') ||
+        path.startsWith('/shopify/install') ||
+        path.startsWith('/shopify/callback')
+      ) {
+        window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
       }
     </script>
+    
+    <!-- Shopify requires this script to appear statically -->
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     
 
 
