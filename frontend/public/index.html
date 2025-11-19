@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    
-
 
     <meta charset="utf-8" />
 
@@ -16,6 +14,17 @@
     />
 
 
+    <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
+
+    <script>
+      // Only load App Bridge inside Shopify admin iframe
+      if (window !== window.top && window.Shopify && Shopify.shop) {
+        var script = document.createElement("script");
+        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        document.head.appendChild(script);
+      }
+    </script>
+    
 
 
     
