@@ -13,27 +13,26 @@
       content="Web site created using create-react-app"
     />
 
-
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script>
-      (function() {
-        const url = new URL(window.location.href);
-        const host = url.searchParams.get("host");
-        const isEmbedded = (window.top !== window.self);
-      
-        // Load App Bridge ONLY inside Shopify Admin iframe
-        if (host && isEmbedded) {
-          const script = document.createElement("script");
-          script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-          script.async = true;
-          document.head.appendChild(script);
-        }
-      })();
-      </script>
-      
+
+    <!-- Shopify requires this to exist statically -->
+    <script
+      src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
+      data-shopify-app-init="false"
+    ></script>
     
-
-
+    <script>
+      window.__shouldInitAppBridge = false;
+    
+      const url = new URL(window.location.href);
+      const host = url.searchParams.get("host");
+      const isEmbedded = window.top !== window.self;
+    
+      // Enable App Bridge only when we're inside Shopify admin
+      if (host && isEmbedded) {
+        window.__shouldInitAppBridge = true;
+      }
+    </script>
     
 
 
