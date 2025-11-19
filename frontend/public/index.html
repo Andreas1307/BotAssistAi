@@ -15,23 +15,18 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-
     <script>
-      // Disable App Bridge ONLY on OAuth/redirect pages
-      const path = window.location.pathname;
+      // Only load App Bridge inside Shopify Admin iframe OR when host param exists
+      const url = new URL(window.location.href);
+      const host = url.searchParams.get("host");
+      const isEmbedded = window.top !== window.self;
     
-      if (
-        path.startsWith('/shopify/top-level-auth') ||
-        path.startsWith('/shopify/auth') ||
-        path.startsWith('/shopify/install') ||
-        path.startsWith('/shopify/callback')
-      ) {
-        window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+      if (host && isEmbedded) {
+        const script = document.createElement("script");
+        script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+        document.head.appendChild(script);
       }
     </script>
-    
-    <!-- Shopify requires this script to appear statically -->
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     
 
 
