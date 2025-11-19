@@ -15,21 +15,24 @@
 
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <script>
-      function isShopifyEmbedded() {
-        const url = new URL(window.location.href);
-        const host = url.searchParams.get("host");
-        const embedded = (window.top !== window.self);
+      const url = new URL(window.location.href);
+      const host = url.searchParams.get("host");
+      const isEmbedded = window.top !== window.self;
     
-        return host && embedded;
+      // Disable App Bridge unless embedded inside Shopify Admin
+      if (!host || !isEmbedded) {
+        window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
       }
+    </script>
     
-      // Prevent Shopify App Bridge from auto-initializing and breaking your app
-      if (!isShopifyEmbedded()) {
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    
+    <script>
+      // Safety cleanup so Shopify script can't auto-redirect
+      if (window.__SHOPIFY_APP_BRIDGE_DISABLED__) {
         window.appBridge = undefined;
         window.ShopifyApp = undefined;
-        window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
       }
     </script>
     
