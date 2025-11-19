@@ -14,24 +14,24 @@
     />
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-<!-- Required by Shopify embedded app scanner -->
+<!-- Required by Shopify Embedded App Scanner -->
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 
 <script>
-  // 🔒 Stop App Bridge from auto-initializing BEFORE React loads
-  window.__SHOPIFY_BLOCK_APP_BRIDGE__ = true;
+  // Prevent App Bridge from auto-initializing until React is ready
+  window.__SHOPIFY_PREVENT_AUTO_INIT__ = true;
 
-  // Shopify scanner sees the script and passes ✔
-  // Your app won't break because we override its global init hooks
+  // Monkey patch createApp so it doesn't crash during install OAuth
   window.shopify = window.shopify || {};
-  window.shopify.app = window.shopify.app || {
-      createApp: () => {
-        if (window.__SHOPIFY_BLOCK_APP_BRIDGE__) {
-          return {}; // return harmless stub
-        }
-      }
+  window.shopify.app = window.shopify.app || {};
+  window.shopify.app.createApp = function(config) {
+    if (window.__SHOPIFY_PREVENT_AUTO_INIT__) {
+      return {}; // harmless stub
+    }
+    return window.ShopifyAppBridge.default(config);
   };
 </script>
+
 
     
   
