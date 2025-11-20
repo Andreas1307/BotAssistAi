@@ -1300,7 +1300,6 @@ app.get("/debug/cookies", (req, res) => {
 
 
 
-
 app.post('/shopify/session-attach', verifySessionToken, (req, res) => {
   console.log("📦 Received body in session-attach:", req.body);
 
