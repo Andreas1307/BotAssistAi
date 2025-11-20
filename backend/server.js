@@ -1212,16 +1212,16 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <head><meta charset="utf-8" /></head>
         <body>
           <script>
-           window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-    window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-    window.top.location.assign('/?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}');
-      
-    </script>
+            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+            window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
+    
+            // ✅ Redirect to YOUR REACT FRONTEND DASHBOARD
+            window.top.location.assign("${dashboardUrl}");
+          </script>
         </body>
       </html>
     `);
     
-
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
