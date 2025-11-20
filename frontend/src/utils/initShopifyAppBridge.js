@@ -27,16 +27,24 @@ export async function initShopifyAppBridge() {
     sessionStorage.setItem("shopify_host", host);
   }
 
-  const isInstall = window.location.pathname.includes("/shopify/install");
-  const isEmbedded = window.top !== window.self;
+  const isInstall = window.location.pathname.startsWith("/shopify/install");
 
-  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
-  if (!host && isInstall) {
+
+// Only redirect to top-level-auth during INSTALL flow
+if (isInstall) {
+  if (!host) {
     const shopParam = encodeURIComponent(shop || "");
     window.top.location.href =
       `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
     return null;
   }
+}
+if (!isInstall && !host) {
+  console.log("Dashboard loaded in iframe — no host yet but not installing.");
+  return null; // do NOTHING
+}
+
+
 
   // If still no host, wait
   if (!host) {
