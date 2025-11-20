@@ -9,7 +9,17 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export function initShopifyAppBridge() {
+function loadRealAppBridge() {
+  return new Promise(resolve => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+    script.onload = () => resolve();
+    document.body.appendChild(script);
+  });
+}
+
+
+export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
   let host = params.get("host");
@@ -44,6 +54,7 @@ export function initShopifyAppBridge() {
     return null;
   }
 
+  await loadRealAppBridge();
   // Initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
