@@ -14,22 +14,7 @@
     />
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script>
-      // Detect if inside Shopify iframe
-      const isEmbedded = (window.top !== window.self);
-    
-      if (!isEmbedded) {
-        // Only block App Bridge on public website
-        window.__SHOPIFY_BLOCK_APP_BRIDGE__ = true;
-    
-        window.shopify = window.shopify || {};
-        window.shopify.app = window.shopify.app || {
-          createApp() { return {}; }
-        };
-      }
-    </script>
-    
-
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 
 
     
