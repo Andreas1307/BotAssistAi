@@ -1046,16 +1046,7 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    if (!res.headersSent) {
-      const cookies = res.getHeader("set-cookie") || [];
-      const widenedCookies = cookies.map(c =>
-        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
-      );
-      res.setHeader("set-cookie", widenedCookies);
-      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
-    } else {
-      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
-    }
+    
 
   } catch (err) {
     console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
@@ -1101,19 +1092,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
 
-    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
-      console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
-      const shop = req.query.shop;
-      return res.status(200).send(`
-        <html><body>
-          <script>
-            const target = "${abs(`/shopify/top-level-auth?shop=${encodeURIComponent(req.query.shop)}`)}";
-            if (window.top === window.self) window.location.href = target;
-            else window.top.location.href = target;
-          </script>
-        </body></html>
-      `);
-    }
     
   
     const cookieHeader = req.headers.cookie || "";
@@ -1285,7 +1263,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
-
 
 
 app.get("/debug/cookies", (req, res) => {
