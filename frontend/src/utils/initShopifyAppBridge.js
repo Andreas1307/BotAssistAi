@@ -10,6 +10,17 @@ function isEmbedded() {
 }
 
 
+async function loadRealAppBridge() {
+  return new Promise(resolve => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+    script.onload = resolve;
+    document.body.appendChild(script);
+  });
+}
+
+
+
 export async function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
@@ -44,6 +55,14 @@ export async function initShopifyAppBridge() {
     console.warn("⏳ No host param yet — waiting for Shopify redirect");
     return null;
   }
+
+  if (window.top !== window.self) {
+    console.log("🧩 Embedded app detected — loading Shopify App Bridge CDN");
+    await loadRealAppBridge();
+  } else {
+    console.log("🌐 Public website — App Bridge is not needed");
+  }
+  
 
   // Initialize App Bridge
   const app = createApp({

@@ -14,24 +14,21 @@
     />
 
     <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-<!-- Fake App Bridge loader for Shopify app scanner -->
-<script>
-  window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-  window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-
-  // Prevent real App Bridge auto initialization
-  window.__SHOPIFY_BLOCK_APP_BRIDGE__ = true;
-
-  // Shopify scanner only checks if "shopify.app" exists
-  window.shopify = window.shopify || {};
-  window.shopify.app = window.shopify.app || {
-    createApp() {
-      if (window.__SHOPIFY_BLOCK_APP_BRIDGE__) {
-        return {}; // return a safe dummy object
+    <script>
+      // Detect if inside Shopify iframe
+      const isEmbedded = (window.top !== window.self);
+    
+      if (!isEmbedded) {
+        // Only block App Bridge on public website
+        window.__SHOPIFY_BLOCK_APP_BRIDGE__ = true;
+    
+        window.shopify = window.shopify || {};
+        window.shopify.app = window.shopify.app || {
+          createApp() { return {}; }
+        };
       }
-    }
-  };
-</script>
+    </script>
+    
 
 
 
