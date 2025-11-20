@@ -995,8 +995,10 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
     httpOnly: false,
     secure: true,
     sameSite: "None",
+    domain: "api.botassistai.com",
     path: "/",
   });
+  
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
   res.send(`
@@ -1212,10 +1214,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
           <script>
            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
     window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-            // Perform redirect WITHOUT loading App Bridge from CDN
-            window.top.location.href =
-              "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com','')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}";
-          </script>
+    window.top.location.assign('/?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}');
+      
+    </script>
         </body>
       </html>
     `);

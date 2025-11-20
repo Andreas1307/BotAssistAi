@@ -26,23 +26,12 @@ export async function initShopifyAppBridge() {
   } else if (host) {
     sessionStorage.setItem("shopify_host", host);
   }
-
-  const isInstall = window.location.pathname.startsWith("/shopify/install");
-
-
-// Only redirect to top-level-auth during INSTALL flow
-if (isInstall) {
-  if (!host) {
-    const shopParam = encodeURIComponent(shop || "");
+  
+  if (!isEmbedded() && window.location.pathname === "/shopify/install" && !host) {
     window.top.location.href =
-      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
+      `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
     return null;
   }
-}
-if (!isInstall && !host) {
-  console.log("Dashboard loaded in iframe — no host yet but not installing.");
-  return null; // do NOTHING
-}
 
 
 
