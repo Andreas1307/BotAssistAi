@@ -1235,9 +1235,10 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
     window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
             // Perform redirect WITHOUT loading App Bridge from CDN
-            window.top.location.href =
-              "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com','')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}";
-          </script>
+         window.top.location.href =
+  "https://api.botassistai.com/shopify/launch?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}";
+
+            </script>
         </body>
       </html>
     `);
@@ -1285,6 +1286,24 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
+app.get("/shopify/launch", (req, res) => {
+  const { shop, host } = req.query;
+
+  if (!shop || !host) return res.status(400).send("Missing shop or host");
+
+  res.send(`
+    <html>
+      <body>
+        <script>
+          window.location.href =
+            "https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/botassistai?shop=${shop}&host=${host}";
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 
 
 
