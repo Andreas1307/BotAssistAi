@@ -13,7 +13,16 @@ function loadRealAppBridge() {
   return new Promise(resolve => {
     const script = document.createElement("script");
     script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-    script.onload = () => resolve();
+    script.onload = () => {
+      // React has loaded → enable real App Bridge
+      window.__SHOPIFY_BLOCK_APP_BRIDGE__ = false;
+
+      if (window.__originalCreateApp) {
+        window.shopify.app.createApp = window.__originalCreateApp;
+      }
+
+      resolve();
+    };
     document.body.appendChild(script);
   });
 }
