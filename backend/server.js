@@ -42,8 +42,6 @@ const pool = createPool({
   connectionLimit: 5,
   queueLimit: 0,
   connectTimeout: 10000,
-  acquireTimeout: 10000,
-  timeout: 10000
 }).promise();
 
 const verifySessionToken = require('./verifySessionToken');
@@ -982,9 +980,6 @@ app.get("/shopify/top-level-auth", (req, res) => {
   res.send(`
     <html><body>
   <script>
-    window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-    window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-
     window.top.location.href = "${redirectUrl}";
   </script>
 </body></html>
@@ -1011,8 +1006,6 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
   res.send(`
     <html><body>
       <script>
-       window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-    window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
 
         const target = "${installUrl}";
         if (window.top === window.self) {
@@ -1219,10 +1212,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <head><meta charset="utf-8" /></head>
         <body>
           <script>
-            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-            window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-    
-            // ✅ Redirect to YOUR REACT FRONTEND DASHBOARD
             window.top.location.assign("${dashboardUrl}");
           </script>
         </body>
