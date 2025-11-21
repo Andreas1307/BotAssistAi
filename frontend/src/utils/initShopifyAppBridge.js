@@ -26,12 +26,13 @@ export async function initShopifyAppBridge() {
   } else if (host) {
     sessionStorage.setItem("shopify_host", host);
   }
-  
-  if (!isEmbedded() && window.location.pathname === "/shopify/install" && !host) {
-    window.top.location.href =
-      `https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
-    return null;
-  }
+
+  // ❌ DO NOT RUN THIS ON THE FRONTEND
+// /shopify/install belongs to the backend only — React should ignore it entirely
+if (window.location.pathname.startsWith("/shopify")) {
+  console.log("⏸️ Skipping App Bridge — backend Shopify route");
+  return null;
+}
 
 
 
