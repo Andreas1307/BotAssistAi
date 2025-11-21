@@ -74,13 +74,14 @@ app.use(session({
   }
 }));
 
+/*
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true // ⚠️ NO cookies allowed here
 }));
-
+*/
 const allowedOrigins = [
   'https://www.botassistai.com',
   'https://botassistai.com',
@@ -91,15 +92,15 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    const allowed = allowedOrigins.some(o =>
-      o instanceof RegExp ? o.test(origin) : o === origin
-    );
-    callback(null, allowed);
-  },
+  origin: [
+    "https://www.botassistai.com",
+    "https://botassistai.com",
+    /\.myshopify\.com$/,
+    "https://admin.shopify.com"
+  ],
   credentials: true,
 }));
+
 
 app.use((req, res, next) => {
   if (
