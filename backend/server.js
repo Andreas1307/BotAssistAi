@@ -34,11 +34,18 @@ const ivLength = 16;
 const axios = require('axios');
 const chrono = require('chrono-node');
 const pool = createPool({
-host: process.env.DATABASE_HOST,
-user: process.env.DATABASE_USER,
-password: process.env.DATABASE_PASSWORD,
-database: process.env.DATABASE
+  host: process.env.DATABASE_HOST,
+  user: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE,
+  waitForConnections: true,
+  connectionLimit: 5,
+  queueLimit: 0,
+  connectTimeout: 10000,
+  acquireTimeout: 10000,
+  timeout: 10000
 }).promise();
+
 const verifySessionToken = require('./verifySessionToken');
 const fetchWebhooks = require('./fetchWebhooks');
 const { shopify } = require('./shopify');
