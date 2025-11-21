@@ -74,14 +74,13 @@ app.use(session({
   }
 }));
 
-/*
 app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true // ⚠️ NO cookies allowed here
 }));
-*/
+
 const allowedOrigins = [
   'https://www.botassistai.com',
   'https://botassistai.com',
@@ -92,15 +91,15 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: [
-    "https://www.botassistai.com",
-    "https://botassistai.com",
-    /\.myshopify\.com$/,
-    "https://admin.shopify.com"
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some(o =>
+      o instanceof RegExp ? o.test(origin) : o === origin
+    );
+    callback(null, allowed);
+  },
   credentials: true,
 }));
-
 
 app.use((req, res, next) => {
   if (
@@ -981,6 +980,9 @@ app.get("/shopify/top-level-auth", (req, res) => {
   res.send(`
     <html><body>
   <script>
+    window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+    window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
+
     window.top.location.href = "${redirectUrl}";
   </script>
 </body></html>
@@ -1007,6 +1009,8 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
   res.send(`
     <html><body>
       <script>
+       window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+    window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
 
         const target = "${installUrl}";
         if (window.top === window.self) {
@@ -1213,6 +1217,10 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <head><meta charset="utf-8" /></head>
         <body>
           <script>
+            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+            window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
+    
+            // ✅ Redirect to YOUR REACT FRONTEND DASHBOARD
             window.top.location.assign("${dashboardUrl}");
           </script>
         </body>
