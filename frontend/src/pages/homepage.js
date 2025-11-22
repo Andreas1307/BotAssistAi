@@ -18,8 +18,6 @@ import directory from '../directory';
 import axios from "../utils/axiosShopify";
 import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
-import { getAppBridgeInstance } from "../utils/initShopifyAppBridge";
-import { Redirect } from "@shopify/app-bridge/actions";
 
 const Homepage = () => {
   const [stars, setStars] = useState([]);
@@ -70,20 +68,7 @@ const Homepage = () => {
     if (!shopParam) {
       console.warn("❌ Missing shop parameter in URL");
       return;
-    }
-    if (!document.cookie.includes("shopify_toplevel")) {
-      // 🧭 Bounce through your API domain (not the frontend domain!)
-      const bounceUrl = `https://api.botassistai.com/shopify/bounce?shop=${encodeURIComponent(
-        shopParam
-      )}&target=${encodeURIComponent(`${directory}/shopify/auth?shop=${shopParam}`)}`;
-    
-      console.log("🪟 Forcing top-level breakout via backend bounce:", bounceUrl);
-    
-      // ✅ Must always use _top to break out of iframe
-      window.open(bounceUrl, "_top");
-      return;
-    }
-    
+    }   
     
     // Initialize Shopify App Bridge
     (async () => {
@@ -170,7 +155,6 @@ const Homepage = () => {
   
     checkShop();
   }, [appBridgeReady]); 
-  
   
  /*
   const redirectToInstall = async (shop) => {
