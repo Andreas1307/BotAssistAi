@@ -16,7 +16,7 @@ import HowItWorks from "../components/howItWorks"
 import Faq from "../components/faq"
 import directory from '../directory';
 import axios from "../utils/axiosShopify";
-//import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
+import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import { Helmet } from "react-helmet";
 
 const Homepage = () => {
