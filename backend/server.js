@@ -1204,6 +1204,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
+    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
 
     res.send(`
       <!DOCTYPE html>
@@ -1217,10 +1218,10 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <body>
           <script>
             (function() {
-              // Try to redirect via App Bridge if host is available
               const host = "${host}";
               const shop = "${shop}";
-              const dashboard = "${dashboardUrl}";
+              const dashboard = "${dashboardUrlEscaped}";
+              
               if (host) {
                 try {
                   const createApp = window['app-bridge'].default;
@@ -1233,17 +1234,17 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
                   window.top.location.href = dashboard;
                 }
               } else {
-                // No host → fallback top-level redirect
                 window.top.location.href = dashboard;
               }
             })();
           </script>
           <noscript>
-            Redirect failed. Please <a href="${dashboard}" target="_top">click here</a>.
+            Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
           </noscript>
         </body>
       </html>
     `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
