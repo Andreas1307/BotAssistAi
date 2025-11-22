@@ -1204,29 +1204,42 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-    
-    res.status(200).send(`
+
+    res.send(`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8"/>
           <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
         </head>
         <body>
           <script>
-            // ✅ Ensure top-level redirect inside Shopify admin iframe
-            function redirect() {
-              const url = "${dashboardUrl}";
-              if (window.top === window.self) {
-                window.location.href = url;
+            (function() {
+              // Try to redirect via App Bridge if host is available
+              const host = "${host}";
+              const shop = "${shop}";
+              const dashboard = "${dashboardUrl}";
+              if (host) {
+                try {
+                  const createApp = window['app-bridge'].default;
+                  const Redirect = window['app-bridge'].actions.Redirect;
+                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+                  const redirect = Redirect.create(app);
+                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
+                } catch(e) {
+                  console.warn("App Bridge redirect failed, fallback to top-level:", e);
+                  window.top.location.href = dashboard;
+                }
               } else {
-                window.top.location.href = url;
+                // No host → fallback top-level redirect
+                window.top.location.href = dashboard;
               }
-            }
-            redirect();
+            })();
           </script>
           <noscript>
-            OAuth completed. Please <a href="${dashboardUrl}" target="_top">click here</a> to continue.
+            Redirect failed. Please <a href="${dashboard}" target="_top">click here</a>.
           </noscript>
         </body>
       </html>
