@@ -1204,16 +1204,30 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-
+    
     res.status(200).send(`
-      <!doctype html>
+      <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8" /></head>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Redirecting...</title>
+        </head>
         <body>
           <script>
-            // ✅ Redirect to YOUR REACT FRONTEND DASHBOARD
-            window.top.location.assign("${dashboardUrl}");
+            // ✅ Ensure top-level redirect inside Shopify admin iframe
+            function redirect() {
+              const url = "${dashboardUrl}";
+              if (window.top === window.self) {
+                window.location.href = url;
+              } else {
+                window.top.location.href = url;
+              }
+            }
+            redirect();
           </script>
+          <noscript>
+            OAuth completed. Please <a href="${dashboardUrl}" target="_top">click here</a> to continue.
+          </noscript>
         </body>
       </html>
     `);
