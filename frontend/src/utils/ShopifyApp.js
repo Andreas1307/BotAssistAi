@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { initShopifyAppBridge, safe } from "./initShopifyAppBridge.js";
+import { initShopifyAppBridge, safeRedirect } from "./initShopifyAppBridge.js";
 
 export default function ShopifyApp() {
   useEffect(() => {
