@@ -964,7 +964,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
   res.sendStatus(200);
 });
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -976,23 +975,15 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  // ✅ Redirect to our top-level redirect page first
-  const bounceUrl = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(shop)}&target=${encodeURIComponent(
-    `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`
-  )}`;
+  const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
-  res.setHeader("Content-Type", "text/html");
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-        <h3>Redirecting to Shopify OAuth…</h3>
-        <script>
-          console.log("Redirecting via bounce page:", ${JSON.stringify(bounceUrl)});
-          window.top.location.href = ${JSON.stringify(bounceUrl)};
-        </script>
-      </body>
-    </html>
+    <html><body>
+  <script>
+    window.top.location.href = "${redirectUrl}";
+  </script>
+</body></html>
+
   `);
 });
 
@@ -1006,8 +997,10 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
     httpOnly: false,
     secure: true,
     sameSite: "None",
+    domain: ".botassistai.com",
     path: "/",
   });
+  
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
   res.send(`
@@ -1054,18 +1047,7 @@ app.get("/shopify/install", async (req, res) => {
       rawResponse: res,
     });
 
-    // 🧠 Important: we must not touch headers after this point
-    // So the rest runs only if headers weren't sent yet
-    if (!res.headersSent) {
-      const cookies = res.getHeader("set-cookie") || [];
-      const widenedCookies = cookies.map(c =>
-        c.replace("Path=/shopify/callback", "Path=/; SameSite=None; Secure")
-      );
-      res.setHeader("set-cookie", widenedCookies);
-      console.log("🍪 [INSTALL] Widened OAuth cookies:", widenedCookies);
-    } else {
-      console.log("ℹ️ [INSTALL] Headers already sent by Shopify OAuth redirect.");
-    }
+    
 
   } catch (err) {
     console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
@@ -1111,19 +1093,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
 
-    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_app_state")) {
-      console.warn("⚠️ Missing app_state cookie — restarting top-level auth.");
-      const shop = req.query.shop;
-      return res.status(200).send(`
-        <html><body>
-          <script>
-            const target = "${abs(`/shopify/top-level-auth?shop=${encodeURIComponent(req.query.shop)}`)}";
-            if (window.top === window.self) window.location.href = target;
-            else window.top.location.href = target;
-          </script>
-        </body></html>
-      `);
-    }
     
   
     const cookieHeader = req.headers.cookie || "";
@@ -1241,26 +1210,14 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <html>
         <head><meta charset="utf-8" /></head>
         <body>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
           <script>
-            const AppBridge = window["app-bridge"];
-            const createApp = AppBridge.default || AppBridge;
-            const app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true,
-            });
-            const Redirect = AppBridge.actions.Redirect.create(app);
-            Redirect.dispatch(
-  AppBridge.actions.Redirect.Action.REMOTE,
-  "https://admin.shopify.com/store/${session.shop.replace('.myshopify.com', '')}/apps/botassistai?shop=${session.shop}&host=${encodeURIComponent(req.query.host)}"
-);
-
+            // ✅ Redirect to YOUR REACT FRONTEND DASHBOARD
+            window.top.location.assign("${dashboardUrl}");
           </script>
         </body>
       </html>
     `);
-
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
@@ -1276,6 +1233,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
           <head><meta charset="utf-8"/></head>
           <body>
             <script>
+             window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+  window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
               console.warn("OAuth cookie missing — restarting top-level auth");
               // If we are in an iframe, force top window to call top-level-auth
               const target = "${abs('/shopify/top-level-auth?shop=')}" + encodeURIComponent("${shop}");
@@ -1301,6 +1260,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
