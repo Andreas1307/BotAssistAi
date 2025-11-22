@@ -9,38 +9,55 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export async function initShopifyAppBridge() {
-
-  if (window.top === window.self) {
-    console.log("⏸️ Not embedded — skipping App Bridge init");
-    return null;
-  }
-
+export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
   let host = params.get("host");
 
-if (window.location.pathname.startsWith("/shopify")) {
-  console.log("⏸️ Skipping App Bridge — backend Shopify route");
-  return null;
-}
+  if (!shop && sessionStorage.getItem("shopify_shop")) {
+    shop = sessionStorage.getItem("shopify_shop");
+  } else if (shop) {
+    sessionStorage.setItem("shopify_shop", shop);
+  }
 
+  if (!host && sessionStorage.getItem("shopify_host")) {
+    host = sessionStorage.getItem("shopify_host");
+  } else if (host) {
+    sessionStorage.setItem("shopify_host", host);
+  }
 
-
+  // 🔹 Only break out if this is FIRST install (no host + path includes /install)
+  const embedded = window.top !== window.self;
+  const isInstall = window.location.pathname.includes("/shopify/install");
+  if (embedded && !host && isInstall) {
+    const shopParam = encodeURIComponent(shop || "");
+    
+    // ✅ Step 1: bounce to your top-level domain first
+    const bounceUrl = `https://botassistai.com/redirect.html?shop=${shopParam}&target=${encodeURIComponent(
+      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`
+    )}`;
+  
+    console.log("🪟 Breaking out of iframe safely via redirect.html:", bounceUrl);
+  
+    // ✅ Step 2: open bounce in top-level window
+    window.open(bounceUrl, "_top");
+    return null;
+  }
+  
   if (!host) {
-    console.warn("⏳ No host param yet — waiting for Shopify redirect");
+    console.warn("⚠️ Missing host; waiting until host param is available");
     return null;
   }
 
+  // ✅ Init App Bridge normally
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: false,
+    forceRedirect: true,
   });
 
   window.appBridge = app;
-  console.log("✅ App Bridge initialized:", host);
-
+  console.log("✅ Shopify App Bridge initialized with host:", host);
   return app;
 }
 
@@ -62,6 +79,16 @@ export function safeRedirect(url, fallbackShop = null) {
     return;
   }
 
+  // 🪟 If still inside iframe, bounce to your top-level domain (botassistai.com)
+  if (window.top !== window.self && shop) {
+    const bounce = `https://botassistai.com/redirect.html?shop=${encodeURIComponent(
+      shop
+    )}&target=${encodeURIComponent(url)}`;
+
+    console.log("🪟 Opening bounce in top context:", bounce);
+    window.open(bounce, "_top");
+    return;
+  }
 
   // Normal redirect
   window.location.href = url;
