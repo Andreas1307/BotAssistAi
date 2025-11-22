@@ -60,11 +60,10 @@ const Homepage = () => {
 
 
   useEffect(() => {
-    const app = initShopifyAppBridge();
-    if (app) {
-      console.log("App Bridge Initialized ✔");
-    }
+    if (!window.location.search.includes("host=")) return;
+    initShopifyAppBridge();
   }, []);
+  
   
 /*
   useEffect(() => {
