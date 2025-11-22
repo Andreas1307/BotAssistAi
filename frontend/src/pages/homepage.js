@@ -58,14 +58,8 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  
 
-  useEffect(() => {
-    if (!window.location.search.includes("host=")) return;
-    initShopifyAppBridge();
-  }, []);
-  
-  
-/*
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
@@ -162,7 +156,7 @@ const Homepage = () => {
   
     checkShop();
   }, [appBridgeReady]); 
-  */
+  
   
   
   
