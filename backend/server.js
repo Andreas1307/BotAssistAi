@@ -2230,26 +2230,14 @@ try {
 
 
 app.get("/shopify/bounce", (req, res) => {
-  const shop = req.query.shop;
-  const target = req.query.target;
-  const safeTarget = target
-    ? decodeURIComponent(target)
-    : `https://${shop}/admin/apps/botassistai?shop=${shop}`;
-
-  res.setHeader("Content-Type", "text/html");
+  const { shop, target } = req.query;
+  if (!shop || !target) return res.status(400).send("Missing params");
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-        <h3>Redirecting safely…</h3>
-        <script>
-          const target = ${JSON.stringify(safeTarget)};
-          console.log("Redirecting to", target);
-          // ✅ At this point, we’re already outside admin.shopify.com
-          window.location.href = target;
-        </script>
-      </body>
-    </html>
+    <html><body>
+      <script>
+        window.top.location.href = "${target}";
+      </script>
+    </body></html>
   `);
 });
 
