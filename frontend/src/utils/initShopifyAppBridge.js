@@ -10,25 +10,16 @@ function isEmbedded() {
 }
 
 export async function initShopifyAppBridge() {
+
+  if (window.top === window.self) {
+    console.log("⏸️ Not embedded — skipping App Bridge init");
+    return null;
+  }
+
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
   let host = params.get("host");
 
-  // Restore from session
-  if (!shop && sessionStorage.getItem("shopify_shop")) {
-    shop = sessionStorage.getItem("shopify_shop");
-  } else if (shop) {
-    sessionStorage.setItem("shopify_shop", shop);
-  }
-
-  if (!host && sessionStorage.getItem("shopify_host")) {
-    host = sessionStorage.getItem("shopify_host");
-  } else if (host) {
-    sessionStorage.setItem("shopify_host", host);
-  }
-
-  // ❌ DO NOT RUN THIS ON THE FRONTEND
-// /shopify/install belongs to the backend only — React should ignore it entirely
 if (window.location.pathname.startsWith("/shopify")) {
   console.log("⏸️ Skipping App Bridge — backend Shopify route");
   return null;
@@ -36,7 +27,6 @@ if (window.location.pathname.startsWith("/shopify")) {
 
 
 
-  // If still no host, wait
   if (!host) {
     console.warn("⏳ No host param yet — waiting for Shopify redirect");
     return null;
@@ -45,7 +35,7 @@ if (window.location.pathname.startsWith("/shopify")) {
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true,
+    forceRedirect: false,
   });
 
   window.appBridge = app;
