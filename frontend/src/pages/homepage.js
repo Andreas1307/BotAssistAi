@@ -66,7 +66,7 @@ const Homepage = () => {
     }
   }, []);
   
-
+/*
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
@@ -163,7 +163,7 @@ const Homepage = () => {
   
     checkShop();
   }, [appBridgeReady]); 
-  
+  */
   
   
   
