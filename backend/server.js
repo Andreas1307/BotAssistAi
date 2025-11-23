@@ -747,27 +747,27 @@ const handleSendNewUserEmail = async (rawKey, email) => {
     to: email,
     subject: "Your Account Password for Our App",
     html: `
-    <div style="margin:0; padding:0; background:#0f0f0f; width:100%; font-family: 'Segoe UI', sans-serif;">
+    <div style="margin:0; padding:0; background:#f2f2f2; width:100%; font-family: 'Segoe UI', sans-serif;">
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; margin:auto; padding:40px 20px;">
         <tr>
           <td>
             <!-- Card -->
             <div style="
-              background: linear-gradient(145deg, rgba(25,25,25,0.9), rgba(10,10,10,0.95));
+              background: #fff;
               padding:40px 30px;
               border-radius:22px;
-              border:1px solid rgba(255,255,255,0.08);
-              box-shadow:0 25px 50px rgba(0,0,0,0.45), 0 0 20px rgba(0,245,212,0.12);
+              border:1px solid #dfdfdf;
+              box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.2);
               backdrop-filter:blur(12px);
               text-align:center;
             ">
               
               <!-- Logo -->
-              <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:25px; border-radius:14px;" />
+              <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:20px; border-radius:11px;" />
   
               <!-- Heading -->
-              <h1 style="color:#ffffff; font-size:30px; font-weight:700; margin:0 0 18px;">
-                Welcome to BotAssist AI
+              <h1 style="color:#ffffff; font-size:32px; font-weight:700; margin:0 0 15px;">
+                Welcome to BotAssistAI
               </h1>
   
               <!-- Subheading -->
@@ -778,34 +778,34 @@ const handleSendNewUserEmail = async (rawKey, email) => {
   
               <!-- Password Box -->
               <div style="
-                background:rgba(0,245,212,0.12);
-                border:1px solid rgba(0,245,212,0.35);
-                color:#00F5D4;
+                background: #00f5d4;
+                border:1px solid #f9f9f9;
+                color:#fff;
                 font-size:20px;
                 font-weight:600;
-                padding:14px 20px;
+                padding:11px 22px;
                 border-radius:14px;
                 display:inline-block;
-                margin-bottom:28px;
+                margin-bottom:23px;
                 letter-spacing:0.5px;
               ">
                 ${rawKey}
               </div>
   
               <!-- Message -->
-              <p style="color:#bfbfbf; font-size:15px; line-height:1.6; margin-bottom:35px;">
+              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:25px;">
                 For security, we strongly recommend updating your password once you sign in to your dashboard.
               </p>
   
               <!-- Divider -->
-              <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 32px; border-radius:2px;"></div>
+              <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 27px; border-radius:2px;"></div>
   
               <!-- Support -->
-              <p style="font-size:14px; color:#dcdcdc; margin:0 0 15px;">
+              <p style="font-size:14px; color:#333; margin:0 0 15px;">
                 Need help? Our team is here for you:
               </p>
   
-              <a href="mailto:support@botassistai.com" style="color:#00F5D4; font-size:15px; text-decoration:none; font-weight:600;">
+              <a href="mailto:support@botassistai.com" style="color:#00F5D4; font-size:15.5px; text-decoration:none; font-weight:600;">
                 support@botassistai.com
               </a>
   
@@ -826,7 +826,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               </div>
   
               <!-- Footer -->
-              <p style="font-size:11px; color:#7b7b7b; margin-top:30px; line-height:1.5;">
+              <p style="font-size:11px; color:#444; margin-top:30px; line-height:1.5;">
                 You received this email because you created an account with BotAssist AI.<br>
                 If you wish to unsubscribe, click 
                 <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
