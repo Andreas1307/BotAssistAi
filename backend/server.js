@@ -766,12 +766,12 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:20px; border-radius:11px;" />
   
               <!-- Heading -->
-              <h1 style="color:#ffffff; font-size:32px; font-weight:700; margin:0 0 15px;">
+              <h1 style="color:#222; font-size:32px; font-weight:700; margin:0 0 15px;">
                 Welcome to BotAssistAI
               </h1>
   
               <!-- Subheading -->
-              <p style="color:#dcdcdc; font-size:16px; line-height:1.6; margin:0 0 25px;">
+              <p style="color:#333; font-size:16px; line-height:1.6; margin:0 0 25px;">
                 Your account has been successfully created.<br>
                 Below is your secure temporary password:
               </p>
@@ -783,7 +783,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
                 color:#fff;
                 font-size:20px;
                 font-weight:600;
-                padding:11px 22px;
+                padding:9.3px 22px;
                 border-radius:14px;
                 display:inline-block;
                 margin-bottom:23px;
@@ -810,20 +810,20 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               </a>
   
               <!-- Social Icons -->
-              <div style="margin-top:35px;">
-                <a href="https://facebook.com/botassistai" style="margin:0 10px;">
-                  <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook.png" width="26" style="opacity:.85;">
-                </a>
-                <a href="https://instagram.com/botassistai" style="margin:0 10px;">
-                  <img src="https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png" width="26" style="opacity:.85;">
-                </a>
-                <a href="https://twitter.com/botassistai" style="margin:0 10px;">
-                  <img src="https://img.icons8.com/ios-filled/50/ffffff/twitter.png" width="26" style="opacity:.85;">
-                </a>
-                <a href="https://linkedin.com/company/botassistai" style="margin:0 10px;">
-                  <img src="https://img.icons8.com/ios-filled/50/ffffff/linkedin.png" width="26" style="opacity:.85;">
-                </a>
-              </div>
+              <div style="margin-bottom:27px;">
+                  <a href="https://facebook.com/botassistai" style="margin:0 6px;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="26" alt="">
+                  </a>
+                  <a href="https://instagram.com/botassistai" style="margin:0 6px;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="26" alt="">
+                  </a>
+                  <a href="https://twitter.com/botassistai" style="margin:0 6px;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="26" alt="">
+                  </a>
+                  <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="26" alt="">
+                  </a>
+                </div>
   
               <!-- Footer -->
               <p style="font-size:11px; color:#444; margin-top:30px; line-height:1.5;">
@@ -847,7 +847,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
     console.log('✅ Password email sent:', info.response);
   });
 
-}
+} 
 
 // asta nu mai este folosita
 app.get("/auth/callback", async (req, res) => {
