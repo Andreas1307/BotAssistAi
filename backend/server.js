@@ -773,28 +773,50 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <!-- Subheading -->
               <p style="color:#333; font-size:16.5px; font-weight: 500; line-height:1.6; margin:0 0 25px;">
                 Your account has been successfully created.<br>
-                Below is your secure temporary password:
+                Here are your secure login details:
               </p>
-  
-              <!-- Password Box -->
+
+              <!-- Login Details Section -->
               <div style="
-                background: #00f5d4;
-                border:1px solid #f9f9f9;
-                color:#fff;
-                font-size:20px;
-                font-weight:600;
-                padding:10px 24px;
-                border-radius:14px;
+                background:#f8f8f8;
+                border-radius:16px;
+                padding:18px 20px 22px;
+                margin-bottom:25px;
+                border:1px solid #e6e6e6;
+                text-align:left;
                 display:inline-block;
-                margin-bottom:13px;
-                letter-spacing:0.5px;
+                width:85%;
               ">
-                ${rawKey}
+
+                <!-- Username -->
+                <p style="margin:0 0 12px; font-size:15px; color:#333;">
+                  <strong>Username:</strong><br>
+                  <span style="color:#111; font-weight:600;">${email}</span>
+                </p>
+
+                <!-- Password -->
+                <p style="margin:0; font-size:15px; color:#333;">
+                  <strong>Temporary Password:</strong><br>
+                  <span style="
+                    display:inline-block;
+                    background:#00f5d4;
+                    padding:8px 14px;
+                    border-radius:10px;
+                    color:#fff;
+                    font-size:17px;
+                    font-weight:600;
+                    letter-spacing:0.5px;
+                  ">
+                    ${rawKey}
+                  </span>
+                </p>
+
               </div>
-  
+
               <!-- Message -->
               <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:25px;">
-                For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section. 
+                Please log in using the credentials above.<br>
+                Once inside your dashboard, visit <strong>Settings → Security</strong> to update your password.
               </p>
   
               <!-- Divider -->
@@ -823,11 +845,11 @@ const handleSendNewUserEmail = async (rawKey, email) => {
                   <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="26" alt="">
                   </a>
-                </div>
+              </div>
   
               <!-- Footer -->
               <p style="font-size:11px; color:#444; margin-top:30px; line-height:1.5;">
-                You received this email because you created an account with BotAssist AI.<br>
+                You received this email because you created an account with BotAssistAI.<br>
                 If you wish to unsubscribe, click 
                 <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
               </p>
@@ -837,7 +859,6 @@ const handleSendNewUserEmail = async (rawKey, email) => {
       </table>
     </div>
   `,
-  
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
