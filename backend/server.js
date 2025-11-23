@@ -747,118 +747,113 @@ const handleSendNewUserEmail = async (rawKey, email) => {
     to: email,
     subject: "Your Account Password for Our App",
     html: `
-    <div style="margin:0; padding:0; background:#f2f2f2; width:100%; font-family: 'Segoe UI', sans-serif;">
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; margin:auto; padding:40px 20px;">
-        <tr>
-          <td>
-            <!-- Card -->
-            <div style="
-              background: #fff;
-              padding:40px 30px;
-              border-radius:22px;
-              border:1px solid #dfdfdf;
-              box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.2);
-              backdrop-filter:blur(12px);
-              text-align:center;
-            ">
-              
-              <!-- Logo -->
-              <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:10px; border-radius:11px;" />
-  
-              <!-- Heading -->
-              <h1 style="color:#222; font-size:33px; font-weight:700; margin:0 0 8px;">
-                Welcome to BotAssistAI
-              </h1>
-  
-              <!-- Subheading -->
-              <p style="color:#333; font-size:16.5px; font-weight: 500; line-height:1.6; margin:0 0 25px;">
-                Your account has been successfully created.<br>
-                Here are your secure login details:
-              </p>
+<div style="margin:0; padding:0; background:#f2f2f2; width:100%; font-family: 'Segoe UI', sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; margin:auto; padding:40px 20px;">
+    <tr>
+      <td>
+        <!-- Card -->
+        <div style="
+          background: #fff;
+          padding:40px 30px;
+          border-radius:22px;
+          border:1px solid #dfdfdf;
+          box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.2);
+          backdrop-filter:blur(12px);
+          text-align:center;
+        ">
+          
+          <!-- Logo -->
+          <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:10px; border-radius:11px;" />
 
-              <!-- Login Details Section -->
-              <div style="
-                background:#f8f8f8;
-                border-radius:16px;
-                padding:18px 20px 22px;
-                margin-bottom:25px;
-                border:1px solid #e6e6e6;
-                text-align:left;
-                display:inline-block;
-                width:85%;
-              ">
+          <!-- Heading -->
+          <h1 style="color:#222; font-size:33px; font-weight:700; margin:0 0 8px;">
+            Welcome to BotAssistAI
+          </h1>
 
-                <!-- Username -->
-                <p style="margin:0 0 12px; font-size:15px; color:#333;">
-                  <strong>Username:</strong><br>
-                  <span style="color:#111; font-weight:600;">${email}</span>
-                </p>
+          <!-- Subheading -->
+          <p style="color:#333; font-size:16.5px; font-weight:500; line-height:1.6; margin:0 0 25px;">
+            Your account has been successfully created.<br>
+            Below are your login details:
+          </p>
 
-                <!-- Password -->
-                <p style="margin:0; font-size:15px; color:#333;">
-                  <strong>Temporary Password:</strong><br>
-                  <span style="
-                    display:inline-block;
-                    background:#00f5d4;
-                    padding:8px 14px;
-                    border-radius:10px;
-                    color:#fff;
-                    font-size:17px;
-                    font-weight:600;
-                    letter-spacing:0.5px;
-                  ">
-                    ${rawKey}
-                  </span>
-                </p>
+          <!-- Username Box -->
+          <div style="
+            background:#111;
+            color:#fff;
+            font-size:16px;
+            font-weight:600;
+            padding:10px 20px;
+            border-radius:10px;
+            display:inline-block;
+            margin-bottom:15px;
+            letter-spacing:0.4px;
+          ">
+            Username: ${email}
+          </div>
 
-              </div>
+          <!-- Password Box -->
+          <div style="
+            background: #00f5d4;
+            border:1px solid #f9f9f9;
+            color:#000;
+            font-size:20px;
+            font-weight:600;
+            padding:10px 24px;
+            border-radius:14px;
+            display:inline-block;
+            margin-bottom:13px;
+            letter-spacing:0.5px;
+          ">
+            ${rawKey}
+          </div>
 
-              <!-- Message -->
-              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:25px;">
-                Please log in using the credentials above.<br>
-                Once inside your dashboard, visit <strong>Settings → Security</strong> to update your password.
-              </p>
-  
-              <!-- Divider -->
-              <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 27px; border-radius:2px;"></div>
-  
-              <!-- Support -->
-              <p style="font-size:14px; color:#333; margin:0 0 5px;">
-                Need help? Our team is here for you:
-              </p>
-  
-              <a href="mailto:support@botassistai.com" style="color:#00F5D4; margin-bottom: 15px; font-size:15.5px; text-decoration:none; font-weight:600;">
-                support@botassistai.com
-              </a>
-  
-              <!-- Social Icons -->
-              <div style="margin-bottom:20px;">
-                  <a href="https://facebook.com/botassistai" style="margin:0 6px;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="26" alt="">
-                  </a>
-                  <a href="https://instagram.com/botassistai" style="margin:0 6px;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="26" alt="">
-                  </a>
-                  <a href="https://twitter.com/botassistai" style="margin:0 6px;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="26" alt="">
-                  </a>
-                  <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="26" alt="">
-                  </a>
-              </div>
-  
-              <!-- Footer -->
-              <p style="font-size:11px; color:#444; margin-top:30px; line-height:1.5;">
-                You received this email because you created an account with BotAssistAI.<br>
-                If you wish to unsubscribe, click 
-                <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
-              </p>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </div>
-  `,
+          <!-- Message -->
+          <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:25px;">
+            For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section.
+          </p>
+
+          <!-- Divider -->
+          <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 27px; border-radius:2px;"></div>
+
+          <!-- Support -->
+          <p style="font-size:14px; color:#333; margin:0 0 5px;">
+            Need help? Our team is here for you:
+          </p>
+
+          <a href="mailto:support@botassistai.com" style="color:#00F5D4; margin-bottom:15px; font-size:15.5px; text-decoration:none; font-weight:600;">
+            support@botassistai.com
+          </a>
+
+          <!-- Social Icons -->
+          <div style="margin-bottom:20px; margin-top:20px;">
+            <a href="https://facebook.com/botassistai" style="margin:0 6px;">
+              <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="26" alt="">
+            </a>
+            <a href="https://instagram.com/botassistai" style="margin:0 6px;">
+              <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="26" alt="">
+            </a>
+            <a href="https://twitter.com/botassistai" style="margin:0 6px;">
+              <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="26" alt="">
+            </a>
+            <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;">
+              <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="26" alt="">
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <p style="font-size:11px; color:#444; margin-top:30px; line-height:1.5;">
+            You received this email because you created an account with BotAssistAI.<br>
+            If you wish to unsubscribe, click 
+            <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
+          </p>
+
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+`,
+
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
