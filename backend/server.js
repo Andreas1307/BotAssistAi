@@ -1144,15 +1144,13 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
-/*
       try {
         await handleSendNewUserEmail(rawKey, email);
       } catch (err) {
         console.error("❌ Failed to send new user email:", err);
       }
 
-      SA FAC UPDATE DACA VREAU
-        */
+      
     }
 
     // --- Log the user in via Passport BEFORE redirect
