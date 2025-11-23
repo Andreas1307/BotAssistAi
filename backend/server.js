@@ -794,7 +794,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
   
               <!-- Message -->
               <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:25px;">
-                For security, we strongly recommend updating your password once you sign in to your dashboard.
+                For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section. 
               </p>
   
               <!-- Divider -->
