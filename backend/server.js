@@ -747,24 +747,24 @@ const handleSendNewUserEmail = async (rawKey, email) => {
     to: email,
     subject: "Your Account Password for Our App",
     html: `
-     <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
+     <div style="font-family: 'Segoe UI', sans-serif; width: 88%; margin: auto; padding: 40px 30px; text-align: center; background: #f2f2f2; color: #222; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);">
 
-<img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
+<img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; border-radius: 15px; margin-bottom: 30px;">
 
-<h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">Hey there!</h1>
+<h1 style="color: #222; font-size: 34px; font-weight: 700;">Hey there!</h1>
 
-<p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
+<p style="color: #333; font-size: 17px; margin-bottom: 20px;">
 Your <strong>account </strong> has been created. Here is your temporary password:  
 <br />
 <strong>${rawKey}</strong>
 </p>
 
 
-<h3 style="color: #00F5D4; font-size: 22px;">Please log in and change your password in the settings for security.</h3>
+<h3 style="color: #333; font-size: 22px;">Please log in and change your password in the settings for security.</h3>
 
 
 
-<p style="margin-top: 35px; font-size: 14px; color: #aaa;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
+<p style="margin-top: 35px; font-size: 14px; color: #333;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
 
 <div style="margin-top: 25px;">
 <a href="https://facebook.com/botassistai" style="margin: 0 8px;">
