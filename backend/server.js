@@ -763,15 +763,15 @@ const handleSendNewUserEmail = async (rawKey, email) => {
             ">
               
               <!-- Logo -->
-              <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:20px; border-radius:11px;" />
+              <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:10px; border-radius:11px;" />
   
               <!-- Heading -->
-              <h1 style="color:#222; font-size:32px; font-weight:700; margin:0 0 15px;">
+              <h1 style="color:#222; font-size:33px; font-weight:700; margin:0 0 8px;">
                 Welcome to BotAssistAI
               </h1>
   
               <!-- Subheading -->
-              <p style="color:#333; font-size:16px; line-height:1.6; margin:0 0 25px;">
+              <p style="color:#333; font-size:16.5px; font-weight: 500; line-height:1.6; margin:0 0 25px;">
                 Your account has been successfully created.<br>
                 Below is your secure temporary password:
               </p>
@@ -783,10 +783,10 @@ const handleSendNewUserEmail = async (rawKey, email) => {
                 color:#fff;
                 font-size:20px;
                 font-weight:600;
-                padding:9.3px 22px;
+                padding:10px 24px;
                 border-radius:14px;
                 display:inline-block;
-                margin-bottom:23px;
+                margin-bottom:13px;
                 letter-spacing:0.5px;
               ">
                 ${rawKey}
@@ -801,16 +801,16 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 27px; border-radius:2px;"></div>
   
               <!-- Support -->
-              <p style="font-size:14px; color:#333; margin:0 0 15px;">
+              <p style="font-size:14px; color:#333; margin:0 0 5px;">
                 Need help? Our team is here for you:
               </p>
   
-              <a href="mailto:support@botassistai.com" style="color:#00F5D4; font-size:15.5px; text-decoration:none; font-weight:600;">
+              <a href="mailto:support@botassistai.com" style="color:#00F5D4; margin-bottom: 15px; font-size:15.5px; text-decoration:none; font-weight:600;">
                 support@botassistai.com
               </a>
   
               <!-- Social Icons -->
-              <div style="margin-bottom:27px;">
+              <div style="margin-bottom:20px;">
                   <a href="https://facebook.com/botassistai" style="margin:0 6px;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="26" alt="">
                   </a>
