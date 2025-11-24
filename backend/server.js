@@ -824,6 +824,25 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:12px;">
                 For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section. 
               </p>
+
+              <!-- Login Button -->
+<a href="https://botassistai.com/login" 
+  style="
+    display:inline-block;
+    background: #00F5D4;
+    color:#000;
+    font-size:17px;
+    font-weight:700;
+    padding:12px 28px;
+    border-radius:14px;
+    text-decoration:none;
+    margin:18px 0 22px;
+    box-shadow:0 8px 18px rgba(0, 245, 212, 0.35);
+    transition:opacity .25s ease;
+  ">
+  Log In to Your Account
+</a>
+
   
               <!-- Divider -->
               <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 15px; border-radius:2px;"></div>
