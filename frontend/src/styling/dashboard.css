@@ -1067,56 +1067,79 @@ body {
 }
 
 
-
-.outOfConvs {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-.limit-card {
-  background: rgba(0, 245, 212, 0.08);
-  backdrop-filter: blur(16px);
-  border-radius: 18px;
-  padding: 22px 28px;
-  border: 1px solid rgba(0, 245, 212, 0.25);
-  box-shadow: 0 8px 30px rgba(0, 245, 212, 0.15);
+.conversation-limit {
   max-width: 420px;
+  margin: 25px auto;
+  padding: 18px 22px;
+  background: #ffffff;
+  border-radius: 16px;
+  position: relative;
   text-align: center;
-  animation: slideUp 0.45s ease, pulseGlow 3s infinite ease-in-out;
+  font-family: "Segoe UI", sans-serif;
+
+  /* Gradient border */
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(#fff, #fff),
+    linear-gradient(135deg, #00f5d4, #00b3ff, #736cff);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+
+  /* Soft shadow */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+
+  /* animation */
+  animation: fadeSlideIn 0.6s ease forwards;
+  opacity: 0;
 }
 
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 12px rgba(0,245,212,0.15); }
-  50% { box-shadow: 0 0 20px rgba(0,245,212,0.35); }
-  100% { box-shadow: 0 0 12px rgba(0,245,212,0.15); }
-}
-
-
-.limit-title {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #222;
+/* Icon */
+.limit-icon {
+  font-size: 32px;
   margin-bottom: 8px;
 }
 
-.limit-text {
-  font-size: 0.95rem;
+/* Title */
+.conversation-limit h3 {
+  margin: 6px 0 4px;
+  font-size: 20px;
+  color: #222;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Text */
+.conversation-limit p {
+  font-size: 15px;
   color: #444;
   line-height: 1.5;
+  margin: 0;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+
+/* Animation */
+@keyframes fadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+/* Responsive */
+@media (max-width: 480px) {
+  .conversation-limit {
+    padding: 16px 15px;
+  }
+  .conversation-limit h3 {
+    font-size: 18px;
+  }
+  .conversation-limit p {
+    font-size: 14px;
+  }
 }
 
 
