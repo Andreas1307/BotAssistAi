@@ -404,6 +404,7 @@ app.post('/api/link-shop-to-user', verifySessionToken, async (req, res) => {
 
 app.post("/shopify/uninstall", bodyParser.raw({ type: "application/json" }), async (req, res) => {
   try {
+    console.log("I AM HITTTTTTTTTTTTTTTTTTTTTTTTTT")
     const crypto = require("crypto");
     const hmacHeader = req.headers["x-shopify-hmac-sha256"];
     const rawBody = req.body;
@@ -766,7 +767,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:10px; border-radius:11px;" />
   
               <!-- Heading -->
-              <h1 style="color:#222; font-size:33px; font-weight:700; margin:0 0 5px;">
+              <h1 style="color:#222; font-size:34px; font-weight:700; margin:0 0 5px;">
                 Welcome to BotAssistAI
               </h1>
   
@@ -821,7 +822,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               </div>
   
               <!-- Message -->
-              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:12px;">
+              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:8px;">
                 For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section. 
               </p>
 
@@ -830,11 +831,11 @@ const handleSendNewUserEmail = async (rawKey, email) => {
   style="
     display:inline-block;
     background: #00F5D4;
-    color:#000;
+    color:#fff;
     font-size:17px;
     font-weight:700;
     padding:12px 28px;
-    border-radius:14px;
+    border-radius:16px;
     text-decoration:none;
     margin:18px 0 22px;
     box-shadow:0 8px 18px rgba(0, 245, 212, 0.35);
@@ -859,16 +860,16 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <!-- Social Icons -->
               <div style="margin-bottom:20px; margin-top: 15px;">
                   <a href="https://facebook.com/botassistai" style="margin:0 6px; text-decoration: none;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="26" alt="">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="27" alt="">
                   </a>
                   <a href="https://instagram.com/botassistai" style="margin:0 6px; text-decoration: none;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="26" alt="">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="27" alt="">
                   </a>
                   <a href="https://twitter.com/botassistai" style="margin:0 6px; text-decoration: none;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="26" alt="">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="27" alt="">
                   </a>
                   <a href="https://linkedin.com/company/botassistai" style="margin:0 6px; text-decoration: none;">
-                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="26" alt="">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="27" alt="">
                   </a>
                 </div>
   
