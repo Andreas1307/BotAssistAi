@@ -878,9 +878,18 @@ if (loading) {
 
         <h1 className="dashboard-title">  <FaTachometerAlt className="dashIcon" />Dashboard Overview</h1>
         <div>
-<div className="outOfConvs">
-  dsdsadsasdadsasdadsa
+
+
+          
+        <div className="outOfConvs">
+  <div className="limit-card">
+    <h3 className="limit-title">Daily Limit Reached</h3>
+    <p className="limit-text">
+      You've reached today’s conversation limit. More conversations will be available tomorrow.
+    </p>
+  </div>
 </div>
+
     <ToastContainer />
   </div>
 
