@@ -1069,54 +1069,82 @@ body {
 
 
 
-.conversation-alert {
-  position: fixed;
-  bottom: 30px;
-  right: -400px; /* hidden off-screen */
-  width: 320px;
-  padding: 20px 22px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(12px);
+.limit-banner {
+  width: 100%;
+  max-width: 680px;
+  margin: 25px auto;
+  padding: 22px 28px;
   border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25), 0 0 15px rgba(0,0,0,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  animation: slideIn 0.8s ease forwards, floatUp 3s ease-in-out infinite alternate;
-  z-index: 9999;
-  font-family: "Segoe UI", sans-serif;
+  background: rgba(0, 245, 212, 0.08);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 245, 212, 0.3);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  animation: slideFade 0.6s ease forwards;
 }
 
-.alert-content h3 {
-  margin: 0 0 6px;
+.limit-icon {
+  font-size: 36px;
+  background: linear-gradient(135deg, #00f5d4, #00bfa6);
+  padding: 10px;
+  border-radius: 14px;
+  color: white;
+  box-shadow: 0 6px 14px rgba(0, 245, 212, 0.4);
+  animation: pulseGlow 2.2s infinite ease-in-out;
+}
+
+.limit-content h3 {
+  margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #111;
-  letter-spacing: 0.2px;
+  color: #0d0d0d;
+  letter-spacing: 0.5px;
 }
 
-.alert-content p {
-  margin: 0;
+.limit-content p {
+  margin: 6px 0 0 0;
+  font-size: 15px;
   color: #333;
-  font-size: 14.5px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-@keyframes slideIn {
+/* ===================== Animations ===================== */
+
+@keyframes slideFade {
   from {
-    right: -400px;
     opacity: 0;
+    transform: translateY(14px);
   }
   to {
-    right: 30px;
     opacity: 1;
-  }
-}
-
-@keyframes floatUp {
-  from {
     transform: translateY(0);
   }
-  to {
-    transform: translateY(-6px);
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 12px rgba(0, 245, 212, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(0, 245, 212, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(0, 245, 212, 0.45);
+  }
+}
+
+/* Mobile Friendly */
+@media (max-width: 480px) {
+  .limit-banner {
+    padding: 18px 20px;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .limit-icon {
+    font-size: 32px;
   }
 }
 

@@ -880,13 +880,14 @@ if (loading) {
         <div>
 
 
-
-        <div class="conversation-alert">
-  <div class="alert-content">
-    <h3>Daily Limit Reached</h3>
+        <div class="limit-banner">
+  <div class="limit-icon">⚡</div>
+  <div class="limit-content">
+    <h3>Daily Conversation Limit Reached</h3>
     <p>You’ve used all available conversations for today. New conversations will be available again tomorrow.</p>
   </div>
 </div>
+
 
 
 
