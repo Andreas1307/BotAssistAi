@@ -766,12 +766,12 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:10px; border-radius:11px;" />
   
               <!-- Heading -->
-              <h1 style="color:#222; font-size:33px; font-weight:700; margin:0 0 8px;">
+              <h1 style="color:#222; font-size:33px; font-weight:700; margin:0 0 5px;">
                 Welcome to BotAssistAI
               </h1>
   
               <!-- Subheading -->
-              <p style="color:#333; font-size:16.5px; font-weight: 500; line-height:1.6; margin:0 0 25px;">
+              <p style="color:#333; font-size:16.5px; font-weight: 500; line-height:1.6; margin:0 0 15px;">
                 Your account has been successfully created.<br>
                 Below are your secure login credentials:
               </p>
@@ -791,7 +791,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
                 padding:10px 18px;
                 border-radius:12px;
                 display:inline-block;
-                margin-bottom:22px;
+                margin-bottom:17px;
                 letter-spacing:0.3px;
                 max-width: 90%;
                 word-break: break-all;
@@ -811,7 +811,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
                 color:#fff;
                 font-size:20px;
                 font-weight:600;
-                padding:10px 24px;
+                padding:7px 24px;
                 border-radius:14px;
                 display:inline-block;
                 margin-bottom:13px;
