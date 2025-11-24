@@ -288,6 +288,13 @@ const Dashboard = () => {
       }
     };
     fetchUser();
+    
+    
+    const interval = setInterval(() => {
+      fetchUser();
+    }, 5000);
+  
+    return () => clearInterval(interval);
   }, []);
 
   //fETCH QUERIES
@@ -435,6 +442,13 @@ const Dashboard = () => {
       }
     }
     fetchDailyConversations()
+
+    const interval = setInterval(() => {
+      fetchDailyConversations();
+    }, 10000);
+  
+    // Cleanup on unmount
+    return () => clearInterval(interval);
   }, [user])
 
 //fetchBotStatus
@@ -528,7 +542,7 @@ useEffect(() => {
 
   checkConnected();
 
-  const interval = setInterval(checkConnected, 1000); 
+  const interval = setInterval(checkConnected, 3000); 
 
   return () => clearInterval(interval);
 }, [user]);
@@ -856,7 +870,7 @@ if (loading) {
       <main className="dashboard-content" id="dash">
   
 
-  {!renew && (
+  {renew && (
      <div className="membership-overlay">
      <div className="membership-modal">
        <h2 className="membership-title">✨ Premium Membership Expired</h2>
@@ -879,7 +893,7 @@ if (loading) {
         </Link>
          <button className="membership-later-btn" onClick={() => {
           offHadMem()
-          setRenew(true)
+          setRenew(false)
          }}>
            Not Now
          </button>
