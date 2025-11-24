@@ -2574,8 +2574,7 @@ app.post("/ask-ai", async (req, res) => {
     const shop = req.shopify?.shop;
     const userType = isShopify ? "shopify" : "standard";
 
-
-    console.log("Log, ", isShopify, shop, userType)
+    let aiResponse;
       const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
  
       const [users] = await pool.query("SELECT * FROM users")
@@ -2618,20 +2617,19 @@ app.post("/ask-ai", async (req, res) => {
         console.log("👀 Conversations today:", count);
       
         if (count >= 30) {
-          console.log("Invalid API key2")
-          return res.status(400).json({ error: "Finished your 30 conversations per day." });
-        }
+          aiResponse = "You've reached the conversation limit for today. Please check back tomorrow.";
+          return res.status(400).json({ error: "Daily conversation limit reached." });
+        }        
       }
   
       if(accountType[0].apiBot === 0) {
         console.log("ACC typr: ", accountType[0].apiBot)
-        console.log("Invalid API key65")
+        aiResponse = "Bot is disabled"
         return res.status(400).json({ error: "Your bot is disabled" });
       }
       
       if (!apiKey || !message) {
         
-        console.log("Invalid API key4")
           return res.status(400).json({ error: "Missing required parameters (userId or message)." });
       }
       const [rows] = await pool.query("SELECT * FROM faq WHERE user_id = ? LIMIT 1", [userId]);
@@ -2812,7 +2810,7 @@ Never refer users to another page unless explicitly asked.`;
       const [bookingEnabled] = await pool.query("SELECT booking FROM users where user_id = ?", [userId])
       const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [userId])
   
-      let aiResponse = response.choices[0].message.content;
+       aiResponse = response.choices[0].message.content;
   
       
       console.log("Parsed Date:", chrono.parseDate("May 7", new Date(), { forwardDate: true }));

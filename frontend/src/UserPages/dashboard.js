@@ -839,7 +839,7 @@ if (loading) {
       <main className="dashboard-content" id="dash">
   
 
-  {renew && (
+  {!membership && (
      <div className="membership-overlay">
      <div className="membership-modal">
        <h2 className="membership-title">✨ Premium Membership Expired</h2>
