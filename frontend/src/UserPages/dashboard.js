@@ -275,6 +275,7 @@ const Dashboard = () => {
         } else {
           setShopifyUser(false)
         }
+        console.log("SHOW RENEWAL MODAL", res.showRenewalModal)
         setRenew(res.showRenewalModal)
       } catch (error) {
         setUser(null);
@@ -812,6 +813,7 @@ if (loading) {
       href={item.hash}
       key={item.hash}
       className={`nav-item ${window.location.hash === item.hash ? "active" : ""}`}
+      onClick={() => setCollap(false)}
     >
       <span className="nav-icon">{item.icon}</span> <a href={item.hash}>{item.name}</a>
     </a>
@@ -876,7 +878,9 @@ if (loading) {
 
         <h1 className="dashboard-title">  <FaTachometerAlt className="dashIcon" />Dashboard Overview</h1>
         <div>
-
+<div className="outOfConvs">
+  dsdsadsasdadsasdadsa
+</div>
     <ToastContainer />
   </div>
 
