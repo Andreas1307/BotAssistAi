@@ -431,7 +431,7 @@ const Dashboard = () => {
         });
         setDailyCount(response.dailyMessages);
         console.log("MEMBERSHIP", membership)    
-        if(response.dailyMessages && membership === "Free") {
+        if(response.dailyMessages && membership === false) {
           setShowConvsLimit(true)
         } else {
           setShowConvsLimit(false)
