@@ -881,11 +881,13 @@ if (loading) {
 
 
 
-        <div className="conversation-limit">
-  <div className="limit-icon">⚠️</div>
-  <h3>Daily Limit Reached</h3>
-  <p>You’ve reached today’s conversation limit. New conversations will be available tomorrow.</p>
+        <div class="conversation-alert">
+  <div class="alert-content">
+    <h3>Daily Limit Reached</h3>
+    <p>You’ve used all available conversations for today. New conversations will be available again tomorrow.</p>
+  </div>
 </div>
+
 
 
     <ToastContainer />

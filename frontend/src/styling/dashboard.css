@@ -1067,78 +1067,56 @@ body {
 }
 
 
-.conversation-limit {
-  max-width: 420px;
-  margin: 25px auto;
-  padding: 18px 22px;
-  background: #ffffff;
-  border-radius: 16px;
-  position: relative;
-  text-align: center;
+
+
+.conversation-alert {
+  position: fixed;
+  bottom: 30px;
+  right: -400px; /* hidden off-screen */
+  width: 320px;
+  padding: 20px 22px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25), 0 0 15px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  animation: slideIn 0.8s ease forwards, floatUp 3s ease-in-out infinite alternate;
+  z-index: 9999;
   font-family: "Segoe UI", sans-serif;
-
-  /* Gradient border */
-  border: 2px solid transparent;
-  background-image: 
-    linear-gradient(#fff, #fff),
-    linear-gradient(135deg, #00f5d4, #00b3ff, #736cff);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-
-  /* Soft shadow */
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-
-  /* animation */
-  animation: fadeSlideIn 0.6s ease forwards;
-  opacity: 0;
 }
 
-/* Icon */
-.limit-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-
-/* Title */
-.conversation-limit h3 {
-  margin: 6px 0 4px;
+.alert-content h3 {
+  margin: 0 0 6px;
   font-size: 20px;
-  color: #222;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  color: #111;
+  letter-spacing: 0.2px;
 }
 
-/* Text */
-.conversation-limit p {
-  font-size: 15px;
-  color: #444;
-  line-height: 1.5;
+.alert-content p {
   margin: 0;
+  color: #333;
+  font-size: 14.5px;
+  line-height: 1.5;
 }
 
-
-/* Animation */
-@keyframes fadeSlideIn {
-  0% {
+@keyframes slideIn {
+  from {
+    right: -400px;
     opacity: 0;
-    transform: translateY(12px);
   }
-  100% {
+  to {
+    right: 30px;
     opacity: 1;
+  }
+}
+
+@keyframes floatUp {
+  from {
     transform: translateY(0);
   }
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .conversation-limit {
-    padding: 16px 15px;
-  }
-  .conversation-limit h3 {
-    font-size: 18px;
-  }
-  .conversation-limit p {
-    font-size: 14px;
+  to {
+    transform: translateY(-6px);
   }
 }
 
