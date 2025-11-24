@@ -1071,12 +1071,11 @@ body {
 
 .limit-banner {
   width: 100%;
-  margin: 25px auto;
+  margin: 15px auto 10px;
   padding: 22px 28px;
   border-radius: 18px;
   background: linear-gradient(90deg, #07f, #9b00ff, #ff007a);
   backdrop-filter: blur(14px);
-  border: 1px solid #f5f5f5;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
@@ -1090,10 +1089,9 @@ body {
   padding: 10px;
   border-radius: 14px;
   color: white;
-  box-shadow: 0 6px 14px rgba(0, 245, 212, 0.4);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
   animation: pulseGlow 2.2s infinite ease-in-out;
 }
-
 .limit-content h3 {
   margin: 0;
   font-size: 20px;
