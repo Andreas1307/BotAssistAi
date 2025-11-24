@@ -275,8 +275,11 @@ const Dashboard = () => {
         } else {
           setShopifyUser(false)
         }
-        console.log("SHOW RENEWAL MODAL", res.showRenewalModal)
-        setRenew(res.showRenewalModal)
+       if(res.user.hadMembership === true) {
+        setRenew(true)
+       } else {
+        setRenew(false)
+       }
       } catch (error) {
         setUser(null);
         showErrorNotification()
@@ -421,7 +424,7 @@ const Dashboard = () => {
           method: "GET",
         });
         setDailyCount(response.dailyMessages);    
-        if(response.dailyMessages && membership === "Free") {
+        if(response.dailyMessages && membership === "free") {
           setShowConvsLimit(true)
         } else {
           setShowConvsLimit(false)
@@ -594,6 +597,13 @@ const LogoutConfirmToast2 = ({ closeToast, onConfirm, reason = "Are you sure you
   </div>
 );
 
+const offHadMem = async () => {
+  try {
+    await fetchWithAuth(`/offHadMem?id=${user.user_id}`)
+  } catch(e) {
+    console.log("An error occured with turning off the had membership");
+  }
+}
 
 const showLogoutConfirm2 = (onConfirm, reason) => {
   try {
@@ -846,7 +856,7 @@ if (loading) {
       <main className="dashboard-content" id="dash">
   
 
-  {renew && (
+  {!renew && (
      <div className="membership-overlay">
      <div className="membership-modal">
        <h2 className="membership-title">✨ Premium Membership Expired</h2>
@@ -855,11 +865,22 @@ if (loading) {
        </p>
        <div className="membership-buttons">
        <Link className="membership-renew-btn" to={`/${user?.username}/upgrade-plan`}>
+       {shopifyUser ? (
+      <button onClick={activatePlan}>
+        Renew Now
+        </button>
+      ) : (
+<Link to={`/${user?.username}/upgrade-plan`}>
       <button>
         Renew Now
         </button>
         </Link>
-         <button className="membership-later-btn" onClick={() =>setRenew(false)}>
+      )}
+        </Link>
+         <button className="membership-later-btn" onClick={() => {
+          offHadMem()
+          setRenew(false)
+         }}>
            Not Now
          </button>
        </div>

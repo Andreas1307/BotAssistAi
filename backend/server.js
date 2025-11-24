@@ -1557,6 +1557,7 @@ cron.schedule("0 0 * * *", async () => {
         });
 
       for (const user of usersToDowngrade) {
+        await pool.query("UPDATE users SET hadMembership = true where user_id = ?", [user.user_id])
         await pool.query(
           "UPDATE users SET subscription_plan = 'free' WHERE user_id = ?",
           [user.user_id]
@@ -1643,7 +1644,16 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-
+app.get("/offHadMem", verifySessionToken, async (req, res) => {
+  try{
+    const { id } = req.query;
+    await pool.query("UPDATE users SET hadMembership = false where user_id = ?", [id])
+    return res.status(200).json({ msg: "Sucess"})
+  } catch(e) {
+    console.log("An error occured with turning off the had membership");
+    return res.status(500).json({ err: "An error occured with turning off the had membership"})
+  }
+})
 
 app.post("/save-services", verifySessionToken, upload.any(), async (req, res) => {
   const { userId, services: rawServices } = req.body;

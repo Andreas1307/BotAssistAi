@@ -346,7 +346,7 @@
     
         const loadingElem = document.getElementById(loadingId);
         if (botResponse === "undefined" || !botResponse) {
-          if (loadingElem) loadingElem.innerHTML = `<strong>Bot:</strong> You've reached the limit of free conversations for today 💬`;
+          if (loadingElem) loadingElem.innerHTML = `<strong>Bot:</strong> Bot is disabled`;
           satisfactionDiv.style.display = "none";
         } else {
           if (loadingElem) {
