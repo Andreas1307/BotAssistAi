@@ -841,7 +841,7 @@ if (loading) {
       <main className="dashboard-content" id="dash">
   
 
-  {!membership && (
+  {renew && (
      <div className="membership-overlay">
      <div className="membership-modal">
        <h2 className="membership-title">✨ Premium Membership Expired</h2>
@@ -880,7 +880,7 @@ if (loading) {
         <div>
 
 
-          
+
         <div className="outOfConvs">
   <div className="limit-card">
     <h3 className="limit-title">Daily Limit Reached</h3>
