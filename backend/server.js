@@ -748,114 +748,142 @@ const handleSendNewUserEmail = async (rawKey, email) => {
     to: email,
     subject: "Your Account Password for Our App",
     html: `
-    <div style="margin:0; padding:0; background:#f2f2f2; width:100%; font-family:'Segoe UI', sans-serif;">
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; margin:auto; padding:40px 20px;">
-    <tr>
-      <td>
-
-        <!-- Card -->
-        <div style="
-          background:#fff;
-          padding:40px 30px;
-          border-radius:22px;
-          border:1px solid #dfdfdf;
-          box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.2);
-          backdrop-filter:blur(12px);
-          text-align:center;
-        ">
-
-          <!-- Logo -->
-          <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:12px; border-radius:11px;" />
-
-          <!-- Heading -->
-          <h1 style="color:#222; font-size:32px; font-weight:700; margin:0 0 8px;">
-            Your Premium Plan Has Expired
-          </h1>
-
-          <!-- Subheading -->
-          <p style="color:#333; font-size:16.5px; font-weight:500; line-height:1.6; margin:0 0 18px;">
-            Your <strong>BotAssistAI Premium</strong> subscription has ended.<br>
-            You’ve been moved to the <span style="color:#00F5D4; font-weight:600;">Free Plan</span>.
-          </p>
-
-          <!-- Info Box -->
-          <div style="
-            background:#eefefe;
-            border:1px solid #d6f4f1;
-            border-radius:16px;
-            padding:22px 20px;
-            margin:25px 0;
-            text-align:left;
-          ">
-            <h3 style="color:#00C7A8; font-size:20px; margin:0 0 15px; text-align:center;">
-              What You’re Missing on Free Plan
-            </h3>
-
-            <ul style="list-style:none; padding:0; margin:0; font-size:15.5px; color:#333; line-height:1.7;">
-              <li>• Unlimited Conversations</li>
-              <li>• Advanced Bot Analytics</li>
-              <li>• Full Brand Customization</li>
-              <li>• Early Access to New Features</li>
-              <li>• Smart FAQ Upload</li>
-            </ul>
-          </div>
-
-          <!-- Text -->
-          <p style="color:#333; font-size:15.5px; line-height:1.6; margin-bottom:20px;">
-            Upgrade again anytime to unlock all features and boost your bot’s performance.
-          </p>
-
-          <!-- Upgrade Button -->
-          <a href="https://botassistai.com/pricing"
-            style="
-              display:inline-block;
-              background:#00F5D4;
-              color:#fff;
-              font-size:17px;
-              font-weight:700;
-              padding:12px 28px;
-              border-radius:16px;
-              text-decoration:none;
-              margin:18px 0 22px;
-              box-shadow:0 8px 18px rgba(0, 245, 212, 0.35);
+    <div style="margin:0; padding:0; background:#f2f2f2; width:100%; font-family: 'Segoe UI', sans-serif;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; margin:auto; padding:40px 20px;">
+        <tr>
+          <td>
+            <!-- Card -->
+            <div style="
+              background: #fff;
+              padding:40px 30px;
+              border-radius:22px;
+              border:1px solid #dfdfdf;
+              box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.2);
+              backdrop-filter:blur(12px);
+              text-align:center;
             ">
-            Upgrade to Premium
-          </a>
+              
+              <!-- Logo -->
+              <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:10px; border-radius:11px;" />
+  
+              <!-- Heading -->
+              <h1 style="color:#222; font-size:34px; font-weight:700; margin:0 0 5px;">
+                Welcome to BotAssistAI
+              </h1>
+  
+              <!-- Subheading -->
+              <p style="color:#333; font-size:16.5px; font-weight: 500; line-height:1.6; margin:0 0 15px;">
+                Your account has been successfully created.<br>
+                Below are your secure login credentials:
+              </p>
 
-          <!-- Divider -->
-          <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 15px; border-radius:2px;"></div>
+              <!-- Username Label -->
+              <p style="color:#333; font-size:15.5px; font-weight:600; margin:0 0 8px;">
+                <span style="opacity:0.85;">Your Login Email:</span>:
+              </p>
 
-          <!-- Support -->
-          <p style="font-size:14px; color:#333; margin:0 0 3px;">
-            Need help? Our team is here for you:
-          </p>
+              <!-- Username Box -->
+              <div style="
+                background: #eefefe;
+                border:1px solid #d6f4f1;
+                color:#222;
+                font-size:17px;
+                font-weight:600;
+                padding:10px 18px;
+                border-radius:12px;
+                display:inline-block;
+                margin-bottom:17px;
+                letter-spacing:0.3px;
+                max-width: 90%;
+                word-break: break-all;
+              ">
+                ${email}
+              </div>
 
-          <a href="mailto:support@botassistai.com" style="color:#00F5D4; font-size:15.5px; text-decoration:none; font-weight:600;">
-            support@botassistai.com
-          </a>
+              <!-- Password Label -->
+              <p style="color:#333; font-size:15.5px; font-weight:600; margin:0 0 8px;">
+                <span style="opacity:0.85;">Temporary Password</span>:
+              </p>
 
-          <!-- Social Icons -->
-          <div style="margin:20px 0;">
-            <a href="https://facebook.com/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="27"></a>
-            <a href="https://instagram.com/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="27"></a>
-            <a href="https://twitter.com/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="27"></a>
-            <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="27"></a>
-          </div>
+              <!-- Password Box -->
+              <div style="
+                background: #00f5d4;
+                border:1px solid #f9f9f9;
+                color:#fff;
+                font-size:20px;
+                font-weight:600;
+                padding:7px 24px;
+                border-radius:14px;
+                display:inline-block;
+                margin-bottom:13px;
+                letter-spacing:0.5px;
+              ">
+                ${rawKey}
+              </div>
+  
+              <!-- Message -->
+              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:8px;">
+                For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section. 
+              </p>
 
-          <!-- Footer -->
-          <p style="font-size:11.5px; color:#444; margin-top:25px; line-height:1.5;">
-            You are receiving this email because you have an account with BotAssistAI.<br>
-            To unsubscribe, click 
-            <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
-          </p>
+              <!-- Login Button -->
+<a href="https://botassistai.com/login" 
+  style="
+    display:inline-block;
+    background: #00F5D4;
+    color:#fff;
+    font-size:17px;
+    font-weight:700;
+    padding:12px 28px;
+    border-radius:16px;
+    text-decoration:none;
+    margin:18px 0 22px;
+    box-shadow:0 8px 18px rgba(0, 245, 212, 0.35);
+    transition:opacity .25s ease;
+  ">
+  Log In to Your Account
+</a>
 
-        </div>
-
-      </td>
-    </tr>
-  </table>
-</div>
-
+  
+              <!-- Divider -->
+              <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 15px; border-radius:2px;"></div>
+  
+              <!-- Support -->
+              <p style="font-size:14px; color:#333; margin:0 0 3px;">
+                Need help? Our team is here for you:
+              </p>
+  
+              <a href="mailto:support@botassistai.com" style="color:#00F5D4; margin-bottom: 15px; font-size:15.5px; text-decoration:none; font-weight:600;">
+                support@botassistai.com
+              </a>
+  
+              <!-- Social Icons -->
+              <div style="margin-bottom:20px; margin-top: 15px;">
+                  <a href="https://facebook.com/botassistai" style="margin:0 6px; text-decoration: none;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="27" alt="">
+                  </a>
+                  <a href="https://instagram.com/botassistai" style="margin:0 6px; text-decoration: none;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="27" alt="">
+                  </a>
+                  <a href="https://twitter.com/botassistai" style="margin:0 6px; text-decoration: none;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="27" alt="">
+                  </a>
+                  <a href="https://linkedin.com/company/botassistai" style="margin:0 6px; text-decoration: none;">
+                    <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="27" alt="">
+                  </a>
+                </div>
+  
+              <!-- Footer -->
+              <p style="font-size:11.5px; color:#444; margin-top:30px; line-height:1.5;">
+                You received this email because you created an account with BotAssist AI.<br>
+                If you wish to unsubscribe, click 
+                <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
   `,
 
   };
@@ -1475,7 +1503,6 @@ app.post("/paypal/webhook", verifySessionToken, async (req, res) => {
 
 
 
-
 app.get("/payed-membership", verifySessionToken, async (req, res) => {
 const { type, userId } = req.query;
 
@@ -1542,60 +1569,113 @@ cron.schedule("0 0 * * *", async () => {
           to: user.email,
           subject: "Your BotAssistAI Premium Plan Has Expired",
           html: `
-           <div style="font-family: 'Segoe UI', sans-serif; width: 90%; margin: auto; padding: 40px 30px; text-align: center; background: linear-gradient(to bottom, #0B1623, #092032); color: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 245, 212, 0.15);">
+          <div style="margin:0; padding:0; background:#f2f2f2; width:100%; font-family:'Segoe UI', sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; margin:auto; padding:40px 20px;">
+    <tr>
+      <td>
 
-  <img src="https://botassistai.com/img/BigLogo.png" alt="BotAssistAI Logo" style="width: 120px; margin-bottom: 30px;">
+        <!-- Card -->
+        <div style="
+          background:#fff;
+          padding:40px 30px;
+          border-radius:22px;
+          border:1px solid #dfdfdf;
+          box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.2);
+          backdrop-filter:blur(12px);
+          text-align:center;
+        ">
 
-  <h1 style="color: #00F5D4; font-size: 34px; font-weight: 700;">Hey there!</h1>
+          <!-- Logo -->
+          <img src="https://botassistai.com/img/BigLogo.png" width="110" style="margin-bottom:12px; border-radius:11px;" />
 
-  <p style="color: #cccccc; font-size: 17px; margin-bottom: 20px;">
-    Your <strong>BotAssistAI Premium</strong> plan has recently expired.  
-    You’ve been moved to our <span style="color: #00F5D4;">Free Plan</span>. Your data is still secure, and you can upgrade again at any time.
-  </p>
+          <!-- Heading -->
+          <h1 style="color:#222; font-size:32px; font-weight:700; margin:0 0 8px;">
+            Your Premium Plan Has Expired
+          </h1>
 
-  <div style="background-color: #112B3C; padding: 20px; border-radius: 12px; margin: 30px 0;">
-      <h3 style="color: #00F5D4; font-size: 22px;">What You’re Currently Missing:</h3>
-      <ul style="list-style-type: none; padding: 0; margin-top: 15px;">
-          <li style="margin: 12px 0; font-size: 16px;">• Unlimited conversations</li>
-          <li style="margin: 12px 0; font-size: 16px;">• Advanced Bot Analytics</li>
-          <li style="margin: 12px 0; font-size: 16px;">• Fully Brand Customizable</li>
-          <li style="margin: 12px 0; font-size: 16px;">• Early Access to New Features</li>
-          <li style="margin: 12px 0; font-size: 16px;">• Smart FAQ Upload</li>
-      </ul>
-  </div>
+          <!-- Subheading -->
+          <p style="color:#333; font-size:16.5px; font-weight:500; line-height:1.6; margin:0 0 18px;">
+            Your <strong>BotAssistAI Premium</strong> subscription has ended.<br>
+            You’ve been moved to the <span style="color:#00F5D4; font-weight:600;">Free Plan</span>.
+          </p>
 
-  <p style="font-size: 16px; margin-bottom: 30px;">
-      Want to regain your <strong style="color: #00F5D4;">Premium features</strong>? Upgrade now and unlock full access.
-  </p>
+          <!-- Info Box -->
+          <div style="
+            background:#eefefe;
+            border:1px solid #d6f4f1;
+            border-radius:16px;
+            padding:22px 20px;
+            margin:25px 0;
+            text-align:left;
+          ">
+            <h3 style="color:#00C7A8; font-size:20px; margin:0 0 15px; text-align:center;">
+              What You’re Missing on Free Plan
+            </h3>
 
-  <a href="https://botassistai.com/pricing" 
-     style="display: inline-block; padding: 14px 30px; font-size: 16px; color: #000; background: #00F5D4; border-radius: 30px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 12px rgba(0, 245, 212, 0.4);">
-     Upgrade to Premium
-  </a>
+            <ul style="list-style:none; padding:0; margin:0; font-size:15.5px; color:#333; line-height:1.7;">
+              <li>• Unlimited Conversations</li>
+              <li>• Advanced Bot Analytics</li>
+              <li>• Full Brand Customization</li>
+              <li>• Early Access to New Features</li>
+              <li>• Smart FAQ Upload</li>
+            </ul>
+          </div>
 
-  <p style="margin-top: 35px; font-size: 14px; color: #aaa;">Questions? <a href="mailto:support@botassistai.com" style="color: #00F5D4; text-decoration: none;">Contact Support</a></p>
+          <!-- Text -->
+          <p style="color:#333; font-size:15.5px; line-height:1.6; margin-bottom:20px;">
+            Upgrade again anytime to unlock all features and boost your bot’s performance.
+          </p>
 
-  <div style="margin-top: 25px;">
-      <a href="https://facebook.com/botassistai" style="margin: 0 8px;">
-          <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" alt="Facebook" width="28">
-      </a>
-      <a href="https://instagram.com/botassistai" style="margin: 0 8px;">
-          <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" alt="Instagram" width="28">
-      </a>
-      <a href="https://twitter.com/botassistai" style="margin: 0 8px;">
-          <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" alt="Twitter" width="28">
-      </a>
-      <a href="https://linkedin.com/company/botassistai" style="margin: 0 8px;">
-          <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" alt="LinkedIn" width="28">
-      </a>
-  </div>
+          <!-- Upgrade Button -->
+          <a href="https://botassistai.com/pricing"
+            style="
+              display:inline-block;
+              background:#00F5D4;
+              color:#fff;
+              font-size:17px;
+              font-weight:700;
+              padding:12px 28px;
+              border-radius:16px;
+              text-decoration:none;
+              margin:18px 0 22px;
+              box-shadow:0 8px 18px rgba(0, 245, 212, 0.35);
+            ">
+            Upgrade to Premium
+          </a>
 
-  <p style="font-size: 12px; color: #666; margin-top: 20px;">
-    You received this email because you have an account with us. 
-    <a href="https://botassistai.com/unsubscribe" style="color: #ff5e5e; text-decoration: none;">Unsubscribe</a>
-  </p>
+          <!-- Divider -->
+          <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 15px; border-radius:2px;"></div>
+
+          <!-- Support -->
+          <p style="font-size:14px; color:#333; margin:0 0 3px;">
+            Need help? Our team is here for you:
+          </p>
+
+          <a href="mailto:support@botassistai.com" style="color:#00F5D4; font-size:15.5px; text-decoration:none; font-weight:600;">
+            support@botassistai.com
+          </a>
+
+          <!-- Social Icons -->
+          <div style="margin:20px 0;">
+            <a href="https://facebook.com/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="27"></a>
+            <a href="https://instagram.com/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="27"></a>
+            <a href="https://twitter.com/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="27"></a>
+            <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;"><img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="27"></a>
+          </div>
+
+          <!-- Footer -->
+          <p style="font-size:11.5px; color:#444; margin-top:25px; line-height:1.5;">
+            You are receiving this email because you have an account with BotAssistAI.<br>
+            To unsubscribe, click 
+            <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
+          </p>
+
+        </div>
+
+      </td>
+    </tr>
+  </table>
 </div>
-
 
           `,
         };

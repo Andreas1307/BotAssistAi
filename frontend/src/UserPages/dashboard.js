@@ -879,7 +879,7 @@ if (loading) {
         </Link>
          <button className="membership-later-btn" onClick={() => {
           offHadMem()
-          setRenew(false)
+          setRenew(true)
          }}>
            Not Now
          </button>
