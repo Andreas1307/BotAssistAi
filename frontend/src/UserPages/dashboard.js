@@ -64,10 +64,10 @@ const Dashboard = () => {
     "What payment methods do you accept?"
   ]);
   const [lastConv, setLastConv] = useState([]);
-  const [integration, setIntegration] = useState(false)
-  const [bookingIntegration, setBookingIntegration] = useState(false)
-  const [shopifyUser, setShopifyUser] = useState(false)
-
+  const [integration, setIntegration] = useState(false);
+  const [bookingIntegration, setBookingIntegration] = useState(false);
+  const [shopifyUser, setShopifyUser] = useState(false);
+  const [showConvsLimit, setShowConvsLimit] = useState(false)
 
   const [host, setHost] = useState(null);
 
@@ -421,6 +421,11 @@ const Dashboard = () => {
           method: "GET",
         });
         setDailyCount(response.dailyMessages);    
+        if(response.dailyMessages && membership === "Free") {
+          setShowConvsLimit(true)
+        } else {
+          setShowConvsLimit(false)
+        }
       } catch (e) {
         console.log("An error occured with fetching the daily conversations", e)
         showErrorNotification()
@@ -879,8 +884,8 @@ if (loading) {
         <h1 className="dashboard-title">  <FaTachometerAlt className="dashIcon" />Dashboard Overview</h1>
         <div>
 
-
-        <div class="limit-banner">
+{showConvsLimit && (
+   <div class="limit-banner">
   <div class="limit-icon">⚡</div>
   <div class="limit-content">
     <h3>Daily Conversation Limit Reached</h3>
@@ -888,6 +893,8 @@ if (loading) {
   </div>
 </div>
 
+)}
+       
 
 
 

@@ -1102,12 +1102,11 @@ body {
 
 .limit-content p {
   margin: 4px 0 0 0;
-  font-size: 14.7px;
+  font-size: 14.8px;
   color: #f6f6f6;
+  font-weight: 500;
   line-height: 1.6;
 }
-
-/* ===================== Animations ===================== */
 
 @keyframes slideFade {
   from {
