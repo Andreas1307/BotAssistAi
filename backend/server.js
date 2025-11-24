@@ -778,7 +778,7 @@ const handleSendNewUserEmail = async (rawKey, email) => {
 
               <!-- Username Label -->
               <p style="color:#333; font-size:15.5px; font-weight:600; margin:0 0 8px;">
-                <span style="opacity:0.85;">Username (your email)</span>:
+                <span style="opacity:0.85;">Your Login Email:</span>:
               </p>
 
               <!-- Username Box -->
@@ -821,15 +821,15 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               </div>
   
               <!-- Message -->
-              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:25px;">
+              <p style="color:#333; font-size:15px; line-height:1.6; margin-bottom:12px;">
                 For security, we strongly recommend updating your password once you sign in to your dashboard and go to the settings section. 
               </p>
   
               <!-- Divider -->
-              <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 27px; border-radius:2px;"></div>
+              <div style="width:70px; height:2px; background:#00F5D4; margin:0 auto 15px; border-radius:2px;"></div>
   
               <!-- Support -->
-              <p style="font-size:14px; color:#333; margin:0 0 5px;">
+              <p style="font-size:14px; color:#333; margin:0 0 3px;">
                 Need help? Our team is here for you:
               </p>
   
@@ -838,23 +838,23 @@ const handleSendNewUserEmail = async (rawKey, email) => {
               </a>
   
               <!-- Social Icons -->
-              <div style="margin-bottom:20px;">
-                  <a href="https://facebook.com/botassistai" style="margin:0 6px;">
+              <div style="margin-bottom:20px; margin-top: 15px;">
+                  <a href="https://facebook.com/botassistai" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/facebook.png" width="26" alt="">
                   </a>
-                  <a href="https://instagram.com/botassistai" style="margin:0 6px;">
+                  <a href="https://instagram.com/botassistai" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="26" alt="">
                   </a>
-                  <a href="https://twitter.com/botassistai" style="margin:0 6px;">
+                  <a href="https://twitter.com/botassistai" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="26" alt="">
                   </a>
-                  <a href="https://linkedin.com/company/botassistai" style="margin:0 6px;">
+                  <a href="https://linkedin.com/company/botassistai" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="26" alt="">
                   </a>
                 </div>
   
               <!-- Footer -->
-              <p style="font-size:11px; color:#444; margin-top:30px; line-height:1.5;">
+              <p style="font-size:11.5px; color:#444; margin-top:30px; line-height:1.5;">
                 You received this email because you created an account with BotAssist AI.<br>
                 If you wish to unsubscribe, click 
                 <a href="https://botassistai.com/unsubscribe" style="color:#ff6b6b; text-decoration:none;">here</a>.
