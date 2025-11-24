@@ -292,8 +292,7 @@ const Dashboard = () => {
     
     const interval = setInterval(() => {
       fetchUser();
-    }, 5000);
-  
+    }, 9000);
     return () => clearInterval(interval);
   }, []);
 
@@ -430,8 +429,9 @@ const Dashboard = () => {
         const response = await fetchWithAuth(`/daily-messages?userId=${userId}`, {
           method: "GET",
         });
-        setDailyCount(response.dailyMessages);    
-        if(response.dailyMessages && membership === "free") {
+        setDailyCount(response.dailyMessages);
+        console.log("MEMBERSHIP", membership)    
+        if(response.dailyMessages && membership === "Free") {
           setShowConvsLimit(true)
         } else {
           setShowConvsLimit(false)
@@ -445,7 +445,7 @@ const Dashboard = () => {
 
     const interval = setInterval(() => {
       fetchDailyConversations();
-    }, 10000);
+    }, 9000);
   
     // Cleanup on unmount
     return () => clearInterval(interval);
