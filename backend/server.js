@@ -1095,7 +1095,7 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: ".botassistai.com",
+    //domain: ".botassistai.com",
     path: "/",
   });
   
