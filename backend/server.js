@@ -1085,18 +1085,15 @@ app.get("/shopify/top-level-auth", (req, res) => {
       <body>
         <script>
           (function() {
-            // ✅ UMD build: AppBridge is the factory function, no .default
-            const createApp = window.AppBridge;
-            const Redirect = window.AppBridgeActions.Redirect;
-
-            const app = createApp({
+            // UMD build → AppBridge and AppBridgeActions are global objects
+            const app = window['AppBridge']({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               shopOrigin: "${shop}",
               forceRedirect: true
             });
 
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
+            const redirect = window['AppBridgeActions'].Redirect.create(app);
+            redirect.dispatch(window['AppBridgeActions'].Redirect.Action.REMOTE, "${redirectUrl}");
           })();
         </script>
       </body>
@@ -1341,11 +1338,14 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               
               if (host) {
                 try {
-                  const createApp = window['app-bridge'].default;
-                  const Redirect = window['app-bridge'].actions.Redirect;
-                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-                  const redirect = Redirect.create(app);
-                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
+                  const app = window['AppBridge']({
+  apiKey: ${process.env.SHOPIFY_API_KEY},
+  host,
+  forceRedirect: true
+});
+const redirect = window['AppBridgeActions'].Redirect.create(app);
+                 
+                 redirect.dispatch(window['AppBridgeActions'].Redirect.Action.REMOTE, dashboardUrl);
                 } catch(e) {
                   console.warn("App Bridge redirect failed, fallback to top-level:", e);
                   window.top.location.href = dashboard;
