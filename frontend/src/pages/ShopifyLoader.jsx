@@ -28,6 +28,7 @@ export default function ShopifyLoader() {
     
     const shopParam = params.get("shop");
     const hostParam = params.get("host");
+    console.log(shopParam, hostParam)
 
     if (!shop) {
       return; // Shopify will add it automatically
