@@ -7,6 +7,9 @@ export default function ShopifyLoader() {
   const [installed, setInstalled] = useState(null);
   const [appBridgeReady, setAppBridgeReady] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  const [shop, setShop] = useState(null);
+  const [user, setUser] = useState(null);
     const [colors, setColors] = useState({
         background: '#f2f2f2',
         chatbotBackground: '#092032',
@@ -20,6 +23,23 @@ export default function ShopifyLoader() {
         textColor: '#cccccc',
         borderColor: '#00F5D4'
       });
+
+      useEffect(() => {
+        const fetchUser = async () => {
+          try {
+            const data = await fetchWithAuth("/auth-check");        
+            setUser(data.user);
+          } catch (error) {
+            console.error("❌ Auth check error:", error);
+            setUser(null);
+          } finally {
+            setLoading(false);
+          }
+        };
+      
+        fetchUser();
+      }, []);
+      
 
 
       useEffect(() => {
