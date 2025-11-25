@@ -1085,13 +1085,16 @@ app.get("/shopify/top-level-auth", (req, res) => {
       <body>
         <script>
           (function() {
-            const app = window['AppBridge'].default({
+            // ✅ UMD build: AppBridge is the factory function, no .default
+            const createApp = window.AppBridge;
+            const Redirect = window.AppBridgeActions.Redirect;
+
+            const app = createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               shopOrigin: "${shop}",
               forceRedirect: true
             });
 
-            const Redirect = window['AppBridgeActions'].Redirect;
             const redirect = Redirect.create(app);
             redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
           })();
@@ -1338,8 +1341,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               
               if (host) {
                 try {
-                  const createApp = window['AppBridge'].default;
-                  const Redirect = window['AppBridgeActions'].Redirect;
+                  const createApp = window['app-bridge'].default;
+                  const Redirect = window['app-bridge'].actions.Redirect;
                   const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
                   const redirect = Redirect.create(app);
                   redirect.dispatch(Redirect.Action.REMOTE, dashboard);
