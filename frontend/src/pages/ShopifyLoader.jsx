@@ -37,8 +37,8 @@ export default function ShopifyLoader() {
           const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
          
           if (!data.installed) {
-            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}&host=${hostParam}`);
-    
+            window.location.assign(`${directory}/shopify/top-level-auth?shop=${shopParam}&host=${hostParam}`);
+
             await fetchWithAuth(`/chatbot-config-shopify`, {
               method: "POST",
               body: JSON.stringify({
@@ -76,7 +76,7 @@ export default function ShopifyLoader() {
       (async () => {
         const app = await initShopifyAppBridge();
         if (!app) {
-            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}&host=${hostParam}`);
+            window.location.assign(`${directory}/shopify/top-level-auth?shop=${shopParam}&host=${hostParam}`);
 
           return;
         }
