@@ -1069,43 +1069,48 @@ function abs(path) {
 }
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
-  const { shop } = req.query;
-
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
+  console.log("I MA HITTTTTTT")
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
     <!DOCTYPE html>
     <html>
-    <head>
-      <meta charset="utf-8"/>
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-    </head>
-    <body>
-      <script>
-        (function() {
-          var Redirect = window['app-bridge'].actions.Redirect;
+      <head>
+        <meta charset="utf-8"/>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+      </head>
+      <body>
+        <script>
+          (function() {
+            // Shopify requires a HOST param to allow App Bridge redirects
+            var params = new URLSearchParams(window.location.search);
+            var host = params.get("host");
 
-          // Force top-level redirect using App Bridge
-          var app = window['app-bridge'].createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: new URLSearchParams(window.location.search).get("host") || "",
-            forceRedirect: true
-          });
+            var createApp = window['app-bridge'].default;
+            var Redirect = window['app-bridge'].actions.Redirect;
 
-          var redirect = Redirect.create(app);
-          redirect.dispatch(
-            Redirect.Action.REMOTE,
-            "${redirectUrl}"
-          );
+            var app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: host,
+              forceRedirect: true
+            });
 
-          // fallback
-          setTimeout(() => { window.top.location.href = "${redirectUrl}" }, 500);
-        })();
-      </script>
-    </body>
+            var redirect = Redirect.create(app);
+
+            // THIS is what fixes the security errors
+            redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
+
+            // Fallback (only triggers outside Shopify admin)
+            setTimeout(() => { 
+              window.top.location.href = "${redirectUrl}";
+            }, 500);
+          })();
+        </script>
+      </body>
     </html>
   `);
 });
