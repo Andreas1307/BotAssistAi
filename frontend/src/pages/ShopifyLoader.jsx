@@ -41,7 +41,7 @@ export default function ShopifyLoader() {
       }, []);
       
 
-
+alert("HELLO")
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const shopParam = params.get("shop");

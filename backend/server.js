@@ -1089,7 +1089,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
             var host = params.get("host");
 
             if (!host) {
-              // fallback if host not available
+              // fallback if host is missing
               window.top.location.href = "${redirectUrl}";
               return;
             }
@@ -1107,7 +1107,9 @@ app.get("/shopify/top-level-auth", (req, res) => {
             redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
 
             // fallback in case App Bridge fails
-            setTimeout(() => { window.top.location.href = "${redirectUrl}" }, 500);
+            setTimeout(() => {
+              window.top.location.href = "${redirectUrl}";
+            }, 500);
           })();
         </script>
       </body>
