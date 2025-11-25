@@ -1076,12 +1076,31 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-    <html><body>
-  <script>
-    window.top.location.href = "${redirectUrl}";
-  </script>
-</body></html>
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+      </head>
+      <body>
+        <script>
+          (function() {
+            const app = window['app-bridge'].default({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              shopOrigin: "${shop}",
+              forceRedirect: true
+            });
 
+            const Redirect = window['app-bridge'].actions.Redirect;
+            const redirect = Redirect.create(app);
+            redirect.dispatch(
+              Redirect.Action.REMOTE,
+              "${redirectUrl}"
+            );
+          })();
+        </script>
+      </body>
+    </html>
   `);
 });
 
