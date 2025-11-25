@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    domain: "api.botassistai.com"
   }
 }));
 
@@ -78,7 +78,7 @@ app.use(['/ping-client', '/ask-ai'], cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // ⚠️ NO cookies allowed here
+  credentials: true 
 }));
 
 const allowedOrigins = [
@@ -1094,7 +1094,7 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: ".botassistai.com",
+    domain: "api.botassistai.com",
     path: "/",
   });
   
@@ -1122,9 +1122,19 @@ app.get("/shopify/install", async (req, res) => {
   console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
 
   if (!hasTopLevel) {
-    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
-    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
+    console.log("⚠️ No top-level cookie → send HTML script once");
+  
+    return res.send(`
+      <html>
+      <body>
+        <script>
+          window.top.location.href = "/shopify/top-level-auth?shop=${shop}";
+        </script>
+      </body>
+      </html>
+    `);
   }
+  
 
   if (authInProgress.has(shop)) {
     console.log(`⚠️ Auth already in progress for ${shop}`);
@@ -1365,7 +1375,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
-
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
