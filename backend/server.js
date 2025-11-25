@@ -1297,9 +1297,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const appHome = `https://admin.shopify.com/store/${shop.replace(".myshopify.com","")}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const dashboardUrl = `https://admin.shopify.com/store/${shop.replace(".myshopify.com","")}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-    const dashboardUrlEscaped = appHome.replace(/"/g, '\\"'); // escape double quotes
+    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
 
     res.send(`
       <!DOCTYPE html>
