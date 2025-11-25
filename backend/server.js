@@ -1297,9 +1297,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const appHome = `https://admin.shopify.com/store/${shop.replace(".myshopify.com","")}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
+    const dashboardUrlEscaped = appHome.replace(/"/g, '\\"'); // escape double quotes
 
     res.send(`
       <!DOCTYPE html>
@@ -1312,7 +1312,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
           <h2>Finishing installation...</h2>
     
           <script>
-            window.top.location.href = "${dashboardUrlEscaped}";
+            window.top.location.href = "https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}";
           </script>
     
           <noscript>
