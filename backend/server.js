@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: "api.botassistai.com"
+   // domain: ".botassistai.com"
   }
 }));
 
@@ -1068,6 +1068,7 @@ function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 const authInProgress = new Set();
+
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
@@ -1094,7 +1095,7 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: "api.botassistai.com",
+    domain: "botassistai.com",
     path: "/",
   });
   
@@ -1125,14 +1126,13 @@ app.get("/shopify/install", async (req, res) => {
     console.log("⚠️ No top-level cookie → send HTML script once");
   
     return res.send(`
-      <html>
-      <body>
-        <script>
-          window.top.location.href = "/shopify/top-level-auth?shop=${shop}";
-        </script>
-      </body>
-      </html>
-    `);
+      <html><body>
+      <script>
+        window.top.location.href = "/shopify/top-level-auth?shop=${shop}";
+      </script>
+      </body></html>
+      `);
+      
   }
   
 
