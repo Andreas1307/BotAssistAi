@@ -20,6 +20,7 @@ import UpgradeDetails from './UserPages/Upgrade';
 import UnsubscribePage from './pages/UnsubscribePage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import ShopifyLoader from './pages/ShopifyLoader';
 
 const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/terms", element: <TermsOfService /> },
   { path: `/admin/:key`, element: <AdminPage /> },
+  { path: `/shopify`, element: <ShopifyLoader /> },
   { path: "*", element: <Error /> }
 ]);
 
