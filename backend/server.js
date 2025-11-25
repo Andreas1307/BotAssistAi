@@ -1072,7 +1072,6 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  console.log("I MA HITTTTTTT")
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
@@ -1086,9 +1085,14 @@ app.get("/shopify/top-level-auth", (req, res) => {
       <body>
         <script>
           (function() {
-            // Shopify requires a HOST param to allow App Bridge redirects
             var params = new URLSearchParams(window.location.search);
             var host = params.get("host");
+
+            if (!host) {
+              // fallback if host not available
+              window.top.location.href = "${redirectUrl}";
+              return;
+            }
 
             var createApp = window['app-bridge'].default;
             var Redirect = window['app-bridge'].actions.Redirect;
@@ -1100,14 +1104,10 @@ app.get("/shopify/top-level-auth", (req, res) => {
             });
 
             var redirect = Redirect.create(app);
-
-            // THIS is what fixes the security errors
             redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
 
-            // Fallback (only triggers outside Shopify admin)
-            setTimeout(() => { 
-              window.top.location.href = "${redirectUrl}";
-            }, 500);
+            // fallback in case App Bridge fails
+            setTimeout(() => { window.top.location.href = "${redirectUrl}" }, 500);
           })();
         </script>
       </body>
