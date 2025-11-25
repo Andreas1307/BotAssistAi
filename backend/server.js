@@ -1069,51 +1069,18 @@ function abs(path) {
 }
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8"/>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-      </head>
-      <body>
-        <script>
-          (function() {
-            var params = new URLSearchParams(window.location.search);
-            var host = params.get("host");
+    <html><body>
+  <script>
+    window.top.location.href = "${redirectUrl}";
+  </script>
+</body></html>
 
-            if (!host) {
-              // fallback if host is missing
-              window.top.location.href = "${redirectUrl}";
-              return;
-            }
-
-            var createApp = window['app-bridge'].default;
-            var Redirect = window['app-bridge'].actions.Redirect;
-
-            var app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: host,
-              forceRedirect: true
-            });
-
-            var redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
-
-            // fallback in case App Bridge fails
-            setTimeout(() => {
-              window.top.location.href = "${redirectUrl}";
-            }, 500);
-          })();
-        </script>
-      </body>
-    </html>
   `);
 });
 
@@ -1337,18 +1304,42 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     res.send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8"/></head>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+        </head>
         <body>
           <script>
-            const dashboard = "${dashboardUrlEscaped}";
-            window.top.location.href = dashboard;
+            (function() {
+              const host = "${host}";
+              const shop = "${shop}";
+              const dashboard = "${dashboardUrlEscaped}";
+              
+              if (host) {
+                try {
+                  const createApp = window['app-bridge'].default;
+                  const Redirect = window['app-bridge'].actions.Redirect;
+                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+                  const redirect = Redirect.create(app);
+                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
+                } catch(e) {
+                  console.warn("App Bridge redirect failed, fallback to top-level:", e);
+                  window.top.location.href = dashboard;
+                }
+              } else {
+                window.top.location.href = dashboard;
+              }
+            })();
           </script>
           <noscript>
-            Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
+            Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
           </noscript>
         </body>
       </html>
     `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
