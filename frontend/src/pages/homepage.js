@@ -60,6 +60,7 @@ const Homepage = () => {
 
 
  
+/*
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
@@ -163,7 +164,6 @@ const Homepage = () => {
 
 
 
-/*
 
   const redirectToInstall = async (shop) => {
     if (!shop) return;
