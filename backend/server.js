@@ -1307,40 +1307,22 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <head>
           <meta charset="utf-8"/>
           <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
         </head>
-        <body>
+        <body style="background: #111; color: white; font-family: sans-serif; text-align:center; padding-top:50px;">
+          <h2>Finishing installation...</h2>
+    
           <script>
-            (function() {
-              const host = "${host}";
-              const shop = "${shop}";
-              const dashboard = "${dashboardUrlEscaped}";
-              
-              if (host) {
-                try {
-                  const createApp = window['app-bridge'].default;
-                  const Redirect = window['app-bridge'].actions.Redirect;
-                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-                  const redirect = Redirect.create(app);
-                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
-                } catch(e) {
-                  console.warn("App Bridge redirect failed, fallback to top-level:", e);
-                  window.top.location.href = dashboard;
-                }
-              } else {
-                window.top.location.href = dashboard;
-              }
-            })();
+            window.top.location.href = "${dashboardUrlEscaped}";
           </script>
+    
           <noscript>
-            Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
+            <meta http-equiv="refresh" content="0; url=${dashboardUrlEscaped}" />
+            <p>Please <a href="${dashboardUrlEscaped}" target="_top">click here</a> if you are not redirected.</p>
           </noscript>
         </body>
       </html>
     `);
-    
-    
+
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
