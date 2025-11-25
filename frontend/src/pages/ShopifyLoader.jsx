@@ -1,12 +1,29 @@
-import { useEffect } from "react";
-import { initShopifyAppBridge, safeRedirect } from "../utils/initShopifyAppBridge";
+import { useEffect, useState } from "react";
+import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
 import directory from "../directory";
 
 export default function ShopifyLoader() {
+    const [colors, setColors] = useState({
+        background: '#f2f2f2',
+        chatbotBackground: '#092032',
+        chatBoxBackground: '#112B3C',
+        chatInputBackground: '#ffffff',        
+        chatInputTextColor: '#000000',
+        chatBtn: '#00F5D4',
+        websiteChatBtn: '#00F5D4',
+        websiteQuestion: '#ffffff',
+        needHelpTextColor: '#00F5D4',
+        textColor: '#cccccc',
+        borderColor: '#00F5D4'
+      });
+
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
-    const host = params.get("host");
+    
+    const shopParam = params.get("shop");
+    const hostParam = params.get("host");
 
     if (!shop) {
       return; // Shopify will add it automatically
@@ -38,8 +55,8 @@ export default function ShopifyLoader() {
           console.log("✅ Shopify store ready");
           setInstalled(true);
   
-          if (user?.username) {
-            safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+          if (shop) {
+            safeRedirect(`/${shop}/dashboard?shop=${shopParam}&host=${hostParam}`);
           }
     
         } catch (err) {
