@@ -47,7 +47,6 @@ export default function ShopifyLoader() {
         const shopParam = params.get("shop");
         const hostParam = params.get("host");
       
-        // If shop param missing, stop
         if (!shopParam) {
           console.warn("❌ Missing shop parameter in URL");
           return;
@@ -57,10 +56,11 @@ export default function ShopifyLoader() {
         (async () => {
           const app = await initShopifyAppBridge();
           if (!app) {
-            // If App Bridge init fails, fallback to OAuth install
-            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+            // MUST go top-level, not embedded
+            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
             return;
           }
+          
           
           setAppBridgeReady(true);
           window.appBridge = app;
@@ -72,7 +72,7 @@ export default function ShopifyLoader() {
             // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
           } catch (err) {
             console.error("❌ Shopify App Bridge init error:", err);
-            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
           }
         })();
       }, []);
