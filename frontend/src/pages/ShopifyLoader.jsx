@@ -3,6 +3,10 @@ import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/init
 import directory from "../directory";
 
 export default function ShopifyLoader() {
+    
+  const [installed, setInstalled] = useState(null);
+  const [appBridgeReady, setAppBridgeReady] = useState(false);
+  const [loading, setLoading] = useState(true);
     const [colors, setColors] = useState({
         background: '#f2f2f2',
         chatbotBackground: '#092032',
