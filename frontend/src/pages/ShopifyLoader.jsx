@@ -37,7 +37,7 @@ export default function ShopifyLoader() {
           const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
          
           if (!data.installed) {
-            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}&host=${hostParam}`);
     
             await fetchWithAuth(`/chatbot-config-shopify`, {
               method: "POST",
@@ -76,8 +76,8 @@ export default function ShopifyLoader() {
       (async () => {
         const app = await initShopifyAppBridge();
         if (!app) {
-          // If App Bridge init fails, fallback to OAuth install
-          safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}&host=${hostParam}`);
+
           return;
         }
         
