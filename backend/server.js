@@ -1079,24 +1079,21 @@ app.get("/shopify/top-level-auth", (req, res) => {
     <!DOCTYPE html>
     <html>
       <head>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge@3.0.1/dist/index.umd.js"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge-actions@3.0.1/dist/index.umd.js"></script>
       </head>
       <body>
         <script>
           (function() {
-            const app = window['app-bridge'].default({
+            const app = window['AppBridge'].default({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               shopOrigin: "${shop}",
               forceRedirect: true
             });
 
-            const Redirect = window['app-bridge'].actions.Redirect;
+            const Redirect = window['AppBridgeActions'].Redirect;
             const redirect = Redirect.create(app);
-            redirect.dispatch(
-              Redirect.Action.REMOTE,
-              "${redirectUrl}"
-            );
+            redirect.dispatch(Redirect.Action.REMOTE, "${redirectUrl}");
           })();
         </script>
       </body>
@@ -1341,8 +1338,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               
               if (host) {
                 try {
-                  const createApp = window['app-bridge'].default;
-                  const Redirect = window['app-bridge'].actions.Redirect;
+                  const createApp = window['AppBridge'].default;
+                  const Redirect = window['AppBridgeActions'].Redirect;
                   const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
                   const redirect = Redirect.create(app);
                   redirect.dispatch(Redirect.Action.REMOTE, dashboard);
