@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-   // domain: ".botassistai.com"
+    domain: ".botassistai.com"
   }
 }));
 
@@ -1061,6 +1061,7 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
   res.sendStatus(200);
 });
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -1068,7 +1069,6 @@ function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 const authInProgress = new Set();
-
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
@@ -1095,7 +1095,7 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: "botassistai.com",
+    domain: ".botassistai.com",
     path: "/",
   });
   
@@ -1123,18 +1123,9 @@ app.get("/shopify/install", async (req, res) => {
   console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
 
   if (!hasTopLevel) {
-    console.log("⚠️ No top-level cookie → send HTML script once");
-  
-    return res.send(`
-      <html><body>
-      <script>
-        window.top.location.href = "/shopify/top-level-auth?shop=${shop}";
-      </script>
-      </body></html>
-      `);
-      
+    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
+    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
   }
-  
 
   if (authInProgress.has(shop)) {
     console.log(`⚠️ Auth already in progress for ${shop}`);
@@ -1251,13 +1242,15 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
+/*
       try {
         await handleSendNewUserEmail(rawKey, email);
       } catch (err) {
         console.error("❌ Failed to send new user email:", err);
       }
 
-      
+      SA FAC UPDATE DACA VREAU
+        */
     }
 
     // --- Log the user in via Passport BEFORE redirect
@@ -1307,7 +1300,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const dashboardUrl = `https://admin.shopify.com/store/${shop.replace(".myshopify.com","")}/apps/botassistai?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
     const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
 
@@ -1317,22 +1310,40 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <head>
           <meta charset="utf-8"/>
           <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
         </head>
-        <body style="background: #111; color: white; font-family: sans-serif; text-align:center; padding-top:50px;">
-          <h2>Finishing installation...</h2>
-    
+        <body>
           <script>
-            window.top.location.href = "https://admin.shopify.com/store/${shop.replace('.myshopify.com','')}/apps/${process.env.SHOPIFY_APP_HANDLE}?shop=${shop}&host=${encodeURIComponent(host)}";
+            (function() {
+              const host = "${host}";
+              const shop = "${shop}";
+              const dashboard = "${dashboardUrlEscaped}";
+              
+              if (host) {
+                try {
+                  const createApp = window['app-bridge'].default;
+                  const Redirect = window['app-bridge'].actions.Redirect;
+                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+                  const redirect = Redirect.create(app);
+                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
+                } catch(e) {
+                  console.warn("App Bridge redirect failed, fallback to top-level:", e);
+                  window.top.location.href = dashboard;
+                }
+              } else {
+                window.top.location.href = dashboard;
+              }
+            })();
           </script>
-    
           <noscript>
-            <meta http-equiv="refresh" content="0; url=${dashboardUrlEscaped}" />
-            <p>Please <a href="${dashboardUrlEscaped}" target="_top">click here</a> if you are not redirected.</p>
+            Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
           </noscript>
         </body>
       </html>
     `);
-
+    
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
@@ -1375,6 +1386,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
+
 
 app.get("/debug/cookies", (req, res) => {
   res.json({
