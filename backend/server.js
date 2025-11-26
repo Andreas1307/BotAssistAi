@@ -1072,40 +1072,15 @@ const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
+
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-  <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://unpkg.com/@shopify/app-bridge@3.0.1/dist/index.umd.min.js"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge-actions@3.0.1/dist/index.umd.min.js"></script>
-  </head>
-  <body>
-    <script>
-      (function() {
-        // Shopify App Bridge UMD globals
-        const AppBridge = window['ShopifyApp'] || window['AppBridge'];
-        const AppBridgeActions = window['AppBridgeActions'];
-
-        if (!AppBridge || !AppBridgeActions) {
-          console.error('Shopify AppBridge not loaded!');
-          return;
-        }
-
-        // Correct instantiation
-        const app = AppBridge.createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          shopOrigin: "${shop}",
-          forceRedirect: true
-        });
-
-        const redirect = AppBridgeActions.Redirect.create(app);
-        redirect.dispatch(AppBridgeActions.Redirect.Action.REMOTE, "${redirectUrl}");
-      })();
-    </script>
-  </body>
-</html>
+    <html><body>
+  <script>
+    window.top.location.href = "${redirectUrl}";
+  </script>
+</body></html>
 
   `);
 });
