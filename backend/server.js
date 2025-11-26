@@ -1315,29 +1315,40 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         </head>
         <body>
           <script>
-            (function() {
-              const host = "${host}";
-              const dashboard = "${dashboardUrl}";
+(function() {
+  const host = ${host};
+  const dashboard = ${dashboardUrlEscaped};
 
-              if (host && window.top !== window.self) {
-                // Inside Shopify admin iframe
-                const AppBridge = window['app-bridge'];
-                const Redirect = window['app-bridge/actions'].Redirect;
+  // Check if we're inside Shopify admin iframe
+  if (window.top !== window.self && host) {
+    try {
+      const AppBridge = window.AppBridge; 
+      const Redirect = window.AppBridgeActions.Redirect;
 
-                const app = AppBridge.createApp({
-                  apiKey: "${process.env.SHOPIFY_API_KEY}",
-                  host: host,
-                  forceRedirect: false
-                });
+      const app = AppBridge.createApp({
+        apiKey: ${process.env.SHOPIFY_API_KEY},
+        host: host,
+        forceRedirect: false  // IMPORTANT !!!
+      });
 
-                const redirect = Redirect.create(app);
-                redirect.dispatch(Redirect.Action.APP, dashboard);
-              } else {
-                // Outside iframe, fallback to top-level redirect
-                window.top.location.href = dashboard;
-              }
-            })();
-          </script>
+      const redirect = Redirect.create(app);
+
+      redirect.dispatch(
+        Redirect.Action.APP,
+        dashboard
+      );
+
+    } catch (err) {
+      console.error("App Bridge failed → fallback redirect", err);
+      window.top.location.href = dashboard; // fallback
+    }
+  } else {
+    // Not in iframe → top-level redirect
+    window.top.location.href = dashboard;
+  }
+})();
+</script>
+
           <noscript>
             Redirect failed. Click <a href="${dashboardUrl}" target="_top">here</a>.
           </noscript>
