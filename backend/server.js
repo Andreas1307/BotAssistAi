@@ -1075,37 +1075,40 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <script src="https://unpkg.com/@shopify/app-bridge@3.0.1/dist/index.umd.min.js"></script>
-        <script src="https://unpkg.com/@shopify/app-bridge-actions@3.0.1/dist/index.umd.min.js"></script>
-      </head>
-      <body>
-        <script>
-          (function() {
-            const AppBridge = window['AppBridge'];
-            const AppBridgeActions = window['AppBridgeActions'];
+  <!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/@shopify/app-bridge@3.0.1/dist/index.umd.min.js"></script>
+    <script src="https://unpkg.com/@shopify/app-bridge-actions@3.0.1/dist/index.umd.min.js"></script>
+  </head>
+  <body>
+    <script>
+      (function() {
+        // Shopify App Bridge UMD globals
+        const AppBridge = window['ShopifyApp'] || window['AppBridge'];
+        const AppBridgeActions = window['AppBridgeActions'];
 
-            const app = AppBridge.default ? AppBridge.default({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              shopOrigin: "${shop}",
-              forceRedirect: true
-            }) : AppBridge({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              shopOrigin: "${shop}",
-              forceRedirect: true
-            });
+        if (!AppBridge || !AppBridgeActions) {
+          console.error('Shopify AppBridge not loaded!');
+          return;
+        }
 
-            const redirect = AppBridgeActions.Redirect.create(app);
-            redirect.dispatch(AppBridgeActions.Redirect.Action.REMOTE, "${redirectUrl}");
-          })();
-        </script>
-      </body>
-    </html>
+        // Correct instantiation
+        const app = AppBridge.createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          shopOrigin: "${shop}",
+          forceRedirect: true
+        });
+
+        const redirect = AppBridgeActions.Redirect.create(app);
+        redirect.dispatch(AppBridgeActions.Redirect.Action.REMOTE, "${redirectUrl}");
+      })();
+    </script>
+  </body>
+</html>
+
   `);
 });
-
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
