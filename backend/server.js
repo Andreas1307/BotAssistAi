@@ -1306,51 +1306,44 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     res.send(`
       <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Redirecting...</title>
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-  </head>
-  <body>
-    <script>
-      (function() {
-        const host = "${host}";
-        const dashboard = "${dashboardUrlEscaped}";
+      <html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+        </head>
+        <body>
+          <script>
+            (function() {
+              const host = "${host}";
+              const dashboard = "${dashboardUrl}";
 
-        // If we're in an iframe, redirect inside Shopify admin
-        if (window.top !== window.self && host) {
-          try {
-            const AppBridge = window['AppBridge'];
-            const Redirect = window['AppBridgeActions'].Redirect;
+              if (host && window.top !== window.self) {
+                // Inside Shopify admin iframe
+                const AppBridge = window['app-bridge'];
+                const Redirect = window['app-bridge/actions'].Redirect;
 
-            const app = AppBridge.createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: host,
-              forceRedirect: false  // <-- important: false keeps it in iframe
-            });
+                const app = AppBridge.createApp({
+                  apiKey: "${process.env.SHOPIFY_API_KEY}",
+                  host: host,
+                  forceRedirect: false
+                });
 
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.APP, dashboard);
-          } catch(err) {
-            console.warn("App Bridge redirect failed, fallback to top:", err);
-            window.top.location.href = dashboard;
-          }
-        } else {
-          // If we somehow landed outside iframe, redirect top-level
-          window.top.location.href = dashboard;
-        }
-      })();
-    </script>
-    <noscript>
-      Redirect failed. Click <a href="${dashboardUrlEscaped}" target="_top">here</a>.
-    </noscript>
-  </body>
-</html>
-
+                const redirect = Redirect.create(app);
+                redirect.dispatch(Redirect.Action.APP, dashboard);
+              } else {
+                // Outside iframe, fallback to top-level redirect
+                window.top.location.href = dashboard;
+              }
+            })();
+          </script>
+          <noscript>
+            Redirect failed. Click <a href="${dashboardUrl}" target="_top">here</a>.
+          </noscript>
+        </body>
+      </html>
     `);
-    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
