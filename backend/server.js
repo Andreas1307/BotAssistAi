@@ -1078,7 +1078,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
   res.send(`
     <html><body>
   <script>
-    window.top.location.href = "${redirectUrl}";
+    window.location.href = "${redirectUrl}";
   </script>
 </body></html>
 
@@ -1088,7 +1088,6 @@ app.get("/shopify/top-level-auth", (req, res) => {
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
-console.log(" I have been HITYTTTTTTTTTTTTTTTT")
   console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
 
   res.cookie("shopify_toplevel", "true", {
@@ -1104,12 +1103,7 @@ console.log(" I have been HITYTTTTTTTTTTTTTTTT")
   res.send(`
     <html><body>
       <script>
-        const target = "${installUrl}";
-        if (window.top === window.self) {
-          window.location.href = target;
-        } else {
-          window.top.location.href = target;
-        }
+        window.location.href = "${installUrl}";
       </script>
     </body></html>
   `);
@@ -1326,7 +1320,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
                   const Redirect = window['app-bridge'].actions.Redirect;
                   const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
                   const redirect = Redirect.create(app);
-                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
+                  redirect.dispatch(Redirect.Action.APP, dashboard);
                 } catch(e) {
                   console.warn("App Bridge redirect failed, fallback to top-level:", e);
                   window.top.location.href = dashboard;
