@@ -1314,37 +1314,36 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     <script src="https://unpkg.com/@shopify/app-bridge-actions@3.0.1/dist/index.umd.min.js"></script>
   </head>
   <body>
-    <script>
-      (function() {
-        const host = "${host}";
-        const dashboardUrl = "${dashboardUrlEscaped}";
+   <script>
+(function() {
+  const host = "${host}";
+  const dashboard = "${dashboardUrlEscaped}";
+  const inIframe = window.top !== window.self;
 
-        // Check if inside an iframe (Shopify admin)
-        const inIframe = window.top !== window.self;
+  if (inIframe && host) {
+    try {
+      const AppBridge = window['AppBridge'];
+      const Redirect = window['AppBridgeActions'].Redirect;
 
-        if (inIframe && host) {
-          try {
-            const AppBridge = window['AppBridge'];
-            const Redirect = window['AppBridgeActions'].Redirect;
+      const app = AppBridge.createApp({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: host,
+        forceRedirect: true
+      });
 
-            const app = AppBridge.createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: host,
-              forceRedirect: true
-            });
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.APP, dashboard); // <-- keeps inside iframe
+    } catch (err) {
+      console.warn("App Bridge redirect failed, fallback to top window", err);
+      window.top.location.href = dashboard;
+    }
+  } else {
+    // fallback for first install or outside iframe
+    window.location.href = dashboard;
+  }
+})();
+</script>
 
-            const redirect = Redirect.create(app);
-            redirect.dispatch(Redirect.Action.APP, dashboardUrl); // <-- redirect inside Shopify iframe
-          } catch (err) {
-            console.warn("App Bridge redirect failed, fallback to top window", err);
-            window.top.location.href = dashboardUrl;
-          }
-        } else {
-          // Not inside iframe, go directly
-          window.location.href = dashboardUrl;
-        }
-      })();
-    </script>
     <noscript>
       Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
     </noscript>
