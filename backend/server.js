@@ -1322,11 +1322,18 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               
               if (host) {
                 try {
-                  const createApp = window['app-bridge'].default;
-                  const Redirect = window['app-bridge'].actions.Redirect;
-                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-                  const redirect = Redirect.create(app);
-                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
+                  const AppBridge = window['AppBridge'];
+const Redirect = window['AppBridgeActions'].Redirect;
+
+const app = AppBridge.createApp({
+  apiKey: "${process.env.SHOPIFY_API_KEY}",
+  host: host,
+  forceRedirect: true
+});
+
+const redirect = Redirect.create(app);
+redirect.dispatch(Redirect.Action.APP, dashboard); // <-- KEEP inside iframe
+
                 } catch(e) {
                   console.warn("App Bridge redirect failed, fallback to top-level:", e);
                   window.top.location.href = dashboard;
