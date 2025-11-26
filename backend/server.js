@@ -1320,29 +1320,31 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   const dashboard = "${dashboardUrl}";
   const apiKey = "${process.env.SHOPIFY_API_KEY}";
 
-  if (window.top !== window.self && host) {
+  // If inside Shopify iframe → ALWAYS use App Bridge redirect
+  if (window.top !== window.self) {
     try {
       const AppBridge = window.AppBridge;
       const Redirect = window.AppBridgeActions.Redirect;
 
       const app = AppBridge.createApp({
         apiKey: apiKey,
-        host: host,
-        forceRedirect: false
+        host: host || new URLSearchParams(window.location.search).get("host"),
+        forceRedirect: true
       });
 
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.APP, dashboard);
-
+      return;
     } catch (err) {
-      console.error("App Bridge failed → fallback", err);
-      window.top.location.href = dashboard;
+      console.error("App Bridge redirect failed → fallback", err);
     }
-  } else {
-    window.top.location.href = dashboard;
   }
+
+  // Fallback for standalone environments
+  window.top.location.href = dashboard;
 })();
 </script>
+
           <noscript>
             Redirect failed. Click <a href="${dashboardUrl}" target="_top">here</a>.
           </noscript>
