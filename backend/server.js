@@ -1085,15 +1085,20 @@ app.get("/shopify/top-level-auth", (req, res) => {
       <body>
         <script>
           (function() {
-            // UMD build → AppBridge and AppBridgeActions are global objects
-            const app = window['AppBridge']({
+            // UMD global objects
+            const AppBridge = window['AppBridge'];
+            const AppBridgeActions = window['AppBridgeActions'];
+
+            // Create app instance
+            const app = AppBridge.createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
               shopOrigin: "${shop}",
               forceRedirect: true
             });
 
-            const redirect = window['AppBridgeActions'].Redirect.create(app);
-            redirect.dispatch(window['AppBridgeActions'].Redirect.Action.REMOTE, "${redirectUrl}");
+            // Redirect
+            const redirect = AppBridgeActions.Redirect.create(app);
+            redirect.dispatch(AppBridgeActions.Redirect.Action.REMOTE, "${redirectUrl}");
           })();
         </script>
       </body>
@@ -1338,14 +1343,17 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               
               if (host) {
                 try {
-                  const app = window['AppBridge']({
-  apiKey: ${process.env.SHOPIFY_API_KEY},
-  host,
-  forceRedirect: true
-});
-const redirect = window['AppBridgeActions'].Redirect.create(app);
-                 
-                 redirect.dispatch(window['AppBridgeActions'].Redirect.Action.REMOTE, dashboardUrl);
+                  const AppBridge = window['AppBridge'];
+    const AppBridgeActions = window['AppBridgeActions'];
+
+    const app = AppBridge.createApp({
+      apiKey: "${process.env.SHOPIFY_API_KEY}",
+      host: "${host}",
+      forceRedirect: true
+    });
+
+    const redirect = AppBridgeActions.Redirect.create(app);
+    redirect.dispatch(AppBridgeActions.Redirect.Action.REMOTE, "${dashboardUrlEscaped}");
                 } catch(e) {
                   console.warn("App Bridge redirect failed, fallback to top-level:", e);
                   window.top.location.href = dashboard;
