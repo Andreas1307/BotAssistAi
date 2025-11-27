@@ -40,44 +40,29 @@ export default function ShopifyLoader() {
         fetchUser();
       }, []);
       
-
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const shopParam = params.get("shop");
-        const hostParam = params.get("host");
       
-        if (!shopParam) {
-          console.warn("❌ Missing shop parameter in URL");
+        if (!shopParam) return;
+      
+        const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
+      
+        // FIX: If inside iframe AND cookie missing → force top-level
+        if (window.top !== window.self && !hasTopLevelCookie) {
+          window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
           return;
-        }   
-        
+        }
+      
+        // Otherwise initialize App Bridge normally
         (async () => {
-            const app = await initShopifyAppBridge();
-          
-            // ✅ Only redirect top-level if App Bridge is NOT available AND cookie missing
-            const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
-          
-            if (!app && !hasTopLevelCookie) {
-              safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-              return;
-            }
-          
+          const app = await initShopifyAppBridge();
+          if (app) {
             setAppBridgeReady(true);
             window.appBridge = app;
-            try {
-              console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
-            } catch(err) {
-              console.error("❌ Shopify App Bridge init error:", err);
-              if (!hasTopLevelCookie) {
-                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-              }
-            }
-          })();
-          
+          }
+        })();
       }, []);
-      
-      
-    
       
     
       useEffect(() => {
