@@ -15,12 +15,11 @@
 
 
 
-<!-- REQUIRED for App Bridge V3 to work in an iframe -->
-<script>
-  window.__SHOPIFY_APP_BRIDGE_HOST = new URLSearchParams(window.location.search).get("host");
-</script>
-
-<script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    <script>
+      window.__SHOPIFY_APP_BRIDGE_HOST =
+        new URLSearchParams(location.search).get("host");
+    </script>
+    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
 
     
     
@@ -48,28 +47,6 @@
 
 
     <title>BotAssistAI</title>
-
-
-
-    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-  
-    <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1885771515529090'); // ✅ your correct Pixel ID
-      fbq('track', 'PageView');
-    </script>
-    <noscript><img height="1" width="1" style="display:none"
-      src="https://www.facebook.com/tr?id=1885771515529090&ev=PageView&noscript=1"
-    /></noscript>
-    
     
 
   </head>
