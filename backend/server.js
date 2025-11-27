@@ -1086,12 +1086,8 @@ app.get("/shopify/top-level-auth", (req, res) => {
       </head>
       <body>
         <script>
-          // Always force parent/top to the auth entry point.
-          if (window.top === window.self) {
-            window.location.replace("${redirectUrl}");
-          } else {
-            window.top.location.replace("${redirectUrl}");
-          }
+       window.location.href = "${redirectUrl}";
+
         </script>
       </body>
     </html>
@@ -1125,11 +1121,8 @@ app.get("/shopify/auth", (req, res) => {
       </head>
       <body>
         <script>
-          if (window.top === window.self) {
-            window.location.replace("${installUrl}");
-          } else {
-            window.top.location.replace("${installUrl}");
-          }
+        window.location.href = "${redirectUrl}";
+
         </script>
       </body>
     </html>

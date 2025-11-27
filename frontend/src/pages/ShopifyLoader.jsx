@@ -51,29 +51,29 @@ export default function ShopifyLoader() {
           return;
         }   
         
-        // Initialize Shopify App Bridge
         (async () => {
-          const app = await initShopifyAppBridge();
-          if (!app) {
-            // MUST go top-level, not embedded
-            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-            return;
-          }
+            const app = await initShopifyAppBridge();
           
+            // ✅ Only redirect top-level if App Bridge is NOT available AND cookie missing
+            const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
           
-          setAppBridgeReady(true);
-          window.appBridge = app;
-          try {
-            // No /api/ping anymore — just assume App Bridge works
-            console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
-      
-            // Optionally, you can trigger install if shop is not installed yet
-            // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
-          } catch (err) {
-            console.error("❌ Shopify App Bridge init error:", err);
-            safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-          }
-        })();
+            if (!app && !hasTopLevelCookie) {
+              safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+              return;
+            }
+          
+            setAppBridgeReady(true);
+            window.appBridge = app;
+            try {
+              console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
+            } catch(err) {
+              console.error("❌ Shopify App Bridge init error:", err);
+              if (!hasTopLevelCookie) {
+                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+              }
+            }
+          })();
+          
       }, []);
       
       
@@ -101,7 +101,14 @@ export default function ShopifyLoader() {
             const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
            
             if (!data.installed) {
-              safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+                const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
+                if (hasTopLevelCookie) {
+                  // Embedded install allowed
+                  window.location.href = `${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`;
+                } else {
+                  // Fallback: force top-level
+                  safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+                }
       
               await fetchWithAuth(`/chatbot-config-shopify`, {
                 method: "POST",

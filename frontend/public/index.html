@@ -14,20 +14,20 @@
     />
 
 
-
     <script>
       (function() {
         const params = new URLSearchParams(window.location.search);
         const shop = params.get("shop");
-        const host = params.get("host");
-    
-        // If inside iframe AND top-level cookie missing → redirect to top-level-auth
-        if (window.top !== window.self && !document.cookie.includes("shopify_toplevel=true")) {
+        
+        // ✅ Only redirect if top-level cookie missing
+        const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
+        if (window.top !== window.self && !hasTopLevelCookie) {
           const redirectUrl = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;
           window.top.location.href = redirectUrl;
         }
       })();
     </script>
+    
     
 
     
