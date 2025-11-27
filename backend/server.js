@@ -1076,12 +1076,18 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-    <html><body>
-  <script>
-    window.location.href = "${redirectUrl}";
-  </script>
-</body></html>
-
+    <html>
+      <body>
+        <script>
+          // ALWAYS redirect top-level (not inside iframe)
+          if (window.top === window.self) {
+            window.location.href = "${redirectUrl}";
+          } else {
+            window.top.location.href = "${redirectUrl}";
+          }
+        </script>
+      </body>
+    </html>
   `);
 });
 
@@ -1103,10 +1109,11 @@ app.get("/shopify/auth", (req, res) => {
   res.send(`
     <html><body>
       <script>
-        window.location.href = "${installUrl}";
+        window.top.location.href = "${installUrl}";
       </script>
     </body></html>
   `);
+  
 });
 
 app.get("/shopify/install", async (req, res) => {
