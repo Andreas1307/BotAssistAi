@@ -16,10 +16,19 @@
 
 
     <script>
-      window.__SHOPIFY_APP_BRIDGE_HOST =
-        new URLSearchParams(location.search).get("host");
+      (function() {
+        const params = new URLSearchParams(window.location.search);
+        const shop = params.get("shop");
+        const host = params.get("host");
+    
+        // If inside iframe AND top-level cookie missing → redirect to top-level-auth
+        if (window.top !== window.self && !document.cookie.includes("shopify_toplevel=true")) {
+          const redirectUrl = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;
+          window.top.location.href = redirectUrl;
+        }
+      })();
     </script>
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    
 
     
     
