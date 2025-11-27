@@ -46,24 +46,26 @@ export default function ShopifyLoader() {
       
         if (!shopParam) return;
       
-        const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
+        const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
       
-        // FIX: If inside iframe AND cookie missing → force top-level
-        if (window.top !== window.self && !hasTopLevelCookie) {
+        // 1️⃣ FIX: If in iframe AND cookie missing → MUST go top-level
+        if (window.top !== window.self && !hasTopLevel) {
           window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
           return;
         }
       
-        // Otherwise initialize App Bridge normally
+        // 2️⃣ Otherwise initialize App Bridge normally
         (async () => {
           const app = await initShopifyAppBridge();
-          if (app) {
-            setAppBridgeReady(true);
-            window.appBridge = app;
+          if (!app) {
+            console.warn("App Bridge failed to initialize, retrying top-level…");
+            window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+            return;
           }
+          window.appBridge = app;
+          setAppBridgeReady(true);
         })();
-      }, []);
-      
+      }, []);     
     
       useEffect(() => {
     

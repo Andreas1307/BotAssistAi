@@ -1100,18 +1100,15 @@ app.get("/shopify/auth", (req, res) => {
 
   console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
 
-  // Important: set domain to parent domain so Shopify admin (iframe) can read cookie
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: COOKIE_DOMAIN,
+    domain: "botassistai.com",   // FIXED
     path: "/",
   });
-
-  // Immediately redirect to our install entry which will call shopify.auth.begin()
+  
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
-  // Use top-level replace as well
   res.send(`
     <!doctype html>
     <html>
