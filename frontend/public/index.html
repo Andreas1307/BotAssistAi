@@ -13,21 +13,17 @@
       content="Web site created using create-react-app"
     />
 
-
     <script>
       (function() {
-        const params = new URLSearchParams(window.location.search);
-        const shop = params.get("shop");
-        
-        // ✅ Only redirect if top-level cookie missing
+        const shop = new URLSearchParams(window.location.search).get("shop");
         const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
+    
+        // Only redirect if missing cookie
         if (window.top !== window.self && !hasTopLevelCookie) {
-          const redirectUrl = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;
-          window.top.location.href = redirectUrl;
+          window.top.location.href = `https://api.botassistai.com/shopify/top-level-auth?shop=${shop}`;
         }
       })();
     </script>
-    
     
 
     
