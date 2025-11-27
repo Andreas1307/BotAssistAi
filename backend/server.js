@@ -1069,21 +1069,28 @@ function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 const authInProgress = new Set();
+const COOKIE_DOMAIN = ".botassistai.com";
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
+  // This page MUST run top-level redirect (Shopify requires top-level for cookie)
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
+    <!doctype html>
     <html>
+      <head>
+        <meta charset="utf-8"/>
+        <title>Top-level auth</title>
+      </head>
       <body>
         <script>
-          // ALWAYS redirect top-level (not inside iframe)
+          // Always force parent/top to the auth entry point.
           if (window.top === window.self) {
-            window.location.href = "${redirectUrl}";
+            window.location.replace("${redirectUrl}");
           } else {
-            window.top.location.href = "${redirectUrl}";
+            window.top.location.replace("${redirectUrl}");
           }
         </script>
       </body>
@@ -1097,25 +1104,34 @@ app.get("/shopify/auth", (req, res) => {
 
   console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
 
+  // Important: set domain to parent domain so Shopify admin (iframe) can read cookie
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
+    domain: COOKIE_DOMAIN,
     path: "/",
   });
 
+  // Immediately redirect to our install entry which will call shopify.auth.begin()
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
-
+  // Use top-level replace as well
   res.send(`
-    <!DOCTYPE html>
+    <!doctype html>
     <html>
       <head>
-        <meta http-equiv="refresh" content="0; URL=${installUrl}" />
-        <style>
-          body { background: transparent; }
-        </style>
+        <meta charset="utf-8"/>
+        <title>Auth set cookie</title>
       </head>
-      <body></body>
+      <body>
+        <script>
+          if (window.top === window.self) {
+            window.location.replace("${installUrl}");
+          } else {
+            window.top.location.replace("${installUrl}");
+          }
+        </script>
+      </body>
     </html>
   `);
 });
