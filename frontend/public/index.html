@@ -15,6 +15,12 @@
 
 
 
+<!-- REQUIRED for App Bridge V3 to work in an iframe -->
+<script>
+  window.__SHOPIFY_APP_BRIDGE_HOST = new URLSearchParams(window.location.search).get("host");
+</script>
+
+<script src="https://unpkg.com/@shopify/app-bridge@3"></script>
 
     
     
