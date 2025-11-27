@@ -1121,7 +1121,7 @@ app.get("/shopify/auth", (req, res) => {
       </head>
       <body>
         <script>
-        window.location.href = "${redirectUrl}";
+        window.location.href = "${installUrl}";
 
         </script>
       </body>
