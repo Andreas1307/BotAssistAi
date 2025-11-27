@@ -1094,26 +1094,30 @@ app.get("/shopify/top-level-auth", (req, res) => {
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
+
   console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
 
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    //domain: ".botassistai.com",
     path: "/",
   });
-  
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+
   res.send(`
-    <html><body>
-      <script>
-        window.top.location.href = "${installUrl}";
-      </script>
-    </body></html>
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta http-equiv="refresh" content="0; URL=${installUrl}" />
+        <style>
+          body { background: transparent; }
+        </style>
+      </head>
+      <body></body>
+    </html>
   `);
-  
 });
 
 app.get("/shopify/install", async (req, res) => {
