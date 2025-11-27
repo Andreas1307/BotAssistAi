@@ -1071,16 +1071,20 @@ function abs(path) {
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
+
+  const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
-    <!DOCTYPE html>
     <html>
       <body>
         <script>
-          window.parent.postMessage(
-            { message: "Shopify.AUTH_REQUEST", shop: "${shop}" },
-            "*"
-          );
+          // ALWAYS redirect top-level (not inside iframe)
+          if (window.top === window.self) {
+            window.location.href = "${redirectUrl}";
+          } else {
+            window.top.location.href = "${redirectUrl}";
+          }
         </script>
       </body>
     </html>
@@ -1089,6 +1093,9 @@ app.get("/shopify/top-level-auth", (req, res) => {
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
+
+  console.log(`🍪 [AUTH] Setting shopify_toplevel cookie for ${shop}`);
 
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
@@ -1097,7 +1104,20 @@ app.get("/shopify/auth", (req, res) => {
     path: "/",
   });
 
-  res.redirect(302, `/shopify/install?shop=${encodeURIComponent(shop)}`);
+  const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta http-equiv="refresh" content="0; URL=${installUrl}" />
+        <style>
+          body { background: transparent; }
+        </style>
+      </head>
+      <body></body>
+    </html>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
