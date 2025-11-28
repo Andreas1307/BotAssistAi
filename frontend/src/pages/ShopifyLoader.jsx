@@ -48,13 +48,15 @@ export default function ShopifyLoader() {
       
         const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
       
-        if (window.top !== window.self && !hasTopLevel && isInstall) {
-            window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
-            return;
-          }
-          
+     // Only force top-level redirect if Shopify says this is an INSTALL request
+const isInstall = window.location.search.includes("shopify_retry") ||
+window.location.search.includes("redirected=1");
 
-      
+if (window.top !== window.self && !hasTopLevel && isInstall) {
+    window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+    return;
+  }
+  
         (async () => {
           const app = await initShopifyAppBridge();
           if (!app) {
