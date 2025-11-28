@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
+import createApp from '@shopify/app-bridge';
+import { Redirect } from '@shopify/app-bridge/actions';
 import directory from "../directory";
 
 export default function ShopifyLoader() {
@@ -43,29 +45,33 @@ export default function ShopifyLoader() {
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const shopParam = params.get("shop");
+        const hostParam = params.get("host");
+        const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
       
         if (!shopParam) return;
       
-        const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
-        const hostParam = new URLSearchParams(window.location.search).get("host");
-        
-        // Install = host missing
-        const isInstall = !hostParam;
-        
-     // Only redirect top-level *once* — ONLY if cookie missing AND host missing
-if (!hasTopLevel && !hostParam) {
-    window.location.assign(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-    return;
-}
-
-  
+        if (!hostParam || !hasTopLevel) {
+          // Use App Bridge redirect for OAuth
+          const app = createApp({
+            apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY,
+            host: hostParam,
+            forceRedirect: true,
+          });
+          const redirect = Redirect.create(app);
+          redirect.dispatch(
+            Redirect.Action.REMOTE,
+            `${directory}/shopify/auth?shop=${shopParam}`
+          );
+          return;
+        }
+      
+        // Otherwise init App Bridge normally
         (async () => {
           const app = await initShopifyAppBridge();
-          
           window.appBridge = app;
           setAppBridgeReady(true);
         })();
-      }, []);     
+      }, []);
     
       useEffect(() => {
     
