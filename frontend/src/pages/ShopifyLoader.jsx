@@ -50,7 +50,7 @@ export default function ShopifyLoader() {
       
         if (!shopParam) return;
       
-        if (!hostParam || !hasTopLevel) {
+        if (!hasTopLevel && window.top === window.self) {
             // ALWAYS send them to top-level-auth instead of /auth
             window.top.location.href =
               `${directory}/shopify/top-level-auth?shop=${shopParam}`;
