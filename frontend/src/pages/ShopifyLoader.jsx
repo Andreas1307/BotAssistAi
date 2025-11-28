@@ -95,14 +95,11 @@ return;
             const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
            
             if (!data.installed) {
-                const hasTopLevelCookie = document.cookie.includes("shopify_toplevel=true");
-                if (hasTopLevelCookie) {
-                  // Embedded install allowed
-                  window.location.href = `${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`;
-                } else {
-                  // Fallback: force top-level
-                  safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-                }
+                // Let backend handle install
+                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+                return;
+              }
+            
       
               await fetchWithAuth(`/chatbot-config-shopify`, {
                 method: "POST",
@@ -113,8 +110,6 @@ return;
                 headers: { "Content-Type": "application/json" },
               });
       
-              return; 
-            }
       
             if (!data.hasBilling) {
               console.warn("⚠️ Store installed but missing billing setup.");
