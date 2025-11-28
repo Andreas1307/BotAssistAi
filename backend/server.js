@@ -1086,7 +1086,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
       </head>
       <body>
         <script>
-       window.location.href = "${redirectUrl}";
+       window.top.location.href = "${redirectUrl}";
 
         </script>
       </body>
@@ -1118,7 +1118,7 @@ app.get("/shopify/auth", (req, res) => {
       </head>
       <body>
         <script>
-        window.location.href = "${installUrl}";
+        window.top.location.href = "${installUrl}";
 
         </script>
       </body>
@@ -1376,9 +1376,11 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
               // If we are in an iframe, force top window to call top-level-auth
               const target = "${abs('/shopify/top-level-auth?shop=')}" + encodeURIComponent("${shop}");
               if (window.top === window.self) {
-                window.location.href = target;
+                window.top.location.href = target;
+
               } else {
                 window.top.location.href = target;
+
               }
             </script>
             <noscript>
