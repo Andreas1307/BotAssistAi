@@ -1077,21 +1077,33 @@ app.get("/shopify/top-level-auth", (req, res) => {
   // This page MUST run top-level redirect (Shopify requires top-level for cookie)
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
-  res.send(`
+// Only redirect during install OAuth
+if (!req.cookies.shopify_toplevel) {
+  return res.send(`
     <!doctype html>
     <html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>Top-level auth</title>
-      </head>
       <body>
         <script>
-       window.top.location.href = "${redirectUrl}";
-
+          window.top.location.href = "${redirectUrl}";
         </script>
       </body>
     </html>
   `);
+}
+
+// If cookie exists → DO NOT REDIRECT AGAIN
+return res.send(`
+  <!doctype html>
+  <html>
+    <body>
+      <script>
+        // Just close or return to iframe
+        window.location.href = "/"; 
+      </script>
+    </body>
+  </html>
+`);
+
 });
 
 app.get("/shopify/auth", (req, res) => {
@@ -1134,9 +1146,11 @@ app.get("/shopify/install", async (req, res) => {
   console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
 
   if (!hasTopLevel) {
-    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
-    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
+    if (!req.query.host) {
+      return res.redirect(abs(`/shopify/top-level-auth?shop=${shop}`));
+    }
   }
+  
 
   if (authInProgress.has(shop)) {
     console.log(`⚠️ Auth already in progress for ${shop}`);
