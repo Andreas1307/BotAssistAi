@@ -47,18 +47,17 @@ export default function ShopifyLoader() {
         if (!shopParam) return;
       
         const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
-      
-        const urlParams = new URLSearchParams(window.location.search);
-        const hostParam = urlParams.get("host");
+        const hostParam = new URLSearchParams(window.location.search).get("host");
         
-        const isInstall = (window.top === window.self) && !hostParam;
-
-        if (window.top !== window.self && !hasTopLevel && isInstall) {
+        // Install = host missing
+        const isInstall = !hostParam;
+        
+        // If cookie missing AND this is install → go top-level
+        if (!hasTopLevel && isInstall) {
             window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
             return;
-          }
-          
-
+        }
+        
   
         (async () => {
           const app = await initShopifyAppBridge();
