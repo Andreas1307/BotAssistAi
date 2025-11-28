@@ -1077,33 +1077,16 @@ app.get("/shopify/top-level-auth", (req, res) => {
   // This page MUST run top-level redirect (Shopify requires top-level for cookie)
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
-// Only redirect during install OAuth
-if (!req.cookies.shopify_toplevel) {
   return res.send(`
     <!doctype html>
-    <html>
-      <body>
-        <script>
-          window.top.location.href = "${redirectUrl}";
-        </script>
-      </body>
-    </html>
-  `);
-}
-
-// If cookie exists → DO NOT REDIRECT AGAIN
-return res.send(`
-  <!doctype html>
-  <html>
-    <body>
+    <html><body>
       <script>
-        // Just close or return to iframe
-        window.location.href = "/"; 
+        // Stay inside iframe — return to Shopify automatically
+        window.location.replace("/shopify/install?shop=${shop}");
       </script>
-    </body>
-  </html>
-`);
-
+    </body></html>
+  `);
+  
 });
 
 app.get("/shopify/auth", (req, res) => {
@@ -1130,7 +1113,7 @@ app.get("/shopify/auth", (req, res) => {
       </head>
       <body>
         <script>
-        window.top.location.href = "${installUrl}";
+        window.location.replace("${installUrl}");
 
         </script>
       </body>
@@ -1354,10 +1337,10 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
                   redirect.dispatch(Redirect.Action.APP, dashboard);
                 } catch(e) {
                   console.warn("App Bridge redirect failed, fallback to top-level:", e);
-                  window.top.location.href = dashboard;
+                  window.location.replace(dashboard);
                 }
               } else {
-                window.top.location.href = dashboard;
+                window.location.replace(dashboard);
               }
             })();
           </script>

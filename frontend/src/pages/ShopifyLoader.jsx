@@ -52,12 +52,12 @@ export default function ShopifyLoader() {
         // Install = host missing
         const isInstall = !hostParam;
         
-        // If cookie missing AND this is install → go top-level
-        if (!hasTopLevel && isInstall) {
-            window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
-            return;
-        }
-        
+     // Only redirect top-level *once* — ONLY if cookie missing AND host missing
+if (!hasTopLevel && !hostParam) {
+    window.location.assign(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+    return;
+}
+
   
         (async () => {
           const app = await initShopifyAppBridge();
