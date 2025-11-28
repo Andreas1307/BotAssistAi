@@ -51,19 +51,12 @@ export default function ShopifyLoader() {
         if (!shopParam) return;
       
         if (!hostParam || !hasTopLevel) {
-          // Use App Bridge redirect for OAuth
-          const app = createApp({
-            apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY,
-            host: hostParam,
-            forceRedirect: true,
-          });
-          const redirect = Redirect.create(app);
-          redirect.dispatch(
-            Redirect.Action.REMOTE,
-            `${directory}/shopify/auth?shop=${shopParam}`
-          );
-          return;
-        }
+            // ALWAYS send them to top-level-auth instead of /auth
+            window.top.location.href =
+              `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+            return;
+          }
+          
       
         // Otherwise init App Bridge normally
         (async () => {
@@ -94,8 +87,7 @@ export default function ShopifyLoader() {
             const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
            
             if (!data.installed) {
-                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-              
+
                 await fetchWithAuth(`/chatbot-config-shopify`, {
                   method: "POST",
                   body: JSON.stringify({
@@ -105,8 +97,10 @@ export default function ShopifyLoader() {
                   headers: { "Content-Type": "application/json" },
                 });
               
-                return; 
+                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+                return;
               }
+              
               
             if (!data.hasBilling) {
               console.warn("⚠️ Store installed but missing billing setup.");
@@ -133,3 +127,5 @@ export default function ShopifyLoader() {
 
   return <div>Loading Shopify App…</div>;
 }
+
+
