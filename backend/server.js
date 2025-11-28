@@ -1104,6 +1104,7 @@ app.get("/shopify/auth", (req, res) => {
     secure: true,
     sameSite: "None",
     path: "/",
+    domain: ".botassistai.com", 
   });
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
