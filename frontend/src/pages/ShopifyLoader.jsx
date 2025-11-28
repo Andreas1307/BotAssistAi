@@ -95,22 +95,20 @@ return;
             const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
            
             if (!data.installed) {
-                // Let backend handle install
                 safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
-                return;
+              
+                await fetchWithAuth(`/chatbot-config-shopify`, {
+                  method: "POST",
+                  body: JSON.stringify({
+                    shop: shopParam,
+                    colors,
+                  }),
+                  headers: { "Content-Type": "application/json" },
+                });
+              
+                return; 
               }
-            
-      
-              await fetchWithAuth(`/chatbot-config-shopify`, {
-                method: "POST",
-                body: JSON.stringify({
-                  shop: shopParam,
-                  colors,
-                }),
-                headers: { "Content-Type": "application/json" },
-              });
-      
-      
+              
             if (!data.hasBilling) {
               console.warn("⚠️ Store installed but missing billing setup.");
               return;
