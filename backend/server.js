@@ -1069,24 +1069,29 @@ function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 const authInProgress = new Set();
-const COOKIE_DOMAIN = ".botassistai.com";
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  // This page MUST run top-level redirect (Shopify requires top-level for cookie)
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
+  // THIS PAGE MUST ALWAYS PERFORM A TOP-LEVEL REDIRECT
   return res.send(`
     <!doctype html>
-    <html><body>
-      <script>
-        // Stay inside iframe — return to Shopify automatically
-        window.location.replace("/shopify/install?shop=${shop}");
-      </script>
-    </body></html>
+    <html>
+      <body>
+        <script>
+          if (window.top === window.self) {
+            // Already top-level → go to /shopify/auth
+            window.location.href = "${redirectUrl}";
+          } else {
+            // In iframe → break out ONCE
+            window.top.location.href = "${redirectUrl}";
+          }
+        </script>
+      </body>
+    </html>
   `);
-  
 });
 
 app.get("/shopify/auth", (req, res) => {
