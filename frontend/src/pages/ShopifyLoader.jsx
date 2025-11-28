@@ -48,11 +48,18 @@ export default function ShopifyLoader() {
       
         const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
       
-        // 1️⃣ FIX: If in iframe AND cookie missing → MUST go top-level
-        if (window.top !== window.self && !hasTopLevel) {
-          window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
-          return;
-        }
+     // Only force top-level redirect if Shopify says this is an INSTALL request
+const isInstall = window.location.search.includes("shopify_retry") ||
+window.location.search.includes("redirected=1");
+
+// If embed + no cookie + INSTALL → redirect
+if (window.top !== window.self && !hasTopLevel && isInstall) {
+window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+return;
+}
+
+// Otherwise NEVER force top-level
+
       
         // 2️⃣ Otherwise initialize App Bridge normally
         (async () => {
