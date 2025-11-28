@@ -1,143 +1,133 @@
-import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useConfig } from "@/components/hooks/use-config";
-import { useSettings } from "@/components/hooks/use-settings";
-import { fetchWithAuth } from "@/lib/utils/fetch-with-auth";
-import { initShopifyAppBridge } from "@/lib/shopify/app-bridge/app-bridge-provider";
+import { useEffect, useState } from "react";
+import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
+import directory from "../directory";
 
-const ShopifyLoader = () => {
-  const [config, setConfig] = useConfig();
-  const navigate = useNavigate();
-  const [settings] = useSettings();
-
-  const [searchParams] = useSearchParams();
-  const shopParam = searchParams.get("shop");
-
-  const [isLoading, setIsLoading] = useState(true);
-
-  const installCallback = async (shop) => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/shopify/install`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shop }),
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        console.error("Install failed", await response.text());
-        return false;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        setConfig((prev) => ({
-          ...prev,
-          appId: data.appId,
-          appSecret: data.appSecret,
-        }));
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error("Install error:", error);
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    const run = async () => {
-      if (!shopParam) {
-        console.error("Missing shop param");
-        return;
-      }
-
-      const directory = import.meta.env.VITE_API_BASE_URL;
-
-      //
-      // -------------------------------------------------------------
-      // 1️⃣ CHECK SESSION COOKIE (shopify_session)
-      // -------------------------------------------------------------
-      //
-
-      const cookieCheck = await fetchWithAuth(`/shopify/check-auth`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+export default function ShopifyLoader() {
+    
+  const [installed, setInstalled] = useState(null);
+  const [appBridgeReady, setAppBridgeReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  const [shop, setShop] = useState(null);
+  const [user, setUser] = useState(null);
+    const [colors, setColors] = useState({
+        background: '#f2f2f2',
+        chatbotBackground: '#092032',
+        chatBoxBackground: '#112B3C',
+        chatInputBackground: '#ffffff',        
+        chatInputTextColor: '#000000',
+        chatBtn: '#00F5D4',
+        websiteChatBtn: '#00F5D4',
+        websiteQuestion: '#ffffff',
+        needHelpTextColor: '#00F5D4',
+        textColor: '#cccccc',
+        borderColor: '#00F5D4'
       });
 
-      if (!cookieCheck?.authenticated) {
-        // ❗ This is the ONLY moment we redirect to top-level-auth.
-        window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
-        return;
-      }
+      useEffect(() => {
+        const fetchUser = async () => {
+          try {
+            const data = await fetchWithAuth("/auth-check");        
+            setUser(data.user);
+          } catch (error) {
+            console.error("❌ Auth check error:", error);
+            setUser(null);
+          } finally {
+            setLoading(false);
+          }
+        };
+      
+        fetchUser();
+      }, []);
+      
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shopParam = params.get("shop");
+      
+        if (!shopParam) return;
+      
+        const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
+        const hostParam = new URLSearchParams(window.location.search).get("host");
+        
+        // Install = host missing
+        const isInstall = !hostParam;
+        
+     // Only redirect top-level *once* — ONLY if cookie missing AND host missing
+if (!hasTopLevel && !hostParam) {
+    window.location.assign(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+    return;
+}
 
-      //
-      // -------------------------------------------------------------
-      // 2️⃣ INITIALIZE APP BRIDGE (embedded mode)
-      // -------------------------------------------------------------
-      //
-
-      const app = await initShopifyAppBridge();
-
-      if (!app) {
-        console.warn("App Bridge not ready yet. Waiting.");
-        return;
-      }
-
-      //
-      // -------------------------------------------------------------
-      // 3️⃣ CHECK IF STORE IS INSTALLED
-      // -------------------------------------------------------------
-      //
-
-      const installStatus = await fetchWithAuth(`/shopify/install-status`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!installStatus.installed) {
-        // ❗ installCallback runs EXACTLY ONCE per fresh installation
-        const didInstall = await installCallback(shopParam);
-
-        if (!didInstall) {
-          console.error("Store could not be installed.");
+  
+        (async () => {
+          const app = await initShopifyAppBridge();
+          if (!app) {
+            console.warn("App Bridge not ready yet, waiting…");
+            return;
+          }
+          
+          window.appBridge = app;
+          setAppBridgeReady(true);
+        })();
+      }, []);     
+    
+      useEffect(() => {
+    
+        if (!appBridgeReady) return; 
+    
+        const params = new URLSearchParams(window.location.search);
+        const shopParam = params.get("shop");
+        const hostParam = params.get("host");
+      
+        if (!shopParam || !hostParam) {
+          console.warn("❌ Not running inside Shopify context.");
+          setLoading(false);
           return;
         }
-      }
+      
+        setShop(shopParam);
+      
+        const checkShop = async () => {
+          try {
+            const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
+           
+            if (!data.installed) {
+                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+              
+                await fetchWithAuth(`/chatbot-config-shopify`, {
+                  method: "POST",
+                  body: JSON.stringify({
+                    shop: shopParam,
+                    colors,
+                  }),
+                  headers: { "Content-Type": "application/json" },
+                });
+              
+                return; 
+              }
+              
+            if (!data.hasBilling) {
+              console.warn("⚠️ Store installed but missing billing setup.");
+              return;
+            }
+      
+            console.log("✅ Shopify store ready");
+            setInstalled(true);
+    
+            if (user?.username) {
+              safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+            }
+      
+          } catch (err) {
+            console.error("❌ Shopify flow failed:", err);
+            setInstalled(false);
+          } finally {
+            setLoading(false);
+          }
+        };
+      
+        checkShop();
+      }, [appBridgeReady]); 
 
-      //
-      // -------------------------------------------------------------
-      // 4️⃣ OPEN CONFIG OR DEFAULT CHATBOT PAGE
-      // -------------------------------------------------------------
-      //
-
-      const colors = settings?.appearance?.colors;
-
-      // KEEP YOUR REQUIRED CALL
-      await fetchWithAuth(`/chatbot-config-shopify`, {
-        method: "POST",
-        body: JSON.stringify({
-          shop: shopParam,
-          colors,
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      setIsLoading(false);
-
-      // Route inside embedded app
-      navigate("/chatbot", { replace: true });
-    };
-
-    run();
-  }, [shopParam, navigate, settings, setConfig]);
-
-  return isLoading ? <div>Loading Shopify App…</div> : null;
-};
-
-export default ShopifyLoader;
+  return <div>Loading Shopify App…</div>;
+}
