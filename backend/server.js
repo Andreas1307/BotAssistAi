@@ -1104,26 +1104,22 @@ app.get("/shopify/auth", (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: "botassistai.com",   // FIXED
     path: "/",
   });
   
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
-  res.send(`
-    <!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>Auth set cookie</title>
-      </head>
-      <body>
-        <script>
-        window.location.replace("${installUrl}");
+res.send(`
+  <!doctype html>
+  <html>
+    <head><meta charset="utf-8"/></head>
+    <body>
+      <script>
+        window.top.location.href = "${installUrl}";
+      </script>
+    </body>
+  </html>
+`);
 
-        </script>
-      </body>
-    </html>
-  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1131,13 +1127,10 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   const hasTopLevel = !!req.cookies.shopify_toplevel;
-  console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
+if (!hasTopLevel) {
+  return res.redirect(abs(`/shopify/top-level-auth?shop=${shop}`));
+}
 
-  if (!hasTopLevel) {
-    if (!req.query.host) {
-      return res.redirect(abs(`/shopify/top-level-auth?shop=${shop}`));
-    }
-  }
   
 
   if (authInProgress.has(shop)) {
