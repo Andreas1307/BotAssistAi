@@ -8,7 +8,6 @@ export default function ShopifyLoader() {
     
   const [installed, setInstalled] = useState(null);
   const [appBridgeReady, setAppBridgeReady] = useState(false);
-  const [loading, setLoading] = useState(true);
   
   const [shop, setShop] = useState(null);
   const [user, setUser] = useState(null);
@@ -27,7 +26,7 @@ export default function ShopifyLoader() {
       });
 
       useEffect(() => {
-        if (!appBridgeReady) return;   // ⬅️ WAIT HERE
+        if (!appBridgeReady) return;
       
         const fetchUser = async () => {
           try {
@@ -36,14 +35,11 @@ export default function ShopifyLoader() {
           } catch (error) {
             console.error("❌ Auth check error:", error);
             setUser(null);
-          } finally {
-            setLoading(false);
           }
         };
       
         fetchUser();
-      }, [appBridgeReady]);  // ⬅️ NOW IT WAITS FOR APP BRIDGE
-      
+      }, [appBridgeReady]);
       
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -79,7 +75,6 @@ export default function ShopifyLoader() {
       
         if (!shopParam || !hostParam) {
           console.warn("❌ Not running inside Shopify context.");
-          setLoading(false);
           return;
         }
       
@@ -120,13 +115,11 @@ export default function ShopifyLoader() {
           } catch (err) {
             console.error("❌ Shopify flow failed:", err);
             setInstalled(false);
-          } finally {
-            setLoading(false);
-          }
+          } 
         };
       
         checkShop();
-      }, [appBridgeReady]); 
+      }, [appBridgeReady, user]); 
 
   return <div>Loading Shopify App…</div>;
 }
