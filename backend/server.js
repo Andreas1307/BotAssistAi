@@ -2478,7 +2478,7 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
       lineItems: [
         {
           plan: {
@@ -2531,42 +2531,17 @@ app.post("/create-subscription2", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { userId } = req.query;
-
-    // Shopify sends full merchant admin URL as the referer
-    const referer = req.get("referer");
-
-    let host = null;
-
-    if (referer) {
-      try {
-        const refUrl = new URL(referer);
-        const h = refUrl.searchParams.get("host");
-        if (h) host = h; // If Shopify forwarded host
-      } catch (e) {
-        console.log("Referer parse failed", e);
-      }
-    }
-
-    // ⚠️ If host still missing, fall back to user database
-    if (!host) {
-      console.log("⚠️ No host in referer, falling back to DB");
-      const [rowsUser] = await pool.query(
-        "SELECT shopify_shop_domain FROM users WHERE user_id=?",
-        [userId]
-      );
-      if (!rowsUser.length) return res.status(404).send("User not found");
-      host = rowsUser[0].shopify_shop_domain;
-    }
+    const { userId, host } = req.query;
 
     if (!host) {
-      console.error("❌ Still no host resolved");
+      console.error("❌ Missing host in callback");
       return res.send("Missing host from Shopify");
     }
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
 
+    // Update subscription
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
@@ -2587,11 +2562,13 @@ app.get("/billing/callback", async (req, res) => {
         </body>
       </html>
     `);
+
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
