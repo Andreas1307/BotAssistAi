@@ -9,38 +9,56 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export async function initShopifyAppBridge() {
-  if (window.top === window.self) return null; // Not embedded
-
+export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  const host = params.get("host");
+  let shop = params.get("shop");
+  let host = params.get("host");
 
-  if (!host) {
-    console.error("❌ Host param missing — cannot init App Bridge");
+  // Restore from session
+  if (!shop && sessionStorage.getItem("shopify_shop")) {
+    shop = sessionStorage.getItem("shopify_shop");
+  } else if (shop) {
+    sessionStorage.setItem("shopify_shop", shop);
+  }
+
+  if (!host && sessionStorage.getItem("shopify_host")) {
+    host = sessionStorage.getItem("shopify_host");
+  } else if (host) {
+    sessionStorage.setItem("shopify_host", host);
+  }
+
+  const isInstall = window.location.pathname.includes("/shopify/install");
+  const isEmbedded = window.top !== window.self;
+
+  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
+  if (!host && isInstall) {
+    const shopParam = encodeURIComponent(shop || "");
+    window.top.location.href =
+      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
     return null;
   }
 
-  if (!window.appBridge) {
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: false,
-    });
-    window.appBridge = app;
-    console.log("✅ App Bridge initialized:", host);
+  // If still no host, wait
+  if (!host) {
+    console.warn("⏳ No host param yet — waiting for Shopify redirect");
+    return null;
   }
 
-  return window.appBridge;
+  // Initialize App Bridge
+  const app = createApp({
+    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+    host,
+    forceRedirect: true,
+  });
+
+  window.appBridge = app;
+  console.log("✅ App Bridge initialized:", host);
+
+  return app;
 }
 
 export function getAppBridgeInstance() {
-  return new Promise((resolve) => {
-    const waitForApp = () => {
-      if (window.appBridge) return resolve(window.appBridge);
-      setTimeout(waitForApp, 50);
-    };
-    waitForApp();
-  });
+  return window.appBridge || null;
 }
 
 export function safeRedirect(url, fallbackShop = null) {
