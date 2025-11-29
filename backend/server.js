@@ -2530,7 +2530,21 @@ app.post("/create-subscription2", async (req, res) => {
 app.get("/billing/callback", async (req, res) => {
   try {
     const { userId } = req.query;
-    const host = req.query.host; // ← THIS ONE IS FROM SHOPIFY, ALWAYS VALID
+
+    // ❗ DO NOT USE req.query.host (it is NOT reliable)
+    // ❗ Instead, get "host" FROM THE REFERER HEADER
+    const referer = req.get("referer");
+
+    let host = null;
+    if (referer) {
+      const urlObj = new URL(referer);
+      host = urlObj.searchParams.get("host");
+    }
+
+    if (!host) {
+      console.error("❌ No valid host returned by Shopify");
+      return res.send("Missing host from Shopify");
+    }
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
@@ -2542,10 +2556,11 @@ app.get("/billing/callback", async (req, res) => {
 
     const shop = rows[0].shopify_shop_domain;
 
-    // MUST redirect using Shopify-supplied host
-    const appUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(host)}&shop=${shop}`;
+    const appUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(
+      host
+    )}&shop=${shop}`;
 
-    res.send(`
+    return res.send(`
       <html>
         <body>
           <script>
@@ -2560,6 +2575,7 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
