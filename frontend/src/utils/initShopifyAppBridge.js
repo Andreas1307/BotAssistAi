@@ -10,100 +10,36 @@ function isEmbedded() {
 }
 
 export async function initShopifyAppBridge() {
+  if (window.top === window.self) return null; // Not embedded
 
-  if (window.top === window.self) {
-    console.log("⏸️ Not embedded — skipping App Bridge init");
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
+
+  if (!host) {
+    console.error("❌ Host param missing — cannot init App Bridge");
     return null;
   }
 
-  const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop");
-  let host = params.get("host");
+  if (!window.appBridge) {
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: false,
+    });
+    window.appBridge = app;
+    console.log("✅ App Bridge initialized:", host);
+  }
 
-// Only skip App Bridge on API or auth routes handled by backend, NOT dashboard
-const isBackendRoute =
-  window.location.pathname.startsWith("/shopify/auth") ||
-  window.location.pathname.startsWith("/shopify/callback") ||
-  window.location.pathname.startsWith("/shopify/top-level-auth") ||
-  window.location.pathname.startsWith("/admin"); // Shopify admin proxy safety
-
-if (isBackendRoute) {
-  console.log("⏸️ Skipping App Bridge — backend Shopify route");
-  return null;
-}
-
-
-if (!host) {
-  console.warn("⏳ No host param — retrying until available");
-
-  let tries = 0;
-  const maxTries = 40;
-
-  return new Promise(resolve => {
-    const interval = setInterval(() => {
-      const p = new URLSearchParams(window.location.search);
-      host = p.get("host");
-
-      if (host || tries >= maxTries) {
-        clearInterval(interval);
-
-        if (!host) {
-          console.error("❌ Host param never appeared — cannot init App Bridge");
-          resolve(null);
-          return;
-        }
-
-        const app = createApp({
-          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-          host,
-          forceRedirect: false,
-        });
-
-        window.appBridge = app;
-        console.log("✅ App Bridge initialized after host delay");
-        resolve(app);
-      }
-
-      tries++;
-    }, 50);
-  });
-}
-
-
-  const app = createApp({
-    apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
-    forceRedirect: false,
-  });
-
-  window.appBridge = app;
-  console.log("✅ App Bridge initialized:", host);
-
-  return app;
+  return window.appBridge;
 }
 
 export function getAppBridgeInstance() {
   return new Promise((resolve) => {
-    if (window.appBridge) {
-      return resolve(window.appBridge);
-    }
-
-    let attempts = 0;
-    const maxAttempts = 20;
-
-    const interval = setInterval(() => {
-      attempts++;
-
-      if (window.appBridge) {
-        clearInterval(interval);
-        resolve(window.appBridge);
-      }
-
-      if (attempts >= maxAttempts) {
-        clearInterval(interval);
-        resolve(null); // give up after 20 tries
-      }
-    }, 50);
+    const waitForApp = () => {
+      if (window.appBridge) return resolve(window.appBridge);
+      setTimeout(waitForApp, 50);
+    };
+    waitForApp();
   });
 }
 
