@@ -33,10 +33,42 @@ if (isBackendRoute) {
 }
 
 
-  if (!host) {
-    console.warn("⏳ No host param yet — waiting for Shopify redirect");
-    return null;
-  }
+if (!host) {
+  console.warn("⏳ No host param — retrying until available");
+
+  let tries = 0;
+  const maxTries = 40;
+
+  return new Promise(resolve => {
+    const interval = setInterval(() => {
+      const p = new URLSearchParams(window.location.search);
+      host = p.get("host");
+
+      if (host || tries >= maxTries) {
+        clearInterval(interval);
+
+        if (!host) {
+          console.error("❌ Host param never appeared — cannot init App Bridge");
+          resolve(null);
+          return;
+        }
+
+        const app = createApp({
+          apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+          host,
+          forceRedirect: false,
+        });
+
+        window.appBridge = app;
+        console.log("✅ App Bridge initialized after host delay");
+        resolve(app);
+      }
+
+      tries++;
+    }, 50);
+  });
+}
+
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -51,7 +83,28 @@ if (isBackendRoute) {
 }
 
 export function getAppBridgeInstance() {
-  return window.appBridge || null;
+  return new Promise((resolve) => {
+    if (window.appBridge) {
+      return resolve(window.appBridge);
+    }
+
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const interval = setInterval(() => {
+      attempts++;
+
+      if (window.appBridge) {
+        clearInterval(interval);
+        resolve(window.appBridge);
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        resolve(null); // give up after 20 tries
+      }
+    }, 50);
+  });
 }
 
 export function safeRedirect(url, fallbackShop = null) {
