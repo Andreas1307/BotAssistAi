@@ -2478,7 +2478,7 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host || "")}`,
       lineItems: [
         {
           plan: {
@@ -2532,42 +2532,40 @@ app.post("/create-subscription2", async (req, res) => {
 app.get("/billing/callback", async (req, res) => {
   try {
     const { userId, host } = req.query;
-
-    if (!host) {
-      console.error("❌ Missing host in callback");
-      return res.send("Missing host from Shopify");
-    }
-
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
-    if (!rows.length) return res.status(404).send("User not found");
+    if (rows.length === 0) return res.status(404).send("User not found");
 
-    // Update subscription
+    // ✅ Update user's subscription
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
     const shop = rows[0].shopify_shop_domain;
-    console.log("💡 Callback host:", host);
+    const safeHost = host || btoa(`${shop}/admin`);
 
-    const redirectUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(host)}`;
-return res.send(`
+    const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
+
+res.send(`
+  <!DOCTYPE html>
   <html>
-    <body>
-      <script type="text/javascript">
-        // Force top window redirect for embedded apps
-        window.top.location.href = "${redirectUrl}";
+    <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+      <h3>Redirecting back to BotAssistAI…</h3>
+      <script>
+        console.log("✅ Redirecting directly to:", ${JSON.stringify(appUrl)});
+        // Use top window to break out safely
+        window.top.location.href = ${JSON.stringify(appUrl)};
       </script>
     </body>
   </html>
 `);
-
 
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 

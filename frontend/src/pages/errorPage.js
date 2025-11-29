@@ -27,7 +27,7 @@ const Error = () => {
     fetchUser();
   }, []);
 
-  /*
+  
   useEffect(() => {
     if (loading) return;
     
@@ -44,10 +44,6 @@ const Error = () => {
       }
     
   }, [user, loading, navigate]);
-  */
-
-
-
     return (
         <div className="error-div">
             <h2>Ooops, Error 404, Page Not Found</h2>
