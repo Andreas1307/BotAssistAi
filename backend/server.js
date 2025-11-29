@@ -2476,7 +2476,7 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
       lineItems: [
         {
           plan: {
@@ -2529,20 +2529,10 @@ app.post("/create-subscription2", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { userId } = req.query;
-
-    // ❗ DO NOT USE req.query.host (it is NOT reliable)
-    // ❗ Instead, get "host" FROM THE REFERER HEADER
-    const referer = req.get("referer");
-
-    let host = null;
-    if (referer) {
-      const urlObj = new URL(referer);
-      host = urlObj.searchParams.get("host");
-    }
+    const { userId, host } = req.query;
 
     if (!host) {
-      console.error("❌ No valid host returned by Shopify");
+      console.error("❌ No host provided by Shopify callback");
       return res.send("Missing host from Shopify");
     }
 
@@ -2556,7 +2546,7 @@ app.get("/billing/callback", async (req, res) => {
 
     const shop = rows[0].shopify_shop_domain;
 
-    const appUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(
+    const redirectUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(
       host
     )}&shop=${shop}`;
 
@@ -2564,7 +2554,7 @@ app.get("/billing/callback", async (req, res) => {
       <html>
         <body>
           <script>
-            window.top.location.href = "${appUrl}";
+            window.top.location.href = "${redirectUrl}";
           </script>
         </body>
       </html>
@@ -2575,6 +2565,7 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
