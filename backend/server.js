@@ -2533,13 +2533,36 @@ app.get("/billing/callback", async (req, res) => {
   try {
     const { userId } = req.query;
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.send("Missing Authorization header");
+    // Shopify sends full merchant admin URL as the referer
+    const referer = req.get("referer");
 
-    const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+    let host = null;
 
-    const host = payload.dest.replace("https://", "").replace("/admin", "");
+    if (referer) {
+      try {
+        const refUrl = new URL(referer);
+        const h = refUrl.searchParams.get("host");
+        if (h) host = h; // If Shopify forwarded host
+      } catch (e) {
+        console.log("Referer parse failed", e);
+      }
+    }
+
+    // ⚠️ If host still missing, fall back to user database
+    if (!host) {
+      console.log("⚠️ No host in referer, falling back to DB");
+      const [rowsUser] = await pool.query(
+        "SELECT shopify_shop_domain FROM users WHERE user_id=?",
+        [userId]
+      );
+      if (!rowsUser.length) return res.status(404).send("User not found");
+      host = rowsUser[0].shopify_shop_domain;
+    }
+
+    if (!host) {
+      console.error("❌ Still no host resolved");
+      return res.send("Missing host from Shopify");
+    }
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
@@ -2564,12 +2587,12 @@ app.get("/billing/callback", async (req, res) => {
         </body>
       </html>
     `);
-
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
