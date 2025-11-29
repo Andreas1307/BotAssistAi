@@ -27,9 +27,11 @@ export default function ShopifyLoader() {
       });
 
       useEffect(() => {
+        if (!appBridgeReady) return;   // ⬅️ WAIT HERE
+      
         const fetchUser = async () => {
           try {
-            const data = await fetchWithAuth("/auth-check");        
+            const data = await fetchWithAuth("/auth-check");
             setUser(data.user);
           } catch (error) {
             console.error("❌ Auth check error:", error);
@@ -40,7 +42,8 @@ export default function ShopifyLoader() {
         };
       
         fetchUser();
-      }, []);
+      }, [appBridgeReady]);  // ⬅️ NOW IT WAITS FOR APP BRIDGE
+      
       
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
