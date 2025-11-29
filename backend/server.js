@@ -2450,6 +2450,8 @@ app.get("/get-shop", async (req, res) => {
   res.json({ shop: rows[0].shopify_shop_domain });
 });
 
+
+
 app.post("/create-subscription2", async (req, res) => {
   try {
     const { userId, host } = req.body; // 👈 add host here
@@ -2476,7 +2478,7 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host)}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
       lineItems: [
         {
           plan: {
@@ -2529,12 +2531,15 @@ app.post("/create-subscription2", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { userId, host } = req.query;
+    const { userId } = req.query;
 
-    if (!host) {
-      console.error("❌ No host provided by Shopify callback");
-      return res.send("Missing host from Shopify");
-    }
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.send("Missing Authorization header");
+
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+
+    const host = payload.dest.replace("https://", "").replace("/admin", "");
 
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
@@ -2565,7 +2570,6 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 
