@@ -2476,7 +2476,7 @@ app.post("/create-subscription2", async (req, res) => {
 
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host || "")}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}`,
       lineItems: [
         {
           plan: {
@@ -2529,11 +2529,12 @@ app.post("/create-subscription2", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { userId, host } = req.query;
+    const { userId } = req.query;
+    const host = req.query.host; // ← THIS ONE IS FROM SHOPIFY, ALWAYS VALID
+
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
 
-    // Update subscription in DB
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
@@ -2541,16 +2542,13 @@ app.get("/billing/callback", async (req, res) => {
 
     const shop = rows[0].shopify_shop_domain;
 
-    // Make sure host is exactly Shopify's host query param
-    const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${encodeURIComponent(host)}`;
+    // MUST redirect using Shopify-supplied host
+    const appUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(host)}&shop=${shop}`;
 
     res.send(`
-      <!DOCTYPE html>
       <html>
-        <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-          <h3>Redirecting back to BotAssistAI…</h3>
+        <body>
           <script>
-            // Force top-level navigation back into Shopify iframe with correct host
             window.top.location.href = "${appUrl}";
           </script>
         </body>
@@ -2562,7 +2560,6 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
-
 
 
 
