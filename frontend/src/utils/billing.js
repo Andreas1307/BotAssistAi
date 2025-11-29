@@ -14,7 +14,7 @@ export async function handleBilling(userId) {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const host = payload?.dest?.split("/admin")[0].replace("https://", "");
 
-    const res = await axios.post(`${directory}/create-subscription2`, { userId });
+    const res = await axios.post(`${directory}/create-subscription2`, { userId, host });
     const confirmationUrl = res.data?.confirmationUrl;
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
