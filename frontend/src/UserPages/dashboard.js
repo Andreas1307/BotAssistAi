@@ -687,6 +687,11 @@ const fetchConvHistory = async (loadAllChats = false) => {
 
   useEffect(() => {
     if (loading) return; 
+
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
   
     if (user) {
       navigate(`/${user?.username}/dashboard`);

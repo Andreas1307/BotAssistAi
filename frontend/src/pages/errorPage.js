@@ -27,13 +27,20 @@ const Error = () => {
     fetchUser();
   }, []);
   useEffect(() => {
-    if (!loading) {
+    if (loading) return;
+    
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
       if (user) {
        navigate(`/${user.username}/dashboard`)
-      } else {
+      } 
+      else {
         navigate("/"); 
       }
-    }
+    
   }, [user, loading, navigate]);
     return (
         <div className="error-div">

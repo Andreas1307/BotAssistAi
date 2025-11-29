@@ -38,13 +38,21 @@ const Pricing = () => {
 
 
   useEffect(() => {
-    if (!loading) {
+    if (loading) return
+      
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
       if (user) {
         navigate(`/${user.username}/dashboard`);
-      } else if (location.pathname !== "/pricing") {
+        return 
+      }
+       if (location.pathname !== "/pricing") {
         navigate("/pricing");
       }
-    }
+    
   }, [user, loading, navigate, location.pathname]);
   
   if (loading) {

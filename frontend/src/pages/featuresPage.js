@@ -34,13 +34,22 @@ const FeaturesPage = () => {
 
 
   useEffect(() => {
-    if (!loading) {
+    if (loading) return
+
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
       if (user) {
         navigate(`/${user.username}/dashboard`);
-      } else if (location.pathname !== "/features") {
+        return
+      }
+      
+      if (location.pathname !== "/features") {
         navigate("/features");
       }
-    }
+    
   }, [user, loading, navigate, location.pathname]);
   
   if (loading) {

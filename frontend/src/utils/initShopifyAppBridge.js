@@ -20,11 +20,17 @@ export async function initShopifyAppBridge() {
   let shop = params.get("shop");
   let host = params.get("host");
 
-if (window.location.pathname.startsWith("/shopify")) {
+// Only skip App Bridge on API or auth routes handled by backend, NOT dashboard
+const isBackendRoute =
+  window.location.pathname.startsWith("/shopify/auth") ||
+  window.location.pathname.startsWith("/shopify/callback") ||
+  window.location.pathname.startsWith("/shopify/top-level-auth") ||
+  window.location.pathname.startsWith("/admin"); // Shopify admin proxy safety
+
+if (isBackendRoute) {
   console.log("⏸️ Skipping App Bridge — backend Shopify route");
   return null;
 }
-
 
 
   if (!host) {

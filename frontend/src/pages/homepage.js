@@ -199,6 +199,12 @@ const Homepage = () => {
   
 
   useEffect(() => {
+
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
       if (user) {
         navigate(`/${user.username}/dashboard`);
       } else {

@@ -34,16 +34,24 @@ const About = () => {
   
 
   
-
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        navigate(`/${user.username}/dashboard`);
-      } else if (location.pathname !== "/about") {
-        navigate("/about");
-      }
+    if (loading) return;
+  
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
+    if (user) {
+      navigate(`/${user.username}/dashboard`);
+      return;
+    }
+  
+    if (location.pathname !== "/about") {
+      navigate("/about");
     }
   }, [user, loading, navigate, location.pathname]);
+  
   
   if (loading) {
     return null;

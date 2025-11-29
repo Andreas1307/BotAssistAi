@@ -33,7 +33,13 @@ const LogIn = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      if (window.location.pathname === "/login") {
+      
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
+      if (window.location.pathname === "/log-in") {
         // Only redirect if the user is manually visiting /login
         navigate(`/${user.username}/dashboard`);
       }

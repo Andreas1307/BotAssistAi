@@ -30,6 +30,23 @@ const [user, setUser] = useState(null)
   
     fetchUser();
   }, [navigate]);
+
+
+  
+  useEffect(() => {
+    if (!loading && user) {
+      
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
+      if (window.location.pathname === "/sign-up") {
+        // Only redirect if the user is manually visiting /login
+        navigate(`/${user.username}/dashboard`);
+      }
+    }
+  }, [user, loading, navigate]);
   
 
   useEffect(() => {

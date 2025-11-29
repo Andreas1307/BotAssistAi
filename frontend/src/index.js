@@ -24,6 +24,7 @@ import ShopifyLoader from './pages/ShopifyLoader';
 
 const router = createBrowserRouter([
   { path: "/:user/dashboard", element: <Dashboard /> },
+  { path: "/shopify/dashboard", element: <Dashboard /> },
   { path: "/:user/upgrade-plan", element: <UpgradeDetails /> },
   { path: "/unsubscribe", element: <UnsubscribePage /> },
   { path: "/", element: <Homepage /> },

@@ -79,12 +79,21 @@ const Contact = () => {
 
 
   useEffect(() => {
-    if (!loading) {
+    if (loading) return
+    
+      
+    if (user?.shopify_access_token) {
+      navigate("/shopify/dashboard");
+      return;
+    }
+  
       if (user) {
         navigate(`/${user.username}/dashboard`);
-      } else if (location.pathname !== "/contact") {
+        return
+      } 
+      
+      if (location.pathname !== "/contact") {
         navigate("/contact");
-      }
     }
   }, [user, loading, navigate, location.pathname]);
   
