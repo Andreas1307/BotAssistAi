@@ -1326,46 +1326,47 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     const dashboardUrl = `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
 
     res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8"/>
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-        </head>
-        <body>
-          <script>
-            (function() {
-              const host = "${host}";
-              const shop = "${shop}";
-              const dashboard = "${dashboardUrlEscaped}";
-              
-              if (host) {
-                try {
-                  const createApp = window['app-bridge'].default;
-                  const Redirect = window['app-bridge'].actions.Redirect;
-                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-                  const redirect = Redirect.create(app);
-                  redirect.dispatch(Redirect.Action.APP, dashboard);
-                } catch(e) {
-                  console.warn("App Bridge redirect failed, fallback to top-level:", e);
-                  window.location.replace(dashboard);
-                }
-              } else {
-                window.location.replace(dashboard);
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8"/>
+        <title>Redirecting...</title>
+        <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+      </head>
+      <body>
+        <script>
+          (function() {
+            const host = "${host}";
+            const shop = "${shop}";
+            const dashboard = "${dashboardUrl.replace(/"/g, '\\"')}";
+            
+            if (host) {
+              try {
+                const createApp = window['app-bridge'].default;
+                const Redirect = window['app-bridge'].actions.Redirect;
+                const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+                const redirect = Redirect.create(app);
+                // ✅ Use APP redirect to stay inside Shopify iframe
+                redirect.dispatch(Redirect.Action.APP, dashboard);
+              } catch(e) {
+                // Only fallback to top-level redirect if App Bridge fails
+                console.warn("App Bridge redirect failed — fallback to top-level:", e);
+                window.top.location.href = dashboard;
               }
-            })();
-          </script>
-          <noscript>
-            Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
-          </noscript>
-        </body>
-      </html>
+            } else {
+              // If no host, must do top-level redirect
+              window.top.location.href = dashboard;
+            }
+          })();
+        </script>
+        <noscript>
+          Redirect failed. Please <a href="${dashboardUrl}" target="_top">click here</a>.
+        </noscript>
+      </body>
+    </html>
     `);
     
     

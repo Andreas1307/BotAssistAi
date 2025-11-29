@@ -78,8 +78,7 @@ const [shopifyUser, setShopifyUser] = useState(false)
   }, []);
 
   
-  console.log("WHAT IS SHOPIFY USER", shopifyUser, "dsaaaaaaaaaaa", membership )
-
+  
   // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
