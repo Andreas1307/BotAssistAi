@@ -1,19 +1,23 @@
 import axios from "axios";
 import { Redirect } from "@shopify/app-bridge/actions";
 import { getAppBridgeInstance } from "./initShopifyAppBridge";
+import { getSessionToken } from "@shopify/app-bridge/utilities";
 import directory from "../directory";
 
 export async function handleBilling(userId) {
   try {
     const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
+    const app = getAppBridgeInstance();
+    const token = await getSessionToken(app);
+
+    // Decode host from JWT
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const host = payload?.dest?.split("/admin")[0].replace("https://", "");
 
     const res = await axios.post(`${directory}/create-subscription2`, { userId, host });
     const confirmationUrl = res.data?.confirmationUrl;
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");
 
-    const app = getAppBridgeInstance();
     const isEmbedded = window.top !== window.self;
 
     if (app && host) {
