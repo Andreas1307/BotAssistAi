@@ -2532,39 +2532,45 @@ app.post("/create-subscription2", async (req, res) => {
 app.get("/billing/callback", async (req, res) => {
   try {
     const { userId, host } = req.query;
-    const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
-    if (rows.length === 0) return res.status(404).send("User not found");
 
-    // ✅ Update user's subscription
+    if (!host) {
+      console.error("❌ Missing host in callback");
+      return res.send("Missing host from Shopify");
+    }
+
+    const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
+    if (!rows.length) return res.status(404).send("User not found");
+
+    // Update subscription
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
     const shop = rows[0].shopify_shop_domain;
-    const safeHost = host || btoa(`${shop}/admin`);
 
-    const appUrl = `https://${shop}/admin/apps/botassistai?shop=${shop}&host=${safeHost}`;
+    const appUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(host)}`;
 
-res.send(`
-  <!DOCTYPE html>
-  <html>
-    <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
-      <h3>Redirecting back to BotAssistAI…</h3>
-      <script>
-        console.log("✅ Redirecting directly to:", ${JSON.stringify(appUrl)});
-        // Use top window to break out safely
-        window.top.location.href = ${JSON.stringify(appUrl)};
-      </script>
-    </body>
-  </html>
-`);
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+        <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
+          <h3>Redirecting back to BotAssistAI…</h3>
+          <script>
+            console.log("✅ Redirecting directly to:", "${appUrl}");
+            // Force top-level redirect for embedded apps
+            window.top.location.href = "${appUrl}";
+          </script>
+        </body>
+      </html>
+    `);
 
   } catch (err) {
     console.error("❌ Billing callback failed:", err);
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
