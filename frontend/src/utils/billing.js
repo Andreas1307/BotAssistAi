@@ -7,11 +7,9 @@ import directory from "../directory";
 export async function handleBilling(userId) {
   try {
     const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
     const app = getAppBridgeInstance();
-const token = await getSessionToken(app);
-const payload = JSON.parse(atob(token.split(".")[1]));
-const host = payload.dest.split("/admin")[0].replace("https://", "");
+    const host = params.get("host"); 
+
 
     const res = await axios.post(`${directory}/create-subscription2`, { userId, host });
     const confirmationUrl = res.data?.confirmationUrl;

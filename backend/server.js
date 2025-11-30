@@ -2549,7 +2549,7 @@ app.get("/billing/callback", async (req, res) => {
 
     const shop = rows[0].shopify_shop_domain;
 
-    const appUrl = `https://${shop}/admin/apps/botassistai?host=${encodeURIComponent(host)}`;
+    const appUrl = `https://${shop}/admin/apps/botassistai?host=${host}`;
 
     return res.send(`
       <!DOCTYPE html>
