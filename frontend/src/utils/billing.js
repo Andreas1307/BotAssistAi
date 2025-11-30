@@ -9,18 +9,14 @@ export async function handleBilling(userId) {
     const app = getAppBridgeInstance();
     const token = await getSessionToken(app);
 
+    // Decode JWT
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const rawDest = payload.dest;
+    const dest = payload.dest; // e.g. https://admin.shopify.com/store/andrei-store205/apps/botassistai
 
-    let host;
+    // 🔥 Extract ONLY the required host value
+    const host = btoa(dest.replace("https://", ""));
 
-    if (rawDest.includes("admin.shopify.com")) {
-      host = btoa(rawDest.replace("https://", ""));
-    } else {
-      const shopDomain = rawDest.split("/admin")[0].replace("https://", "");
-      host = btoa(shopDomain);  
-    }
-    
+    console.log("Correct HOST:", host);
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
@@ -32,8 +28,10 @@ export async function handleBilling(userId) {
 
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+
   } catch (err) {
     console.error("❌ Billing activation failed:", err);
-    alert("Billing failed — check console for details");
+    alert("Billing failed — see console");
   }
 }
+
