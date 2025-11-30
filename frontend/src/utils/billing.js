@@ -7,18 +7,14 @@ import directory from "../directory";
 export async function handleBilling(userId) {
   try {
     const app = getAppBridgeInstance();
-    const token = await getSessionToken(app);
+    const params = new URLSearchParams(window.location.search);
+    const host = params.get("host");
 
-    // decode JWT
-    const payload = JSON.parse(atob(token.split(".")[1]));
-
-    // ✔ this is the REAL admin domain
-    const adminUrl = payload.iss; 
-
-    // Convert admin URL into base64 host
-    const host = btoa(adminUrl.replace("https://", ""));
-
-    console.log("USING JWT ISS HOST:", host);
+    if (!host) {
+      console.error("❌ No host found in URL");
+      alert("Missing host parameter");
+      return;
+    }
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
@@ -36,3 +32,4 @@ export async function handleBilling(userId) {
     alert("Billing failed — see console");
   }
 }
+
