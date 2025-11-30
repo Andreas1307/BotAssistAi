@@ -7,14 +7,17 @@ import directory from "../directory";
 export async function handleBilling(userId) {
   try {
     const app = getAppBridgeInstance();
-    const params = new URLSearchParams(window.location.search);
-    const host = params.get("host");
 
-    if (!host) {
-      console.error("❌ No host found in URL");
-      alert("Missing host parameter");
-      return;
-    }
+    const token = await getSessionToken(app);
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    // The correct host source
+    const dest = payload.dest.replace("https://", ""); // shop.myshopify.com/admin
+
+    const host = btoa(dest);
+
+    console.log("✔ Extracted host from JWT:", host);
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
@@ -32,4 +35,3 @@ export async function handleBilling(userId) {
     alert("Billing failed — see console");
   }
 }
-
