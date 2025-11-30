@@ -2477,7 +2477,7 @@ app.post("/create-subscription2", async (req, res) => {
       }
     `;
 
-    const returnHost = btoa(`admin.shopify.com/store/${storeName}`);
+    const returnHost = btoa(`admin.shopify.com/store/${shop}`);
 
     const variables = {
       name: "BotAssist Pro Plan",
