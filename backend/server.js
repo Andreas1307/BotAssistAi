@@ -2542,15 +2542,15 @@ app.get("/billing/callback", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
 
-    // Update subscription
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
     const shop = rows[0].shopify_shop_domain;
+    const storeName = shop.replace(".myshopify.com", "");
 
-    const appUrl = `https://${shop}/admin/apps/botassistai?host=${host}`;
+    const appUrl = `https://admin.shopify.com/store/${storeName}/apps/botassistai?host=${host}`;
 
     return res.send(`
       <!DOCTYPE html>
@@ -2558,8 +2558,6 @@ app.get("/billing/callback", async (req, res) => {
         <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>Redirecting back to BotAssistAI…</h3>
           <script>
-            console.log("✅ Redirecting directly to:", "${appUrl}");
-            // Force top-level redirect for embedded apps
             window.top.location.href = "${appUrl}";
           </script>
         </body>

@@ -21,7 +21,6 @@ export async function handleBilling(userId) {
       host = btoa(shopDomain);  
     }
     
-    alert("HOST = " + host);
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
