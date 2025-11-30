@@ -4,23 +4,21 @@ import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import { getSessionToken } from "@shopify/app-bridge/utilities";
 import directory from "../directory";
 
-function getHostFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("host");
-}
-
-
 export async function handleBilling(userId) {
   try {
     const app = getAppBridgeInstance();
     const token = await getSessionToken(app);
 
-    // Get host directly from the URL — TRUST THIS ONE
-    const host = getHostFromURL();
+    // decode JWT
+    const payload = JSON.parse(atob(token.split(".")[1]));
 
-    if (!host) throw new Error("Missing host in URL");
+    // ✔ this is the REAL admin domain
+    const adminUrl = payload.iss; 
 
-    console.log("USING URL HOST:", host);
+    // Convert admin URL into base64 host
+    const host = btoa(adminUrl.replace("https://", ""));
+
+    console.log("USING JWT ISS HOST:", host);
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
@@ -38,5 +36,3 @@ export async function handleBilling(userId) {
     alert("Billing failed — see console");
   }
 }
-
-
