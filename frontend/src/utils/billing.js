@@ -15,13 +15,12 @@ export async function handleBilling(userId) {
     let host;
 
     if (rawDest.includes("admin.shopify.com")) {
-      // admin.shopify.com/store/... style → must base64 encode
       host = btoa(rawDest.replace("https://", ""));
     } else {
-      // myshopify.com store
-      host = rawDest.split("/admin")[0].replace("https://", "");
+      const shopDomain = rawDest.split("/admin")[0].replace("https://", "");
+      host = btoa(shopDomain);  
     }
-
+    
     alert("HOST = " + host);
 
     const res = await axios.post(`${directory}/create-subscription2`, {
