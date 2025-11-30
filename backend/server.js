@@ -2477,9 +2477,11 @@ app.post("/create-subscription2", async (req, res) => {
       }
     `;
 
+    const returnHost = btoa(`admin.shopify.com/store/${storeName}`);
+
     const variables = {
       name: "BotAssist Pro Plan",
-      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(host || "")}`,
+      returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(returnHost)}`,
       lineItems: [
         {
           plan: {
@@ -2550,9 +2552,11 @@ app.get("/billing/callback", async (req, res) => {
     const shop = rows[0].shopify_shop_domain;
     const storeName = shop.replace(".myshopify.com", "");
 
+    const encodedHost = btoa(`admin.shopify.com/store/${storeName}`);
+
     const appUrl = 
-    `https://admin.shopify.com/store/${storeName}/apps/botassistai?shop=${shop}&host=${host}`;
-  
+      `https://admin.shopify.com/store/${storeName}/apps/botassistai?shop=${shop}&host=${encodedHost}`;
+    
     return res.send(`
       <!DOCTYPE html>
       <html>

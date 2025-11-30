@@ -20,9 +20,18 @@ export async function handleBilling(userId) {
 
     // Extract dest → "andrei-store205.myshopify.com/admin"
     const dest = payload.dest.replace("https://", "");
-    const host = btoa(dest);
-
-    console.log("✔ Host extracted from JWT:", host);
+    const params = new URLSearchParams(window.location.search);
+    let host = params.get("host");
+    
+    if (!host) {
+      // build correct admin host for App Bridge
+      const store = payload.dest.split(".myshopify.com")[0];  
+      const adminHost = `admin.shopify.com/store/${store}`;
+      host = btoa(adminHost);
+    }
+    
+    console.log("✔ Using host:", host);
+    
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
