@@ -4,19 +4,23 @@ import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import { getSessionToken } from "@shopify/app-bridge/utilities";
 import directory from "../directory";
 
+function getHostFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("host");
+}
+
+
 export async function handleBilling(userId) {
   try {
     const app = getAppBridgeInstance();
     const token = await getSessionToken(app);
 
-    // Decode JWT
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const dest = payload.dest; // e.g. https://admin.shopify.com/store/andrei-store205/apps/botassistai
+    // Get host directly from the URL — TRUST THIS ONE
+    const host = getHostFromURL();
 
-    // 🔥 Extract ONLY the required host value
-    const host = btoa(dest.replace("https://", ""));
+    if (!host) throw new Error("Missing host in URL");
 
-    console.log("Correct HOST:", host);
+    console.log("USING URL HOST:", host);
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
@@ -34,4 +38,5 @@ export async function handleBilling(userId) {
     alert("Billing failed — see console");
   }
 }
+
 
