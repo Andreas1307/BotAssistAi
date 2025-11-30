@@ -2550,7 +2550,8 @@ app.get("/billing/callback", async (req, res) => {
     const shop = rows[0].shopify_shop_domain;
     const storeName = shop.replace(".myshopify.com", "");
 
-    const appUrl = `https://admin.shopify.com/store/${storeName}/apps/botassistai?host=${host}`;    
+    // ⭐ FIX: MUST include both shop & host
+    const appUrl = `https://admin.shopify.com/store/${storeName}/apps/botassistai?shop=${shop}&host=${host}`;
 
     return res.send(`
       <!DOCTYPE html>
@@ -2569,6 +2570,7 @@ app.get("/billing/callback", async (req, res) => {
     res.status(500).send("Billing callback failed");
   }
 });
+
 
 
 
