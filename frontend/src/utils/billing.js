@@ -10,7 +10,7 @@ export async function handleBilling(userId) {
     const app = getAppBridgeInstance();
     const host = params.get("host"); 
 
-
+alert(host)
     const res = await axios.post(`${directory}/create-subscription2`, { userId, host });
     const confirmationUrl = res.data?.confirmationUrl;
     if (!confirmationUrl) throw new Error("Missing confirmationUrl");

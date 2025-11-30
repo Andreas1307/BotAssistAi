@@ -2461,7 +2461,8 @@ app.post("/create-subscription2", async (req, res) => {
     const user = rows[0];
     const shop = user.shopify_shop_domain;
     const token = user.shopify_access_token;
-
+ 
+    console.log("The host is:", host)
     const query = `
       mutation AppSubscriptionCreate(
         $name: String!, 
