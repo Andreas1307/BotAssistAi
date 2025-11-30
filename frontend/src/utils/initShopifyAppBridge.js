@@ -11,51 +11,23 @@ function isEmbedded() {
 
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop");
-  let host = params.get("host");
+  const host = params.get("host");
+  const shop = params.get("shop");
 
-  // Restore from session
-  if (!shop && sessionStorage.getItem("shopify_shop")) {
-    shop = sessionStorage.getItem("shopify_shop");
-  } else if (shop) {
-    sessionStorage.setItem("shopify_shop", shop);
-  }
-
-  if (!host && sessionStorage.getItem("shopify_host")) {
-    host = sessionStorage.getItem("shopify_host");
-  } else if (host) {
-    sessionStorage.setItem("shopify_host", host);
-  }
-
-  const isInstall = window.location.pathname.includes("/shopify/install");
-  const isEmbedded = window.top !== window.self;
-
-  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
-  if (!host && isInstall) {
-    const shopParam = encodeURIComponent(shop || "");
-    window.top.location.href =
-      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
-    return null;
-  }
-
-  // If still no host, wait
-  if (!host) {
-    console.warn("⏳ No host param yet — waiting for Shopify redirect");
-    return null;
-  }
-
-  // Initialize App Bridge
+  // ✔ Do NOT block App Bridge if host missing
+  // Shopify will supply host through the JWT shortly after load
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-    host,
+    host: host || undefined,
     forceRedirect: true,
   });
 
   window.appBridge = app;
-  console.log("✅ App Bridge initialized:", host);
+  console.log("✅ App Bridge initialized:", host || "(waiting for JWT)");
 
   return app;
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
