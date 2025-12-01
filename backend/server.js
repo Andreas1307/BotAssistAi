@@ -1089,7 +1089,6 @@ app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res.clearCookie("shopify_toplevel", { path: "/", sameSite: "None", secure: true });
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
