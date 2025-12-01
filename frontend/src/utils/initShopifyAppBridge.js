@@ -54,8 +54,8 @@ if (!host) {
     const redirect = Redirect.create(app);
     redirect.dispatch(
       Redirect.Action.REMOTE,
-      `https://${window.location.host}${window.location.pathname}?shop=${shopParam}`
-    );
+      `/shopify/auth?shop=${shop}`
+    );    
     return null;
   }
 

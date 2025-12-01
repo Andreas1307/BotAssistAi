@@ -25,26 +25,6 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
-      useEffect(() => {
-        const initialize = async () => {
-          const params = new URLSearchParams(window.location.search);
-          const shop = params.get("shop");
-          const host = params.get("host");
-        
-          if (!shop || !host) {
-            return; // DO NOTHING
-          }
-        
-          const app = createApp({
-            apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-            host,
-            forceRedirect: true,
-          });
-          window.appBridge = app;
-          setAppBridgeReady(true);
-        };
-        initialize();
-      }, []);
       
       useEffect(() => {
         if (!appBridgeReady) return;
@@ -59,7 +39,7 @@ export default function ShopifyLoader() {
           }
         };
         fetchUser();
-      }, [appBridgeReady]);
+      }, [appBridgeReady, shop]);
       
       
       useEffect(() => {
