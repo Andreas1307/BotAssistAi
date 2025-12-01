@@ -95,7 +95,7 @@ export default function ShopifyLoader() {
                   headers: { "Content-Type": "application/json" },
                 });
               
-                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+             //   safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
                 return;
               }
               
