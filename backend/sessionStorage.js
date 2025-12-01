@@ -1,13 +1,13 @@
-// sessionStorage.js
-
-const { Session } = require("@shopify/shopify-api");
 const fs = require("fs");
 const path = require("path");
+const { Session } = require("@shopify/shopify-api");
 
 const SESSIONS_FILE = path.join(__dirname, "sessions.json");
 
 function ensureFile() {
-  if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, JSON.stringify({}), "utf8");
+  if (!fs.existsSync(SESSIONS_FILE)) {
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify({}), "utf8");
+  }
 }
 
 function loadSessions() {
@@ -25,18 +25,16 @@ function saveSessions(sessions) {
 }
 
 module.exports = {
+  // ✅ Store session to file
   storeCallback: async (session) => {
-    if (!session.id || !session.shop) return false;
+    if (!session.id || !session.shop) {
+      console.error("Invalid session object, missing id or shop:", session);
+      return false;
+    }
 
     const sessions = loadSessions();
-
-    // Use Shopify-style session ID format
-    let sessionId = session.isOnline
-      ? `${session.id}` // online session
-      : `offline_${session.shop}`; // offline session
-
-    sessions[sessionId] = {
-      id: sessionId,
+    sessions[session.id] = {
+      id: session.id,
       shop: session.shop,
       isOnline: session.isOnline,
       accessToken: session.accessToken,
@@ -47,10 +45,11 @@ module.exports = {
     };
 
     saveSessions(sessions);
-    console.log("✅ Stored session:", sessionId);
+    console.log("✅ Stored session:", session.id);
     return true;
   },
 
+  // ✅ Load one session
   loadCallback: async (id) => {
     const sessions = loadSessions();
     const data = sessions[id];
@@ -59,18 +58,21 @@ module.exports = {
       return undefined;
     }
 
-    return new Session({
+    const session = new Session({
       id: data.id,
       shop: data.shop,
-      isOnline: data.isOnline,
+      isOnline: data.isOnline || false,
       state: data.state,
       scope: data.scope,
       expires: data.expires ? new Date(data.expires) : null,
       accessToken: data.accessToken,
       onlineAccessInfo: data.onlineAccessInfo,
     });
+
+    return session;
   },
 
+  // ✅ Delete session
   deleteCallback: async (id) => {
     const sessions = loadSessions();
     if (sessions[id]) {
@@ -81,6 +83,7 @@ module.exports = {
     return true;
   },
 
+  // ✅ NEW: Return all stored sessions
   getAllSessions: async () => {
     const sessions = loadSessions();
     return Object.values(sessions);

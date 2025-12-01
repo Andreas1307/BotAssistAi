@@ -11,20 +11,40 @@ function isEmbedded() {
 
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  const shop = params.get("shop") || sessionStorage.getItem("shopify_shop");
-  const host = params.get("host") || sessionStorage.getItem("shopify_host");
+  let shop = params.get("shop");
+  let host = params.get("host");
 
-  if (!shop) return null;
+  // Restore from session
+  if (!shop && sessionStorage.getItem("shopify_shop")) {
+    shop = sessionStorage.getItem("shopify_shop");
+  } else if (shop) {
+    sessionStorage.setItem("shopify_shop", shop);
+  }
 
-  sessionStorage.setItem("shopify_shop", shop);
-  if (host) sessionStorage.setItem("shopify_host", host);
+  if (!host && sessionStorage.getItem("shopify_host")) {
+    host = sessionStorage.getItem("shopify_host");
+  } else if (host) {
+    sessionStorage.setItem("shopify_host", host);
+  }
 
-  if (!host) {
-    // Top-level redirect for OAuth
-    window.top.location.href = `${directory}/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
+  const isInstall = window.location.pathname.includes("/shopify/install");
+  const isEmbedded = window.top !== window.self;
+
+  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
+  if (!host && isInstall) {
+    const shopParam = encodeURIComponent(shop || "");
+    window.top.location.href =
+      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
     return null;
   }
 
+  // If still no host, wait
+  if (!host) {
+    console.warn("⏳ No host param yet — waiting for Shopify redirect");
+    return null;
+  }
+
+  // Initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -32,9 +52,10 @@ export function initShopifyAppBridge() {
   });
 
   window.appBridge = app;
+  console.log("✅ App Bridge initialized:", host);
+
   return app;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
