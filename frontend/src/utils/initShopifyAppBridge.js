@@ -38,11 +38,32 @@ export function initShopifyAppBridge() {
     return null;
   }
 
-  // If still no host, wait
-  if (!host) {
-    console.warn("⏳ No host param yet — waiting for Shopify redirect");
+// 🔥 FIX — If host missing, reload through Shopify
+if (!host) {
+  const shopParam = encodeURIComponent(shop || "");
+
+  // Shopify ALWAYS needs host param inside iframe to initialize App Bridge
+  if (isEmbedded()) {
+    // Reload the iframe using Shopify's internal redirect
+    const app = createApp({
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+      shopOrigin: shopParam,
+      forceRedirect: true,
+    });
+
+    const redirect = Redirect.create(app);
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      `https://${window.location.host}${window.location.pathname}?shop=${shopParam}`
+    );
     return null;
   }
+
+  // If top-level → just wait, Shopify will insert host
+  console.warn("⏳ Waiting for host during install...");
+  return null;
+}
+
 
   // Initialize App Bridge
   const app = createApp({

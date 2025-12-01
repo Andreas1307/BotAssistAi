@@ -97,14 +97,13 @@ export default function ShopifyLoader() {
 
                 await fetchWithAuth(`/chatbot-config-shopify`, {
                   method: "POST",
-                  body: JSON.stringify({
+                  body: {
                     shop: shopParam,
                     colors,
-                  }),
+                  },
                   headers: { "Content-Type": "application/json" },
                 });
               
-                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
                 return;
               }
               
