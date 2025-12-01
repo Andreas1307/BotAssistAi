@@ -11,16 +11,17 @@ function isEmbedded() {
 
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop") || sessionStorage.getItem("shopify_shop");
-  let host = params.get("host") || sessionStorage.getItem("shopify_host");
+  const shop = params.get("shop") || sessionStorage.getItem("shopify_shop");
+  const host = params.get("host") || sessionStorage.getItem("shopify_host");
 
-  if (shop) sessionStorage.setItem("shopify_shop", shop);
+  if (!shop) return null;
+
+  sessionStorage.setItem("shopify_shop", shop);
   if (host) sessionStorage.setItem("shopify_host", host);
 
   if (!host) {
-    const shopParam = encodeURIComponent(shop || "");
-    console.warn("⚠️ Host missing — forcing top-level redirect...");
-    window.top.location.href = `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
+    // Top-level redirect for OAuth
+    window.top.location.href = `${directory}/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`;
     return null;
   }
 
