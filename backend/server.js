@@ -2535,7 +2535,7 @@ app.post("/create-subscription2", async (req, res) => {
 app.get("/billing/callback", async (req, res) => {
   try {
     const { userId } = req.query;
-    let { host } = req.query; // may be undefined / base64 / plain / url
+    let { host } = req.query;
 
     // Safety check
     if (!userId) {
