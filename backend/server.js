@@ -1119,14 +1119,21 @@ app.get("/shopify/install", async (req, res) => {
 
 
   if (!req.cookies.shopify_toplevel) {
+    console.log("⚠️ Missing top-level cookie, redirecting to /shopify/top-level-auth");
+    const shopParam = encodeURIComponent(shop);
     return res.send(`
       <html><body>
         <script>
-          window.top.location.href = "/shopify/top-level-auth?shop=${encodeURIComponent(shop)}";
+          if (window.top === window.self) {
+            window.location.href = "/shopify/top-level-auth?shop=${shopParam}";
+          } else {
+            window.top.location.href = "/shopify/top-level-auth?shop=${shopParam}";
+          }
         </script>
       </body></html>
     `);
   }
+  
 
   if (authInProgress.has(shop)) {
     console.log(`⚠️ Auth already in progress for ${shop}`);

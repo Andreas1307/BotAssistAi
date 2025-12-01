@@ -48,13 +48,13 @@ export default function ShopifyLoader() {
         const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
       
         if (!shopParam) return;
-      
-        if (!hasTopLevel && window.top === window.self) {
-            // ALWAYS send them to top-level-auth instead of /auth
-            window.top.location.href =
-              `${directory}/shopify/top-level-auth?shop=${shopParam}`;
-            return;
-          }
+
+        if (!hostParam) {
+          const shopParam = encodeURIComponent(params.get("shop"));
+          window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+          return;
+        }
+        
           
       
         // Otherwise init App Bridge normally
