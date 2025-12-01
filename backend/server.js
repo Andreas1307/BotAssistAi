@@ -2476,8 +2476,8 @@ app.post("/create-subscription2", async (req, res) => {
         }
       }
     `;
+    const returnHost = host; // Use the host sent from frontend / App Bridge
 
-    const returnHost = btoa(`admin.shopify.com/store/${shop}`);
 
     const variables = {
       name: "BotAssist Pro Plan",
@@ -2552,11 +2552,9 @@ app.get("/billing/callback", async (req, res) => {
     const shop = rows[0].shopify_shop_domain;
     const storeName = shop.replace(".myshopify.com", "");
 
-    const encodedHost = btoa(`admin.shopify.com/store/${storeName}`);
-
     const appUrl = 
-      `https://admin.shopify.com/store/${storeName}/apps/botassistai?shop=${shop}&host=${encodedHost}`;
-    
+    `https://admin.shopify.com/store/${storeName}/apps/botassistai?shop=${shop}&host=${host}`;
+  
     return res.send(`
       <!DOCTYPE html>
       <html>
