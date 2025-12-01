@@ -1109,37 +1109,37 @@ app.get("/shopify/auth", (req, res) => {
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 
   res.send(`
-    <!doctype html>
-    <html>
-      <body>
-        <script>
-          const params = new URLSearchParams(window.location.search);
-          const host = params.get('host');
-          const installUrl = "${installUrl}";
-    
-          if (!host) {
-            // TOP LEVEL REDIRECT
-            window.location.href = installUrl;
-          } else {
-            // INSIDE IFRAME → USE APP BRIDGE
-            const createApp = window['app-bridge'].default;
-            const Redirect = window['app-bridge'].actions.Redirect;
-            const app = createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host,
-              forceRedirect: true,
-            });
-    
-            Redirect.create(app).dispatch(
-              Redirect.Action.REMOTE,
-              installUrl
-            );
-          }
-        </script>
-      </body>
-    </html>
-    `);
-    
+<!doctype html>
+<html>
+  <body>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const host = params.get('host');
+      const installUrl = "${installUrl}";
+
+      if (!host) {
+        // TOP LEVEL REDIRECT
+        window.location.href = installUrl;
+      } else {
+        // INSIDE IFRAME → USE APP BRIDGE
+        const createApp = window['app-bridge'].default;
+        const Redirect = window['app-bridge'].actions.Redirect;
+        const app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host,
+          forceRedirect: true,
+        });
+
+        Redirect.create(app).dispatch(
+          Redirect.Action.REMOTE,
+          installUrl
+        );
+      }
+    </script>
+  </body>
+</html>
+`);
+
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1326,19 +1326,34 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     })();
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
-    const dashboardUrl = `https://www.botassistai.com/shopify/dashboard?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host)}`;
+    const dashboardUrl = `https://www.botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    return res.send(`
-      <html>
-        <body>
-          <script>
-            window.top.location.href = "${dashboardUrl}";
-          </script>
-        </body>
-      </html>
-    `);
+res.send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Redirecting to Dashboard...</title>
+  </head>
+  <body>
+    <script>
+      // Force top-level redirect to dashboard
+      const dashboard = "${dashboardUrl.replace(/"/g, '\\"')}";
+      console.log("Redirecting to dashboard:", dashboard);
+      
+      if (window.top !== window.self) {
+        window.top.location.href = dashboard;
+      } else {
+        window.location.href = dashboard;
+      }
+    </script>
+    <noscript>
+      Redirect failed. Please <a href="${dashboardUrl}" target="_top">click here</a>.
+    </noscript>
+  </body>
+</html>
+`);
+
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1384,6 +1399,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
+
 
 
 

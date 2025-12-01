@@ -11,61 +11,19 @@ function isEmbedded() {
 
 export function initShopifyAppBridge() {
   const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop");
-  let host = params.get("host");
+  let shop = params.get("shop") || sessionStorage.getItem("shopify_shop");
+  let host = params.get("host") || sessionStorage.getItem("shopify_host");
 
-  // Restore from session
-  if (!shop && sessionStorage.getItem("shopify_shop")) {
-    shop = sessionStorage.getItem("shopify_shop");
-  } else if (shop) {
-    sessionStorage.setItem("shopify_shop", shop);
-  }
+  if (shop) sessionStorage.setItem("shopify_shop", shop);
+  if (host) sessionStorage.setItem("shopify_host", host);
 
-  if (!host && sessionStorage.getItem("shopify_host")) {
-    host = sessionStorage.getItem("shopify_host");
-  } else if (host) {
-    sessionStorage.setItem("shopify_host", host);
-  }
-
-  const isInstall = window.location.pathname.includes("/shopify/install");
-  const embedded = window.top !== window.self;
-
-
-  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
-  if (!host && isInstall) {
+  if (!host) {
     const shopParam = encodeURIComponent(shop || "");
-    window.top.location.href =
-      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
+    console.warn("⚠️ Host missing — forcing top-level redirect...");
+    window.top.location.href = `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
     return null;
   }
 
-// 🔥 FIX — If host missing, reload through Shopify
-if (!host) {
-  const shopParam = encodeURIComponent(shop || "");
-
-  // Shopify ALWAYS needs host param inside iframe to initialize App Bridge
-  if (embedded()) {
-    // Reload the iframe using Shopify's internal redirect
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });    
-
-    const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `/shopify/auth?shop=${shop}`
-    );    
-    return null;
-  }
-
-  console.warn("⏳ Waiting for host during install...");
-  return null;
-}
-
-
-  // Initialize App Bridge
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
@@ -73,10 +31,9 @@ if (!host) {
   });
 
   window.appBridge = app;
-  console.log("✅ App Bridge initialized:", host);
-
   return app;
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
