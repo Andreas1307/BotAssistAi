@@ -24,8 +24,8 @@ export async function handleBilling(userId) {
     let host = params.get("host");
     
     if (!host) {
-      // build correct admin host for App Bridge
-      const store = payload.dest.split(".myshopify.com")[0];  
+      const store = payload.dest.replace("https://", "").split(".myshopify.com")[0];
+ 
       const adminHost = `admin.shopify.com/store/${store}`;
       host = btoa(adminHost);
     }
