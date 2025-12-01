@@ -28,7 +28,8 @@ export function initShopifyAppBridge() {
   }
 
   const isInstall = window.location.pathname.includes("/shopify/install");
-  const isEmbedded = window.top !== window.self;
+  const embedded = window.top !== window.self;
+
 
   // 🔥 REQUIRED FIX — top-level redirect when host missing during install
   if (!host && isInstall) {
@@ -43,7 +44,7 @@ if (!host) {
   const shopParam = encodeURIComponent(shop || "");
 
   // Shopify ALWAYS needs host param inside iframe to initialize App Bridge
-  if (isEmbedded()) {
+  if (embedded()) {
     // Reload the iframe using Shopify's internal redirect
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
@@ -59,7 +60,6 @@ if (!host) {
     return null;
   }
 
-  // If top-level → just wait, Shopify will insert host
   console.warn("⏳ Waiting for host during install...");
   return null;
 }

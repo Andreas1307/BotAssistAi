@@ -25,7 +25,6 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
-      
       useEffect(() => {
         if (!appBridgeReady) return;
       
@@ -33,14 +32,14 @@ export default function ShopifyLoader() {
           try {
             const data = await fetchWithAuth("/auth-check");
             setUser(data.user);
-          } catch (err) {
-            console.error("❌ Auth check error:", err);
+          } catch (error) {
+            console.error("❌ Auth check error:", error);
             setUser(null);
           }
         };
-        fetchUser();
-      }, [appBridgeReady, shop]);
       
+        fetchUser();
+      }, [appBridgeReady]);
       
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -89,13 +88,14 @@ export default function ShopifyLoader() {
 
                 await fetchWithAuth(`/chatbot-config-shopify`, {
                   method: "POST",
-                  body: {
+                  body: JSON.stringify({
                     shop: shopParam,
                     colors,
-                  },
+                  }),
                   headers: { "Content-Type": "application/json" },
                 });
               
+                safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
                 return;
               }
               
