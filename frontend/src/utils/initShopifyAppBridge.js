@@ -9,67 +9,33 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export function initShopifyAppBridge() {
+export async function initShopifyAppBridge() {
+
+  if (window.top === window.self) {
+    console.log("⏸️ Not embedded — skipping App Bridge init");
+    return null;
+  }
+
   const params = new URLSearchParams(window.location.search);
   let shop = params.get("shop");
   let host = params.get("host");
 
-  // Restore from session
-  if (!shop && sessionStorage.getItem("shopify_shop")) {
-    shop = sessionStorage.getItem("shopify_shop");
-  } else if (shop) {
-    sessionStorage.setItem("shopify_shop", shop);
-  }
-
-  if (!host && sessionStorage.getItem("shopify_host")) {
-    host = sessionStorage.getItem("shopify_host");
-  } else if (host) {
-    sessionStorage.setItem("shopify_host", host);
-  }
-
-  const isInstall = window.location.pathname.includes("/shopify/install");
-  const isEmbedded = window.top !== window.self;
-
-  // 🔥 REQUIRED FIX — top-level redirect when host missing during install
-  if (!host && isInstall) {
-    const shopParam = encodeURIComponent(shop || "");
-    window.top.location.href =
-      `https://api.botassistai.com/shopify/top-level-auth?shop=${shopParam}`;
-    return null;
-  }
-
-// 🔥 FIX — If host missing, reload through Shopify
-if (!host) {
-  const shopParam = encodeURIComponent(shop || "");
-
-  // Shopify ALWAYS needs host param inside iframe to initialize App Bridge
-  if (isEmbedded()) {
-    // Reload the iframe using Shopify's internal redirect
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });    
-
-    const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://${window.location.host}${window.location.pathname}?shop=${shopParam}`
-    );
-    return null;
-  }
-
-  // If top-level → just wait, Shopify will insert host
-  console.warn("⏳ Waiting for host during install...");
+if (window.location.pathname.startsWith("/shopify")) {
+  console.log("⏸️ Skipping App Bridge — backend Shopify route");
   return null;
 }
 
 
-  // Initialize App Bridge
+
+  if (!host) {
+    console.warn("⏳ No host param yet — waiting for Shopify redirect");
+    return null;
+  }
+
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true,
+    forceRedirect: false,
   });
 
   window.appBridge = app;
