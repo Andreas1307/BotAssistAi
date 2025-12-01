@@ -2553,7 +2553,7 @@ app.get("/billing/callback", async (req, res) => {
     const storeName = shop.replace(".myshopify.com", "");
 
     const appUrl = 
-    `https://admin.shopify.com/store/${storeName}/apps/botassistai?shop=${shop}&host=${host}`;
+    `https://admin.shopify.com/store/andrei-store205/apps/botassistai/shopify/dashboard?shop=${shop}&host=${host}`;
   
     return res.send(`
       <!DOCTYPE html>
