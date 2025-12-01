@@ -1104,42 +1104,41 @@ app.get("/shopify/auth", (req, res) => {
     secure: true,
     sameSite: "None",
     path: "/",
+    domain: "api.botassistai.com", 
   });
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
 
   res.send(`
-<!doctype html>
-<html>
-  <body>
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const host = params.get('host');
-      const installUrl = "${installUrl}";
+    <!doctype html>
+    <html>
+      <head><meta charset="utf-8"/></head>
+      <body>
+        <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+        <script>
+          const host = new URLSearchParams(window.location.search).get('host');
+          const installUrl = "${installUrl}";
 
-      if (!host) {
-        // TOP LEVEL REDIRECT
-        window.location.href = installUrl;
-      } else {
-        // INSIDE IFRAME → USE APP BRIDGE
-        const createApp = window['app-bridge'].default;
-        const Redirect = window['app-bridge'].actions.Redirect;
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host,
-          forceRedirect: true,
-        });
-
-        Redirect.create(app).dispatch(
-          Redirect.Action.REMOTE,
-          installUrl
-        );
-      }
-    </script>
-  </body>
-</html>
-`);
-
+          if (host) {
+            // Continue inside iframe using App Bridge
+            const createApp = window['app-bridge'].default;
+            const Redirect = window['app-bridge'].actions.Redirect;
+            const app = createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host,
+              forceRedirect: true,
+            });
+            const redirect = Redirect.create(app);
+            redirect.dispatch(Redirect.Action.REMOTE, installUrl);
+          } else {
+            // Top-level redirect only — SAFE
+            window.location.href = installUrl;
+          }
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
