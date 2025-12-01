@@ -2534,35 +2534,124 @@ app.post("/create-subscription2", async (req, res) => {
 
 app.get("/billing/callback", async (req, res) => {
   try {
-    const { userId, host } = req.query;
+    const { userId } = req.query;
+    let { host } = req.query; // may be undefined / base64 / plain / url
 
-    if (!host) {
-      console.error("❌ Missing host in callback");
-      return res.send("Missing host from Shopify");
+    // Safety check
+    if (!userId) {
+      console.error("❌ billing callback missing userId");
+      return res.status(400).send("Missing userId");
     }
 
+    // Load user early for logging / shop name
     const [rows] = await pool.query("SELECT * FROM users WHERE user_id=?", [userId]);
     if (!rows.length) return res.status(404).send("User not found");
+    const shop = rows[0].shopify_shop_domain; // e.g. andrei-store205.myshopify.com
 
+    // Helper: is probably base64 (simple heuristic)
+    const looksLikeBase64 = (s) => {
+      if (!s || typeof s !== "string") return false;
+      // base64 charset + allow padding = ; length multiple of 4 is common
+      return /^[A-Za-z0-9+/=]+$/.test(s) && (s.length % 4 === 0);
+    };
+
+    // If host is missing from query, try to recover from Referer header
+    if (!host) {
+      const referer = req.get("referer");
+      if (referer) {
+        try {
+          const u = new URL(referer);
+          host = u.searchParams.get("host") || u.hostname || null;
+          console.log("ℹ️ Recovered host from referer:", host);
+        } catch (err) {
+          console.warn("⚠️ Could not parse referer:", err?.message);
+        }
+      }
+    }
+
+    if (!host) {
+      console.error("❌ Missing host in callback after referer fallback");
+      return res.status(400).send("Missing host from Shopify");
+    }
+
+    // Normalize host into base64-encoded admin host that Shopify expects
+    let hostForRedirect = host; // default: maybe already encoded
+
+    try {
+      if (looksLikeBase64(host)) {
+        // already base64 — just use it
+        console.log("✔ Host appears base64 — using as-is");
+        hostForRedirect = host;
+      } else {
+        // If host looks like a full URL, strip protocol and trailing slashes
+        if (host.startsWith("http://") || host.startsWith("https://")) {
+          let stripped = host.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+          // If stripped already contains 'admin.shopify.com' or '/admin', use directly
+          if (stripped.includes("admin.shopify.com") || stripped.includes("/admin") || stripped.includes("/store/")) {
+            hostForRedirect = Buffer.from(stripped).toString("base64");
+            console.log("✔ Host was a full URL — encoded:", stripped);
+          } else {
+            // if it's e.g. 'andrei-store205.myshopify.com/admin', still remove '/admin' then build admin host
+            const maybeShop = stripped.split("/")[0];
+            const store = maybeShop.replace(".myshopify.com", "").replace(/\/.*$/,"");
+            const adminHost = `admin.shopify.com/store/${store}`;
+            hostForRedirect = Buffer.from(adminHost).toString("base64");
+            console.log("✔ Host was URL without admin — built adminHost:", adminHost);
+          }
+        } else if (host.includes("admin.shopify.com") || host.includes("/admin") || host.includes("/store/")) {
+          // host is admin path-like, encode it
+          const cleaned = host.replace(/\/+$/, ""); // trim trailing slash
+          hostForRedirect = Buffer.from(cleaned).toString("base64");
+          console.log("✔ Host was admin-like — encoded:", cleaned);
+        } else if (host.endsWith(".myshopify.com") || host.includes(".")) {
+          // raw shop domain (myshopify or custom domain) → build admin.shopify.com/store/<storeName>
+          // For myshopify: extract store name before .myshopify.com
+          let storeName;
+          if (host.endsWith(".myshopify.com")) {
+            storeName = host.replace(".myshopify.com", "").replace(/\/.*$/,"");
+          } else {
+            // custom domain: remove any path and use entire hostname as store identifier
+            storeName = host.split("/")[0].replace(/^https?:\/\//, "");
+          }
+          const adminHost = `admin.shopify.com/store/${storeName}`;
+          hostForRedirect = Buffer.from(adminHost).toString("base64");
+          console.log("✔ Built adminHost from shop domain:", adminHost);
+        } else {
+          // fallback: base64 encode whatever we got
+          hostForRedirect = Buffer.from(String(host)).toString("base64");
+          console.log("ℹ️ Fallback: encoded host as base64:", hostForRedirect);
+        }
+      }
+    } catch (err) {
+      console.warn("⚠️ Error normalizing host, falling back to encoding raw host:", err?.message);
+      hostForRedirect = Buffer.from(String(host)).toString("base64");
+    }
+
+    // Update DB subscription BEFORE redirect (you already do this elsewhere)
     await pool.query(
       "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
       [userId]
     );
 
-    const shop = rows[0].shopify_shop_domain;
-    const storeName = shop.replace(".myshopify.com", "");
+    // Build final admin redirect URL. Use the shop to compute store path:
+    const storeSelector = (shop && shop.indexOf(".myshopify.com") > -1)
+      ? shop.replace(".myshopify.com", "")
+      : shop.split("/")[0]; // fallback for custom domains
 
-    const appUrl = 
-    `https://admin.shopify.com/store/andrei-store205/apps/botassistai/shopify/dashboard?shop=${shop}&host=${host}`;
-  
+    const appUrl = `https://admin.shopify.com/store/${encodeURIComponent(storeSelector)}/apps/botassistai/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(hostForRedirect)}`;
+
+    console.log("➡️ Redirecting merchant back to app in admin iframe:", appUrl, { originalHost: host, normalizedHost: hostForRedirect });
+
     return res.send(`
       <!DOCTYPE html>
       <html>
         <body style="text-align:center;margin-top:30vh;font-family:sans-serif">
           <h3>Redirecting back to BotAssistAI…</h3>
           <script>
-            window.top.location.href = "${appUrl}";
+            // top-level break-out to ensure iframe is replaced
+            window.top.location.href = ${JSON.stringify(appUrl)};
           </script>
+          <noscript>Please <a href="${appUrl}" target="_top">click here to continue</a>.</noscript>
         </body>
       </html>
     `);
