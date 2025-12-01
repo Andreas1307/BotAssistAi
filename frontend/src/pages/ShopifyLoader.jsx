@@ -27,7 +27,19 @@ export default function ShopifyLoader() {
 
       useEffect(() => {
         const initialize = async () => {
-          const app = await initShopifyAppBridge();
+          const params = new URLSearchParams(window.location.search);
+          const shop = params.get("shop");
+          const host = params.get("host");
+        
+          if (!shop || !host) {
+            return; // DO NOTHING
+          }
+        
+          const app = createApp({
+            apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+            host,
+            forceRedirect: true,
+          });
           window.appBridge = app;
           setAppBridgeReady(true);
         };

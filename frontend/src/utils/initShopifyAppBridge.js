@@ -47,9 +47,9 @@ if (!host) {
     // Reload the iframe using Shopify's internal redirect
     const app = createApp({
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      shopOrigin: shopParam,
+      host,
       forceRedirect: true,
-    });
+    });    
 
     const redirect = Redirect.create(app);
     redirect.dispatch(
