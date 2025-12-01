@@ -1090,13 +1090,12 @@ app.get("/shopify/auth", (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
   res.clearCookie("shopify_toplevel", { path: "/", sameSite: "None", secure: true });
-res.cookie("shopify_toplevel", "true", {
+  res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
     path: "/",
-});
-
+  });
   
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
@@ -1118,19 +1117,22 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  const hasTopLevel = !!req.cookies.shopify_toplevel;
-  console.log(`🔎 [INSTALL] shop=${shop}, hasTopLevel=${hasTopLevel}`);
 
-  if (!hasTopLevel) {
-    console.warn("⚠️ Missing top-level cookie → redirecting back to /top-level-auth");
-    return res.redirect(abs(`/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`));
+  if (!req.cookies.shopify_toplevel) {
+    return res.send(`
+      <html><body>
+        <script>
+          window.top.location.href = "/shopify/top-level-auth?shop=${encodeURIComponent(shop)}";
+        </script>
+      </body></html>
+    `);
   }
 
   if (authInProgress.has(shop)) {
     console.log(`⚠️ Auth already in progress for ${shop}`);
     return res.status(200).send("OAuth in progress, please wait...");
   }
-  authInProgress.add(shop);
+  authInProgress.add(shop);  
 
   try {
     console.log("🚀 [INSTALL] Beginning Shopify OAuth");
