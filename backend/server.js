@@ -1073,6 +1073,14 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
+  res.cookie("shopify_toplevel", "true", {
+    httpOnly: false,
+    secure: true,
+    sameSite: "None",
+    path: "/",
+  });
+  
+
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
@@ -1089,13 +1097,7 @@ app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
-    secure: true,
-    sameSite: "None",
-    path: "/",
-  });
-  
+
 
   const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
   res.send(`
