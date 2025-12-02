@@ -1312,48 +1312,52 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
     const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); 
-    const embeddedAppUrl = `/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    const embeddedAppUrl = `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    res.cookie('shopify_session', session.id, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'None',
-      path: '/'
-    });
-    
     res.send(`
-    <!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8"/>
-        <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
-        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-      </head>
-      <body>
-        <script>
-          const host = "${host}";
-          const appUrl = "${embeddedAppUrl}";
-    
-          try {
-            const createApp = window['app-bridge'].default;
-            const Redirect = window['app-bridge'].actions.Redirect;
-            const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-            const redirect = Redirect.create(app);
-    
-            // Redirect inside the iframe
-            redirect.dispatch(Redirect.Action.REMOTE, appUrl);
-          } catch(e) {
-            console.warn("App Bridge redirect failed, fallback to iframe top:", e);
-            window.location.href = appUrl; // iframe-level redirect
-          }
-        </script>
-        <noscript>
-          <a href="${embeddedAppUrl}">Continue to app</a>
-        </noscript>
-      </body>
-    </html>
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8"/>
+          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+        </head>
+        <body>
+          <script>
+            (function() {
+              const host = "${host}";
+              const appUrl = "${embeddedAppUrl}";
+              try {
+                const createApp = window['app-bridge'].default;
+                const Redirect = window['app-bridge'].actions.Redirect;
+                const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+                const redirect = Redirect.create(app);
+
+                // Redirect INSIDE the iframe
+                redirect.dispatch(Redirect.Action.REMOTE, appUrl);
+              } catch(e) {
+                console.warn("App Bridge redirect failed, fallback to iframe top:", e);
+                window.location.href = appUrl;
+              }
+            })();
+          </script>
+          <noscript>
+            <a href="${embeddedAppUrl}">Continue to app</a>
+          </noscript>
+        </body>
+      </html>
     `);
-    
+
+  } catch (err) {
+    console.error('❌ Shopify callback error:', err);
+    return res.status(500).send(`
+      <html><body>
+        <h3>OAuth error: ${err.name || "Unknown"}</h3>
+        <pre>${(err && err.message) || ""}</pre>
+      </body></html>
+    `);
+  }
+});
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
