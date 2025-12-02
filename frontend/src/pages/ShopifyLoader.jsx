@@ -80,7 +80,7 @@ export default function ShopifyLoader() {
       
     
       
-    
+    /*
       useEffect(() => {
     
         if (!appBridgeReady) return; 
@@ -102,7 +102,7 @@ export default function ShopifyLoader() {
             const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
            
             if (!data.installed) {
-              safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+             // safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
       
               await fetchWithAuth(`/chatbot-config-shopify`, {
                 method: "POST",
@@ -138,6 +138,7 @@ export default function ShopifyLoader() {
       
         checkShop();
       }, [appBridgeReady]); 
+      */
 
   return <div>Loading Shopify App…</div>;
 }

@@ -1119,7 +1119,7 @@ app.get("/shopify/install", async (req, res) => {
   if (!shop) return res.status(400).send("Missing shop param");
 
 
-  if (!req.cookies.shopify_toplevel) {
+  if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log("⚠️ Missing top-level cookie, redirecting to /shopify/top-level-auth");
     const shopParam = encodeURIComponent(shop);
     return res.send(`
