@@ -94,9 +94,10 @@ export default function ShopifyLoader() {
                   }),
                   headers: { "Content-Type": "application/json" },
                 });
-              
-             //   safeRedirect(`${directory}/shopify/top-level-auth?shop=${shopParam}`);
+                console.warn("App is not installed yet — staying in loader.");
+                setInstalled(false);
                 return;
+                
               }
               
               

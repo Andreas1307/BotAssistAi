@@ -1071,33 +1071,46 @@ function abs(path) {
 const authInProgress = new Set();
 app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
-  const redirectUrl = `/shopify/auth?shop=${encodeURIComponent(shop)}`;
-
-  res.send(`
-    <script>
-      window.top.location.href = "${redirectUrl}";
-    </script>
-  `);
-});
-
-app.get("/shopify/auth", (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
+  if (!shop) return res.status(400).send("Missing shop param");
 
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    path: "/",  
+    path: "/",
   });
+  
 
-  const installUrl = `/shopify/install?shop=${encodeURIComponent(shop)}`;
+  const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
+
   res.send(`
-    <script>
-      window.top.location.href = "${installUrl}";
-    </script>
+    <html><body>
+  <script>
+    window.top.location.href = "${redirectUrl}";
+  </script>
+</body></html>
+
+  `);
+});
+
+app.get("/shopify/auth", (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
+
+
+
+  const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
+  res.send(`
+    <html><body>
+      <script>
+        const target = "${installUrl}";
+        if (window.top === window.self) {
+          window.location.href = target;
+        } else {
+          window.top.location.href = target;
+        }
+      </script>
+    </body></html>
   `);
 });
 
