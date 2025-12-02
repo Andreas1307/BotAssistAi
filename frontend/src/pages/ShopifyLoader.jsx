@@ -56,11 +56,7 @@ export default function ShopifyLoader() {
         // Initialize Shopify App Bridge
         (async () => {
           const app = await initShopifyAppBridge();
-          if (!app) {
-            // If App Bridge init fails, fallback to OAuth install
-            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
-            return;
-          }
+         
           
           setAppBridgeReady(true);
           window.appBridge = app;
