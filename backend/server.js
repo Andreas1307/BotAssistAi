@@ -1104,7 +1104,11 @@ app.get("/shopify/auth", (req, res) => {
     <html><body>
       <script>
         const target = "${installUrl}";
+        if (window.top === window.self) {
           window.location.href = target;
+        } else {
+          window.top.location.href = target;
+        }
       </script>
     </body></html>
   `);
@@ -1312,43 +1316,19 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     res.send(`
       <!DOCTYPE html>
       <html>
-        <head>
-          <meta charset="utf-8"/>
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-        </head>
+        <head><meta charset="utf-8"/></head>
         <body>
           <script>
-            (function() {
-              const host = "${host}";
-              const shop = "${shop}";
-              const dashboard = "${dashboardUrlEscaped}";
-              
-              if (host) {
-                try {
-                  const createApp = window['app-bridge'].default;
-                  const Redirect = window['app-bridge'].actions.Redirect;
-                  const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-                  const redirect = Redirect.create(app);
-                  redirect.dispatch(Redirect.Action.REMOTE, dashboard);
-                } catch(e) {
-                  console.warn("App Bridge redirect failed, fallback to top-level:", e);
-                  window.top.location.href = dashboard;
-                }
-              } else {
-                window.top.location.href = dashboard;
-              }
-            })();
+            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+            window.top.location.href = "${dashboardUrlEscaped}";
           </script>
           <noscript>
-            Redirect failed. Please <a href="${dashboardUrlEscaped}" target="_top">click here</a>.
+            <a href="${dashboardUrlEscaped}" target="_top">Continue</a>
           </noscript>
         </body>
       </html>
-    `);
-    
-    
+      `);
+      
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
