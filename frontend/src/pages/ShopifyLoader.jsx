@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { safeRedirect, initShopifyAppBridge, fetchWithAuth } from "../utils/initShopifyAppBridge";
-import createApp from '@shopify/app-bridge';
-import { Redirect } from '@shopify/app-bridge/actions';
 import directory from "../directory";
 
 export default function ShopifyLoader() {
     
   const [installed, setInstalled] = useState(null);
   const [appBridgeReady, setAppBridgeReady] = useState(false);
-  
-  const [shop, setShop] = useState(null);
-  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
     const [colors, setColors] = useState({
         background: '#f2f2f2',
         chatbotBackground: '#092032',
@@ -25,104 +21,103 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
-      useEffect(() => {
-        if (!appBridgeReady) return;
-      
-        const fetchUser = async () => {
-          try {
-            const data = await fetchWithAuth("/auth-check");
-            setUser(data.user);
-          } catch (error) {
-            console.error("❌ Auth check error:", error);
-            setUser(null);
-          }
-        };
-      
-        fetchUser();
-      }, [appBridgeReady]);
-      
-      useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const shopParam = params.get("shop");
-        const hostParam = params.get("host");
-        const hasTopLevel = document.cookie.includes("shopify_toplevel=true");
-      
-        if (!shopParam) return;
 
-        if (!hostParam) {
-          const shopParam = encodeURIComponent(params.get("shop"));
-          window.top.location.href = `${directory}/shopify/top-level-auth?shop=${shopParam}`;
+ useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shopParam = params.get("shop");
+    const hostParam = params.get("host");
+  
+    // If shop param missing, stop
+    if (!shopParam) {
+      console.warn("❌ Missing shop parameter in URL");
+      return;
+    }   
+    
+    // Initialize Shopify App Bridge
+    (async () => {
+      const app = await initShopifyAppBridge();
+      if (!app) {
+        // If App Bridge init fails, fallback to OAuth install
+        safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+        return;
+      }
+      
+      setAppBridgeReady(true);
+      window.appBridge = app;
+      try {
+        // No /api/ping anymore — just assume App Bridge works
+        console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
+  
+        // Optionally, you can trigger install if shop is not installed yet
+        // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
+      } catch (err) {
+        console.error("❌ Shopify App Bridge init error:", err);
+        safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+      }
+    })();
+  }, []);
+  
+  
+
+  
+
+  useEffect(() => {
+
+    if (!appBridgeReady) return; 
+
+    const params = new URLSearchParams(window.location.search);
+    const shopParam = params.get("shop");
+    const hostParam = params.get("host");
+  
+    if (!shopParam || !hostParam) {
+      console.warn("❌ Not running inside Shopify context.");
+      setLoading(false);
+      return;
+    }
+  
+    setShop(shopParam);
+  
+    const checkShop = async () => {
+      try {
+        const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
+       
+        if (!data.installed) {
+          safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+  
+          await fetchWithAuth(`/chatbot-config-shopify`, {
+            method: "POST",
+            body: JSON.stringify({
+              shop: shopParam,
+              colors,
+            }),
+            headers: { "Content-Type": "application/json" },
+          });
+  
+          return; 
+        }
+  
+        if (!data.hasBilling) {
+          console.warn("⚠️ Store installed but missing billing setup.");
           return;
         }
-        
-          
-      
-        // Otherwise init App Bridge normally
-        (async () => {
-          const app = await initShopifyAppBridge();
-          window.appBridge = app;
-          setAppBridgeReady(true);
-        })();
-      }, []);
-    
-      useEffect(() => {
-    
-        if (!appBridgeReady) return; 
-    
-        const params = new URLSearchParams(window.location.search);
-        const shopParam = params.get("shop");
-        const hostParam = params.get("host");
-      
-        if (!shopParam || !hostParam) {
-          console.warn("❌ Not running inside Shopify context.");
-          return;
-        }
-      
-        setShop(shopParam);
-      
-        const checkShop = async () => {
-          try {
-            const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
-           
-            if (!data.installed) {
+  
+        console.log("✅ Shopify store ready");
+        setInstalled(true);
 
-                await fetchWithAuth(`/chatbot-config-shopify`, {
-                  method: "POST",
-                  body: JSON.stringify({
-                    shop: shopParam,
-                    colors,
-                  }),
-                  headers: { "Content-Type": "application/json" },
-                });
-                console.warn("App is not installed yet — staying in loader.");
-                setInstalled(false);
-                return;
-                
-              }
-              
-              
-            if (!data.hasBilling) {
-              console.warn("⚠️ Store installed but missing billing setup.");
-              return;
-            }
-      
-            console.log("✅ Shopify store ready");
-            setInstalled(true);
-    
-            if (user?.username) {
-              safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
-            }
-      
-          } catch (err) {
-            console.error("❌ Shopify flow failed:", err);
-            setInstalled(false);
-          } 
-        };
-      
-        checkShop();
-      }, [appBridgeReady, user]); 
+        if (user?.username) {
+          safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+        }
+  
+      } catch (err) {
+        console.error("❌ Shopify flow failed:", err);
+        setInstalled(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    checkShop();
+  }, [appBridgeReady]); 
 
   return <div>Loading Shopify App…</div>;
 }
-
-
