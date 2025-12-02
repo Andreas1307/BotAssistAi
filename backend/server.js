@@ -1104,11 +1104,7 @@ app.get("/shopify/auth", (req, res) => {
     <html><body>
       <script>
         const target = "${installUrl}";
-        if (window.top === window.self) {
           window.location.href = target;
-        } else {
-          window.top.location.href = target;
-        }
       </script>
     </body></html>
   `);

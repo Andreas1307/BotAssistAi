@@ -24,7 +24,7 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
-    /*
+    
       useEffect(() => {
         const fetchUser = async () => {
           try {
@@ -138,7 +138,7 @@ export default function ShopifyLoader() {
       
         checkShop();
       }, [appBridgeReady]); 
-      */
+    
 
   return <div>Loading Shopify App…</div>;
 }
