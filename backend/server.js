@@ -1078,6 +1078,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
     secure: true,
     sameSite: "None",
     path: "/",
+    domain: ".botassistai.com"
   });
   
 
