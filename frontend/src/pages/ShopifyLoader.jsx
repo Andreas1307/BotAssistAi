@@ -10,7 +10,7 @@ export default function ShopifyLoader() {
   
   const [shop, setShop] = useState(null);
   const [user, setUser] = useState(null);
-  const [colors, setColors] = useState({
+    const [colors, setColors] = useState({
         background: '#f2f2f2',
         chatbotBackground: '#092032',
         chatBoxBackground: '#112B3C',
@@ -24,6 +24,7 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
+    /*
       useEffect(() => {
         const fetchUser = async () => {
           try {
@@ -40,6 +41,8 @@ export default function ShopifyLoader() {
         fetchUser();
       }, []);
       
+
+
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const shopParam = params.get("shop");
@@ -54,7 +57,11 @@ export default function ShopifyLoader() {
         // Initialize Shopify App Bridge
         (async () => {
           const app = await initShopifyAppBridge();
-         
+          if (!app) {
+            // If App Bridge init fails, fallback to OAuth install
+            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+            return;
+          }
           
           setAppBridgeReady(true);
           window.appBridge = app;
@@ -66,7 +73,7 @@ export default function ShopifyLoader() {
             // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
           } catch (err) {
             console.error("❌ Shopify App Bridge init error:", err);
-           // safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
           }
         })();
       }, []);
@@ -74,7 +81,6 @@ export default function ShopifyLoader() {
       
     
       
-    /*
       useEffect(() => {
     
         if (!appBridgeReady) return; 
