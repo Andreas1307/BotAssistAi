@@ -1350,16 +1350,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
-    return res.status(500).send(`
-      <html><body>
-        <h3>OAuth error: ${err.name || "Unknown"}</h3>
-        <pre>${(err && err.message) || ""}</pre>
-      </body></html>
-    `);
-  }
-});
-  } catch (err) {
-    console.error('❌ Shopify callback error:', err);
   
     // If cookie missing, ask user to restart top-level flow
     if (err && err.name === 'CookieNotFound') {
