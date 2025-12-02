@@ -17,32 +17,23 @@ export async function initShopifyAppBridge() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop");
-  let host = params.get("host");
-
-if (window.location.pathname.startsWith("/shopify")) {
-  console.log("⏸️ Skipping App Bridge — backend Shopify route");
-  return null;
-}
-
-
+  const host = params.get("host");
 
   if (!host) {
-    console.warn("⏳ No host param yet — waiting for Shopify redirect");
-    return null;
+    console.warn("⚠️ Missing host param — using fallback");
+    return null; // DO NOT REDIRECT HERE
   }
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: false,
   });
 
+  console.log("✅ App Bridge initialized");
   window.appBridge = app;
-  console.log("✅ App Bridge initialized:", host);
-
   return app;
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
