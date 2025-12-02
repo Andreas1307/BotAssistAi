@@ -36,10 +36,6 @@ export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
-export function getAppBridgeInstance() {
-  return window.appBridge || null;
-}
-
 export function safeRedirect(url, fallbackShop = null) {
   const params = new URLSearchParams(window.location.search);
   const shop = params.get("shop") || fallbackShop;
