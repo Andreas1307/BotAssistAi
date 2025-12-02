@@ -1212,7 +1212,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
-      isOnline: true,
+      isOnline: false,
     });
 
     if (!session?.shop || !session?.accessToken) {
