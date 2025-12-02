@@ -8,6 +8,7 @@ export default function ShopifyLoader() {
   const [appBridgeReady, setAppBridgeReady] = useState(false);
   const [loading, setLoading] = useState(true);
   
+  const [shop, setShop] = useState(null);
   const [user, setUser] = useState(null);
     const [colors, setColors] = useState({
         background: '#f2f2f2',
@@ -24,21 +25,21 @@ export default function ShopifyLoader() {
       });
 
       useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await fetchWithAuth("/auth-check");        
-        setUser(data.user);
-      } catch (error) {
-        console.error("❌ Auth check error:", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchUser();
-  }, []);
-  
+        const fetchUser = async () => {
+          try {
+            const data = await fetchWithAuth("/auth-check");        
+            setUser(data.user);
+          } catch (error) {
+            console.error("❌ Auth check error:", error);
+            setUser(null);
+          } finally {
+            setLoading(false);
+          }
+        };
+      
+        fetchUser();
+      }, []);
+      
 
 
       useEffect(() => {
