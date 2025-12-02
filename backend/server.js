@@ -1313,25 +1313,33 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
     const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head><meta charset="utf-8"/></head>
-        <body>
-          <script>
-            // Disable App Bridge on callback page
-            window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-    
-            // Always redirect the TOP window during OAuth
-            window.top.location.href = "${dashboardUrlEscaped}";
-          </script>
-    
-          <noscript>
-            <a href="${dashboardUrlEscaped}" target="_top">Continue</a>
-          </noscript>
-        </body>
-      </html>
-    `);
+    // --- build an admin URL that will load your embedded app in Shopify admin
+// Use your app handle (slug) if available, otherwise your app_id.
+const appHandleOrId = process.env.SHOPIFY_APP_HANDLE || process.env.SHOPIFY_APP_ID || "<your_app_id_here>";
+// Example admin URL for the merchant's store:
+const adminAppUrl = `https://${shop}/admin/apps/${encodeURIComponent(appHandleOrId)}?host=${encodeURIComponent(host)}`;
+
+res.send(`
+  <!doctype html>
+  <html>
+    <head><meta charset="utf-8"/></head>
+    <body>
+      <script>
+        // Tell Shopify's admin not to boot app-bridge on this minimal page
+        window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+
+        // Redirect the top window back to the Shopify admin app URL (loads your app inside the iframe)
+        // This keeps the app embedded and avoids cookie/loop issues.
+        window.top.location.href = "${adminAppUrl}";
+      </script>
+
+      <noscript>
+        <a href="${adminAppUrl}" target="_top">Open app in Shopify Admin</a>
+      </noscript>
+    </body>
+  </html>
+`);
+
     
       
   } catch (err) {
