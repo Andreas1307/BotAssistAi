@@ -1148,7 +1148,7 @@ app.get("/shopify/install", async (req, res) => {
     // --- Start OAuth (shopify-api sends redirect)
     await shopify.auth.begin({
       shop,
-      isOnline: true,
+      isOnline: false,
       callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
