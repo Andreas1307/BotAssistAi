@@ -1319,15 +1319,20 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <head><meta charset="utf-8"/></head>
         <body>
           <script>
+            // Disable App Bridge on callback page
             window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+    
+            // Always redirect the TOP window during OAuth
             window.top.location.href = "${dashboardUrlEscaped}";
           </script>
+    
           <noscript>
             <a href="${dashboardUrlEscaped}" target="_top">Continue</a>
           </noscript>
         </body>
       </html>
-      `);
+    `);
+    
       
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
