@@ -26,12 +26,14 @@ export default function ShopifyLoader() {
 
     
       useEffect(() => {
+        if (!appBridgeReady) return; // ⚡ wait for App Bridge
+      
         const fetchUser = async () => {
           try {
-            const data = await fetchWithAuth("/auth-check");        
+            const data = await fetchWithAuth("/auth-check");
             setUser(data.user);
-          } catch (error) {
-            console.error("❌ Auth check error:", error);
+          } catch (err) {
+            console.error("❌ Auth check error:", err);
             setUser(null);
           } finally {
             setLoading(false);
@@ -39,47 +41,31 @@ export default function ShopifyLoader() {
         };
       
         fetchUser();
-      }, []);
+      }, [appBridgeReady]);
       
 
 
       useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const shopParam = params.get("shop");
-        const hostParam = params.get("host");
+        const init = async () => {
+          const params = new URLSearchParams(window.location.search);
+          const shopParam = params.get("shop");
+          const hostParam = params.get("host");
+          if (!shopParam || !hostParam) return;
       
-        // If shop param missing, stop
-        if (!shopParam) {
-          console.warn("❌ Missing shop parameter in URL");
-          return;
-        }   
-        
-        // Initialize Shopify App Bridge
-        (async () => {
           const app = await initShopifyAppBridge();
           if (!app) {
-            // If App Bridge init fails, fallback to OAuth install
+            console.warn("App Bridge init failed, fallback to install");
             safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
             return;
           }
-          
-          setAppBridgeReady(true);
-          window.appBridge = app;
-          try {
-            // No /api/ping anymore — just assume App Bridge works
-            console.log("✅ Shopify App Bridge initialized and embedded app session confirmed");
       
-            // Optionally, you can trigger install if shop is not installed yet
-            // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
-          } catch (err) {
-            console.error("❌ Shopify App Bridge init error:", err);
-            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
-          }
-        })();
+          setAppBridgeReady(true);
+          setShop(shopParam);
+        };
+      
+        init();
       }, []);
       
-      
-    
       
       useEffect(() => {
     

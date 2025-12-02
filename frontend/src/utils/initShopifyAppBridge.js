@@ -10,38 +10,30 @@ function isEmbedded() {
 }
 
 export async function initShopifyAppBridge() {
-
   if (window.top === window.self) {
-    console.log("⏸️ Not embedded — skipping App Bridge init");
+    console.log("❌ Not embedded → skipping App Bridge");
     return null;
   }
 
-  const params = new URLSearchParams(window.location.search);
-  let shop = params.get("shop");
-  let host = params.get("host");
-
-if (window.location.pathname.startsWith("/shopify")) {
-  console.log("⏸️ Skipping App Bridge — backend Shopify route");
-  return null;
-}
-
-
-
+  const host = new URLSearchParams(window.location.search).get("host");
   if (!host) {
-    console.warn("⏳ No host param yet — waiting for Shopify redirect");
+    console.warn("❌ Missing host param → cannot init App Bridge");
     return null;
   }
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: false,
+    forceRedirect: true, // important for embedded apps
   });
 
-  window.appBridge = app;
-  console.log("✅ App Bridge initialized:", host);
-
+  window.appBridge = app; // store globally
+  console.log("✅ App Bridge initialized");
   return app;
+}
+
+export function getAppBridgeInstance() {
+  return window.appBridge || null;
 }
 
 export function getAppBridgeInstance() {
