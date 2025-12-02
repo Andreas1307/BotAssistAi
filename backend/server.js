@@ -1314,6 +1314,13 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); 
     const embeddedAppUrl = `/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
+    res.cookie('shopify_session', session.id, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+      path: '/'
+    });
+    
     res.send(`
     <!doctype html>
     <html>
@@ -1324,30 +1331,24 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       </head>
       <body>
         <script>
-          (function() {
-            const host = "${host}";
-            const shop = "${shop}";
-            const appUrl = "${embeddedAppUrl}";
+          const host = "${host}";
+          const appUrl = "${embeddedAppUrl}";
     
-            try {
-              // Initialize App Bridge
-              const createApp = window['app-bridge'].default;
-              const Redirect = window['app-bridge'].actions.Redirect;
-              const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
-              const redirect = Redirect.create(app);
+          try {
+            const createApp = window['app-bridge'].default;
+            const Redirect = window['app-bridge'].actions.Redirect;
+            const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+            const redirect = Redirect.create(app);
     
-              // Redirect inside the iframe to your app route
-              redirect.dispatch(Redirect.Action.REMOTE, appUrl);
-            } catch(e) {
-              console.warn("App Bridge redirect failed, fallback to top-level:", e);
-              // fallback: top-level redirect if App Bridge fails
-              window.top.location.href = appUrl;
-            }
-          })();
+            // Redirect inside the iframe
+            redirect.dispatch(Redirect.Action.REMOTE, appUrl);
+          } catch(e) {
+            console.warn("App Bridge redirect failed, fallback to iframe top:", e);
+            window.location.href = appUrl; // iframe-level redirect
+          }
         </script>
-    
         <noscript>
-          <a href="${embeddedAppUrl}" target="_top">Continue to app</a>
+          <a href="${embeddedAppUrl}">Continue to app</a>
         </noscript>
       </body>
     </html>
