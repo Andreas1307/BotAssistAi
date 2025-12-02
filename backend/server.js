@@ -1312,30 +1312,47 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
     const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); 
-    const embeddedAppUrl =
-    `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-  
-  res.send(`
+    const embeddedAppUrl = `/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+
+    res.send(`
     <!doctype html>
     <html>
-      <head><meta charset="utf-8"/></head>
+      <head>
+        <meta charset="utf-8"/>
+        <script src="https://unpkg.com/@shopify/app-bridge@3.0.0"></script>
+        <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+      </head>
       <body>
         <script>
-          // Disable app bridge on this page
-          window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-  
-          // Redirect TOP to your embedded app route
-          window.top.location.href = "${embeddedAppUrl}";
+          (function() {
+            const host = "${host}";
+            const shop = "${shop}";
+            const appUrl = "${embeddedAppUrl}";
+    
+            try {
+              // Initialize App Bridge
+              const createApp = window['app-bridge'].default;
+              const Redirect = window['app-bridge'].actions.Redirect;
+              const app = createApp({ apiKey: "${process.env.SHOPIFY_API_KEY}", host, forceRedirect: true });
+              const redirect = Redirect.create(app);
+    
+              // Redirect inside the iframe to your app route
+              redirect.dispatch(Redirect.Action.REMOTE, appUrl);
+            } catch(e) {
+              console.warn("App Bridge redirect failed, fallback to top-level:", e);
+              // fallback: top-level redirect if App Bridge fails
+              window.top.location.href = appUrl;
+            }
+          })();
         </script>
-  
+    
         <noscript>
           <a href="${embeddedAppUrl}" target="_top">Continue to app</a>
         </noscript>
       </body>
     </html>
-  `);
-  
-      
+    `);
+    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
