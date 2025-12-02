@@ -1311,36 +1311,30 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
 
     const dashboardUrl = `https://botassistai.com/${encodeURIComponent(user.username)}/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
-
-    // --- build an admin URL that will load your embedded app in Shopify admin
-// Use your app handle (slug) if available, otherwise your app_id.
-const appHandleOrId = process.env.SHOPIFY_APP_HANDLE || process.env.SHOPIFY_APP_ID || "<your_app_id_here>";
-// Example admin URL for the merchant's store:
-const adminAppUrl = `https://${shop}/admin/apps/${encodeURIComponent(appHandleOrId)}?host=${encodeURIComponent(host)}`;
-
-res.send(`
-  <!doctype html>
-  <html>
-    <head><meta charset="utf-8"/></head>
-    <body>
-      <script>
-        // Tell Shopify's admin not to boot app-bridge on this minimal page
-        window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-
-        // Redirect the top window back to the Shopify admin app URL (loads your app inside the iframe)
-        // This keeps the app embedded and avoids cookie/loop issues.
-        window.top.location.href = "${adminAppUrl}";
-      </script>
-
-      <noscript>
-        <a href="${adminAppUrl}" target="_top">Open app in Shopify Admin</a>
-      </noscript>
-    </body>
-  </html>
-`);
-
-    
+    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); 
+    const embeddedAppUrl =
+    `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+  
+  res.send(`
+    <!doctype html>
+    <html>
+      <head><meta charset="utf-8"/></head>
+      <body>
+        <script>
+          // Disable app bridge on this page
+          window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
+  
+          // Redirect TOP to your embedded app route
+          window.top.location.href = "${embeddedAppUrl}";
+        </script>
+  
+        <noscript>
+          <a href="${embeddedAppUrl}" target="_top">Continue to app</a>
+        </noscript>
+      </body>
+    </html>
+  `);
+  
       
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
