@@ -10,7 +10,7 @@ export default function ShopifyLoader() {
   
   const [shop, setShop] = useState(null);
   const [user, setUser] = useState(null);
-    const [colors, setColors] = useState({
+  const [colors, setColors] = useState({
         background: '#f2f2f2',
         chatbotBackground: '#092032',
         chatBoxBackground: '#112B3C',
@@ -40,8 +40,6 @@ export default function ShopifyLoader() {
         fetchUser();
       }, []);
       
-
-
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const shopParam = params.get("shop");
@@ -68,7 +66,7 @@ export default function ShopifyLoader() {
             // safeRedirect(`${directory}/install?shop=${shopParam}&host=${hostParam}`);
           } catch (err) {
             console.error("❌ Shopify App Bridge init error:", err);
-            safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+           // safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
           }
         })();
       }, []);
