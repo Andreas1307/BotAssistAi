@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    domain: "api.botassistai.com"
   }
 }));
 
@@ -1070,20 +1070,12 @@ function clearAllOAuthCookies(res) {
     "shopify_toplevel"
   ];
 
-  const domains = [
-    "api.botassistai.com",
-    ".botassistai.com",
-    undefined
-  ];
-
   cookieNames.forEach((name) => {
-    domains.forEach((domain) => {
-      res.clearCookie(name, {
-        path: "/",
-        secure: true,
-        sameSite: "none",
-        domain
-      });
+    res.clearCookie(name, {
+      domain: "api.botassistai.com",
+      path: "/",
+      secure: true,
+      sameSite: "None"
     });
   });
 }
@@ -1107,7 +1099,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
     secure: true,
     sameSite: "None",
     path: "/",
-    domain: ".botassistai.com"
+    domain: "api.botassistai.com"
   });
   
 
