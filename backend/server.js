@@ -1073,12 +1073,10 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res.clearCookie("shopify_toplevel", {
-    domain: "api.botassistai.com",
-    secure: true,
-    sameSite: "None",
-    path: "/",
-  });
+  res.clearCookie("shopify_toplevel", { domain: "api.botassistai.com", secure: true, sameSite: "None", path: "/" });
+res.clearCookie("shopify_oauth_state", { domain: "api.botassistai.com", secure: true, sameSite: "None", path: "/" });
+res.clearCookie("shopify_app_state", { domain: "api.botassistai.com", secure: true, sameSite: "None", path: "/" });
+
 
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
