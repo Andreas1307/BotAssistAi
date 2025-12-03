@@ -1064,30 +1064,30 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 
 function clearAllOAuthCookies(res) {
   const cookieNames = [
-    "shopify_toplevel",
-    "shopify_oauth_state",
-    "shopify_app_state"
+    "connect.sid",
+    "shopify_app_state",
+    "shopify_app_state.sig",
+    "shopify_toplevel"
   ];
 
   const domains = [
     "api.botassistai.com",
-    ".api.botassistai.com",
     ".botassistai.com",
-    "botassistai.com",
     undefined
   ];
 
-  cookieNames.forEach(name => {
-    domains.forEach(domain => {
+  cookieNames.forEach((name) => {
+    domains.forEach((domain) => {
       res.clearCookie(name, {
-        domain,
         path: "/",
         secure: true,
-        sameSite: "None"
+        sameSite: "none",
+        domain
       });
     });
   });
 }
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
