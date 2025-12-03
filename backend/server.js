@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: "api.botassistai.com"
+    domain: ".botassistai.com"
   }
 }));
 
@@ -1062,6 +1062,33 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 });
 
 
+function clearAllOAuthCookies(res) {
+  const cookieNames = [
+    "shopify_toplevel",
+    "shopify_oauth_state",
+    "shopify_app_state"
+  ];
+
+  const domains = [
+    "api.botassistai.com",
+    ".api.botassistai.com",
+    ".botassistai.com",
+    "botassistai.com",
+    undefined
+  ];
+
+  cookieNames.forEach(name => {
+    domains.forEach(domain => {
+      res.clearCookie(name, {
+        domain,
+        path: "/",
+        secure: true,
+        sameSite: "None"
+      });
+    });
+  });
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -1073,32 +1100,26 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  const cookieOptions = {
-    domain: "api.botassistai.com",
+  clearAllOAuthCookies(res);
+
+  res.cookie("shopify_toplevel", "true", {
+    httpOnly: false,
     secure: true,
     sameSite: "None",
-    path: "/"
-  };
-
-  // wipe old cookies under the correct domain only
-  res.clearCookie("shopify_toplevel", cookieOptions);
-  res.clearCookie("shopify_oauth_state", cookieOptions);
-  res.clearCookie("shopify_app_state", cookieOptions);
-
-  // set new cookie under the correct domain
-  res.cookie("shopify_toplevel", "true", {
-    ...cookieOptions,
-    httpOnly: false
+    path: "/",
+    domain: ".botassistai.com"
   });
+  
 
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
     <html><body>
-      <script>
-        window.top.location.href = "${redirectUrl}";
-      </script>
-    </body></html>
+  <script>
+    window.top.location.href = "${redirectUrl}";
+  </script>
+</body></html>
+
   `);
 });
 
