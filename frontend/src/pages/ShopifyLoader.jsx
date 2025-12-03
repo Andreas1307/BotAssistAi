@@ -24,6 +24,18 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shopParam = params.get("shop");
+        const hostParam = params.get("host");
+      
+        if (!shopParam || !hostParam) return;
+      
+        // This must be the FIRST call, before any API that requires session
+        safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
+      }, []);
+      
+
     
       useEffect(() => {
         if (!appBridgeReady) return; // ⚡ wait for App Bridge

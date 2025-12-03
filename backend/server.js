@@ -1162,9 +1162,7 @@ app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  // If top-level cookie missing → redirect to force-top-level-auth
   if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-    console.log("⚠️ Missing top-level cookie, redirecting to force-top-level-auth");
     return res.send(`
       <html><body>
         <script>
@@ -1174,14 +1172,11 @@ app.get("/shopify/install", async (req, res) => {
     `);
   }
 
-  if (authInProgress.has(shop)) {
-    console.log(`⚠️ Auth already in progress for ${shop}`);
-    return res.status(200).send("OAuth in progress, please wait...");
-  }
+  // Prevent concurrent OAuth
+  if (authInProgress.has(shop)) return res.status(200).send("OAuth in progress...");
   authInProgress.add(shop);
 
   try {
-    console.log("🚀 [INSTALL] Beginning Shopify OAuth");
     await shopify.auth.begin({
       shop,
       isOnline: false,
@@ -1189,16 +1184,10 @@ app.get("/shopify/install", async (req, res) => {
       rawRequest: req,
       rawResponse: res,
     });
-  } catch (err) {
-    console.error("❌ [INSTALL] Shopify OAuth start failed:", err);
-    if (!res.headersSent) {
-      res.status(500).send("Error starting Shopify OAuth");
-    }
   } finally {
     authInProgress.delete(shop);
   }
 });
-
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
