@@ -38,7 +38,7 @@ useEffect(() => {
 }, []);
 
 
-    
+  /*  
       useEffect(() => {
         if (!appBridgeReady) return; // ⚡ wait for App Bridge
       
@@ -138,7 +138,7 @@ useEffect(() => {
       
         checkShop();
       }, [appBridgeReady]); 
-    
+    */
 
   return <div>Loading Shopify App…</div>;
 }
