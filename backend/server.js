@@ -1073,31 +1073,35 @@ app.get("/shopify/top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  res.clearCookie("shopify_toplevel", { domain: "api.botassistai.com", secure: true, sameSite: "None", path: "/" });
-res.clearCookie("shopify_oauth_state", { domain: "api.botassistai.com", secure: true, sameSite: "None", path: "/" });
-res.clearCookie("shopify_app_state", { domain: "api.botassistai.com", secure: true, sameSite: "None", path: "/" });
-
-
-  res.cookie("shopify_toplevel", "true", {
-    httpOnly: false,
+  const cookieOptions = {
+    domain: "api.botassistai.com",
     secure: true,
     sameSite: "None",
-    path: "/",
-    domain: ".botassistai.com"
+    path: "/"
+  };
+
+  // wipe old cookies under the correct domain only
+  res.clearCookie("shopify_toplevel", cookieOptions);
+  res.clearCookie("shopify_oauth_state", cookieOptions);
+  res.clearCookie("shopify_app_state", cookieOptions);
+
+  // set new cookie under the correct domain
+  res.cookie("shopify_toplevel", "true", {
+    ...cookieOptions,
+    httpOnly: false
   });
-  
 
   const redirectUrl = `https://api.botassistai.com/shopify/auth?shop=${encodeURIComponent(shop)}`;
 
   res.send(`
     <html><body>
-  <script>
-    window.top.location.href = "${redirectUrl}";
-  </script>
-</body></html>
-
+      <script>
+        window.top.location.href = "${redirectUrl}";
+      </script>
+    </body></html>
   `);
 });
+
 
 app.get("/shopify/auth", (req, res) => {
   const { shop } = req.query;
