@@ -430,7 +430,7 @@ const Dashboard = () => {
           method: "GET",
         });
         setDailyCount(response.dailyMessages);
-        if(response.dailyMessages && membership === false) {
+        if(response.dailyMessages >= 15 && membership === false) {
           setShowConvsLimit(true)
         } else {
           setShowConvsLimit(false)
