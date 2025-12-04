@@ -32,12 +32,20 @@ module.exports = {
       return false;
     }
   
-    // FIX: enforce correct offline session ID
-    let id = session.id;
-    if (!session.isOnline) {
+    let id;
+    if (session.isOnline) {
+      // Online session ID must include shop + user id
+      const userId = session.onlineAccessInfo?.associated_user?.id;
+      if (!userId) {
+        console.error("No associated user ID for online session");
+        return false;
+      }
+      id = `online_${session.shop}_${userId}`;
+    } else {
+      // Offline session
       id = `offline_${session.shop}`;
-      session.id = id;
     }
+    session.id = id;
   
     const sessions = loadSessions();
     sessions[id] = {
@@ -52,21 +60,11 @@ module.exports = {
   
     saveSessions(sessions);
     console.log("✅ Stored session:", id);
-  
     return true;
   },
   
-
-  // ✅ Load one session
   loadCallback: async (id) => {
     const sessions = loadSessions();
-  
-    // FIX: Shopify requests "offline_{shop}" for offline sessions
-    if (!sessions[id] && id.includes("_")) {
-      const shop = id.split("_")[0];
-      id = `offline_${shop}`;
-    }
-  
     const data = sessions[id];
     if (!data) {
       console.error("Session not found for id:", id);
@@ -84,9 +82,7 @@ module.exports = {
       onlineAccessInfo: data.onlineAccessInfo,
     });
   },
-  
 
-  // ✅ Delete session
   deleteCallback: async (id) => {
     const sessions = loadSessions();
     if (sessions[id]) {

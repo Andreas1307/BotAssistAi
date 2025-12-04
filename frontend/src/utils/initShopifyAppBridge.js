@@ -103,24 +103,15 @@ export async function fetchWithAuth(url, options = {}) {
     : `${window.directory || "https://api.botassistai.com"}${url}`;
 
 
+  // 6️⃣ Send the request
   const res = await fetch(fullUrl, opts);
 
+  // 7️⃣ Retry once if token expired (401)
   if (res.status === 401 && !options._retried) {
     console.warn("🔄 Token expired — refreshing App Bridge token...");
     window.sessionToken = null;
-    try {
-      const app = await getAppBridgeInstance();
-      if (!app) throw new Error("App Bridge not initialized");
-      token = await getSessionToken(app); // refresh token
-      window.sessionToken = token;
-      options._retried = true;
-      return fetchWithAuth(url, options);
-    } catch (err) {
-      console.error("❌ Could not refresh Shopify token:", err);
-      throw err; // stop retrying → prevents infinite 401 loop
-    }
+    return fetchWithAuth(url, { ...options, _retried: true });
   }
-  
 
   // 8️⃣ Handle response
   let data;
