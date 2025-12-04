@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    domain: "api.botassistai.com"
   }
 }));
 
@@ -84,6 +84,7 @@ app.use(['/ping-client', '/ask-ai'], cors({
 const allowedOrigins = [
   'https://www.botassistai.com',
   'https://botassistai.com',
+  'https://api.botassistai.com',
   'https://admin.shopify.com',
   /\.myshopify\.com$/,
   'http://localhost:3000',
@@ -93,10 +94,12 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const allowed = allowedOrigins.some(o =>
-      o instanceof RegExp ? o.test(origin) : o === origin
-    );
-    callback(null, allowed);
+const allowed = allowedOrigins.some(o =>
+  o instanceof RegExp ? o.test(origin) : o === origin
+);
+if (allowed) return callback(null, true);
+return callback(new Error("Not allowed by CORS"));
+
   },
   credentials: true,
 }));
@@ -258,8 +261,6 @@ app.get('/', async (req, res) => {
 function isValidShop(shop) {
   return /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/.test(shop);
 }
-
-
 
 app.use((req, res, next) => {
   const cookies = req.headers.cookie?.split(';').map(c => c.trim()) || [];
@@ -1415,7 +1416,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   }
   
 });
-
 
 
 
