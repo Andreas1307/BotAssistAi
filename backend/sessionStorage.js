@@ -27,50 +27,64 @@ function saveSessions(sessions) {
 module.exports = {
   // ✅ Store session to file
   storeCallback: async (session) => {
-    if (!session.id || !session.shop) {
-      console.error("Invalid session object, missing id or shop:", session);
+    if (!session.shop) {
+      console.error("Invalid session object:", session);
       return false;
     }
-
+  
+    // FIX: enforce correct offline session ID
+    let id = session.id;
+    if (!session.isOnline) {
+      id = `offline_${session.shop}`;
+      session.id = id;
+    }
+  
     const sessions = loadSessions();
-    sessions[session.id] = {
-      id: session.id,
+    sessions[id] = {
+      id,
       shop: session.shop,
       isOnline: session.isOnline,
       accessToken: session.accessToken,
       scope: session.scope,
-      expires: session.expires?.toISOString(),
-      state: session.state || null,
+      expires: session.expires ? session.expires.toISOString() : null,
       onlineAccessInfo: session.onlineAccessInfo || null,
     };
-
+  
     saveSessions(sessions);
-    console.log("✅ Stored session:", session.id);
+    console.log("✅ Stored session:", id);
+  
     return true;
   },
+  
 
   // ✅ Load one session
   loadCallback: async (id) => {
     const sessions = loadSessions();
+  
+    // FIX: Shopify requests "offline_{shop}" for offline sessions
+    if (!sessions[id] && id.includes("_")) {
+      const shop = id.split("_")[0];
+      id = `offline_${shop}`;
+    }
+  
     const data = sessions[id];
     if (!data) {
       console.error("Session not found for id:", id);
       return undefined;
     }
-
-    const session = new Session({
+  
+    return new Session({
       id: data.id,
       shop: data.shop,
-      isOnline: data.isOnline || false,
+      isOnline: data.isOnline,
       state: data.state,
       scope: data.scope,
       expires: data.expires ? new Date(data.expires) : null,
       accessToken: data.accessToken,
       onlineAccessInfo: data.onlineAccessInfo,
     });
-
-    return session;
   },
+  
 
   // ✅ Delete session
   deleteCallback: async (id) => {
