@@ -6,7 +6,7 @@ module.exports = async function verifySessionToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    req.shopify = null; // Explicitly mark as not a Shopify session
+    req.shopify = null; 
     return next();
   }
 
@@ -26,7 +26,7 @@ module.exports = async function verifySessionToken(req, res, next) {
     }
 
     const shop = payload.dest.replace(/^https:\/\//, '').toLowerCase();
-    const onlineSessionId = `${shop}_${payload.sub}`;
+    const onlineSessionId = `online_${shop}_${payload.sub}`;
     const offlineSessionId = `offline_${shop}`;
 
     const session =
