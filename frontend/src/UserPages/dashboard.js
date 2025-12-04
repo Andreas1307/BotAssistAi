@@ -445,7 +445,7 @@ const Dashboard = () => {
 
     const interval = setInterval(() => {
       fetchDailyConversations();
-    }, 9000);
+    }, 3000);
   
     // Cleanup on unmount
     return () => clearInterval(interval);
