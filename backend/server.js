@@ -1125,69 +1125,74 @@ app.get("/shopify/force-top-level-auth", (req, res) => {
 });
 
 app.get("/shopify/top-level-auth", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
 
   res.cookie("shopify_toplevel", "true", {
     httpOnly: false,
     secure: true,
     sameSite: "None",
     path: "/",
-    domain: ".botassistai.com",
+    domain: ".botassistai.com"
   });
 
+  const redirectUrl = `/shopify/auth?shop=${encodeURIComponent(shop)}`;
   res.send(`
     <html><body>
       <script>
-        window.top.location.href =
-          "/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+        window.top.location.href = "${redirectUrl}";
       </script>
     </body></html>
   `);
 });
 
 app.get("/shopify/auth", (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop param");
 
-  const installUrl =
-    `/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
 
+
+  const installUrl = abs(`/shopify/install?shop=${encodeURIComponent(shop)}`);
   res.send(`
     <html><body>
       <script>
-        window.top.location.href = "${installUrl}";
+        const target = "${installUrl}";
+        if (window.top === window.self) {
+          window.location.href = target;
+        } else {
+          window.top.location.href = target;
+        }
       </script>
     </body></html>
   `);
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host } = req.query;
+  const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  // Force top-level auth if missing cookie
   if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-    const redirect = `/shopify/force-top-level-auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`;
     return res.send(`
       <html><body>
         <script>
-          window.top.location.href = "${redirect}";
+          window.top.location.href = "/shopify/force-top-level-auth?shop=${encodeURIComponent(shop)}";
         </script>
       </body></html>
     `);
   }
 
-  if (authInProgress.has(shop)) {
-    return res.status(200).send("OAuth already in progress");
-  }
+  // Prevent concurrent OAuth
+  if (authInProgress.has(shop)) return res.status(200).send("OAuth in progress...");
   authInProgress.add(shop);
 
   try {
     await shopify.auth.begin({
       shop,
       isOnline: false,
-      callbackPath: `/shopify/callback`,
+      callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
+      state: host ? Buffer.from(JSON.stringify({ host })).toString("base64") : undefined
     });
     
   } finally {
@@ -1247,10 +1252,10 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host ? decodeURIComponent(req.query.host) : '';
-    if (!host) {
-      console.error("❌ MISSING host parameter in callback");
-    }
+    const state = req.query.state ? JSON.parse(Buffer.from(req.query.state, 'base64').toString()) : {};
+const host = state.host || '';
+
+
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
     const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
