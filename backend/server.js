@@ -1185,10 +1185,11 @@ app.get("/shopify/install", async (req, res) => {
     await shopify.auth.begin({
       shop,
       isOnline: false,
-      callbackPath: `/shopify/callback?host=${encodeURIComponent(host || "")}`,
+      callbackPath: `/shopify/callback`,
       rawRequest: req,
       rawResponse: res,
     });
+    
   } finally {
     authInProgress.delete(shop);
   }
