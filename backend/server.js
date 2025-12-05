@@ -1223,8 +1223,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
     }    
 
-    
-  
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
     const hasAppState = cookieHeader.includes("shopify_app_state");
@@ -1328,11 +1326,17 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         console.error('❌ Post-redirect setup error:', err);
       }
     })();
+
+    if (!host) {
+      // Use base64 of "admin.shopify.com"
+      const adminHost = Buffer.from("admin.shopify.com", "utf8").toString("base64");
+      host = adminHost;
+    }
     console.log(`✅ Webhooks & ScriptTag installed for ${shop}`);
 
     const dashboardUrl = `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     console.log(`➡️ Redirecting to dashboard: ${dashboardUrl}`);
-    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); // escape double quotes
+    const dashboardUrlEscaped = dashboardUrl.replace(/"/g, '\\"'); 
 
     res.send(`
       <!DOCTYPE html>
