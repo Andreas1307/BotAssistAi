@@ -1168,9 +1168,10 @@ app.get("/shopify/auth", (req, res) => {
 });
 
 app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
+  const { shop, host } = req.query;   // <-- FIX: extract host safely
   if (!shop) return res.status(400).send("Missing shop param");
 
+  // Enforce top-level cookie
   if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     return res.send(`
       <html><body>
@@ -1186,15 +1187,24 @@ app.get("/shopify/install", async (req, res) => {
   authInProgress.add(shop);
 
   try {
+    // Prepare state object (host may be undefined on first install – that's ok)
+    const stateObj = host ? { host } : {};
+    const encodedState = Buffer.from(JSON.stringify(stateObj)).toString("base64");
+
     await shopify.auth.begin({
       shop,
       isOnline: false,
       callbackPath: "/shopify/callback",
       rawRequest: req,
       rawResponse: res,
-      state: host ? Buffer.from(JSON.stringify({ host })).toString("base64") : undefined
+      state: encodedState  // <-- FIXED, safe, always defined
     });
-    
+
+  } catch (err) {
+    console.error("❌ OAuth begin failed:", err);
+    if (!res.headersSent) {
+      res.status(500).send("OAuth error");
+    }
   } finally {
     authInProgress.delete(shop);
   }
