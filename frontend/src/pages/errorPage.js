@@ -10,7 +10,7 @@ const Error = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-
+/*
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -44,6 +44,7 @@ const Error = () => {
       }
     
   }, [user, loading, navigate]);
+  */
     return (
         <div className="error-div">
             <h2>Ooops, Error 404, Page Not Found</h2>
