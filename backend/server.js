@@ -70,7 +70,7 @@ app.use(session({
     secure: true,      
     sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000,
-    domain: ".botassistai.com"
+    domain: "botassistai.com"
   }
 }));
 
@@ -1133,7 +1133,7 @@ app.get("/shopify/top-level-auth", (req, res) => {
     secure: true,
     sameSite: "None",
     path: "/",
-    domain: ".botassistai.com"
+    domain: "botassistai.com"
   });
 
   const redirectUrl = `/shopify/auth?shop=${encodeURIComponent(shop)}`;
