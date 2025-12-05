@@ -114,6 +114,15 @@ app.use((req, res, next) => {
 app.use(shopifySessionMiddleware);
 
 
+const SHOPIFY_ROUTES = [
+  "/shopify/install",
+  "/shopify/top-level-auth",
+  "/shopify/auth",
+  "/shopify/callback",
+];
+
+app.get(SHOPIFY_ROUTES, (req, res, next) => next());
+
 
 
 
