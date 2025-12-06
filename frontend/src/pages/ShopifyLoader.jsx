@@ -24,6 +24,9 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
+
+      
+  /*  
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const shopParam = params.get("shop");
@@ -37,8 +40,6 @@ useEffect(() => {
   );
 }, []);
 
-
-  /*  
       useEffect(() => {
         if (!appBridgeReady) return; // ⚡ wait for App Bridge
       
