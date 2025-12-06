@@ -82,7 +82,7 @@ useEffect(() => {
       
       */
       useEffect(() => {
-    
+
         if (!appBridgeReady) return; 
     
         const params = new URLSearchParams(window.location.search);
@@ -102,7 +102,6 @@ useEffect(() => {
             const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
            
             if (!data.installed) {
-             // safeRedirect(`${directory}/shopify/install?shop=${shopParam}&host=${hostParam}`);
       
               await fetchWithAuth(`/chatbot-config-shopify`, {
                 method: "POST",
@@ -125,7 +124,7 @@ useEffect(() => {
             setInstalled(true);
     
             if (user?.username) {
-              safeRedirect(`/${user.username}/dashboard?shop=${shopParam}&host=${hostParam}`);
+              safeRedirect(`/shopify/dashboard?shop=${shopParam}&host=${hostParam}`);
             }
       
           } catch (err) {
