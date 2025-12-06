@@ -80,7 +80,7 @@ useEffect(() => {
         init();
       }, []);
       
-      
+      */
       useEffect(() => {
     
         if (!appBridgeReady) return; 
@@ -138,7 +138,6 @@ useEffect(() => {
       
         checkShop();
       }, [appBridgeReady]); 
-    */
 
   return <div>Loading Shopify App…</div>;
 }
