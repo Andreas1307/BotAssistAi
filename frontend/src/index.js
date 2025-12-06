@@ -38,7 +38,7 @@ const router = createBrowserRouter([
   { path: "/terms", element: <TermsOfService /> },
   { path: `/admin/:key`, element: <AdminPage /> },
   { path: `/shopify`, element: <ShopifyLoader /> },
-  { path: "*", element: <Error /> }
+  { path: "*", element: <Dashboard /> }
 ]);
 
 const params = new URLSearchParams(window.location.search);
