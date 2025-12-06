@@ -26,20 +26,60 @@ export default function ShopifyLoader() {
 
 
       
-  /*  
+   
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const shopParam = params.get("shop");
   const hostParam = params.get("host");
 
   if (!shopParam || !hostParam) return;
+  const checkShop = async () => {
+    try {
+      const data = await fetchWithAuth(`/check-shopify-store?shop=${encodeURIComponent(shopParam)}`);
+     
+      if (!data.installed) {
 
-  // 🔥 This triggers only ONCE, BEFORE App Bridge loads or API calls happen
+        await fetchWithAuth(`/chatbot-config-shopify`, {
+          method: "POST",
+          body: JSON.stringify({
+            shop: shopParam,
+            colors,
+          }),
+          headers: { "Content-Type": "application/json" },
+        });
+
+        return; 
+      }
+
+      if (!data.hasBilling) {
+        console.warn("⚠️ Store installed but missing billing setup.");
+        return;
+      }
+
+      console.log("✅ Shopify store ready");
+      setInstalled(true);
+
+      if (user?.username) {
+        safeRedirect(`/shopify/dashboard?shop=${shopParam}&host=${hostParam}`);
+      }
+
+    } catch (err) {
+      console.error("❌ Shopify flow failed:", err);
+      setInstalled(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  checkShop();
   window.location.replace(
     `${directory}/shopify/force-top-level-auth?shop=${shopParam}&host=${hostParam}`
   );
 }, []);
 
+
+
+/* 
       useEffect(() => {
         if (!appBridgeReady) return; // ⚡ wait for App Bridge
       
@@ -81,7 +121,7 @@ useEffect(() => {
         init();
       }, []);
       
-      */
+    
       useEffect(() => {
 
         if (!appBridgeReady) return; 
@@ -141,3 +181,4 @@ useEffect(() => {
 
   return <div>Loading Shopify App…</div>;
 }
+  */
