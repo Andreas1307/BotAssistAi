@@ -24,28 +24,42 @@ export default function ShopifyLoader() {
         borderColor: '#00F5D4'
       });
 
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shopParam = params.get("shop");
+        const hostParam = params.get("host");
+      
+        if (!shopParam || !hostParam) return;
+      
+        // ❗ DO NOT redirect if Shopify already injected a token
+        const isToken = !shopParam.endsWith(".myshopify.com");
+      
+        if (isToken) {
+          console.warn("❌ Shopify returned a session token, skipping redirect:", shopParam);
+          return;
+        }
+      
+        // Otherwise → do the top-level redirect ONCE
+        window.location.replace(
+          `${directory}/shopify/force-top-level-auth?shop=${shopParam}&host=${hostParam}`
+        );
+      }, []);
+      
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const shopParam = params.get("shop");
-  const hostParam = params.get("host");
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shopParam = params.get("shop");
+      
+        if (!shopParam || !shopParam.endsWith(".myshopify.com")) {
+          console.warn("❌ Not a valid shop domain:", shopParam);
+          return;
+        }
+      
+        checkShop(shopParam);
+      }, []);
++      
 
-  if (!shopParam || !hostParam) return;
-
-  window.location.replace(
-    `${directory}/shopify/force-top-level-auth?shop=${shopParam}&host=${hostParam}`
-  );
-}, []);
-
-
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const shopParam = params.get("shop");
-  const hostParam = params.get("host");
-
-  if (!shopParam || !hostParam) return;
-
-  const checkShop = async () => {
+const checkShop = async (shopParam) => {
     try {
       const data = await fetchWithAuth(
         `/check-shopify-store?shop=${encodeURIComponent(shopParam)}`
@@ -79,11 +93,6 @@ useEffect(() => {
       setLoading(false);
     }
   };
-
-  checkShop();
-}, []);
-
-
 
 /* 
       useEffect(() => {
