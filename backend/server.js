@@ -646,7 +646,11 @@ async function registerGdprWebhooks(session) {
 
 
 app.get('/check-shopify-store', async (req, res) => {
-  const { shop } = req.query;
+  const shop =
+  req.user?.shopify_shop_domain ||
+  req.session?.shopify?.shop ||
+  null;
+
   console.log("/check-shopify-store", shop)
 
   if (!shop) {
@@ -4651,7 +4655,14 @@ app.get("/satisfaction-admin", async (req, res) => {
   })
 
   app.post("/chatbot-config-shopify", async (req, res) => {
-    const { shop, colors } = req.body;
+        // Extract colors from body
+        const colors = req.body.colors;
+
+        // REAL SHOP DOMAIN FROM SERVER SESSION
+        const shop =
+          req.user?.shopify_shop_domain ||
+          req.session?.shopify?.shop ||
+          null;
     console.log("/chatbot-config-shopify", shop)
   try {
     const {
