@@ -4,42 +4,46 @@ import directory from "../directory";
 
 export default function ShopifyLoader() {
 
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopParam = params.get("shop");
     const hostParam = params.get("host");
     const hmacParam = params.get("hmac");
   
-    if (!shopParam || !hostParam) return;
+    // 1. Missing params → stop
+    if (!shopParam || !hostParam) {
+      console.warn("🚫 Missing shop or host");
+      return;
+    }
   
-    // Already inside Shopify admin iframe → DO NOTHING
+    // 2. Inside Shopify iframe → NEVER redirect
     if (window.top !== window.self) {
-      console.log("📌 In iframe, not triggering install redirect");
+      console.log("📌 Inside iframe → skipping top-level redirect");
       return;
     }
   
-    // Already returning from OAuth → DO NOTHING
+    // 3. Validate shop domain
+    const validShopRegex = /^[a-z0-9-]+\.myshopify\.com$/i;
+    const isValidShop = validShopRegex.test(shopParam);
+  
+    if (!isValidShop) {
+      console.warn(`⛔ Invalid shop param (likely a session token): ${shopParam}`);
+      return;
+    }
+  
+    // 4. If already returned from OAuth (no hmac), do NOT redirect again
     if (!hmacParam) {
-      console.log("📌 No hmac, meaning Shopify already authenticated.");
+      console.log("📌 No HMAC → already authenticated once, skipping redirect");
       return;
     }
   
-    // Prevent redirect loops caused by session tokens
-    const looksLikeToken = !shopParam.endsWith(".myshopify.com");
-    if (looksLikeToken) {
-      console.warn("⛔ Received session token instead of shop domain. Skipping redirect.");
-      return;
-    }
-  
-    // FIRST-TIME INSTALL ONLY
-    console.log("➡️ Redirecting to top level auth…");
+    // 5. First-time install → redirect
+    console.log("➡️ Redirecting to top-level OAuth…");
   
     window.location.replace(
       `${directory}/shopify/force-top-level-auth?shop=${shopParam}&host=${hostParam}`
     );
-  }, []);
-  
+  }, []); 
       
 
   return <div>Loading Shopify App…</div>;
