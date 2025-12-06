@@ -647,6 +647,7 @@ async function registerGdprWebhooks(session) {
 
 app.get('/check-shopify-store', async (req, res) => {
   const { shop } = req.query;
+  console.log("/check-shopify-store", shop)
 
   if (!shop) {
     return res.status(400).json({ installed: false });
@@ -4651,6 +4652,7 @@ app.get("/satisfaction-admin", async (req, res) => {
 
   app.post("/chatbot-config-shopify", async (req, res) => {
     const { shop, colors } = req.body;
+    console.log("/chatbot-config-shopify", shop)
   try {
     const {
       background,
