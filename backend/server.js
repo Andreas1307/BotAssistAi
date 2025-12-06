@@ -1076,7 +1076,6 @@ app.post('/shopify/gdpr/shop/redact', express.raw({ type: 'application/json' }),
 });
 
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -1330,30 +1329,88 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       [shop, session.accessToken, user.user_id]
     );
 
-    (async () => {
-      try {
-        const { storeCallback } = require('./sessionStorage');
-        await storeCallback(session);
-        await registerGdprWebhooks(session, shop);
+(async () => {
+  try {
+    const { storeCallback } = require('./sessionStorage');
+    await storeCallback(session);
+    await registerGdprWebhooks(session, shop);
 
-        // --- Register ScriptTag to load chatbot on storefront
-        const scriptClient = new shopify.clients.Rest({ session });
-        await scriptClient.post({
-          path: "script_tags",
-          data: {
-            script_tag: {
-              event: "onload",
-              src: `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`,
-            },
-          },
-          type: "application/json",
-        });
+    // ----------------------
+    // 💥 YOUR NEW LOGIC HERE
+    // ----------------------
 
-        console.log(`✅ Setup complete & ScriptTag installed for ${shop}`);
-      } catch (err) {
-        console.error('❌ Post-redirect setup error:', err);
-      }
-    })();
+    const defaultColors = {
+      background: '#f2f2f2',
+      chatbotBackground: '#092032',
+      chatBoxBackground: '#112B3C',
+      chatInputBackground: '#ffffff',
+      chatInputTextColor: '#000000',
+      chatBtn: '#00F5D4',
+      websiteChatBtn: '#00F5D4',
+      websiteQuestion: '#ffffff',
+      needHelpTextColor: '#00F5D4',
+      textColor: '#cccccc',
+      borderColor: '#00F5D4'
+    };
+
+    // 1️⃣ CHECK IF STORE EXISTS IN YOUR DB
+    const [existingConfig] = await pool.query(
+      "SELECT * FROM shopify_customization WHERE shop = ?",
+      [shop]
+    );
+
+    // 2️⃣ IF NOT INSTALLED → AUTO CREATE AFTER CALLBACK
+    if (existingConfig.length === 0) {
+      await pool.query(
+        `INSERT INTO shopify_customization 
+          (shop, background, chatbotBackground, chatBoxBackground, chatInputBackground, chatInputTextColor, chatBtn, websiteChatBtn, 
+           websiteQuestion, needHelpTextColor, textColor, borderColor)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          shop,
+          defaultColors.background,
+          defaultColors.chatbotBackground,
+          defaultColors.chatBoxBackground,
+          defaultColors.chatInputBackground,
+          defaultColors.chatInputTextColor,
+          defaultColors.chatBtn,
+          defaultColors.websiteChatBtn,
+          defaultColors.websiteQuestion,
+          defaultColors.needHelpTextColor,
+          defaultColors.textColor,
+          defaultColors.borderColor
+        ]
+      );
+
+      console.log(`🎨 Auto-created chatbot config for ${shop}`);
+    } else {
+      console.log(`🎨 Chatbot config already exists for ${shop}`);
+    }
+
+    // ----------------------
+    // END OF YOUR LOGIC
+    // ----------------------
+
+    // Register ScriptTag to load chatbot
+    const scriptClient = new shopify.clients.Rest({ session });
+    await scriptClient.post({
+      path: "script_tags",
+      data: {
+        script_tag: {
+          event: "onload",
+          src: `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`
+        }
+      },
+      type: "application/json"
+    });
+
+    console.log(`✅ ScriptTag installed for ${shop}`);
+
+  } catch (err) {
+    console.error('❌ Post-redirect setup error:', err);
+  }
+})();
+
 
     const dashboardUrl =
       `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;

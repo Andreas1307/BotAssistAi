@@ -46,6 +46,7 @@ export default function ShopifyLoader() {
       }, []);
       
 
+/* 
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const shopParam = params.get("shop");
@@ -91,7 +92,6 @@ const checkShop = async (shopParam) => {
     }
   };
 
-/* 
       useEffect(() => {
         if (!appBridgeReady) return; // ⚡ wait for App Bridge
       
