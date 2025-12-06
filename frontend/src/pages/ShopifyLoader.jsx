@@ -82,9 +82,6 @@ const checkShop = async (shopParam) => {
 
       setInstalled(true);
 
-      if (user?.username) {
-        safeRedirect(`/shopify/dashboard?shop=${shopParam}&host=${hostParam}`);
-      }
 
     } catch (err) {
       console.error(err);
