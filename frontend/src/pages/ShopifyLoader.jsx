@@ -57,7 +57,7 @@ export default function ShopifyLoader() {
       
         checkShop(shopParam);
       }, []);
-+      
+   
 
 const checkShop = async (shopParam) => {
     try {
