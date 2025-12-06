@@ -1196,9 +1196,9 @@ app.get("/shopify/install", async (req, res) => {
       isOnline: false,
       callbackPath: "/shopify/callback",
       rawRequest: req,
-      rawResponse: res,
-      state: encodedState  // <-- FIXED, safe, always defined
+      rawResponse: res
     });
+    
 
   } catch (err) {
     console.error("❌ OAuth begin failed:", err);
@@ -1262,8 +1262,8 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const state = req.query.state ? JSON.parse(Buffer.from(req.query.state, 'base64').toString()) : {};
-const host = state.host || '';
+    const host = req.query.host || "";
+
 
 
     // --- Fetch shop info
