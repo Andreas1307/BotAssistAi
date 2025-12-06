@@ -1194,7 +1194,7 @@ app.get("/shopify/install", async (req, res) => {
     await shopify.auth.begin({
       shop,
       isOnline: false,
-      callbackPath: "/shopify/callback",
+      callbackPath: "https://api.botassistai.com/shopify/callback",
       rawRequest: req,
       rawResponse: res
     });
