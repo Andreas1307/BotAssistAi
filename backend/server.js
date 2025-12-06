@@ -645,7 +645,7 @@ async function registerGdprWebhooks(session) {
 }
 
 
-app.get('/check-shopify-store', verifySessionToken, async (req, res) => {
+app.get('/check-shopify-store', async (req, res) => {
   const { shop } = req.query;
 
   if (!shop) {
