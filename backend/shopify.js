@@ -15,7 +15,7 @@ const shopify = shopifyApi({
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes,
   hostName: "api.botassistai.com",
-hostScheme: "https",
+  hostScheme: "https",
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
   sessionStorage: { storeCallback, loadCallback, deleteCallback },
