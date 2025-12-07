@@ -1405,11 +1405,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <html>
         <head>
           <meta charset="utf-8"/>
-          <script type="module">
-  import createApp from "https://unpkg.com/@shopify/app-bridge@4";
-  import { Redirect } from "https://unpkg.com/@shopify/app-bridge/actions";
-</script>
-
+   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
           <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
         </head>
         <body>
