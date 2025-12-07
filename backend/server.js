@@ -1191,9 +1191,11 @@ app.get("/shopify/install", async (req, res) => {
       shop,
       isOnline: false,
       callbackPath: "/shopify/callback",
+      state: JSON.stringify({ host }), // always include host
       rawRequest: req,
       rawResponse: res
     });
+    
     
 
   } catch (err) {
@@ -1215,26 +1217,10 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-    console.log("🟢 /callback hit");
-    console.log("🍪 Incoming cookies:", req.headers.cookie);
-    console.log("🧭 Original URL:", req.originalUrl);
-    console.log("🧠 Query params:", req.query);
-    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie); 
-    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
 if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   console.error("❌ Missing shopify_toplevel cookie");
 }
 
-    console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
-    console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
-    console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
-    console.log('🍪 CALLBACK COOKIES:', req.headers.cookie || '(none)');
-    console.log("🍪 CALLBACK HEADERS:", req.headers.cookie);
-    console.log("🧠 CALLBACK HOST:", req.get('host'));
-    
-    console.log("🧭 /shopify/callback hit");
-    console.log("🧠 Query:", req.query);
-    console.log("🍪 Headers:", req.headers.cookie || "(none)");
 
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
@@ -1258,7 +1244,9 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host || "";
+    const stateObj = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
+const host = stateObj.host;
+
 
 
 
