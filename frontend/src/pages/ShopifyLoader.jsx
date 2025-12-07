@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import createApp from "@shopify/app-bridge";
+import { Redirect } from "@shopify/app-bridge/actions";
 import directory from "../directory";
 
 export default function ShopifyLoader() {
@@ -6,20 +8,34 @@ export default function ShopifyLoader() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
-    const host = params.get("host");
 
-    if (!shop) return; // shop is the only required param
+    if (!shop || !shop.endsWith(".myshopify.com")) return;
 
-    // If already embedded, DO NOTHING
-    if (window.top !== window.self) return;
+    /*
+     * If inside iframe → use App Bridge redirect
+     */
+    if (window.top !== window.self) {
+      const host = params.get("host") || btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
 
-    // Redirect only if it's a real shop domain
-    if (!shop.endsWith(".myshopify.com")) return;
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
 
-    // Host may be missing — that's fine
-    const url = `${directory}/shopify/force-top-level-auth?shop=${shop}`;
-    window.top.location.href = url;
+      const redirect = Redirect.create(app);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `${directory}/shopify/force-top-level-auth?shop=${shop}`
+      );
 
+      return;
+    }
+
+    /*
+     * If top-level (not in iframe) → normal redirect
+     */
+    window.location.href = `${directory}/shopify/force-top-level-auth?shop=${shop}`;
   }, []);
 
   return <div>Loading Shopify App…</div>;
