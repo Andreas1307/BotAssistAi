@@ -3,9 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import "../styling/SignLog.css";
 import Header from "../components/Header";
 import Footer from "../components/footer";
-import { fetchWithAuth } from "../utils/initShopifyAppBridge";
-import directory from '../directory';
 import axios from "axios";
+import directory from '../directory';
+
 const LogIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,47 +14,40 @@ const LogIn = () => {
   const [error, setError] = useState("")
   const navigate = useNavigate();
 
- 
+  // Check if the user is authenticated
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await fetchWithAuth("/auth-check");        
-        setUser(data.user);
+        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        setUser(res.data.user);
       } catch (error) {
-        console.error("❌ Auth check error:", error);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
-  
     fetchUser();
   }, []);
 
+  // Redirect authenticated user to dashboard
   useEffect(() => {
     if (!loading && user) {
-     
-      /*
-    if (user?.shopify_access_token) {
-      navigate("/shopify/dashboard");
-      return;
-    }*/
-  
-      if (window.location.pathname === "/log-in") {
+      if (window.location.pathname === "/login") {
         // Only redirect if the user is manually visiting /login
         navigate(`/${user.username}/dashboard`);
       }
     }
   }, [user, loading, navigate]);
 
-  
+  // Handle form submission
   const handleData = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetchWithAuth(`/log-in`, {
-        method: "POST",
-        body: { email, password },
-      });
+      const response = await axios.post(
+        `${directory}/log-in`,
+        { email, password },
+        { withCredentials: true }
+      );
       navigate(`/${response.data.user.username}/dashboard`);
     } catch (e) {
       console.error("Error logging in:", e);
@@ -204,4 +197,5 @@ Don't have an account yet? <Link to="/sign-up"> Sign Up Now</Link>
 };
 
 export default LogIn;
+
 
