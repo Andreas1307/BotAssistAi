@@ -1409,29 +1409,43 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
         <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
       </head>
       <body>
-          <script>
+      <script>
+      (function() {
+        const dashboardUrl = "${dashboardUrl}";
+        const host = "${host}";
+      
+        // Check if host exists (Shopify embedded)
+        if (host) {
+          try {
             const app = window['app-bridge'].default({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
+              host: host,
               forceRedirect: true
             });
-
-            const redirect = window['app-bridge'].actions.Redirect.create(app);
-
-            try {
-              redirect.dispatch(window['app-bridge'].actions.Redirect.Action.REMOTE, "${dashboardUrl}");
-            } catch (e) {
-              console.warn("App Bridge failed — forcing top redirect", e);
-              window.top.location.href = "${dashboardUrl}";
-            }
-          </script>
-
-          <noscript>
-            Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
-          </noscript>
-        </body>
+            const Redirect = window['app-bridge'].actions.Redirect;
+            const redirect = Redirect.create(app);
+      
+            // iframe-safe App Bridge redirect
+            redirect.dispatch(Redirect.Action.APP, dashboardUrl);
+          } catch (err) {
+            console.warn("App Bridge redirect failed — forcing top-level fallback", err);
+            window.top.location.href = dashboardUrl;
+          }
+        } else {
+          // First install / host missing → top-level redirect
+          console.warn("Host missing. Redirecting top-level");
+          window.top.location.href = dashboardUrl;
+        }
+      })();
+      </script>
+      
+      <noscript>
+      Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
+      </noscript>
+      </body>
       </html>
       `);
+      
       
       
   } catch (err) {
