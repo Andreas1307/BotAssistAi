@@ -1403,35 +1403,39 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     return res.send(`
       <!DOCTYPE html>
       <html>
-        <head><meta charset="utf-8"/></head>
-        <body>
-          <script>
-            const dashboardUrl = "${dashboardUrl}";
-            
-            // If inside Shopify admin iframe, redirect top window
-            if (window.top === window.self) {
-              // Not inside iframe
-              window.location.href = dashboardUrl;
+      <head>
+        <meta charset="utf-8"/>
+        <script type="module">
+          import createApp from "https://unpkg.com/@shopify/app-bridge@4.0.0";
+          import { Redirect } from "https://unpkg.com/@shopify/app-bridge@4.0.0/actions";
+      
+          const app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+            forceRedirect: true
+          });
+      
+          const redirect = Redirect.create(app);
+      
+          try {
+            redirect.dispatch(Redirect.Action.APP, "${dashboardUrl}");
+          } catch (err) {
+            console.warn("App Bridge redirect failed — forcing parent redirect", err);
+            if (window.parent) {
+              window.parent.location.href = "${dashboardUrl}";
             } else {
-              try {
-                // Use Shopify App Bridge safe redirect
-                const redirectToIframe = () => {
-                  window.top.location.href = dashboardUrl;
-                };
-
-                redirectToIframe();
-              } catch (err) {
-                console.warn('Redirect failed, forcing top window', err);
-                window.top.location.href = dashboardUrl;
-              }
+              window.location.href = "${dashboardUrl}";
             }
-          </script>
-          <noscript>
-            Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
-          </noscript>
-        </body>
+          }
+        </script>
+        <noscript>
+          Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
+        </noscript>
+      </head>
+      <body></body>
       </html>
-    `);
+      `);
+      
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
