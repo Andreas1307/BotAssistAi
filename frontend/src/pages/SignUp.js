@@ -4,8 +4,8 @@ import "../styling/SignLog.css";
 import Header from "../components/Header";
 import Footer from "../components/footer";
 import directory from '../directory';
-import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 import axios from "axios";
+
 const SignUp = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -14,15 +14,16 @@ const SignUp = () => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [error, setError] = useState("")
   const navigate = useNavigate();
-const [user, setUser] = useState(null)
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await fetchWithAuth("/auth-check");        
-        setUser(data.user);
+        const res = await axios.get(`${directory}/auth-check`, { withCredentials: true });
+        if (res.data.user) {
+          navigate(`/${res.data.user.username}/dashboard`);
+        }
       } catch (error) {
-        console.error("❌ Auth check error:", error);
-        setUser(null);
+        console.error("Auth check failed:", error);
       } finally {
         setLoading(false);
       }
@@ -30,23 +31,6 @@ const [user, setUser] = useState(null)
   
     fetchUser();
   }, [navigate]);
-
-
-  
-  useEffect(() => {
-    if (!loading && user) {
-      
-    if (user?.shopify_access_token) {
-      navigate("/shopify/dashboard");
-      return;
-    }
-  
-      if (window.location.pathname === "/sign-up") {
-        // Only redirect if the user is manually visiting /login
-        navigate(`/${user.username}/dashboard`);
-      }
-    }
-  }, [user, loading, navigate]);
   
 
   useEffect(() => {
@@ -142,13 +126,11 @@ const [user, setUser] = useState(null)
       return;
     }
     try {
-      const data = await fetchWithAuth(
-        `/register`, {
-          method: "POST",
-          body: JSON.stringify({ username, email, password }),
-        }
+      const res = await axios.post(
+        `${directory}/register`,
+        { username, email, password },
+        { withCredentials: true }
       );
-      const res = await data.json();
       
       if (res.data?.user?.username) {
         if (window.fbq) {
