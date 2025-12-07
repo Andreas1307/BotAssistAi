@@ -1406,33 +1406,47 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <head>
         <meta charset="utf-8"/>
         <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
-<script>
-  const app = window['app-bridge'].default({
-    apiKey: "${process.env.SHOPIFY_API_KEY}",
-    host: "${host}",
-    forceRedirect: true
-  });
-
-  const Redirect = window['app-bridge'].actions.Redirect;
-
-  const redirect = Redirect.create(app);
-  try {
-    redirect.dispatch(Redirect.Action.APP, "${dashboardUrl}");
-  } catch (err) {
-    console.warn("App Bridge redirect failed, falling back to parent redirect", err);
-    if (window.parent) {
-      window.parent.location.href = "${dashboardUrl}";
-    } else {
-      window.location.href = "${dashboardUrl}";
-    }
-  }
-</script>
-
+        <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
       </head>
-      <body></body>
+      <body>
+        <script>
+          (function() {
+            const dashboardUrl = "${dashboardUrl}";
+            const host = "${host}";
+      
+            // Check if inside Shopify admin iframe
+            const inIframe = window.top !== window.self;
+      
+            if (inIframe && host) {
+              try {
+                const app = window['app-bridge'].default({
+                  apiKey: "${process.env.SHOPIFY_API_KEY}",
+                  host: host,
+                  forceRedirect: true
+                });
+                const Redirect = window['app-bridge'].actions.Redirect;
+                const redirect = Redirect.create(app);
+      
+                // Use Shopify App Bridge iframe redirect
+                redirect.dispatch(Redirect.Action.APP, dashboardUrl);
+              } catch (err) {
+                console.warn("App Bridge redirect failed — falling back", err);
+                window.top.location.href = dashboardUrl;
+              }
+            } else {
+              // Not in iframe, just redirect top
+              window.top.location.href = dashboardUrl;
+            }
+          })();
+        </script>
+      
+        <noscript>
+          Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
+        </noscript>
+      </body>
       </html>
       `);
+      
       
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
