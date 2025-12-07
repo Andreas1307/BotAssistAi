@@ -1244,7 +1244,12 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host || "";
+    const host =
+    req.query.host ||
+    JSON.parse(Buffer.from(req.query.state, "base64").toString()).host ||
+    Buffer.from(req.query.state, "base64").toString() ||
+    "";
+  
 
 
 
