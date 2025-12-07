@@ -1414,29 +1414,26 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
             const dashboardUrl = "${dashboardUrl}";
             const host = "${host}";
       
-            // Are we inside the Shopify admin iframe?
-            const inIframe = window.top !== window.self;
-      
-            if (inIframe && host) {
+            // Only attempt App Bridge redirect if host exists (Shopify embedded)
+            if (host) {
               try {
-                // Initialize App Bridge
                 const app = window['app-bridge'].default({
                   apiKey: "${process.env.SHOPIFY_API_KEY}",
                   host: host,
                   forceRedirect: true
                 });
-      
                 const Redirect = window['app-bridge'].actions.Redirect;
                 const redirect = Redirect.create(app);
       
-                // Use App Bridge redirect so the dashboard loads inside the iframe
+                // App Bridge iframe-safe redirect
                 redirect.dispatch(Redirect.Action.APP, dashboardUrl);
               } catch (err) {
-                console.warn("App Bridge redirect failed — forcing iframe-safe redirect", err);
+                console.warn("App Bridge failed, fallback top redirect", err);
                 window.top.location.href = dashboardUrl;
               }
             } else {
-              // Not in iframe, just redirect top
+              // Host missing → fallback to top-level redirect
+              console.warn("Host missing, cannot use App Bridge. Redirecting top-level");
               window.top.location.href = dashboardUrl;
             }
           })();
@@ -1448,6 +1445,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       </body>
       </html>
       `);
+      
       
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
