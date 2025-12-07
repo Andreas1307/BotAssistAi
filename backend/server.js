@@ -1244,8 +1244,19 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const stateObj = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
-const host = stateObj.host;
+    let host = "";
+if (req.query.host) {
+  host = req.query.host;
+} else if (req.query.state) {
+  try {
+    const stateJSON = Buffer.from(req.query.state, "base64").toString();
+    const parsed = JSON.parse(stateJSON);
+    host = parsed.host || "";
+  } catch (err) {
+    console.warn("⚠️ Invalid OAuth state — ignoring", err);
+    host = "";
+  }
+}
 
 
 
