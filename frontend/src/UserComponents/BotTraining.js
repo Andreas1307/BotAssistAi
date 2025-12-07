@@ -295,13 +295,13 @@ const setFieldValue = (field, value) => {
 shopifyUser ? (
   <div onClick={activatePlan} className='upgrade-div'>
     <span>
-      Upgrade Plan To See More
+      Upgrade Plan For More
     </span>
   </div>
 ) : (
   <div className='upgrade-div'>
     <Link to={`/${user?.username}/upgrade-plan`}>
-      Upgrade Plan To See More
+      Upgrade Plan For More
     </Link>
   </div>
 )

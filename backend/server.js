@@ -1521,7 +1521,7 @@ app.post('/shopify/session-attach', verifySessionToken, (req, res) => {
   return res.status(200).json({ success: true });
 });
 
-app.post("/paypal/webhook", verifySessionToken, async (req, res) => {
+app.post("/paypal/webhook", async (req, res) => {
   const { orderID, userId } = req.body;
 
 
@@ -2719,11 +2719,23 @@ app.get("/billing/callback", async (req, res) => {
       hostForRedirect = Buffer.from(String(host)).toString("base64");
     }
 
-    // Update DB subscription BEFORE redirect (you already do this elsewhere)
-    await pool.query(
-      "UPDATE users SET subscription_plan='Pro', subscribed_at=NOW() WHERE user_id=?",
-      [userId]
-    );
+    
+const now = new Date();
+const expiry = new Date(now);
+expiry.setDate(now.getDate() + 30); // 30-day subscription
+
+console.log("🔄 Updating subscription for user:", userId);
+
+await pool.query(
+  `UPDATE users 
+   SET 
+     subscription_plan = ?, 
+     subscribed_at = ?, 
+     subscription_expiry = ? 
+   WHERE user_id = ?`,
+  ["Pro", now, expiry, userId]
+);
+
 
     // Build final admin redirect URL. Use the shop to compute store path:
     const storeSelector = (shop && shop.indexOf(".myshopify.com") > -1)

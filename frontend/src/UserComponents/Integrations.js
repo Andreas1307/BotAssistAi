@@ -856,7 +856,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   className="configChatBtn"
   onClick={() => {
     if (window.top !== window.self) {
-      alert("This action is not available inside the Shopify admin. Please open the app in a new tab.");
+      alert("This action is not available inside the Shopify admin. Please open BotAssistAi in a new tab.");
     } else {
       setChatBotConfig(true);
     }
