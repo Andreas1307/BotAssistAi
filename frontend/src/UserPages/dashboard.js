@@ -924,17 +924,17 @@ if (loading) {
         <h1 className="dashboard-title">  <FaTachometerAlt className="dashIcon" />Dashboard Overview</h1>
         <div>
 
-{showConvsLimit && (
-   <div class="limit-banner">
-  <div class="limit-icon">⚡</div>
-  <div class="limit-content">
-    <h3>Daily Conversation Limit Reached</h3>
-    <p>You’ve used all available conversations for today. New conversations will be available again tomorrow.</p>
+        {showConvsLimit && !membership && (
+  <div className="limit-banner">
+    <div className="limit-icon">⚡</div>
+    <div className="limit-content">
+      <h3>Daily Conversation Limit Reached</h3>
+      <p>You’ve used all available conversations for today. 
+         New conversations will be available again tomorrow.</p>
+    </div>
   </div>
-</div>
-
 )}
-       
+
 
 
 
