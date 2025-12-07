@@ -1402,33 +1402,37 @@ const host = stateObj.host;
       <html>
         <head>
           <meta charset="utf-8"/>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
         </head>
         <body>
           <script>
-            const app = window['app-bridge'].default({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true
-            });
-
-            const redirect = window['app-bridge'].actions.Redirect.create(app);
-
+            const host = "${host}";           // from OAuth state
+            const dashboardUrl = "${dashboardUrl}";
+      
             try {
-              redirect.dispatch(window['app-bridge'].actions.Redirect.Action.REMOTE, "${dashboardUrl}");
-            } catch (e) {
-              console.warn("App Bridge failed — forcing top redirect", e);
-              window.top.location.href = "${dashboardUrl}";
+              const app = window['app-bridge'].default({
+                apiKey: "${process.env.SHOPIFY_API_KEY}",
+                host: host,
+                forceRedirect: true
+              });
+      
+              const Redirect = window['app-bridge'].actions.Redirect;
+              Redirect.create(app).dispatch(Redirect.Action.APP, dashboardUrl);
+      
+            } catch (err) {
+              console.warn("App Bridge failed — fallback top-level redirect", err);
+              window.top.location.href = dashboardUrl;
             }
           </script>
-
+      
           <noscript>
             Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
           </noscript>
         </body>
       </html>
-    `);
+      `);
+      
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
