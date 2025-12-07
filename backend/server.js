@@ -2768,7 +2768,7 @@ await pool.query(
 
 
 
-
+sa verific daca totul este bine cu emailuri
 
 
 
