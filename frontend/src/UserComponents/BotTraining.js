@@ -172,6 +172,7 @@ const setFieldValue = (field, value) => {
     formData.append("webUrl", userData.web_url ?? "");
     formData.append("phoneNum", userData.phoneNum ?? "");
   
+    console.log("FORM DATA", formData)
     try {
       const response = await fetchWithAuth(`/update-config`, {
         method: "POST",
