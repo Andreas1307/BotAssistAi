@@ -33,11 +33,12 @@ const LogIn = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      
+     
+      /*
     if (user?.shopify_access_token) {
       navigate("/shopify/dashboard");
       return;
-    }
+    }*/
   
       if (window.location.pathname === "/log-in") {
         // Only redirect if the user is manually visiting /login
@@ -203,8 +204,4 @@ Don't have an account yet? <Link to="/sign-up"> Sign Up Now</Link>
 };
 
 export default LogIn;
-
-
-// sa ma uit la ce response mi-a dat chat gpt ca primesc token-urile si imi scrie logged in
-// dar nu imi da login 
 
