@@ -1244,12 +1244,12 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host =
-    req.query.host ||
-    JSON.parse(Buffer.from(req.query.state, "base64").toString()).host ||
-    Buffer.from(req.query.state, "base64").toString() ||
-    "";
-  
+   const host =
+  req.query.host ||
+  JSON.parse(Buffer.from(req.query.state, "base64").toString()).host ||
+  Buffer.from(req.query.state, "base64").toString() ||
+  "";
+
 
 
 
@@ -1405,33 +1405,36 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <html>
         <head>
           <meta charset="utf-8"/>
-   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+    
+          <!-- ✔ The ONLY valid browser App Bridge bundle -->
+          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
         </head>
         <body>
           <script>
-            const app = window['app-bridge'].default({
+            const params = new URLSearchParams(window.location.search);
+            const host = params.get("host");
+            
+            const app = window.appBridge.createApp({
               apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true
+              host,
+              forceRedirect: true,
             });
-
-            const redirect = window['app-bridge'].actions.Redirect.create(app);
-
-            try {
-              redirect.dispatch(window['app-bridge'].actions.Redirect.Action.REMOTE, "${dashboardUrl}");
-            } catch (e) {
-              console.warn("App Bridge failed — forcing top redirect", e);
-              window.top.location.href = "${dashboardUrl}";
-            }
+    
+            const redirect = window.appBridge.actions.Redirect.create(app);
+    
+            redirect.dispatch(
+              window.appBridge.actions.Redirect.Action.APP,
+              "${dashboardUrl}"
+            );
           </script>
-
+    
           <noscript>
-            Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
+            Redirecting… <a href="${dashboardUrl}" target="_top">Click here</a>.
           </noscript>
         </body>
       </html>
     `);
+    
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
