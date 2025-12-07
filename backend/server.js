@@ -1405,32 +1405,30 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <html>
       <head>
         <meta charset="utf-8"/>
-        <script type="module">
-          import createApp from "https://unpkg.com/@shopify/app-bridge@4.0.0";
-          import { Redirect } from "https://unpkg.com/@shopify/app-bridge@4.0.0/actions";
-      
-          const app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-      
-          const redirect = Redirect.create(app);
-      
-          try {
-            redirect.dispatch(Redirect.Action.APP, "${dashboardUrl}");
-          } catch (err) {
-            console.warn("App Bridge redirect failed — forcing parent redirect", err);
-            if (window.parent) {
-              window.parent.location.href = "${dashboardUrl}";
-            } else {
-              window.location.href = "${dashboardUrl}";
-            }
-          }
-        </script>
-        <noscript>
-          Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
-        </noscript>
+        <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
+<script>
+  const app = window['app-bridge'].default({
+    apiKey: "${process.env.SHOPIFY_API_KEY}",
+    host: "${host}",
+    forceRedirect: true
+  });
+
+  const Redirect = window['app-bridge'].actions.Redirect;
+
+  const redirect = Redirect.create(app);
+  try {
+    redirect.dispatch(Redirect.Action.APP, "${dashboardUrl}");
+  } catch (err) {
+    console.warn("App Bridge redirect failed, falling back to parent redirect", err);
+    if (window.parent) {
+      window.parent.location.href = "${dashboardUrl}";
+    } else {
+      window.location.href = "${dashboardUrl}";
+    }
+  }
+</script>
+
       </head>
       <body></body>
       </html>
