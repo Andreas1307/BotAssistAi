@@ -2768,9 +2768,6 @@ await pool.query(
 
 
 
-sa verific daca totul este bine cu emailuri
-
-
 
 
 
@@ -4157,6 +4154,8 @@ const {
   webUrl,
   phoneNum
 } = req.body;
+
+console.log("WEB URL", webUrl)
 
 const fileReference = req.file ? req.file.path : null; // Get the uploaded file
 const parsedThreshold = parseFloat(escalationThreshold) || 0.7;
