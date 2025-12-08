@@ -1409,43 +1409,44 @@ if (req.query.host) {
     console.log("➡️ Redirecting user to:", dashboardUrl);
 
     return res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8"/>
-          <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
-          <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
-        </head>
-        <body>
-          <script>
-            const host = "${host}";
-const dashboardUrl = "${dashboardUrl}";
+     <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
+  </head>
+  <body>
+    <script>
+      const host = "${host}";
+      const dashboardUrl = "${dashboardUrl}";
 
-try {
-  const app = window['app-bridge'].default({
-    apiKey: "${process.env.SHOPIFY_API_KEY}",
-    host: host,
-    forceRedirect: true
-  });
+      try {
+        // ⚠️ For UMD, no `.default` needed
+        const app = window['app-bridge']({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: host,
+          forceRedirect: true
+        });
 
-  const Redirect = window['app-bridge'].actions.Redirect;
-  const redirect = Redirect.create(app);
+        const Redirect = window['app-bridge'].actions.Redirect;
+        const redirect = Redirect.create(app);
 
-  // ✅ Use REMOTE to stay inside Shopify admin iframe
-  redirect.dispatch(Redirect.Action.REMOTE, dashboardUrl);
+        // ✅ REMOTE keeps the redirect inside the admin iframe
+        redirect.dispatch(Redirect.Action.REMOTE, dashboardUrl);
 
-} catch (err) {
-  console.warn("App Bridge failed — fallback top-level redirect", err);
-  window.top.location.href = dashboardUrl;
-}
+      } catch (err) {
+        console.warn("App Bridge failed — fallback top-level redirect", err);
+        window.top.location.href = dashboardUrl;
+      }
+    </script>
 
-          </script>
-      
-          <noscript>
-            Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
-          </noscript>
-        </body>
-      </html>
+    <noscript>
+      Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
+    </noscript>
+  </body>
+</html>
+
       `);
       
     
