@@ -1410,8 +1410,9 @@ return res.send(`
 <html>
   <head>
     <meta charset="utf-8"/>
-    <!-- Use the combined Shopify App Bridge UMD -->
-    <script src="https://unpkg.com/@shopify/app-bridge@4.1.1/dist/index.umd.min.js"></script>
+    <!-- ✅ Use Shopify's official CDN-hosted App Bridge -->
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
     <script>
@@ -1420,18 +1421,18 @@ return res.send(`
 
       try {
         // ⚡ Initialize App Bridge
-        const app = window['AppBridge'].createApp({
+        const app = shopify.appBridge.createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: host,
           forceRedirect: true
         });
 
         // ⚡ Get Redirect action
-        const Redirect = window['AppBridge'].actions.Redirect;
+        const Redirect = shopify.appBridge.actions.Redirect;
         const redirect = Redirect.create(app);
 
-        // ✅ REMOTE keeps it inside the admin iframe
-        redirect.dispatch(Redirect.Action.REMOTE, dashboardUrl);
+        // ✅ Use APP action to redirect **inside the iframe**
+        redirect.dispatch(Redirect.Action.APP, dashboardUrl);
 
       } catch (err) {
         console.warn("App Bridge failed — fallback top-level redirect", err);
