@@ -1167,7 +1167,6 @@ app.get("/shopify/install", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  console.log("🚀 /shopify/install hit:", { shop, host });
 
   // --------------------------------------------
   // 1️⃣ If top-level cookie missing → bounce ONCE
@@ -1225,7 +1224,6 @@ app.get("/shopify/install", async (req, res) => {
   authInProgress.add(shop);
 
   try {
-    console.log("🔐 Starting OAuth for:", shop);
 
     // Build safe state
     const stateObj = {
@@ -1279,7 +1277,6 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     const hasAppState = cookieHeader.includes("shopify_app_state");
     const hasTopLevel = cookieHeader.includes("shopify_toplevel");
   
-    console.log("🔍 Cookie presence →", { hasOAuthState, hasAppState, hasTopLevel });
   
     const { session } = await shopify.auth.callback({
       rawRequest: req,
@@ -1355,7 +1352,6 @@ if (req.query.host) {
       });
     });
 
-    console.log(`✅ User ${user.email} logged in`);
 
     // --- Save install info
     await pool.query(
@@ -1418,7 +1414,6 @@ if (req.query.host) {
         ]
       );
 
-      console.log(`🎨 Auto-created chatbot config for ${shop}`);
     } else {
       console.log(`🎨 Chatbot config already exists for ${shop}`);
     }
@@ -1440,7 +1435,6 @@ if (req.query.host) {
       type: "application/json"
     });
 
-    console.log(`✅ ScriptTag installed for ${shop}`);
 
   } catch (err) {
     console.error('❌ Post-redirect setup error:', err);
