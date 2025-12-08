@@ -1403,13 +1403,10 @@ if (req.query.host) {
 })();
 
 
-    const dashboardUrl =
-      `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+const dashboardUrl = `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
 
-    console.log("➡️ Redirecting user to:", dashboardUrl);
-
-    return res.send(`
-     <!DOCTYPE html>
+return res.send(`
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8"/>
@@ -1422,7 +1419,7 @@ if (req.query.host) {
       const dashboardUrl = "${dashboardUrl}";
 
       try {
-        // ⚠️ For UMD, no `.default` needed
+        // ✅ UMD usage: no .default
         const app = window['app-bridge']({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: host,
@@ -1432,7 +1429,7 @@ if (req.query.host) {
         const Redirect = window['app-bridge'].actions.Redirect;
         const redirect = Redirect.create(app);
 
-        // ✅ REMOTE keeps the redirect inside the admin iframe
+        // REMOTE ensures staying inside iframe
         redirect.dispatch(Redirect.Action.REMOTE, dashboardUrl);
 
       } catch (err) {
@@ -1446,8 +1443,8 @@ if (req.query.host) {
     </noscript>
   </body>
 </html>
+`);
 
-      `);
       
     
   } catch (err) {
