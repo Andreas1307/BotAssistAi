@@ -26,7 +26,7 @@ export default function ShopifyLoader() {
       const redirect = Redirect.create(app);
       redirect.dispatch(
         Redirect.Action.REMOTE,
-        `${directory}/shopify/force-top-level-auth?shop=${shop}`
+        `${directory}/shopify/install?shop=${shop}`
       );
 
       return;
