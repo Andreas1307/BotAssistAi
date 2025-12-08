@@ -871,10 +871,10 @@ const handleSendNewUserEmail = async (rawKey, email) => {
                   <a href="https://instagram.com/botassistai" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/instagram-new.png" width="27" alt="">
                   </a>
-                  <a href="https://twitter.com/botassistai" style="margin:0 6px; text-decoration: none;">
+                  <a href="https://x.com/botassistai" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/twitter.png" width="27" alt="">
                   </a>
-                  <a href="https://linkedin.com/company/botassistai" style="margin:0 6px; text-decoration: none;">
+                  <a href="https://www.linkedin.com/in/botassist-ai-23611536a/" style="margin:0 6px; text-decoration: none;">
                     <img src="https://img.icons8.com/ios-filled/50/00F5D4/linkedin.png" width="27" alt="">
                   </a>
                 </div>
