@@ -8,45 +8,50 @@ export async function handleBilling(userId) {
   try {
     const app = getAppBridgeInstance();
 
-    // ❗ App Bridge not ready yet
-    if (!app) {
-      console.warn("App Bridge not ready yet");
-      return;
+    let host;
+    let confirmationUrl;
+
+    // --------------------------
+    // 🟢 CASE 1: Inside iframe
+    // --------------------------
+    if (app) {
+      const token = await getSessionToken(app);
+      const payload = JSON.parse(atob(token.split(".")[1]));
+
+      const store = payload.dest
+        .replace("https://", "")
+        .split(".myshopify.com")[0];
+
+      host = btoa(`admin.shopify.com/store/${store}`);
+
+      const res = await axios.post(`${directory}/create-subscription2`, {
+        userId,
+        host,
+      });
+
+      confirmationUrl = res.data.confirmationUrl;
+
+      const redirect = Redirect.create(app);
+      return redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
     }
 
-    // ✔ Always get host from Shopify JWT, never from URL
-    const token = await getSessionToken(app);
-    const payload = JSON.parse(atob(token.split(".")[1]));
-
-    // Extract dest → "andrei-store205.myshopify.com/admin"
-    const dest = payload.dest.replace("https://", "");
-    const params = new URLSearchParams(window.location.search);
-    let host = params.get("host");
-    
-    if (!host) {
-      const store = payload.dest.replace("https://", "").split(".myshopify.com")[0];
- 
-      const adminHost = `admin.shopify.com/store/${store}`;
-      host = btoa(adminHost);
-    }
-    
-    console.log("✔ Using host:", host);
-    
+    // --------------------------
+    // 🔴 CASE 2: NOT inside iframe
+    // --------------------------
+    console.warn("App Bridge unavailable → doing top-level redirect");
 
     const res = await axios.post(`${directory}/create-subscription2`, {
       userId,
-      host,
+      host: null,
     });
 
-    const confirmationUrl = res.data?.confirmationUrl;
-    if (!confirmationUrl) throw new Error("Missing confirmationUrl");
+    confirmationUrl = res.data.confirmationUrl;
 
-    const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+    // Shopify requires top redirect here
+    window.location.href = confirmationUrl;
 
   } catch (err) {
     console.error("Billing failed:", err);
     alert("Billing failed — check console");
   }
 }
-
