@@ -1410,8 +1410,8 @@ return res.send(`
 <html>
   <head>
     <meta charset="utf-8"/>
-    <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
+    <!-- Use the combined Shopify App Bridge UMD -->
+    <script src="https://unpkg.com/@shopify/app-bridge@4.1.1/dist/index.umd.min.js"></script>
   </head>
   <body>
     <script>
@@ -1419,17 +1419,18 @@ return res.send(`
       const dashboardUrl = "${dashboardUrl}";
 
       try {
-        // ✅ UMD usage: no .default
-        const app = window['app-bridge']({
+        // ⚡ Initialize App Bridge
+        const app = window['AppBridge'].createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: host,
           forceRedirect: true
         });
 
-        const Redirect = window['app-bridge'].actions.Redirect;
+        // ⚡ Get Redirect action
+        const Redirect = window['AppBridge'].actions.Redirect;
         const redirect = Redirect.create(app);
 
-        // REMOTE ensures staying inside iframe
+        // ✅ REMOTE keeps it inside the admin iframe
         redirect.dispatch(Redirect.Action.REMOTE, dashboardUrl);
 
       } catch (err) {
@@ -1443,6 +1444,7 @@ return res.send(`
     </noscript>
   </body>
 </html>
+
 `);
 
       
