@@ -97,7 +97,6 @@ const SupportBotCustomization = () => {
         );
 
         const data = response.config || {};
-  console.log(data)
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,
           escalation_threshold: data.escalation_threshold ?? 0.7,
