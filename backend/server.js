@@ -1075,7 +1075,7 @@ function abs(path) {
   return path.startsWith("http") ? path : `https://api.botassistai.com${path}`;
 }
 const authInProgress = new Set();
-
+/*
 app.get("/shopify/force-top-level-auth", (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
@@ -1162,46 +1162,94 @@ app.get("/shopify/auth", (req, res) => {
     </body></html>
   `);
 });
-
+*/
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host } = req.query;   // <-- FIX: extract host safely
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop param");
 
-  // Enforce top-level cookie
-  if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
+  console.log("🚀 /shopify/install hit:", { shop, host });
+
+  // --------------------------------------------
+  // 1️⃣ If top-level cookie missing → bounce ONCE
+  // --------------------------------------------
+  const hasTopLevelCookie =
+    req.headers.cookie && req.headers.cookie.includes("shopify_toplevel");
+
+  if (!hasTopLevelCookie) {
+    console.log("⚠️ Missing shopify_toplevel → setting cookie + bouncing");
+
+    // Clear old cookies
+    [
+      "connect.sid",
+      "shopify_app_state",
+      "shopify_app_state.sig",
+      "shopify_toplevel",
+    ].forEach((name) => {
+      res.clearCookie(name, {
+        domain: ".botassistai.com",
+        path: "/",
+        secure: true,
+        sameSite: "None",
+      });
+    });
+
+    // Set the required top-level cookie
+    res.cookie("shopify_toplevel", "true", {
+      httpOnly: false,
+      secure: true,
+      sameSite: "None",
+      path: "/",
+      domain: ".botassistai.com",
+    });
+
+    // Bounce — but DO NOT return to /install again → use a stable redirect route
     return res.send(`
+      <!DOCTYPE html>
       <html><body>
         <script>
-          window.top.location.href = "/shopify/force-top-level-auth?shop=${encodeURIComponent(shop)}";
+          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(
+            shop
+          )}";
         </script>
       </body></html>
     `);
   }
 
-  // Prevent concurrent OAuth
-  if (authInProgress.has(shop)) return res.status(200).send("OAuth in progress...");
+  // --------------------------------------------
+  // 2️⃣ We are top-level → now actually start OAuth
+  // --------------------------------------------
+  if (authInProgress.has(shop)) {
+    return res.status(200).send("OAuth already in progress…");
+  }
+
   authInProgress.add(shop);
 
   try {
-    // Prepare state object (host may be undefined on first install – that's ok)
-    const stateObj = host ? { host } : {};
+    console.log("🔐 Starting OAuth for:", shop);
+
+    // Build safe state
+    const stateObj = {
+      host: host || null,
+      nonce: crypto.randomBytes(16).toString("hex"),
+    };
     const encodedState = Buffer.from(JSON.stringify(stateObj)).toString("base64");
 
     await shopify.auth.begin({
       shop,
       isOnline: false,
       callbackPath: "/shopify/callback",
-      state: JSON.stringify({ host }), // always include host
+      state: encodedState,
       rawRequest: req,
-      rawResponse: res
+      rawResponse: res,
     });
-    
-    
+
+    // IMPORTANT: RETURN — shopify.auth.begin already sends the redirect
+    return;
 
   } catch (err) {
-    console.error("❌ OAuth begin failed:", err);
+    console.error("❌ /shopify/install OAuth error:", err);
     if (!res.headersSent) {
-      res.status(500).send("OAuth error");
+      return res.status(500).send("OAuth start failed.");
     }
   } finally {
     authInProgress.delete(shop);
@@ -1251,15 +1299,12 @@ if (req.query.host) {
   try {
     const stateJSON = Buffer.from(req.query.state, "base64").toString();
     const parsed = JSON.parse(stateJSON);
-    host = parsed.host || "";
+    host = parsed.host || btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
   } catch (err) {
-    console.warn("⚠️ Invalid OAuth state — ignoring", err);
-    host = "";
+    console.warn("⚠️ Invalid OAuth state — using fallback host", err);
+    host = btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
   }
 }
-
-
-
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });

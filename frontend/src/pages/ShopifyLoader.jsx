@@ -32,10 +32,7 @@ export default function ShopifyLoader() {
       return;
     }
 
-    /*
-     * If top-level (not in iframe) → normal redirect
-     */
-    window.location.href = `${directory}/shopify/force-top-level-auth?shop=${shop}`;
+    window.location.href = `${directory}/shopify/install?shop=${shop}`;
   }, []);
 
   return <div>Loading Shopify App…</div>;
