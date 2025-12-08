@@ -1217,26 +1217,10 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-    console.log("🟢 /callback hit");
-    console.log("🍪 Incoming cookies:", req.headers.cookie);
-    console.log("🧭 Original URL:", req.originalUrl);
-    console.log("🧠 Query params:", req.query);
-    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie); 
-    console.log("🍪 CALLBACK COOKIES:", req.headers.cookie);
 if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
   console.error("❌ Missing shopify_toplevel cookie");
 }
 
-    console.log("🍪 CALLBACK HEADERS RECEIVED:", req.headers.cookie);
-    console.log("🧭 [DEBUG] CALLBACK URL:", req.originalUrl);
-    console.log("🧠 [DEBUG] CALLBACK QUERY:", req.query);
-    console.log('🍪 CALLBACK COOKIES:', req.headers.cookie || '(none)');
-    console.log("🍪 CALLBACK HEADERS:", req.headers.cookie);
-    console.log("🧠 CALLBACK HOST:", req.get('host'));
-    
-    console.log("🧭 /shopify/callback hit");
-    console.log("🧠 Query:", req.query);
-    console.log("🍪 Headers:", req.headers.cookie || "(none)");
 
     if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       console.error("❌ Missing shopify_toplevel cookie");
@@ -1260,7 +1244,20 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     }
 
     const shop = session.shop;
-    const host = req.query.host || "";
+    let host = "";
+if (req.query.host) {
+  host = req.query.host;
+} else if (req.query.state) {
+  try {
+    const stateJSON = Buffer.from(req.query.state, "base64").toString();
+    const parsed = JSON.parse(stateJSON);
+    host = parsed.host || "";
+  } catch (err) {
+    console.warn("⚠️ Invalid OAuth state — ignoring", err);
+    host = "";
+  }
+}
+
 
 
 
@@ -1416,33 +1413,41 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
       <html>
         <head>
           <meta charset="utf-8"/>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-          <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge@4.0.0/dist/index.umd.min.js"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@shopify/app-bridge/actions@4.0.0/dist/index.umd.min.js"></script>
         </head>
         <body>
           <script>
-            const app = window['app-bridge'].default({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true
-            });
+            const host = "${host}";
+const dashboardUrl = "${dashboardUrl}";
 
-            const redirect = window['app-bridge'].actions.Redirect.create(app);
+try {
+  const app = window['app-bridge'].default({
+    apiKey: "${process.env.SHOPIFY_API_KEY}",
+    host: host,
+    forceRedirect: true
+  });
 
-            try {
-              redirect.dispatch(window['app-bridge'].actions.Redirect.Action.REMOTE, "${dashboardUrl}");
-            } catch (e) {
-              console.warn("App Bridge failed — forcing top redirect", e);
-              window.top.location.href = "${dashboardUrl}";
-            }
+  const Redirect = window['app-bridge'].actions.Redirect;
+  const redirect = Redirect.create(app);
+
+  // ✅ Use REMOTE to stay inside Shopify admin iframe
+  redirect.dispatch(Redirect.Action.REMOTE, dashboardUrl);
+
+} catch (err) {
+  console.warn("App Bridge failed — fallback top-level redirect", err);
+  window.top.location.href = dashboardUrl;
+}
+
           </script>
-
+      
           <noscript>
             Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
           </noscript>
         </body>
       </html>
-    `);
+      `);
+      
     
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1485,7 +1490,7 @@ if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
     `);
   }
   
-});
+}); 
 
 
 
