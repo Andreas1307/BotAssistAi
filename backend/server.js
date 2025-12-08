@@ -1455,46 +1455,40 @@ return res.send(`
 <html>
   <head>
     <meta charset="utf-8"/>
-    <!-- ✅ Use Shopify's official CDN-hosted App Bridge -->
+
+    <!-- THE ONLY VALID APP BRIDGE -->
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
+
   <body>
     <script>
-      const host = "${host}";
       const dashboardUrl = "${dashboardUrl}";
+      const host = "${host}";
 
       try {
-        // ⚡ Initialize App Bridge
-        const app = shopify.appBridge.createApp({
+        // Initialize App Bridge (2025 syntax)
+        const app = shopify.createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: host,
-          forceRedirect: true
+          forceRedirect: true,
         });
 
-        // ⚡ Get Redirect action
-        const Redirect = shopify.appBridge.actions.Redirect;
-        const redirect = Redirect.create(app);
+        // Redirect action (2025 syntax)
+        const redirect = shopify.redirect;
 
-        // ✅ Use APP action to redirect **inside the iframe**
-        redirect.dispatch(Redirect.Action.APP, dashboardUrl);
+        // This keeps you INSIDE the iframe (REMOTE is deprecated)
+        redirect.dispatch(redirect.Action.APP, dashboardUrl);
 
       } catch (err) {
-        console.warn("App Bridge failed — fallback top-level redirect", err);
+        console.error("App Bridge failed:", err);
         window.top.location.href = dashboardUrl;
       }
     </script>
-
-    <noscript>
-      Redirecting... <a href="${dashboardUrl}" target="_top">Click here</a>.
-    </noscript>
   </body>
 </html>
-
 `);
 
-      
-    
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
   
