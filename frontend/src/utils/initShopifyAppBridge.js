@@ -113,6 +113,39 @@ export async function fetchWithAuth(url, options = {}) {
     return fetchWithAuth(url, { ...options, _retried: true });
   }
 
+  // 7b️⃣ If still 401 after retry → trigger OAuth re-auth
+if (res.status === 401) {
+  console.warn("❌ Still unauthorized after retry — forcing Shopify re-auth");
+
+  const app = getAppBridgeInstance();
+  if (app) {
+    const redirect = Redirect.create(app);
+
+    // Extract shop from token
+    let shopFromToken = null;
+    try {
+      const token = await getSessionToken(app);
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      shopFromToken = payload.dest
+        .replace("https://", "")
+        .replace("/admin", "");
+    } catch (e) {
+      console.warn("⚠️ Could not parse JWT for shop", e);
+    }
+
+    redirect.dispatch(
+      Redirect.Action.APP,
+      `/shopify/auth?shop=${shopFromToken}`
+    );
+
+    return;
+  }
+
+  // fallback: hard redirect
+  window.top.location.href = `/shopify/auth`;
+  return;
+}
+
   // 8️⃣ Handle response
   let data;
   const contentType = res.headers.get("Content-Type") || "";

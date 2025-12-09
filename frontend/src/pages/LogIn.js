@@ -51,7 +51,7 @@ const LogIn = () => {
       navigate(`/${response.data.user.username}/dashboard`);
     } catch (e) {
       console.error("Error logging in:", e);
-      setError("Invalid Email")
+      setError("Invalid Credentials")
     }
   };
 
