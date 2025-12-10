@@ -790,7 +790,8 @@ body {
   flex-direction: column;
   padding: 3px 5px;
   background: #f2f2f2;
-  border-radius: 8px;
+  border-radius: 6px;
+  margin-bottom: 2px;
 }
 .user-message {
   font-size: 16.5px;
