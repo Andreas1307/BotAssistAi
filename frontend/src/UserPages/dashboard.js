@@ -1027,7 +1027,7 @@ if (loading) {
           </div>
           <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
             <h2><FaChartLine className="stat-icon" /> Resolved Requests</h2>
-            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : resolvedQueries / 2}</p>
+            <p className="stat-number">{!membership ? (<span style={{fontSize: "21.5px"}}>Upgrade To See</span>) : resolvedQueries}</p>
           </div>
           <div style={{opacity: !membership ? 0.5 : 1}} className="graph-card">
             <h2><FaClock className="stat-icon" /> Response Time</h2>
@@ -1133,15 +1133,30 @@ if (loading) {
   {convHistory.length > 0 ? (
     <>
       <ul className="chat-list">
-        {convHistory.slice(0, visibleCount).map((chat, key) => (
-          <li
-            key={key}
-            className={chat.sender_type === "bot" ? "bot-message" : "user-message"}
-          >
-            <strong>{chat.sender_type === "bot" ? "Bot" : "User"}:</strong> {chat.message_text}
-          </li>
-        ))}
-      </ul>
+  {(() => {
+    const pairs = [];
+    for (let i = 0; i < convHistory.length; i += 2) {
+      const userMsg = convHistory[i];
+      const botMsg = convHistory[i + 1];
+
+      pairs.push(
+        <li key={i} className="chat-pair">
+          <div className="user-message">
+            <strong>User:</strong> {userMsg.message_text}
+          </div>
+
+          {botMsg && (
+            <div className="bot-message">
+              <strong>Bot:</strong> {botMsg.message_text}
+            </div>
+          )}
+        </li>
+      );
+    }
+    return pairs;
+  })()}
+</ul>
+
       {visibleCount < convHistory.length && (
         <button className="load-btn" onClick={() => setVisibleCount(prev => prev + 10)}>
           Load more
