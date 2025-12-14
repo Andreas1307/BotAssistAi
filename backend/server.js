@@ -2892,7 +2892,8 @@ app.post("/ask-ai", async (req, res) => {
     const userType = isShopify ? "shopify" : "standard";
 
     let aiResponse;
-      const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
+    const { apiKey, message, ...updates } = req.body;
+
  
       const [users] = await pool.query("SELECT * FROM users")
       const user = users.find((u) => {
@@ -2929,6 +2930,27 @@ app.post("/ask-ai", async (req, res) => {
     userConversationState[conversationId] = {};  // Initialize empty state for the conversation
   }
   const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
+  const plan = accountType[0].subscription_plan;
+
+let MODEL;
+let TEMPERATURE;
+let MAX_TOKENS;
+
+if (plan === "Free") {
+  MODEL = "gpt-5-mini";
+  TEMPERATURE = 0.2;     // more stable, less hallucination
+  MAX_TOKENS = 40;       // short & cheap
+} else if (plan === "Pro") {
+  MODEL = "gpt-5-mini";
+  TEMPERATURE = 0.35;    // more natural & helpful
+  MAX_TOKENS = 70;       // better explanations
+} else {
+  // safety fallback
+  MODEL = "gpt-5-mini";
+  TEMPERATURE = 0.25;
+  MAX_TOKENS = 40;
+}
+
       if (accountType[0].subscription_plan === "Free") {
         const count = await dailyConversations(userId);
         console.log("👀 Conversations today:", count);
@@ -3088,19 +3110,25 @@ Avoid vague answers. Provide clear value in every reply.
 Use product or service examples that match the business type.
 Never refer users to another page unless explicitly asked.`;
 
+systemPrompt += `
+Answer confidently and directly.
+If the user intent is clear, do not ask follow-up questions.
+Prefer action-oriented answers over explanations.
+`;
 
 
       const startTime = Date.now();
   
       const response = await openai.chat.completions.create({
-          model: model,
-          messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userMessage }
-          ],
-          temperature: temperature,
-          max_tokens: 40
+        model: MODEL,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage }
+        ],
+        temperature: TEMPERATURE,
+        max_tokens: MAX_TOKENS
       });
+      
   
       const endTime = Date.now(); 
   
