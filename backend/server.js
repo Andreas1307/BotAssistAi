@@ -1163,11 +1163,25 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
+app.get("/shopify", (req, res) => {
+  const { shop, host } = req.query;
+
+  if (!shop) {
+    return res.status(400).send("Missing shop parameter");
+  }
+
+  // Always start install from backend
+  return res.redirect(
+    302,
+    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+  );
+});
+
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  await shopify.auth.begin({
+  return shopify.auth.begin({
     shop,
     isOnline: false,
     callbackPath: "/shopify/callback",
@@ -1175,7 +1189,6 @@ app.get("/shopify/install", async (req, res) => {
     rawResponse: res,
   });
 });
-
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
@@ -1186,14 +1199,6 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-  console.error("❌ Missing shopify_toplevel cookie");
-}
-
-
-    if (!req.headers.cookie || !req.headers.cookie.includes("shopify_toplevel")) {
-      console.error("❌ Missing shopify_toplevel cookie");
-    }    
 
     const cookieHeader = req.headers.cookie || "";
     const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
@@ -1248,11 +1253,32 @@ if (req.query.host) {
       const hashedPassword = await bcrypt.hash(rawKey, 10);
 
       await pool.query(
-        `INSERT INTO users (username, email, password, api_key, shopify_shop_domain, shopify_access_token, shopify_installed_at)
-         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-        [username, email, hashedPassword, encryptedKey, shop, session.accessToken]
+        `
+        INSERT INTO users (
+          username,
+          email,
+          password,
+          api_key,
+          shopify_shop_domain,
+          shopify_access_token,
+          shopify_installed_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ON DUPLICATE KEY UPDATE
+          email = VALUES(email),
+          shopify_access_token = VALUES(shopify_access_token),
+          shopify_installed_at = NOW()
+        `,
+        [
+          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
+          email,
+          hashedPassword,
+          encryptedKey,
+          shop,
+          session.accessToken,
+        ]
       );
-
+      
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
 
@@ -1341,9 +1367,6 @@ if (req.query.host) {
       console.log(`🎨 Chatbot config already exists for ${shop}`);
     }
 
-    // ----------------------
-    // END OF YOUR LOGIC
-    // ----------------------
 
     // Register ScriptTag to load chatbot
     const scriptClient = new shopify.clients.Rest({ session });
@@ -1365,12 +1388,10 @@ if (req.query.host) {
 })();
 
 
-const dashboardUrl =
-  `https://www.botassistai.com/shopify/dashboard` +
-  `?shop=${encodeURIComponent(shop)}` +
-  `&host=${encodeURIComponent(host)}`;
+const redirectUrl =
+  `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
-return res.redirect(302, dashboardUrl);
+return res.redirect(302, redirectUrl);
 
 
   } catch (err) {
