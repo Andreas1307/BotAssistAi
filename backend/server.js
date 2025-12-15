@@ -1164,95 +1164,18 @@ app.get("/shopify/auth", (req, res) => {
 });
 */
 app.get("/shopify/install", async (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop param");
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
 
-
-  // --------------------------------------------
-  // 1️⃣ If top-level cookie missing → bounce ONCE
-  // --------------------------------------------
-  const hasTopLevelCookie =
-    req.headers.cookie && req.headers.cookie.includes("shopify_toplevel");
-
-  if (!hasTopLevelCookie) {
-    console.log("⚠️ Missing shopify_toplevel → setting cookie + bouncing");
-
-    // Clear old cookies
-    [
-      "connect.sid",
-      "shopify_app_state",
-      "shopify_app_state.sig",
-      "shopify_toplevel",
-    ].forEach((name) => {
-      res.clearCookie(name, {
-        domain: ".botassistai.com",
-        path: "/",
-        secure: true,
-        sameSite: "None",
-      });
-    });
-
-    // Set the required top-level cookie
-    res.cookie("shopify_toplevel", "true", {
-      httpOnly: false,
-      secure: true,
-      sameSite: "None",
-      path: "/",
-      domain: ".botassistai.com",
-    });
-
-    // Bounce — but DO NOT return to /install again → use a stable redirect route
-    return res.send(`
-      <!DOCTYPE html>
-      <html><body>
-        <script>
-          window.top.location.href = "/shopify/auth?shop=${encodeURIComponent(
-            shop
-          )}";
-        </script>
-      </body></html>
-    `);
-  }
-
-  // --------------------------------------------
-  // 2️⃣ We are top-level → now actually start OAuth
-  // --------------------------------------------
-  if (authInProgress.has(shop)) {
-    return res.status(200).send("OAuth already in progress…");
-  }
-
-  authInProgress.add(shop);
-
-  try {
-
-    // Build safe state
-    const stateObj = {
-      host: host || null,
-      nonce: crypto.randomBytes(16).toString("hex"),
-    };
-    const encodedState = Buffer.from(JSON.stringify(stateObj)).toString("base64");
-
-    await shopify.auth.begin({
-      shop,
-      isOnline: false,
-      callbackPath: "/shopify/callback",
-      state: encodedState,
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    // IMPORTANT: RETURN — shopify.auth.begin already sends the redirect
-    return;
-
-  } catch (err) {
-    console.error("❌ /shopify/install OAuth error:", err);
-    if (!res.headersSent) {
-      return res.status(500).send("OAuth start failed.");
-    }
-  } finally {
-    authInProgress.delete(shop);
-  }
+  await shopify.auth.begin({
+    shop,
+    isOnline: false,
+    callbackPath: "/shopify/callback",
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
+
 
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
@@ -1442,46 +1365,13 @@ if (req.query.host) {
 })();
 
 
-const dashboardUrl = `https://botassistai.com/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+const dashboardUrl =
+  `https://www.botassistai.com/shopify/dashboard` +
+  `?shop=${encodeURIComponent(shop)}` +
+  `&host=${encodeURIComponent(host)}`;
 
-return res.send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
+return res.redirect(302, dashboardUrl);
 
-    <!-- THE ONLY VALID APP BRIDGE -->
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-  </head>
-
-  <body>
-    <script>
-      const dashboardUrl = "${dashboardUrl}";
-      const host = "${host}";
-
-      try {
-        // Initialize App Bridge (2025 syntax)
-        const app = shopify.createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: host,
-          forceRedirect: true,
-        });
-
-        // Redirect action (2025 syntax)
-        const redirect = shopify.redirect;
-
-        // This keeps you INSIDE the iframe (REMOTE is deprecated)
-        redirect.dispatch(redirect.Action.APP, dashboardUrl);
-
-      } catch (err) {
-        console.error("App Bridge failed:", err);
-        window.top.location.href = dashboardUrl;
-      }
-    </script>
-  </body>
-</html>
-`);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
