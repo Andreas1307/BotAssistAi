@@ -6,23 +6,16 @@ export default function ShopifyLoader() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    // ❗ DO NOTHING unless explicitly installing
-    if (!shop || !host) {
-      console.log("ℹ️ No shop/host — staying on page");
-      return;
-    }
+    if (!shop) return;
 
-    // ❗ Only redirect if user clicked "Connect Shopify"
-    if (params.get("install") === "1") {
-      const url = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-
-      if (window.top !== window.self) {
-        window.top.location.href = url;
-      } else {
-        window.location.href = url;
-      }
+    // ✅ If in iframe, redirect top window
+    if (window.top !== window.self) {
+      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    } else {
+      // ✅ Otherwise, just redirect normally
+      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     }
   }, []);
 
-  return <div>Loading…</div>;
+  return <div>Loading Shopify App…</div>;
 }
