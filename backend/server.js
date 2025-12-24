@@ -1163,6 +1163,11 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
+function requireUser(req, res, next) {
+  if (req.isAuthenticated?.()) return next();
+  return res.redirect("/log-in");
+}
+
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
 
@@ -1412,14 +1417,16 @@ return res.status(200).send(`
         });
 
         const redirect = Redirect.create(app);
-        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
+        redirect.dispatch(
+  Redirect.Action.REMOTE,
+  "https://www.botassistai.com/shopify/dashboard"
+);
+
       })();
     </script>
   </body>
 </html>
 `);
-
-
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
