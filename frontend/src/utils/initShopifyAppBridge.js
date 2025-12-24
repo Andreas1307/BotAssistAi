@@ -113,12 +113,6 @@ export async function fetchWithAuth(url, options = {}) {
     throw new Error("UNAUTHORIZED");
   }
   
-
-
-
-
-
-
   // 8️⃣ Handle response
   let data;
   const contentType = res.headers.get("Content-Type") || "";
@@ -143,3 +137,5 @@ export async function fetchWithAuth(url, options = {}) {
 function getCookie(name) {
   return document.cookie.split("; ").find(row => row.startsWith(name + "="))?.split("=")[1];
 }
+
+

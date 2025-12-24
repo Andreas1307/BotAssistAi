@@ -1165,22 +1165,15 @@ app.get("/shopify/auth", (req, res) => {
 */
 app.get("/shopify", async (req, res) => {
   const { shop, host } = req.query;
-
-  if (!shop) {
-    return res.status(400).send("Missing shop parameter");
-  }
+  if (!shop) return res.status(400).send("Missing shop");
 
   const sessions = await shopify.session.findSessionsByShop(shop);
 
   if (!sessions || sessions.length === 0) {
-    return res.redirect(
-      `/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
-    );
+    return res.redirect(`/shopify/install?shop=${shop}&host=${host || ""}`);
   }
 
-  return res.redirect(
-    `/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
-  );
+  return res.redirect(`/shopify/dashboard?shop=${shop}&host=${host || ""}`);
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1244,7 +1237,7 @@ if (req.query.host) {
     const username = shopInfo.name || shop;
 
     // --- Find or create user
-    let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let [existing] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
     let user;
     if (existing.length > 0) {
       user = existing[0];
@@ -1285,7 +1278,12 @@ if (req.query.host) {
         ]
       );
       
-      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+      const [newUserResult] = await pool.query(
+        "SELECT * FROM users WHERE shopify_shop_domain = ?",
+        [shop]
+      );
+      user = newUserResult[0];
+      
       user = newUserResult[0];
 
       try {
@@ -1295,6 +1293,20 @@ if (req.query.host) {
       }
 
     }
+
+    if (!req.headers['x-shopify-shop-domain']) {
+      await new Promise((resolve, reject) => {
+        req.logIn(user, (err) => {
+          if (err) return reject(err);
+          req.session.save((saveErr) => {
+            if (saveErr) return reject(saveErr);
+            resolve();
+          });
+        });
+      });
+    }
+    
+
 
     // --- Save install info
     await pool.query(
@@ -1381,6 +1393,9 @@ if (req.query.host) {
   }
 })();
 
+
+const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
+
 return res.status(200).send(`
 <!DOCTYPE html>
 <html>
@@ -1403,16 +1418,14 @@ return res.status(200).send(`
         });
 
         const redirect = Redirect.create(app);
-       redirect.dispatch(
-  Redirect.Action.ADMIN_PATH,
-  "/apps/${process.env.SHOPIFY_API_KEY}/shopify/dashboard"
-);
-
+        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
       })();
     </script>
   </body>
 </html>
 `);
+
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -3893,16 +3906,10 @@ app.post('/register', async (req, res, next) => {
     expiry.setDate(now.getDate() + 30);
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
-      `
-      INSERT INTO users (username, email, password, api_key)
-      VALUES (?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        password = VALUES(password),
-        api_key = VALUES(api_key)
-      `,
+      `INSERT INTO users (username, email, password, api_key) 
+       VALUES (?, ?, ?, ?)`,
       [username, email, hashedPassword, encryptedKey]
     );
-    
 
     // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
     const [userResult] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
