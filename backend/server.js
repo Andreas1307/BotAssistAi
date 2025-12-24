@@ -3068,7 +3068,7 @@ Prefer action-oriented answers over explanations.
           { role: "user", content: userMessage }
         ],
         temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS
+        max_completion_tokens: MAX_TOKENS
       });
       
   
