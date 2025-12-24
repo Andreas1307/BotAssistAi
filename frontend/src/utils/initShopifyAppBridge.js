@@ -9,21 +9,26 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export function initShopifyAppBridge() {
-  const host = new URLSearchParams(window.location.search).get("host");
+export async function initShopifyAppBridge() {
+  if (window.top === window.self) {
+    console.log("❌ Not embedded → skipping App Bridge");
+    return null;
+  }
 
+  const host = new URLSearchParams(window.location.search).get("host");
   if (!host) {
-    console.warn("⚠️ No host — App Bridge not initialized");
+    console.warn("❌ Missing host param → cannot init App Bridge");
     return null;
   }
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true,
+    forceRedirect: true, // important for embedded apps
   });
 
-  window.appBridge = app;
+  window.appBridge = app; // store globally
+  console.log("✅ App Bridge initialized");
   return app;
 }
 
@@ -108,16 +113,38 @@ export async function fetchWithAuth(url, options = {}) {
     return fetchWithAuth(url, { ...options, _retried: true });
   }
 
-  if (res.status === 401) {
-    console.warn("❌ Unauthorized — user needs to reconnect Shopify");
-    throw new Error("UNAUTHORIZED");
+  // 7b️⃣ If still 401 after retry → trigger OAuth re-auth
+if (res.status === 401) {
+  console.warn("❌ Still unauthorized after retry — forcing Shopify re-auth");
+
+  const app = getAppBridgeInstance();
+  if (app) {
+    const redirect = Redirect.create(app);
+
+    // Extract shop from token
+    let shopFromToken = null;
+    try {
+      const token = await getSessionToken(app);
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      shopFromToken = payload.dest
+        .replace("https://", "")
+        .replace("/admin", "");
+    } catch (e) {
+      console.warn("⚠️ Could not parse JWT for shop", e);
+    }
+
+    redirect.dispatch(
+      Redirect.Action.APP,
+      `/shopify/auth?shop=${shopFromToken}`
+    );
+
+    return;
   }
-  
 
-
-
-
-
+  // fallback: hard redirect
+  window.top.location.href = `/shopify/auth`;
+  return;
+}
 
   // 8️⃣ Handle response
   let data;
