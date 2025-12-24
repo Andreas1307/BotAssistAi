@@ -1217,18 +1217,19 @@ app.get('/shopify/callback', async (req, res) => {
 
     const shop = session.shop;
     let host = "";
-if (req.query.host) {
-  host = req.query.host;
-} else if (req.query.state) {
-  try {
-    const stateJSON = Buffer.from(req.query.state, "base64").toString();
-    const parsed = JSON.parse(stateJSON);
-    host = parsed.host || btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
-  } catch (err) {
-    console.warn("⚠️ Invalid OAuth state — using fallback host", err);
-    host = btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
-  }
-}
+    if (req.query.host) {
+      host = req.query.host;
+    } else if (req.query.state) {
+      try {
+        const stateJSON = Buffer.from(req.query.state, "base64").toString();
+        const parsed = JSON.parse(stateJSON);
+        host = parsed.host || encodeURIComponent(`${shop}`);
+      } catch (err) {
+        console.warn("⚠️ Invalid OAuth state — using fallback host", err);
+        host = encodeURIComponent(`${shop}`);
+      }
+    }
+    
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1269,7 +1270,7 @@ if (req.query.host) {
           shopify_installed_at = NOW()
         `,
         [
-          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
+          username,        // guaranteed unique, but no longer relied on
           email,
           hashedPassword,
           encryptedKey,
@@ -1282,7 +1283,6 @@ if (req.query.host) {
         "SELECT * FROM users WHERE shopify_shop_domain = ?",
         [shop]
       );
-      user = newUserResult[0];
       
       user = newUserResult[0];
 
@@ -1294,17 +1294,15 @@ if (req.query.host) {
 
     }
 
-    if (!req.headers['x-shopify-shop-domain']) {
-      await new Promise((resolve, reject) => {
-        req.logIn(user, (err) => {
-          if (err) return reject(err);
-          req.session.save((saveErr) => {
-            if (saveErr) return reject(saveErr);
-            resolve();
-          });
+    await new Promise((resolve, reject) => {
+      req.logIn(user, (err) => {
+        if (err) return reject(err);
+        req.session.save((saveErr) => {
+          if (saveErr) return reject(saveErr);
+          resolve();
         });
       });
-    }
+    });    
     
 
 
