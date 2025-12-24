@@ -1163,17 +1163,23 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-app.get("/shopify", (req, res) => {
+app.get("/shopify", async (req, res) => {
   const { shop, host } = req.query;
 
   if (!shop) {
     return res.status(400).send("Missing shop parameter");
   }
 
-  // Always start install from backend
+  const sessions = await shopify.session.findSessionsByShop(shop);
+
+  if (!sessions || sessions.length === 0) {
+    return res.redirect(
+      `/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+    );
+  }
+
   return res.redirect(
-    302,
-    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+    `/shopify/dashboard?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
   );
 });
 
@@ -1290,18 +1296,6 @@ if (req.query.host) {
 
     }
 
-    // --- Log the user in via Passport BEFORE redirect
-    await new Promise((resolve, reject) => {
-      req.logIn(user, (err) => {
-        if (err) return reject(err);
-        req.session.save((saveErr) => {
-          if (saveErr) return reject(saveErr);
-          resolve();
-        });
-      });
-    });
-
-
     // --- Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
@@ -1386,9 +1380,6 @@ if (req.query.host) {
     console.error('❌ Post-redirect setup error:', err);
   }
 })();
-
-
-const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
 return res.status(200).send(`
 <!DOCTYPE html>
