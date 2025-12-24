@@ -1163,11 +1163,6 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-function requireUser(req, res, next) {
-  if (req.isAuthenticated?.()) return next();
-  return res.redirect("/log-in");
-}
-
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
 
@@ -1417,9 +1412,9 @@ return res.status(200).send(`
         });
 
         const redirect = Redirect.create(app);
-        redirect.dispatch(
-  Redirect.Action.REMOTE,
-  "https://www.botassistai.com/shopify/dashboard"
+       redirect.dispatch(
+  Redirect.Action.ADMIN_PATH,
+  "/apps/${process.env.SHOPIFY_API_KEY}/shopify/dashboard"
 );
 
       })();
@@ -3907,10 +3902,16 @@ app.post('/register', async (req, res, next) => {
     expiry.setDate(now.getDate() + 30);
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
-      `INSERT INTO users (username, email, password, api_key) 
-       VALUES (?, ?, ?, ?)`,
+      `
+      INSERT INTO users (username, email, password, api_key)
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        password = VALUES(password),
+        api_key = VALUES(api_key)
+      `,
       [username, email, hashedPassword, encryptedKey]
     );
+    
 
     // Fetch the newly created user (you may already have this from the INSERT if returning user_id)
     const [userResult] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);

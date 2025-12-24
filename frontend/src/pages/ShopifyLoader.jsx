@@ -8,10 +8,9 @@ export default function ShopifyLoader() {
 
     if (!shop) return;
 
-    // ✅ If in iframe, redirect top window
-    if (window.top !== window.self) {
-      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    } else {
+    if (!document.cookie.includes('connect.sid')) {
+      window.top.location.href = `/shopify/install?...`;
+    }     else {
       // ✅ Otherwise, just redirect normally
       window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     }
