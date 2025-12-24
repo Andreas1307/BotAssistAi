@@ -1228,8 +1228,8 @@ app.get('/shopify/callback', async (req, res) => {
         console.warn("⚠️ Invalid OAuth state — using fallback host", err);
         host = encodeURIComponent(`${shop}`);
       }
-    }
-    
+    }    
+
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1395,35 +1395,35 @@ app.get('/shopify/callback', async (req, res) => {
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
 return res.status(200).send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-  </head>
-  <body>
-    <script>
-      (function() {
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default;
-        const Redirect = AppBridge.actions.Redirect;
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+    </head>
+    <body>
+      <script>
+        (function() {
+          const AppBridge = window['app-bridge'];
+          const createApp = AppBridge.default;
+          const Redirect = AppBridge.actions.Redirect;
+  
+          const app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+            forceRedirect: true
+          });
+  
+          const redirect = Redirect.create(app);
+          redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
+        })();
+      </script>
+    </body>
+  </html>
+  `);
 
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true
-        });
-
-        const redirect = Redirect.create(app);
-        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
-      })();
-    </script>
-  </body>
-</html>
-`);
-
-
+//redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
