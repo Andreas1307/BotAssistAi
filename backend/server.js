@@ -1391,35 +1391,37 @@ if (req.query.host) {
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
 return res.status(200).send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-  </head>
-  <body>
-    <script>
-      (function() {
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default;
-        const Redirect = AppBridge.actions.Redirect;
-
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true
-        });
-
-        const redirect = Redirect.create(app);
-        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
-      })();
-    </script>
-  </body>
-</html>
-`);
-
-
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    </head>
+    <body>
+      <script>
+        (function () {
+          var AppBridge = window['app-bridge'];
+          var createApp = AppBridge.default;
+          var Redirect = AppBridge.actions.Redirect;
+  
+          var app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+            forceRedirect: true
+          });
+  
+          var redirect = Redirect.create(app);
+          redirect.dispatch(
+            Redirect.Action.ADMIN_PATH,
+            "/shopify/dashboard?shop=${shop}&host=${host}"
+          );
+        })();
+      </script>
+    </body>
+  </html>
+  `);
+  
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);

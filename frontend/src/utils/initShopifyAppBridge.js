@@ -9,28 +9,22 @@ function isEmbedded() {
   return window.top !== window.self;
 }
 
-export async function initShopifyAppBridge() {
-  if (window.top === window.self) {
-    console.log("❌ Not embedded → skipping App Bridge");
-    return null;
-  }
+export function initShopifyAppBridge() {
+  if (window.top === window.self) return null;
 
   const host = new URLSearchParams(window.location.search).get("host");
-  if (!host) {
-    console.warn("❌ Missing host param → cannot init App Bridge");
-    return null;
-  }
+  if (!host) return null;
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true, // important for embedded apps
+    forceRedirect: true,
   });
 
-  window.appBridge = app; // store globally
-  console.log("✅ App Bridge initialized");
+  window.appBridge = app;
   return app;
 }
+
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
@@ -62,7 +56,7 @@ export async function fetchWithAuth(url, options = {}) {
   try {
     const app = await getAppBridgeInstance();
     if (app) {
-      token = await getSessionToken(app);
+      token = await getSessionToken(window.appBridge);
       window.sessionToken = token;
     } else {
       console.warn("⚠️ App Bridge not initialized — cannot get JWT");
@@ -124,7 +118,7 @@ if (res.status === 401) {
     // Extract shop from token
     let shopFromToken = null;
     try {
-      const token = await getSessionToken(app);
+      const token = await getSessionToken(window.appBridge);
       const payload = JSON.parse(atob(token.split(".")[1]));
       shopFromToken = payload.dest
         .replace("https://", "")
