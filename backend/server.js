@@ -1270,7 +1270,7 @@ if (req.query.host) {
           shopify_installed_at = NOW()
         `,
         [
-          username,        // guaranteed unique, but no longer relied on
+          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
           email,
           hashedPassword,
           encryptedKey,
