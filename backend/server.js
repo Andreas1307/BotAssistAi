@@ -1165,16 +1165,37 @@ app.get("/shopify/auth", (req, res) => {
 */
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
-
-  if (!shop) {
-    return res.status(400).send("Missing shop parameter");
+  if (!shop || !host) {
+    return res.status(400).send("Missing shop or host");
   }
 
-  // Always start install from backend
-  return res.redirect(
-    302,
-    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
-  );
+  return res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8"/>
+        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      </head>
+      <body>
+        <script>
+          (function () {
+            const app = shopify.createApp({
+              apiKey: "${process.env.SHOPIFY_API_KEY}",
+              host: "${host}",
+              forceRedirect: true
+            });
+
+            shopify.redirect({
+              app,
+              url: "/shopify/install?shop=${shop}&host=${host}",
+              target: "ADMIN_PATH"
+            });
+          })();
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1200,8 +1221,6 @@ app.use((req, res, next) => {
 app.get('/shopify/callback', async (req, res) => {
   try {
 
-   console.log("KKEOFKSDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDFDSFDS")
-  
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1396,24 +1415,21 @@ return res.status(200).send(`
     </head>
     <body>
       <script>
-        (function () {
-          var AppBridge = window['app-bridge'];
-          var createApp = AppBridge.default;
-          var Redirect = AppBridge.actions.Redirect;
-  
-          var app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-  
-          var redirect = Redirect.create(app);
-          redirect.dispatch(
-            Redirect.Action.ADMIN_PATH,
-            "/shopify/dashboard?shop=${shop}&host=${host}"
-          );
-        })();
-      </script>
+  (function () {
+    const app = shopify.createApp({
+      apiKey: "${process.env.SHOPIFY_API_KEY}",
+      host: "${host}",
+      forceRedirect: true
+    });
+
+    shopify.redirect({
+      app,
+      url: "/shopify/dashboard?shop=${shop}&host=${host}",
+      target: "ADMIN_PATH"
+    });
+  })();
+</script>
+
     </body>
   </html>
   `);

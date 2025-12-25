@@ -1,21 +1,23 @@
 import { useEffect } from "react";
+import { Redirect } from "@shopify/app-bridge/actions";
+import { initShopifyAppBridge } from "../utils/initShopifyAppBridge"
 
 export default function ShopifyLoader() {
   useEffect(() => {
+    const app = initShopifyAppBridge();
+    if (!app) return;
+  
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
     const host = params.get("host");
-
+  
     if (!shop) return;
-
-    // ✅ If in iframe, redirect top window
-    if (window.top !== window.self) {
-      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    } else {
-      // ✅ Otherwise, just redirect normally
-      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    }
+  
+    const redirect = Redirect.create(app);
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      `https://api.botassistai.com/shopify/install?shop=${shop}&host=${host}`
+    );
   }, []);
-
   return <div>Loading Shopify App…</div>;
 }
