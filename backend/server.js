@@ -1217,19 +1217,18 @@ app.get('/shopify/callback', async (req, res) => {
 
     const shop = session.shop;
     let host = "";
-    if (req.query.host) {
-      host = req.query.host;
-    } else if (req.query.state) {
-      try {
-        const stateJSON = Buffer.from(req.query.state, "base64").toString();
-        const parsed = JSON.parse(stateJSON);
-        host = parsed.host || encodeURIComponent(`${shop}`);
-      } catch (err) {
-        console.warn("⚠️ Invalid OAuth state — using fallback host", err);
-        host = encodeURIComponent(`${shop}`);
-      }
-    }    
-
+if (req.query.host) {
+  host = req.query.host;
+} else if (req.query.state) {
+  try {
+    const stateJSON = Buffer.from(req.query.state, "base64").toString();
+    const parsed = JSON.parse(stateJSON);
+    host = parsed.host || btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
+  } catch (err) {
+    console.warn("⚠️ Invalid OAuth state — using fallback host", err);
+    host = btoa(`admin.shopify.com/store/${shop.replace(".myshopify.com","")}`);
+  }
+}
 
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
@@ -1238,7 +1237,7 @@ app.get('/shopify/callback', async (req, res) => {
     const username = shopInfo.name || shop;
 
     // --- Find or create user
-    let [existing] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
+    let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     let user;
     if (existing.length > 0) {
       user = existing[0];
@@ -1270,7 +1269,7 @@ app.get('/shopify/callback', async (req, res) => {
           shopify_installed_at = NOW()
         `,
         [
-          username,        // guaranteed unique, but no longer relied on
+          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
           email,
           hashedPassword,
           encryptedKey,
@@ -1279,11 +1278,7 @@ app.get('/shopify/callback', async (req, res) => {
         ]
       );
       
-      const [newUserResult] = await pool.query(
-        "SELECT * FROM users WHERE shopify_shop_domain = ?",
-        [shop]
-      );
-      
+      const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
 
       try {
@@ -1294,6 +1289,7 @@ app.get('/shopify/callback', async (req, res) => {
 
     }
 
+    // --- Log the user in via Passport BEFORE redirect
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1302,8 +1298,7 @@ app.get('/shopify/callback', async (req, res) => {
           resolve();
         });
       });
-    });    
-    
+    });
 
 
     // --- Save install info
@@ -1416,14 +1411,14 @@ return res.status(200).send(`
         });
 
         const redirect = Redirect.create(app);
-       redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
+        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
       })();
     </script>
   </body>
 </html>
 `);
 
-//redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1467,7 +1462,6 @@ return res.status(200).send(`
   }
   
 }); 
-
 
 
 app.get("/debug/cookies", (req, res) => {
