@@ -1182,7 +1182,7 @@ app.get("/shopify", (req, res) => {
       const app = shopify.createApp({
         apiKey: "${process.env.SHOPIFY_API_KEY}",
         host: "${host}",
-        forceRedirect: true
+        forceRedirect: false
       });
 
       // 🔑 THIS creates the embedded session Shopify wants
