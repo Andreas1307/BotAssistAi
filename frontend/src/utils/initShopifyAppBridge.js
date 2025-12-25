@@ -129,9 +129,10 @@ export async function fetchWithAuth(url, options = {}) {
       );
     }
   
-    // ✅ Always return here, don't try to redirect if app is null
+    // ✅ Always return here; do NOT use app if it's null
     return;
-  }  
+  }
+  
   
 
   let data;
