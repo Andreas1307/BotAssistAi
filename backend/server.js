@@ -1163,8 +1163,17 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-app.get("/shopify", (req, res) => {
-  const { host } = req.query;
+app.get("/shopify", async (req, res) => {
+  const { shop, host } = req.query;
+  if (!shop || !host) return res.status(400).send("Missing shop or host");
+
+  // 🔍 check if shop already installed
+  const [rows] = await pool.query(
+    "SELECT 1 FROM shopify_installs WHERE shop = ? LIMIT 1",
+    [shop]
+  );
+
+  const needsInstall = rows.length === 0;
 
   res.status(200).send(`
 <!DOCTYPE html>
@@ -1173,21 +1182,25 @@ app.get("/shopify", (req, res) => {
     <meta charset="utf-8" />
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+      window.__NEEDS_INSTALL__ = ${needsInstall ? "true" : "false"};
+    </script>
   </head>
   <body>
     <script>
-      var app = shopify.createApp({
+      window.app = shopify.createApp({
         apiKey: "${process.env.SHOPIFY_API_KEY}",
         host: "${host}",
         forceRedirect: true
       });
     </script>
 
-    <div id="app">Loading…</div>
+    <div id="app">Loading Shopify App…</div>
   </body>
 </html>
   `);
 });
+
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;

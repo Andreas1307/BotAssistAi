@@ -11,11 +11,14 @@ export function initShopifyAppBridge() {
   const host = params.get("host");
   if (!host) return null;
 
-  return createApp({
+  const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: true,
   });
+
+  window.appBridge = app; // 🔥 REQUIRED
+  return app;
 }
 
 export function getAppBridgeInstance() {

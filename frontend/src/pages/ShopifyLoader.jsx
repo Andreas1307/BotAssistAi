@@ -6,11 +6,10 @@ export default function ShopifyLoader() {
   useEffect(() => {
     const app = initShopifyAppBridge();
     if (!app) return;
-  
+
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
-  
-    // ❗ Only redirect if you KNOW user is not installed
+
     if (window.__NEEDS_INSTALL__ === true && shop) {
       const redirect = Redirect.create(app);
       redirect.dispatch(
@@ -19,6 +18,6 @@ export default function ShopifyLoader() {
       );
     }
   }, []);
-  
+
   return <div>Loading Shopify App…</div>;
 }
