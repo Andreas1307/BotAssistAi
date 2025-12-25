@@ -3335,6 +3335,11 @@ Prefer action-oriented answers over explanations.
         4. Satisfied
         5. Very Satisfied
       `;
+
+
+
+      console.log( aiResponse, satisfactionPrompt, responseTime, 
+      )
   
       setTimeout(() => {
           res.json({ 
