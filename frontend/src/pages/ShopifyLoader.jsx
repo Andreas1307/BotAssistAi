@@ -9,15 +9,16 @@ export default function ShopifyLoader() {
 
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
+    const host = params.get("host");
 
-    if (!shop) return;
+    if (!shop || !host) return;
 
     const redirect = Redirect.create(app);
 
-    // ✅ Always let backend decide install vs dashboard
+    // ✅ Let backend decide install vs dashboard
     redirect.dispatch(
       Redirect.Action.REMOTE,
-      `/shopify/install?shop=${shop}`
+      `/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
   }, []);
 
