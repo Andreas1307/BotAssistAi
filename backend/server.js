@@ -1200,11 +1200,7 @@ app.use((req, res, next) => {
 app.get('/shopify/callback', async (req, res) => {
   try {
 
-    const cookieHeader = req.headers.cookie || "";
-    const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
-    const hasAppState = cookieHeader.includes("shopify_app_state");
-    const hasTopLevel = cookieHeader.includes("shopify_toplevel");
-  
+   console.log("KKEOFKSDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDFDSFDS")
   
     const { session } = await shopify.auth.callback({
       rawRequest: req,
