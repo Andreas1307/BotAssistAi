@@ -3338,7 +3338,7 @@ Prefer action-oriented answers over explanations.
 
 
 
-      console.log( aiResponse, satisfactionPrompt, responseTime, 
+      console.log( aiResponse, "HELOOOOOOOOOOOO"
       )
   
       setTimeout(() => {
