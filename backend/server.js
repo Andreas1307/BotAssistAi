@@ -1163,17 +1163,18 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-app.get("/shopify", async (req, res) => {
+app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
 
-  const sessions = await shopify.session.findSessionsByShop(shop);
-
-  if (!sessions || sessions.length === 0) {
-    return res.redirect(`/shopify/install?shop=${shop}&host=${host || ""}`);
+  if (!shop) {
+    return res.status(400).send("Missing shop parameter");
   }
 
-  return res.redirect(`/shopify/dashboard?shop=${shop}&host=${host || ""}`);
+  // Always start install from backend
+  return res.redirect(
+    302,
+    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+  );
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1269,7 +1270,7 @@ if (req.query.host) {
           shopify_installed_at = NOW()
         `,
         [
-          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
+          username,        // guaranteed unique, but no longer relied on
           email,
           hashedPassword,
           encryptedKey,
