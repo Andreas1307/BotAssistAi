@@ -1175,14 +1175,11 @@ app.get("/shopify", (req, res) => {
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        if (window.shopify) {
-          window.app = shopify.createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-        }
+      // ✅ Initialize App Bridge synchronously for Shopify check
+      var app = shopify.createApp({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: "${host}",
+        forceRedirect: true
       });
     </script>
   </head>
