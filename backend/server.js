@@ -1167,16 +1167,16 @@ app.get("/shopify", (req, res) => {
   const { host } = req.query;
   if (!host) return res.status(400).send("Missing host");
 
-  res.send(`
+  res.status(200).send(`
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
-    <h3>BotAssistAI is loading…</h3>
+    <div>Loading BotAssistAI…</div>
 
     <script>
       const app = shopify.createApp({
@@ -1185,26 +1185,16 @@ app.get("/shopify", (req, res) => {
         forceRedirect: false
       });
 
-      // 🔑 THIS creates the embedded session Shopify wants
-      fetch("shopify:admin/api/2024-07/graphql.json", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: "{ shop { name } }"
-        })
-      })
-      .then(r => r.json())
-      .then(() => {
-        console.log("✅ Embedded session OK");
-      })
-      .catch(err => {
-        console.error("❌ Embedded session failed", err);
+      // ✅ Touch App Bridge so Shopify sees an embedded session
+      app.dispatch({
+        type: "APP::INITIALIZED"
       });
     </script>
   </body>
 </html>
   `);
 });
+
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
