@@ -1201,7 +1201,6 @@ app.get("/shopify", async (req, res) => {
   `);
 });
 
-
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
