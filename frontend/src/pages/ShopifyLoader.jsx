@@ -6,15 +6,14 @@ export default function ShopifyLoader() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (!shop || !host) return;
+    if (!shop) return;
 
-    // ✅ Force top-level redirect for install or dashboard
-    const targetUrl = `/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    
+    // ✅ If in iframe, redirect top window
     if (window.top !== window.self) {
-      window.top.location.href = targetUrl; // top-level required for OAuth
+      window.top.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     } else {
-      window.location.href = targetUrl;
+      // ✅ Otherwise, just redirect normally
+      window.location.href = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     }
   }, []);
 
