@@ -9,15 +9,16 @@ export default function ShopifyLoader() {
   
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
-    const host = params.get("host");
   
-    if (!shop) return;
-  
-    const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/install?shop=${shop}&host=${host}`
-    );
+    // ❗ Only redirect if you KNOW user is not installed
+    if (window.__NEEDS_INSTALL__ === true && shop) {
+      const redirect = Redirect.create(app);
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        `/shopify/install?shop=${shop}`
+      );
+    }
   }, []);
+  
   return <div>Loading Shopify App…</div>;
 }

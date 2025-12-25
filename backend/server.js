@@ -1164,37 +1164,28 @@ app.get("/shopify/auth", (req, res) => {
 });
 */
 app.get("/shopify", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop || !host) {
-    return res.status(400).send("Missing shop or host");
-  }
+  const { host } = req.query;
 
-  return res.status(200).send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8"/>
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <script>
-          (function () {
-            const app = shopify.createApp({
-              apiKey: "${process.env.SHOPIFY_API_KEY}",
-              host: "${host}",
-              forceRedirect: true
-            });
+  res.status(200).send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+    <script>
+      var app = shopify.createApp({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: "${host}",
+        forceRedirect: true
+      });
+    </script>
 
-            shopify.redirect({
-              app,
-              url: "/shopify/install?shop=${shop}&host=${host}",
-              target: "ADMIN_PATH"
-            });
-          })();
-        </script>
-      </body>
-    </html>
+    <div id="app">Loading…</div>
+  </body>
+</html>
   `);
 });
 

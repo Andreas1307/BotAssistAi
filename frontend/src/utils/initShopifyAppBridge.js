@@ -5,26 +5,18 @@ import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
  */
-function isEmbedded() {
-  return window.top !== window.self;
-}
 
 export function initShopifyAppBridge() {
-  if (window.top === window.self) return null;
-
-  const host = new URLSearchParams(window.location.search).get("host");
+  const params = new URLSearchParams(window.location.search);
+  const host = params.get("host");
   if (!host) return null;
 
-  const app = createApp({
+  return createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
     forceRedirect: true,
   });
-
-  window.appBridge = app;
-  return app;
 }
-
 
 export function getAppBridgeInstance() {
   return window.appBridge || null;
@@ -45,7 +37,6 @@ export function safeRedirect(url) {
     window.location.href = url;
   }
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
 
