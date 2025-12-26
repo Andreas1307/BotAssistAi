@@ -2840,14 +2840,15 @@ function generateRandomToken() {
 }
 let userData = {};  
 let userConversationState = {};
-let user_id;
-const conversationId = `${user_id}-${generateRandomToken()}`;
+
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post("/ask-ai", async (req, res) => {
   console.log("🧠 Incoming /ask-ai request body:", req.body);
   console.log("🧾 Headers:", req.headers);
   try {
+    
+    
 
     const isShopify = !!req.shopify;
     const shop = req.shopify?.shop;
@@ -2865,7 +2866,8 @@ app.post("/ask-ai", async (req, res) => {
           return false;
         }
       });
-  
+      const userId = user.user_id;
+      const conversationId = `${userId}-${generateRandomToken()}`;
   
       if (!user) {
         console.log("Invalid API keyiuioho")
@@ -2873,8 +2875,6 @@ app.post("/ask-ai", async (req, res) => {
       }
   
   
-  const userId = user.user_id
-  user_id = userId
   if (!userData[conversationId]) {
     userData[conversationId] = {
       serviceName: "",
