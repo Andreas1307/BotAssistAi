@@ -1165,9 +1165,12 @@ app.get("/shopify/auth", (req, res) => {
 */
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
 
-  // Redirect to install flow
+  if (!shop) {
+    return res.status(400).send("Missing shop parameter");
+  }
+
+  // Always start install from backend
   return res.redirect(
     302,
     `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
@@ -1197,6 +1200,12 @@ app.use((req, res, next) => {
 app.get('/shopify/callback', async (req, res) => {
   try {
 
+    const cookieHeader = req.headers.cookie || "";
+    const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
+    const hasAppState = cookieHeader.includes("shopify_app_state");
+    const hasTopLevel = cookieHeader.includes("shopify_toplevel");
+  
+  
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1382,34 +1391,35 @@ if (req.query.host) {
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
 return res.status(200).send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8"/>
-      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    </head>
-    <body>
-      <script>
-  (function () {
-    const app = shopify.createApp({
-      apiKey: "${process.env.SHOPIFY_API_KEY}",
-      host: "${host}",
-      forceRedirect: true
-    });
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+  </head>
+  <body>
+    <script>
+      (function() {
+        const AppBridge = window['app-bridge'];
+        const createApp = AppBridge.default;
+        const Redirect = AppBridge.actions.Redirect;
 
-    shopify.redirect({
-      app,
-      url: "/shopify/dashboard?shop=${shop}&host=${host}",
-      target: "ADMIN_PATH"
-    });
-  })();
-</script>
+        const app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${host}",
+          forceRedirect: true
+        });
 
-    </body>
-  </html>
-  `);
-  
+        const redirect = Redirect.create(app);
+        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
+      })();
+    </script>
+  </body>
+</html>
+`);
+
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1453,6 +1463,7 @@ return res.status(200).send(`
   }
   
 }); 
+
 
 
 app.get("/debug/cookies", (req, res) => {

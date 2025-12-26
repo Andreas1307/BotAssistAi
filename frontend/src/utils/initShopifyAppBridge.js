@@ -5,19 +5,30 @@ import directory from "../directory";
 /**
  * Detect if running inside Shopify iframe
  */
+function isEmbedded() {
+  return window.top !== window.self;
+}
 
-export function initShopifyAppBridge() {
-  const params = new URLSearchParams(window.location.search);
-  const host = params.get("host");
-  if (!host) return null;
+export async function initShopifyAppBridge() {
+  if (window.top === window.self) {
+    console.log("❌ Not embedded → skipping App Bridge");
+    return null;
+  }
+
+  const host = new URLSearchParams(window.location.search).get("host");
+  if (!host) {
+    console.warn("❌ Missing host param → cannot init App Bridge");
+    return null;
+  }
 
   const app = createApp({
     apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
     host,
-    forceRedirect: true,
+    forceRedirect: true, // important for embedded apps
   });
 
-  window.appBridge = app; // 🔥 REQUIRED
+  window.appBridge = app; // store globally
+  console.log("✅ App Bridge initialized");
   return app;
 }
 
@@ -25,20 +36,23 @@ export function getAppBridgeInstance() {
   return window.appBridge || null;
 }
 
-export function safeRedirect(url) {
-  const app = getAppBridgeInstance();
-  if (!url) return;
+export function safeRedirect(url, fallbackShop = null) {
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get("shop") || fallbackShop;
+  const host = params.get("host");
+  const app = window.appBridge;
 
-  if (app) {
+  if (!url) return console.error("❌ safeRedirect called without URL");
+
+  if (app && host) {
     const redirect = Redirect.create(app);
     redirect.dispatch(Redirect.Action.REMOTE, url);
     return;
   }
 
-  // ONLY allowed when NOT embedded
-  if (window.top === window.self) {
-    window.location.href = url;
-  }
+
+  // Normal redirect
+  window.location.href = url;
 }
 
 export async function fetchWithAuth(url, options = {}) {
@@ -48,7 +62,7 @@ export async function fetchWithAuth(url, options = {}) {
   try {
     const app = await getAppBridgeInstance();
     if (app) {
-      token = await getSessionToken(window.appBridge);
+      token = await getSessionToken(app);
       window.sessionToken = token;
     } else {
       console.warn("⚠️ App Bridge not initialized — cannot get JWT");
@@ -99,36 +113,40 @@ export async function fetchWithAuth(url, options = {}) {
     return fetchWithAuth(url, { ...options, _retried: true });
   }
 
-  if (res.status === 401) {
-    console.warn("❌ Unauthorized — forcing Shopify re-auth");
-  
-    const app = getAppBridgeInstance();
-    if (app) {
-      let shopFromToken = null;
-  
-      try {
-        const token = await getSessionToken(app);
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        shopFromToken = payload.dest
-          .replace("https://", "")
-          .replace("/admin", "");
-      } catch (e) {
-        console.warn("⚠️ Could not parse JWT for shop", e);
-      }
-  
-      const redirect = Redirect.create(app);
-      redirect.dispatch(
-        Redirect.Action.APP,
-        `/shopify/auth${shopFromToken ? `?shop=${shopFromToken}` : ""}`
-      );
+  // 7b️⃣ If still 401 after retry → trigger OAuth re-auth
+if (res.status === 401) {
+  console.warn("❌ Still unauthorized after retry — forcing Shopify re-auth");
+
+  const app = getAppBridgeInstance();
+  if (app) {
+    const redirect = Redirect.create(app);
+
+    // Extract shop from token
+    let shopFromToken = null;
+    try {
+      const token = await getSessionToken(app);
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      shopFromToken = payload.dest
+        .replace("https://", "")
+        .replace("/admin", "");
+    } catch (e) {
+      console.warn("⚠️ Could not parse JWT for shop", e);
     }
-  
-    // ✅ Always return here; do NOT use app if it's null
+
+    redirect.dispatch(
+      Redirect.Action.APP,
+      `/shopify/auth?shop=${shopFromToken}`
+    );
+
     return;
   }
-  
-  
 
+  // fallback: hard redirect
+  window.top.location.href = `/shopify/auth`;
+  return;
+}
+
+  // 8️⃣ Handle response
   let data;
   const contentType = res.headers.get("Content-Type") || "";
 
