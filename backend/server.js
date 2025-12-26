@@ -2900,16 +2900,16 @@ let MAX_TOKENS;
 
 if (plan === "Free") {
   MODEL = "gpt-5-mini";
-  TEMPERATURE = 0.2;     // more stable, less hallucination
+  TEMPERATURE = 1;     // more stable, less hallucination
   MAX_TOKENS = 60;       // short & cheap
 } else if (plan === "Pro") {
   MODEL = "gpt-5-mini";
-  TEMPERATURE = 0.35;    // more natural & helpful
+  TEMPERATURE = 1;    // more natural & helpful
   MAX_TOKENS = 100;       // better explanations
 } else {
   // safety fallback
   MODEL = "gpt-5-mini";
-  TEMPERATURE = 0.25;
+  TEMPERATURE = 1;
   MAX_TOKENS = 60;
 }
 
@@ -3088,7 +3088,7 @@ Prefer action-oriented answers over explanations.
           { role: "user", content: userMessage }
         ],
         temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS
+        max_completion_tokens: MAX_TOKENS
       });
       
   
