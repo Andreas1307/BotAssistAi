@@ -1179,16 +1179,14 @@ app.get("/shopify", (req, res) => {
     <div>Loading BotAssistAI…</div>
 
     <script>
-      const app = shopify.createApp({
+      // ⚠️ DO NOT trigger auth
+      shopify.createApp({
         apiKey: "${process.env.SHOPIFY_API_KEY}",
         host: "${host}",
         forceRedirect: false
       });
 
-      // ✅ Touch App Bridge so Shopify sees an embedded session
-      app.dispatch({
-        type: "APP::INITIALIZED"
-      });
+      // ✅ STOP HERE. Nothing else.
     </script>
   </body>
 </html>
