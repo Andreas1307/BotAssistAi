@@ -1452,7 +1452,6 @@ return res.redirect(302, redirectUrl);
 }); 
 
 
-
 app.get("/debug/cookies", (req, res) => {
   res.json({
     headersCookie: req.headers.cookie || null,
