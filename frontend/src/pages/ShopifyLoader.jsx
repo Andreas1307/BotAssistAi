@@ -11,7 +11,7 @@ export default function ShopifyLoader() {
     if (!shop) return;
 
     safeRedirect(
-      `${directory}/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      `${directory}/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
     
 
