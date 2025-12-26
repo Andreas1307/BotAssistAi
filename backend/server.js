@@ -1409,6 +1409,7 @@ return res.status(200).send(`
 <html>
   <head>
     <meta charset="utf-8"/>
+     <meta name="shopify-api-key" content="${SHOPIFY_API_KEY}" />
    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
