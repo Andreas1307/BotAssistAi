@@ -1398,34 +1398,14 @@ if (req.query.host) {
 })();
 
 
-return res.status(200).send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-  </head>
-  <body>
-    <script>
-      const AppBridge = window['app-bridge'];
-      const createApp = AppBridge.default;
-      const Redirect = AppBridge.actions.Redirect;
+const shopSlug = shop.replace(".myshopify.com", "");
 
-      const app = createApp({
-        apiKey: "${process.env.SHOPIFY_API_KEY}",
-        host: "${host}",
-        forceRedirect: true
-      });
+const redirectUrl =
+  `https://admin.shopify.com/store/${shopSlug}` +
+  `/apps/botassistai?host=${encodeURIComponent(host)}`;
 
-      Redirect.create(app).dispatch(
-        Redirect.Action.APP,
-        "/"
-      );
-    </script>
-  </body>
-</html>
-`);
+return res.redirect(302, redirectUrl);
+
 
 
   } catch (err) {
