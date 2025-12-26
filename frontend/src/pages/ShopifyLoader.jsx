@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import createApp from "@shopify/app-bridge";
-import { Redirect } from "@shopify/app-bridge/actions";
 
 export default function ShopifyLoader() {
   useEffect(() => {
@@ -10,22 +8,14 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // ✅ MUST initialize App Bridge here
-    const app = createApp({
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-      host,
-      forceRedirect: true,
-    });
-
-    // 🔁 Kick off install ONLY if needed
-    const redirect = Redirect.create(app);
-    redirect.dispatch(
-      Redirect.Action.REMOTE,
-      `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-        shop
-      )}&host=${encodeURIComponent(host)}`
-    );
+    // If inside iframe, redirect top window
+    const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+    if (window.top !== window.self) {
+      window.top.location.href = installUrl;
+    } else {
+      window.location.href = installUrl;
+    }
   }, []);
 
-  return <div>Installing BotAssistAI…</div>;
+  return <div>Loading Shopify App…</div>;
 }
