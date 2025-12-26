@@ -1163,28 +1163,18 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-app.get("/shopify/auth", (req, res) => {
+app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
 
-  // Force top-level navigation
-  return res.status(200).send(`
-    <!doctype html>
-    <html>
-      <head><meta charset="utf-8"/></head>
-      <body>
-        <script>
-          if (window.top === window.self) {
-            window.location.href =
-              "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-          } else {
-            window.top.location.href =
-              "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
-          }
-        </script>
-      </body>
-    </html>
-  `);
+  if (!shop) {
+    return res.status(400).send("Missing shop parameter");
+  }
+
+  // Always start install from backend
+  return res.redirect(
+    302,
+    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+  );
 });
 
 app.get("/shopify/install", async (req, res) => {
@@ -1397,12 +1387,39 @@ if (req.query.host) {
   }
 })();
 
-const redirectUrl =
-  `https://www.botassistai.com/shopify?` +
-  `shop=${encodeURIComponent(shop)}` +
-  `&host=${encodeURIComponent(host)}`;
 
-return res.redirect(302, redirectUrl);
+const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
+
+return res.status(200).send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+  </head>
+  <body>
+   <script>
+  (function() {
+    const AppBridge = window['app-bridge'];
+    const createApp = AppBridge.default;
+    const app = createApp({
+      apiKey: "${process.env.SHOPIFY_API_KEY}",
+      host: "${host}",
+      forceRedirect: true
+    });
+
+    // Use AppBridge Redirect correctly for embedded apps
+    const redirect = AppBridge.actions.Redirect.create(app);
+    redirect.dispatch(
+      AppBridge.actions.Redirect.Action.APP,
+      "www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}"
+    );
+  })();
+</script>
+  </body>
+</html>
+`);
+
 
 
   } catch (err) {
