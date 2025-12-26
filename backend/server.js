@@ -1377,35 +1377,36 @@ if (req.query.host) {
 
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
-return res.send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8"/>
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-    </head>
-    <body>
-      <script>
+return res.status(200).send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+  </head>
+  <body>
+    <script>
+      (function() {
         const AppBridge = window['app-bridge'];
         const createApp = AppBridge.default;
         const Redirect = AppBridge.actions.Redirect;
-  
+
         const app = createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: "${host}",
           forceRedirect: true
         });
-  
-        Redirect.create(app).dispatch(
-          Redirect.Action.ADMIN_PATH,
-          "/shopify/dashboard"
-        );
-      </script>
-    </body>
-  </html>
-  `);
-  
+
+        const redirect = Redirect.create(app);
+        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
+      })();
+    </script>
+  </body>
+</html>
+`);
+
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
