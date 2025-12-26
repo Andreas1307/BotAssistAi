@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import { safeRedirect } from "../utils/initShopifyAppBridge";
-import directory from "../directory";
 
 export default function ShopifyLoader() {
   useEffect(() => {
@@ -8,14 +6,20 @@ export default function ShopifyLoader() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (!shop) return;
+    if (!shop || !host) return;
 
-    safeRedirect(
-      `${directory}/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
-    );
-    
+    const installUrl =
+      `https://api.botassistai.com/shopify/install` +
+      `?shop=${encodeURIComponent(shop)}` +
+      `&host=${encodeURIComponent(host)}`;
 
+    // 🔑 MUST be top-level
+    if (window.top === window.self) {
+      window.location.href = installUrl;
+    } else {
+      window.top.location.href = installUrl;
+    }
   }, []);
 
-  return <div>Loading Shopify App…</div>;
+  return <div>Installing BotAssistAI…</div>;
 }
