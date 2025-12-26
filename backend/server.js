@@ -1165,9 +1165,7 @@ app.get("/shopify/auth", (req, res) => {
 */
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
-  if (!shop || !host) {
-    return res.status(400).send("Missing shop or host");
-  }
+  if (!shop || !host) return res.status(400).send("Missing shop or host");
 
   res.status(200).send(`
 <!DOCTYPE html>
@@ -1178,26 +1176,20 @@ app.get("/shopify", (req, res) => {
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
-    <div>Loading BotAssistAI…</div>
+    <div id="root">Loading BotAssistAI…</div>
 
     <script>
-      const app = shopify.createApp({
+      // ✅ ONLY purpose: satisfy embedded check
+      shopify.createApp({
         apiKey: "${process.env.SHOPIFY_API_KEY}",
         host: "${host}",
         forceRedirect: true
-      });
-
-      // ✅ use App Bridge Redirect
-      shopify.redirect({
-        app,
-        url: "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
       });
     </script>
   </body>
 </html>
 `);
 });
-
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
@@ -1433,9 +1425,10 @@ return res.status(200).send(`
     // Use AppBridge Redirect correctly for embedded apps
     const redirect = AppBridge.actions.Redirect.create(app);
     redirect.dispatch(
-      AppBridge.actions.Redirect.Action.APP,
-      "www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}"
-    );
+  Redirect.Action.REMOTE,
+  "https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}"
+);
+
   })();
 </script>
   </body>
