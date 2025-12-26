@@ -1163,19 +1163,6 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-app.get("/shopify", (req, res) => {
-  const { shop, host } = req.query;
-
-  if (!shop) {
-    return res.status(400).send("Missing shop parameter");
-  }
-
-  // Always start install from backend
-  return res.redirect(
-    302,
-    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
-  );
-});
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
@@ -1390,36 +1377,35 @@ if (req.query.host) {
 
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
-return res.status(200).send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-  </head>
-  <body>
-    <script>
-      (function() {
+return res.send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+    </head>
+    <body>
+      <script>
         const AppBridge = window['app-bridge'];
         const createApp = AppBridge.default;
         const Redirect = AppBridge.actions.Redirect;
-
+  
         const app = createApp({
           apiKey: "${process.env.SHOPIFY_API_KEY}",
           host: "${host}",
           forceRedirect: true
         });
-
-        const redirect = Redirect.create(app);
-        redirect.dispatch(Redirect.Action.ADMIN_PATH, "/shopify/dashboard?shop=${shop}&host=${host}");
-      })();
-    </script>
-  </body>
-</html>
-`);
-
-
+  
+        Redirect.create(app).dispatch(
+          Redirect.Action.ADMIN_PATH,
+          "/shopify/dashboard"
+        );
+      </script>
+    </body>
+  </html>
+  `);
+  
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
