@@ -1164,29 +1164,15 @@ app.get("/shopify/auth", (req, res) => {
 });
 */
 app.get("/shopify", (req, res) => {
-  const { host } = req.query;
-  if (!host) return res.status(400).send("Missing host");
+  const { shop, host } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
 
-  res.status(200).send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-  </head>
-  <body>
-    <div>Loading BotAssistAI…</div>
-
-    <!-- DO NOT LOAD APP BRIDGE -->
-    <!-- DO NOT CALL shopify.createApp -->
-    <!-- DO NOT AUTH -->
-    <!-- DO NOT REDIRECT -->
-
-  </body>
-</html>
-  `);
+  // Redirect to install flow
+  return res.redirect(
+    302,
+    `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`
+  );
 });
-
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
