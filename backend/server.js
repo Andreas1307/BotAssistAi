@@ -1163,6 +1163,8 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
+
+
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
 
@@ -2852,7 +2854,8 @@ app.post("/ask-ai", async (req, res) => {
     const userType = isShopify ? "shopify" : "standard";
 
     let aiResponse;
-      const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
+    const { apiKey, message, model = "gpt-5-mini", temperature = 0.1, ...updates } = req.body;
+
  
       const [users] = await pool.query("SELECT * FROM users")
       const user = users.find((u) => {
@@ -3059,7 +3062,7 @@ Never refer users to another page unless explicitly asked.`;
               { role: "user", content: userMessage }
           ],
           temperature: temperature,
-          max_tokens: 40
+          max_tokens: 80
       });
   
       const endTime = Date.now(); 
