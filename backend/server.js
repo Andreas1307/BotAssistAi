@@ -1397,15 +1397,12 @@ if (req.query.host) {
   }
 })();
 
-
-const shopSlug = shop.replace(".myshopify.com", "");
-
 const redirectUrl =
-  `https://admin.shopify.com/store/${shopSlug}` +
-  `/apps/botassistai?host=${encodeURIComponent(host)}`;
+  `https://www.botassistai.com/shopify?` +
+  `shop=${encodeURIComponent(shop)}` +
+  `&host=${encodeURIComponent(host)}`;
 
 return res.redirect(302, redirectUrl);
-
 
 
   } catch (err) {
