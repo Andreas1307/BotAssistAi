@@ -1173,25 +1173,20 @@ app.get("/shopify", (req, res) => {
   <head>
     <meta charset="utf-8" />
     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
     <div>Loading BotAssistAI…</div>
 
-    <script>
-      // ⚠️ DO NOT trigger auth
-      shopify.createApp({
-        apiKey: "${process.env.SHOPIFY_API_KEY}",
-        host: "${host}",
-        forceRedirect: false
-      });
+    <!-- DO NOT LOAD APP BRIDGE -->
+    <!-- DO NOT CALL shopify.createApp -->
+    <!-- DO NOT AUTH -->
+    <!-- DO NOT REDIRECT -->
 
-      // ✅ STOP HERE. Nothing else.
-    </script>
   </body>
 </html>
   `);
 });
+
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
