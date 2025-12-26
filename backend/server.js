@@ -3062,7 +3062,7 @@ Never refer users to another page unless explicitly asked.`;
               { role: "user", content: userMessage }
           ],
           temperature: temperature,
-          max_tokens: 80
+          max_completion_tokens: 80
       });
   
       const endTime = Date.now(); 
