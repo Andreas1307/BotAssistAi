@@ -1164,17 +1164,28 @@ app.get("/shopify/auth", (req, res) => {
 });
 */
 
-app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
+app.get("/shopify/auth", (req, res) => {
+  const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  return shopify.auth.begin({
-    shop,
-    isOnline: false,
-    callbackPath: "/shopify/callback",
-    rawRequest: req,
-    rawResponse: res,
-  });
+  // Force top-level navigation
+  return res.status(200).send(`
+    <!doctype html>
+    <html>
+      <head><meta charset="utf-8"/></head>
+      <body>
+        <script>
+          if (window.top === window.self) {
+            window.location.href =
+              "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+          } else {
+            window.top.location.href =
+              "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}";
+          }
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.use((req, res, next) => {
@@ -1375,13 +1386,35 @@ if (req.query.host) {
 })();
 
 
-const shopSlug = shop.replace(".myshopify.com", "");
-
-const embeddedAdminUrl =
-  `https://admin.shopify.com/store/${shopSlug}` +
-  `/apps/botassistai?host=${encodeURIComponent(host)}`;
-
-return res.redirect(302, embeddedAdminUrl);
+return res.status(200).send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+    </head>
+    <body>
+      <script>
+        const AppBridge = window['app-bridge'];
+        const createApp = AppBridge.default;
+        const Redirect = AppBridge.actions.Redirect;
+  
+        const app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${host}",
+          forceRedirect: true
+        });
+  
+        Redirect.create(app).dispatch(
+          Redirect.Action.APP,
+          "/"
+        );
+      </script>
+    </body>
+  </html>
+  `);
+  
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
