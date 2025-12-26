@@ -2922,7 +2922,7 @@ if (plan === "Free") {
           return res.status(400).json({ error: "Daily conversation limit reached." });
         }        
       }
-  
+  console.log("cum este BOTUL", accountType[0].apiBot)
       if(accountType[0].apiBot === 0) {
         console.log("ACC typr: ", accountType[0].apiBot)
         aiResponse = "Bot is disabled"
@@ -3118,7 +3118,7 @@ Prefer action-oriented answers over explanations.
       const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [userId])
   
        aiResponse = response.choices[0].message.content;
-  
+  console.log("responsiiii", aiResponse)
       
       console.log("Parsed Date:", chrono.parseDate("May 7", new Date(), { forwardDate: true }));
   
