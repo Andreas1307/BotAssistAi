@@ -3361,6 +3361,9 @@ Prefer action-oriented answers over explanations.
         4. Satisfied
         5. Very Satisfied
       `;
+
+
+      console.log("REEEEEEEEEEEEESSSSSSSSSSPPPPPPPPPPPOOOOOOOOONNNSE", aiResponse)
   
       setTimeout(() => {
           res.json({ 
