@@ -1163,7 +1163,6 @@ app.get("/shopify/auth", (req, res) => {
   `);
 });
 */
-
 app.get("/shopify/auth", (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
@@ -1186,6 +1185,19 @@ app.get("/shopify/auth", (req, res) => {
       </body>
     </html>
   `);
+});
+
+app.get("/shopify/install", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  return shopify.auth.begin({
+    shop,
+    isOnline: false,
+    callbackPath: "/shopify/callback",
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.use((req, res, next) => {
@@ -1387,34 +1399,34 @@ if (req.query.host) {
 
 
 return res.status(200).send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8"/>
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
-    </head>
-    <body>
-      <script>
-        const AppBridge = window['app-bridge'];
-        const createApp = AppBridge.default;
-        const Redirect = AppBridge.actions.Redirect;
-  
-        const app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true
-        });
-  
-        Redirect.create(app).dispatch(
-          Redirect.Action.APP,
-          "/"
-        );
-      </script>
-    </body>
-  </html>
-  `);
-  
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+    <script src="https://unpkg.com/@shopify/app-bridge/actions"></script>
+  </head>
+  <body>
+    <script>
+      const AppBridge = window['app-bridge'];
+      const createApp = AppBridge.default;
+      const Redirect = AppBridge.actions.Redirect;
+
+      const app = createApp({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: "${host}",
+        forceRedirect: true
+      });
+
+      Redirect.create(app).dispatch(
+        Redirect.Action.APP,
+        "/"
+      );
+    </script>
+  </body>
+</html>
+`);
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
