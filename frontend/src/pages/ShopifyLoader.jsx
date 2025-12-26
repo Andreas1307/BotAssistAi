@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { safeRedirect } from "../utils/initShopifyAppBridge";
+import directory from "../directory";
 
 export default function ShopifyLoader() {
   useEffect(() => {
@@ -10,7 +11,7 @@ export default function ShopifyLoader() {
     if (!shop) return;
 
     safeRedirect(
-      `/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      `${directory}/shopify/auth?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
     
 
