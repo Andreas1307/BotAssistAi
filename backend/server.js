@@ -1166,7 +1166,7 @@ app.get("/shopify/auth", (req, res) => {
 app.get("/shopify", (req, res) => {
   const { host } = req.query;
 
-  res.status(200).send(`
+  res.status(200).type("html").send(`
 <!DOCTYPE html>
 <html>
   <head>
@@ -1175,10 +1175,7 @@ app.get("/shopify", (req, res) => {
     <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   </head>
   <body>
-    <div id="root">Loading BotAssistAI…</div>
-
     <script>
-      // ✅ THIS is what the checker looks for
       shopify.createApp({
         apiKey: "${process.env.SHOPIFY_API_KEY}",
         host: "${host}",
@@ -1189,7 +1186,6 @@ app.get("/shopify", (req, res) => {
 </html>
 `);
 });
-
 
 app.get("/shopify/install", async (req, res) => {
   const { shop } = req.query;
@@ -1474,6 +1470,7 @@ return res.status(200).send(`
   }
   
 }); 
+
 
 
 app.get("/debug/cookies", (req, res) => {
