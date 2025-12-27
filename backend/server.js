@@ -1194,12 +1194,10 @@ app.get("/shopify", (req, res) => {
       const redirect = Redirect.create(app);
 
       // 🔁 Redirect to your backend install endpoint
- redirect.dispatch(
-  Redirect.Action.APP,
-  '/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
-);
-
-
+      redirect.dispatch(
+        Redirect.Action.REMOTE,
+        "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+      );
     </script>
   </body>
 </html>
@@ -1228,8 +1226,13 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-  
 
+    const cookieHeader = req.headers.cookie || "";
+    const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
+    const hasAppState = cookieHeader.includes("shopify_app_state");
+    const hasTopLevel = cookieHeader.includes("shopify_toplevel");
+  
+  
     const { session } = await shopify.auth.callback({
       rawRequest: req,
       rawResponse: res,
@@ -1294,7 +1297,7 @@ if (req.query.host) {
           shopify_installed_at = NOW()
         `,
         [
-          username,
+          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
           email,
           hashedPassword,
           encryptedKey,
@@ -1314,6 +1317,7 @@ if (req.query.host) {
 
     }
 
+    // --- Log the user in via Passport BEFORE redirect
     await new Promise((resolve, reject) => {
       req.logIn(user, (err) => {
         if (err) return reject(err);
@@ -1325,6 +1329,7 @@ if (req.query.host) {
     });
 
 
+    // --- Save install info
     await pool.query(
       `INSERT INTO shopify_installs (shop, access_token, user_id, installed_at)
        VALUES (?, ?, ?, NOW())
@@ -1409,40 +1414,36 @@ if (req.query.host) {
   }
 })();
 
+
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
 return res.status(200).send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-    </head>
-    <body>
-      <script>
-        var AppBridge = window['app-bridge'];
-        var createApp = AppBridge.default;
-        var Redirect = AppBridge.actions.Redirect;
-  
-        var app = createApp({
-          apiKey: "${process.env.SHOPIFY_API_KEY}",
-          host: "${host}",
-          forceRedirect: true
-        });
-  
-        var redirect = Redirect.create(app);
-  
-        // ✅ Redirect INSIDE Shopify iframe
-        redirect.dispatch(
-          Redirect.Action.APP,
-          "/shopify/dashboard?shop=${shop}&host=${host}"
-        );
-      </script>
-    </body>
-  </html>
-  `);
-  
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+<script>
+  const app = shopify.createApp({
+    apiKey: "${process.env.SHOPIFY_API_KEY}",
+    host: "${host}",
+    forceRedirect: true
+  });
+
+  shopify.redirect.dispatch(
+    shopify.redirect.Action.REMOTE,
+    "https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}"
+  );
+</script>
+
+  </body>
+</html>
+`);
+
+
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
@@ -1486,6 +1487,7 @@ return res.status(200).send(`
   }
   
 }); 
+ 
 
 
 
