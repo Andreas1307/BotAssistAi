@@ -1417,9 +1417,38 @@ if (req.query.host) {
 
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
-return res.redirect(
-  `/shopify/dashboard?shop=${shop}&host=${host}`
-);
+return res.status(200).send(`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    </head>
+    <body>
+      <script>
+        var AppBridge = window['app-bridge'];
+        var createApp = AppBridge.default;
+        var Redirect = AppBridge.actions.Redirect;
+  
+        var app = createApp({
+          apiKey: "${process.env.SHOPIFY_API_KEY}",
+          host: "${host}",
+          forceRedirect: true
+        });
+  
+        var redirect = Redirect.create(app);
+  
+        // ✅ Redirect INSIDE Shopify iframe
+        redirect.dispatch(
+          Redirect.Action.APP,
+          "/shopify/dashboard?shop=${shop}&host=${host}"
+        );
+      </script>
+    </body>
+  </html>
+  `);
+  
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
