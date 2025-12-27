@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import directory from "../directory";
 
 export default function ShopifyLoader() {
   useEffect(() => {
@@ -9,44 +8,19 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // ✅ Prevent running multiple times
-    if (sessionStorage.getItem("shopify_oauth_started")) return;
-    sessionStorage.setItem("shopify_oauth_started", "true");
+    // 🔑 Build the install URL
+    const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
+      shop
+    )}&host=${encodeURIComponent(host)}`;
 
-    // ✅ If inside iframe, escape to top-level
+    // ✅ If inside an iframe, redirect the top window
     if (window.top !== window.self) {
-      window.top.location.href = `${directory}/shopify?shop=${encodeURIComponent(
-        shop
-      )}&host=${encodeURIComponent(host)}`;
-      return;
+      window.top.location.href = installUrl;
+    } else {
+      // ✅ If already top-level, redirect self
+      window.location.href = installUrl;
     }
-
-    // ✅ If already top-level, trigger App Bridge redirect
-    const script = document.createElement("script");
-    script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-    script.async = true;
-
-    script.onload = () => {
-      const AppBridge = window["ShopifyAppBridge"];
-      const createApp = AppBridge.createApp;
-      const Redirect = AppBridge.actions.Redirect;
-
-      const app = createApp({
-        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
-        host,
-        forceRedirect: true,
-      });
-
-      const redirect = Redirect.create(app);
-
-      redirect.dispatch(
-        Redirect.Action.APP,
-        `${directory}/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
-      );
-    };
-
-    document.body.appendChild(script);
   }, []);
 
-  return <div>Installing app…</div>;
+  return <div>Loading Shopify App…</div>;
 }
