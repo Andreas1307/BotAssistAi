@@ -8,22 +8,32 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // ✅ Shopify-approved: App Bridge redirect ONLY
-    if (window.ShopifyAppBridge) {
-      const app = window.ShopifyAppBridge.createApp({
+    // ⬇️ LOAD APP BRIDGE SCRIPT FIRST
+    const script = document.createElement("script");
+    script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+    script.async = true;
+
+    script.onload = () => {
+      const AppBridge = window["ShopifyAppBridge"];
+      const createApp = AppBridge.createApp;
+      const Redirect = AppBridge.actions.Redirect;
+
+      const app = createApp({
         apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY,
         host,
         forceRedirect: true,
       });
 
-      const Redirect = window.ShopifyAppBridge.actions.Redirect;
       const redirect = Redirect.create(app);
 
+      // ✅ THIS TRIGGERS INSTALL
       redirect.dispatch(
         Redirect.Action.APP,
         `/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
       );
-    }
+    };
+
+    document.body.appendChild(script);
   }, []);
 
   return <div>Installing app…</div>;
