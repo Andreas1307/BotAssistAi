@@ -1418,7 +1418,7 @@ if (req.query.host) {
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
 return res.redirect(
-  redirectUrl
+  `/shopify/dashboard?shop=${shop}&host=${host}`
 );
 
   } catch (err) {
