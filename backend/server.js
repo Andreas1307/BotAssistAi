@@ -1165,41 +1165,17 @@ app.get("/shopify/auth", (req, res) => {
 */
 
 
-app.get("/shopify", (req, res) => {
-  const { shop, host } = req.query;
-  if (!shop || !host) return res.status(400).send("Missing shop or host");
+app.get("/shopify", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).send("Missing shop");
 
-  // Shopify App Bridge redirect HTML
-  res.status(200).type("html").send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <script>
-          const AppBridge = window.ShopifyAppBridge;
-          const createApp = AppBridge.createApp;
-          const Redirect = AppBridge.actions.Redirect;
-
-          const app = createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
-
-          const redirect = Redirect.create(app);
-
-          redirect.dispatch(
-            Redirect.Action.APP,
-            "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-          );
-        </script>
-      </body>
-    </html>
-  `);
+  return shopify.auth.begin({
+    shop,
+    isOnline: false,
+    callbackPath: "/shopify/callback",
+    rawRequest: req,
+    rawResponse: res,
+  });
 });
 
 app.get("/shopify/install", async (req, res) => {
