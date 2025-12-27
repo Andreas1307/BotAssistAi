@@ -8,16 +8,23 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // 🚫 DO NOTHING inside Shopify iframe
-    if (window.top !== window.self) {
-      console.log("[ShopifyLoader] Embedded context detected — no redirect");
-      return;
-    }
+    // ✅ Shopify-approved: App Bridge redirect ONLY
+    if (window.ShopifyAppBridge) {
+      const app = window.ShopifyAppBridge.createApp({
+        apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
 
-    // ✅ Only allow redirect when opened OUTSIDE Shopify Admin
-    window.location.href =
-      `/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+      const Redirect = window.ShopifyAppBridge.actions.Redirect;
+      const redirect = Redirect.create(app);
+
+      redirect.dispatch(
+        Redirect.Action.APP,
+        `/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      );
+    }
   }, []);
 
-  return <div>Loading Shopify App…</div>;
+  return <div>Installing app…</div>;
 }
