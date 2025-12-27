@@ -1297,7 +1297,7 @@ if (req.query.host) {
           shopify_installed_at = NOW()
         `,
         [
-          `${username}_${shop}`,        // guaranteed unique, but no longer relied on
+          username,
           email,
           hashedPassword,
           encryptedKey,
@@ -1417,33 +1417,9 @@ if (req.query.host) {
 
 const redirectUrl = `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`;
 
-return res.status(200).send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-     <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-  </head>
-  <body>
-<script>
-  const app = shopify.createApp({
-    apiKey: "${process.env.SHOPIFY_API_KEY}",
-    host: "${host}",
-    forceRedirect: true
-  });
-
-  shopify.redirect.dispatch(
-    shopify.redirect.Action.REMOTE,
-    "https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}"
-  );
-</script>
-
-  </body>
-</html>
-`);
-
-
+return res.redirect(
+  redirectUrl
+);
 
   } catch (err) {
     console.error('❌ Shopify callback error:', err);
