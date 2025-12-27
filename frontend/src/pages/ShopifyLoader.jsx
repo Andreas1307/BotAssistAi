@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import directory from "../directory";
 
 export default function ShopifyLoader() {
   useEffect(() => {
@@ -18,7 +19,7 @@ export default function ShopifyLoader() {
       sessionStorage.setItem("shopify_oauth_started", "true");
 
       window.top.location.href =
-        `/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        `${directory}/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     }
   }, []);
 
