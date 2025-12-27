@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import directory from "../directory"; // your backend base URL
 
 export default function ShopifyLoader() {
   useEffect(() => {
@@ -8,16 +9,20 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // 🔑 Build the install URL
-    const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host)}`;
+    // Only run on first embedded entry
+    if (window.top !== window.self && !sessionStorage.getItem("shopify_oauth_started")) {
+      sessionStorage.setItem("shopify_oauth_started", "true");
 
-    // ✅ If inside an iframe, redirect the top window
-    if (window.top !== window.self) {
-      window.top.location.href = installUrl;
-    } else {
-      // ✅ If already top-level, redirect self
+      // Redirect top window to start OAuth
+      window.top.location.href = `${directory}/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+      return;
+    }
+
+    // Only trigger App Bridge redirect if top-level and not in OAuth already
+    if (window.top === window.self && !sessionStorage.getItem("shopify_oauth_started")) {
+      sessionStorage.setItem("shopify_oauth_started", "true");
+
+      const installUrl = `${directory}/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
       window.location.href = installUrl;
     }
   }, []);
