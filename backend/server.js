@@ -1167,40 +1167,38 @@ app.get("/shopify/auth", (req, res) => {
 
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
+  if (!shop || !host) return res.status(400).send("Missing shop or host");
 
-  if (!shop || !host) {
-    return res.status(400).send("Missing shop or host parameter");
-  }
-
-  // Render HTML that Shopify check expects
+  // Shopify App Bridge redirect HTML
   res.status(200).type("html").send(`
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-  </head>
-  <body>
-    <script>
-      // ✅ Shopify check looks for this exact pattern
-      const app = ShopifyAppBridge.createApp({
-        apiKey: "${process.env.SHOPIFY_API_KEY}",
-        host: "${host}",
-        forceRedirect: true
-      });
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+      </head>
+      <body>
+        <script>
+          const AppBridge = window.ShopifyAppBridge;
+          const createApp = AppBridge.createApp;
+          const Redirect = AppBridge.actions.Redirect;
 
-      const Redirect = ShopifyAppBridge.actions.Redirect;
-      const redirect = Redirect.create(app);
+          const app = createApp({
+            apiKey: "${process.env.SHOPIFY_API_KEY}",
+            host: "${host}",
+            forceRedirect: true
+          });
 
-      // 🔁 Redirect to your backend install endpoint
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        "https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-      );
-    </script>
-  </body>
-</html>
+          const redirect = Redirect.create(app);
+
+          redirect.dispatch(
+            Redirect.Action.APP,
+            "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+          );
+        </script>
+      </body>
+    </html>
   `);
 });
 
