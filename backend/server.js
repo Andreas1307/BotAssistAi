@@ -1168,28 +1168,36 @@ app.get("/shopify/auth", (req, res) => {
 app.get("/shopify", (req, res) => {
   const { shop, host } = req.query;
 
-  res.status(200).send(`
-    <html>
-      <head>
-        <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-      </head>
-      <body>
-        <script>
-          const app = ShopifyAppBridge.createApp({
-            apiKey: "${process.env.SHOPIFY_API_KEY}",
-            host: "${host}",
-            forceRedirect: true
-          });
+  if (!shop || !host) {
+    return res.status(400).send("Missing shop or host parameter");
+  }
 
-          const redirect = ShopifyAppBridge.actions.Redirect.create(app);
-          redirect.dispatch(
-            ShopifyAppBridge.actions.Redirect.Action.APP,
-            "/shopify/install?shop=${shop}"
-          );
-        </script>
-      </body>
-    </html>
+  res.status(200).type("html").send(`
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  </head>
+  <body>
+    <script>
+      const app = ShopifyAppBridge.createApp({
+        apiKey: "${process.env.SHOPIFY_API_KEY}",
+        host: "${host}",
+        forceRedirect: true
+      });
+
+      const Redirect = ShopifyAppBridge.actions.Redirect;
+      const redirect = Redirect.create(app);
+
+      redirect.dispatch(
+        Redirect.Action.APP,
+        "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
+      );
+    </script>
+  </body>
+</html>
   `);
 });
 
