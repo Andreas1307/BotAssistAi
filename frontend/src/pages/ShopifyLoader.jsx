@@ -9,16 +9,44 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // ✅ Only escape once per session
-    if (!sessionStorage.getItem("shopify_oauth_started") && window.top !== window.self) {
-      sessionStorage.setItem("shopify_oauth_started", "true");
+    // ✅ Prevent running multiple times
+    if (sessionStorage.getItem("shopify_oauth_started")) return;
+    sessionStorage.setItem("shopify_oauth_started", "true");
 
-      // ✅ Escape iframe to backend OAuth entry
+    // ✅ If inside iframe, escape to top-level
+    if (window.top !== window.self) {
       window.top.location.href = `${directory}/shopify?shop=${encodeURIComponent(
         shop
       )}&host=${encodeURIComponent(host)}`;
+      return;
     }
+
+    // ✅ If already top-level, trigger App Bridge redirect
+    const script = document.createElement("script");
+    script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
+    script.async = true;
+
+    script.onload = () => {
+      const AppBridge = window["ShopifyAppBridge"];
+      const createApp = AppBridge.createApp;
+      const Redirect = AppBridge.actions.Redirect;
+
+      const app = createApp({
+        apiKey: process.env.REACT_APP_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
+
+      const redirect = Redirect.create(app);
+
+      redirect.dispatch(
+        Redirect.Action.APP,
+        `${directory}/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+      );
+    };
+
+    document.body.appendChild(script);
   }, []);
 
-  return <div>Loading Shopify App…</div>;
+  return <div>Installing app…</div>;
 }
