@@ -1178,19 +1178,6 @@ app.get("/shopify", async (req, res) => {
   });
 });
 
-app.get("/shopify/install", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).send("Missing shop");
-
-  return shopify.auth.begin({
-    shop,
-    isOnline: false,
-    callbackPath: "/shopify/callback",
-    rawRequest: req,
-    rawResponse: res,
-  });
-});
-
 app.use((req, res, next) => {
   if (req.path.includes('/shopify/install') || req.path.includes('/shopify/callback')) {
     console.log('🍪 [DEBUG] Incoming cookies:', req.headers.cookie);
@@ -1419,46 +1406,27 @@ return res.status(200).send(`
 
 
 
-  } catch (err) {
-    console.error('❌ Shopify callback error:', err);
-  
-    // If cookie missing, ask user to restart top-level flow
-    if (err && err.name === 'CookieNotFound') {
-      const shop = req.query.shop || (req.query && req.query.shop) || '';
-      console.warn('⚠️ OAuth cookie missing; re-starting top-level auth for shop:', shop);
-  
-      // Render a tiny page that top-level-redirects to /shopify/top-level-auth
-      return res.status(200).send(`
-        <!doctype html>
-        <html>
-          <head><meta charset="utf-8"/></head>
-          <body>
-            <script>
-             window.__SHOPIFY_APP_BRIDGE_DISABLED__ = true;
-  window.__SHOPIFY_APP_BRIDGE_PAGE_RENDERED__ = true;
-              console.warn("OAuth cookie missing — restarting top-level auth");
-              // If we are in an iframe, force top window to call top-level-auth
-              const target = "${abs('/shopify/top-level-auth?shop=')}" + encodeURIComponent("${shop}");
-              if (window.top === window.self) {
-                window.location.href = target;
-              } else {
-                window.top.location.href = target;
-              }
-            </script>
-            <noscript>
-              OAuth cookie missing. Please <a href="${abs('/shopify/top-level-auth?shop=' + encodeURIComponent(shop))}" target="_top">click here</a>.
-            </noscript>
-          </body>
-        </html>
-      `);
-    }
-  
-    return res.status(200).send(`
-      <html><body><h3>OAuth error: ${err.name || "Unknown"}</h3>
-      <pre>${(err && err.message) || ""}</pre>
-      </body></html>
-    `);
-  }
+} catch (err) {
+  console.error('❌ Shopify callback error:', err);
+
+  // If cookie missing or other OAuth issue, show friendly retry page
+  const shop = req.query.shop || '';
+  return res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8"/>
+        <title>Shopify App OAuth Error</title>
+      </head>
+      <body>
+        <h3>⚠️ OAuth Error</h3>
+        <p>${err.message || 'Unknown error occurred during Shopify authentication.'}</p>
+        <p>Please try installing or opening the app again:</p>
+        <a href="/shopify?shop=${encodeURIComponent(shop)}">Click here to restart the app</a>
+      </body>
+    </html>
+  `);
+}
   
 }); 
  

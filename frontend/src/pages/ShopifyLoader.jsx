@@ -4,16 +4,18 @@ export default function ShopifyLoader() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
-    const host = params.get("host");
 
-    if (!shop || !host) return;
+    if (!shop) return;
 
-    // Build install URL
-    const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(
-      shop
-    )}&host=${encodeURIComponent(host)}`;
+    // ✅ only start OAuth once per browser session
+    if (sessionStorage.getItem("shopify_oauth_done")) {
+      return;
+    }
 
-    // Redirect top window if embedded
+    sessionStorage.setItem("shopify_oauth_done", "true");
+
+    const installUrl = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}`;
+
     if (window.top !== window.self) {
       window.top.location.href = installUrl;
     } else {
