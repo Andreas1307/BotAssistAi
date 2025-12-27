@@ -1,21 +1,37 @@
 import { useEffect } from "react";
+import directory from "../directory";
 
 export default function ShopifyLoader() {
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const { pathname, search } = window.location;
+
+    // ❌ Never run during OAuth or backend routes
+    if (
+      pathname.startsWith("/shopify") ||
+      pathname.includes("callback") ||
+      pathname.includes("install")
+    ) {
+      return;
+    }
+
+    const params = new URLSearchParams(search);
     const shop = params.get("shop");
     const host = params.get("host");
 
     if (!shop || !host) return;
 
-    // If inside iframe, redirect top window
-    const installUrl = `https://api.botassistai.com/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
-    if (window.top !== window.self) {
-      window.top.location.href = installUrl;
-    } else {
-      window.location.href = installUrl;
-    }
+    // ❌ Already top-level → do nothing
+    if (window.top === window.self) return;
+
+    // ❌ Prevent loop
+    if (sessionStorage.getItem("shopify_oauth_started")) return;
+
+    sessionStorage.setItem("shopify_oauth_started", "true");
+
+    // ✅ Escape iframe to Shopify auth entry
+    window.top.location.href =
+      `${directory}/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
   }, []);
 
-  return <div>Loading Shopify App…</div>;
+  return <div>Loading app…</div>;
 }
