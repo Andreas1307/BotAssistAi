@@ -1172,6 +1172,7 @@ app.get("/shopify", (req, res) => {
     return res.status(400).send("Missing shop or host parameter");
   }
 
+  // Render HTML that Shopify check expects
   res.status(200).type("html").send(`
 <!DOCTYPE html>
 <html>
@@ -1182,6 +1183,7 @@ app.get("/shopify", (req, res) => {
   </head>
   <body>
     <script>
+      // ✅ Shopify check looks for this exact pattern
       const app = ShopifyAppBridge.createApp({
         apiKey: "${process.env.SHOPIFY_API_KEY}",
         host: "${host}",
@@ -1191,10 +1193,13 @@ app.get("/shopify", (req, res) => {
       const Redirect = ShopifyAppBridge.actions.Redirect;
       const redirect = Redirect.create(app);
 
-      redirect.dispatch(
-        Redirect.Action.APP,
-        "/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}"
-      );
+      // 🔁 Redirect to your backend install endpoint
+ redirect.dispatch(
+  Redirect.Action.APP,
+  '/shopify/install?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}'
+);
+
+
     </script>
   </body>
 </html>
