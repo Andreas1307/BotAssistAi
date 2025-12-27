@@ -8,8 +8,15 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // ✅ REQUIRED: escape iframe FIRST
+    // ✅ Prevent infinite redirect loop
+    if (sessionStorage.getItem("shopify_oauth_started")) {
+      return;
+    }
+
+    // ✅ Escape iframe only ONCE
     if (window.top !== window.self) {
+      sessionStorage.setItem("shopify_oauth_started", "true");
+
       window.top.location.href =
         `/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
     }
