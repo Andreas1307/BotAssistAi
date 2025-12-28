@@ -3751,54 +3751,67 @@ res.json({ message: "Welcome to the dashboard", user: req.user });
 });
 
 
-
 function ensureShopifyOrLoggedIn(req, res, next) {
   // Shopify session exists
-  if (req.shopify && req.shopify.session) {
-    return next();
-  }
+  if (req.shopify && req.shopify.session) return next();
 
   // Passport session exists for non-Shopify users
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    return next();
-  }
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
 
   // Not authenticated
   return res.status(401).json({ user: null });
-};
+}
 
 
 
-app.get("/auth-check", verifySessionToken, ensureShopifyOrLoggedIn, async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ user: null });
-  }
+app.get(
+  "/auth-check",
+  verifySessionToken,
+  ensureShopifyOrLoggedIn,
+  async (req, res) => {
+    try {
+      // ✅ Determine user from Shopify OR Passport
+      let userId;
 
-  try {
-    const [rows] = await pool.query(
-      "SELECT * FROM users WHERE user_id = ?",
-      [req.user.user_id]
-    );
+      if (req.user?.user_id) {
+        userId = req.user.user_id; // Passport
+      } else if (req.shopify?.session?.shop) {
+        const [rows] = await pool.query(
+          "SELECT * FROM users WHERE shopify_shop_domain = ?",
+          [req.shopify.session.shop]
+        );
+        if (!rows.length) {
+          return res.status(401).json({ user: null });
+        }
+        userId = rows[0].user_id;
+      } else {
+        return res.status(401).json({ user: null });
+      }
 
-    const user = rows[0];
+      const [rows] = await pool.query(
+        "SELECT * FROM users WHERE user_id = ?",
+        [userId]
+      );
 
-    let showRenewalModal = false;
+      const user = rows[0];
 
-    if (
-      user.subscription_plan === "free" &&
-      user.subscription_expiry &&
-      new Date(user.subscription_expiry) < new Date() &&
-      user.subscribed_at // meaning they had a subscription in the past
-    ) {
-      showRenewalModal = true;
+      let showRenewalModal = false;
+      if (
+        user.subscription_plan === "free" &&
+        user.subscription_expiry &&
+        new Date(user.subscription_expiry) < new Date() &&
+        user.subscribed_at
+      ) {
+        showRenewalModal = true;
+      }
+
+      return res.json({ user, showRenewalModal });
+    } catch (err) {
+      console.error("auth-check error:", err);
+      return res.status(500).json({ message: "Server error" });
     }
-
-    return res.json({ user, showRenewalModal });
-  } catch (err) {
-    console.error("auth-check error:", err);
-    return res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 
 
