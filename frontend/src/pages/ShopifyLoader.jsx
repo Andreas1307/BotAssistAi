@@ -8,17 +8,13 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    const isInstalled = document.cookie.includes("shopify_installed=1");
+    const installUrl = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(
+      shop
+    )}&host=${encodeURIComponent(host)}`;
 
-    // 🚫 First install → do NOTHING
-    if (!isInstalled) return;
-
-    // ✅ Post-install iframe recovery ONLY
+    // ✅ Always escape iframe
     if (window.top !== window.self) {
-      window.top.location.href =
-        `https://www.botassistai.com/shopify/dashboard?shop=${encodeURIComponent(
-          shop
-        )}&host=${encodeURIComponent(host)}`;
+      window.top.location.href = installUrl;
     }
   }, []);
 
