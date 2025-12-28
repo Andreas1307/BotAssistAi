@@ -3751,7 +3751,25 @@ res.json({ message: "Welcome to the dashboard", user: req.user });
 });
 
 
-app.get("/auth-check", verifySessionToken, async (req, res) => {
+
+function ensureShopifyOrLoggedIn(req, res, next) {
+  // Shopify session exists
+  if (req.shopify && req.shopify.session) {
+    return next();
+  }
+
+  // Passport session exists for non-Shopify users
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+
+  // Not authenticated
+  return res.status(401).json({ user: null });
+};
+
+
+
+app.get("/auth-check", verifySessionToken, ensureShopifyOrLoggedIn, async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ user: null });
   }

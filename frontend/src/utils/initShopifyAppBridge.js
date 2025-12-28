@@ -95,82 +95,49 @@ export function safeRedirect(url, fallbackShop = null) {
 }
 
 export async function fetchWithAuth(url, options = {}) {
+  // 1️⃣ Try to get Shopify token if embedded
+  let token = null;
 
-  // 1️⃣ Always try to get or reuse a Shopify session token
-  let token = window.sessionToken || null;
   try {
-    const app = await getAppBridgeInstance();
-    if (app) {
-      token = await getSessionToken(app);
-      window.sessionToken = token;
-    } else {
-      console.warn("⚠️ App Bridge not initialized — cannot get JWT");
-    }
+    const app = getAppBridgeInstance();
+    if (app) token = await getSessionToken(app);
   } catch (err) {
-    console.error("❌ Error fetching session token:", err);
+    console.warn("⚠️ App Bridge not initialized — cannot get JWT");
   }
 
-  // 2️⃣ Merge headers cleanly, allowing user overrides
   const headers = new Headers(options.headers || {});
+
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  // 3️⃣ Automatically handle Content-Type
-  const bodyIsFormData = options.body instanceof FormData;
-  const bodyIsJSON = options.body && !bodyIsFormData && typeof options.body === "object";
-
-  if (bodyIsJSON && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  // 4️⃣ Build fetch options
   const opts = {
     method: options.method || "GET",
     headers,
-    credentials: "include", // always send cookies
-    body: bodyIsFormData
-      ? options.body
-      : bodyIsJSON
-      ? JSON.stringify(options.body)
-      : options.body, // supports text, Blob, etc.
+    credentials: "include",
+    body:
+      options.body && typeof options.body === "object" && !(options.body instanceof FormData)
+        ? JSON.stringify(options.body)
+        : options.body,
   };
 
-  // 5️⃣ Construct full URL (handles relative paths)
-  const fullUrl = url.startsWith("http")
-    ? url
-    : `${window.directory || "https://api.botassistai.com"}${url}`;
+  const fullUrl = url.startsWith("http") ? url : `${window.directory || "https://api.botassistai.com"}${url}`;
 
-
-  // 6️⃣ Send the request
   const res = await fetch(fullUrl, opts);
 
-  // 7️⃣ Retry once if token expired (401)
+  // Retry once if token expired
   if (res.status === 401 && !options._retried) {
-    console.warn("🔄 Token expired — refreshing App Bridge token...");
     window.sessionToken = null;
     return fetchWithAuth(url, { ...options, _retried: true });
   }
 
-  // 8️⃣ Handle response
-  let data;
-  const contentType = res.headers.get("Content-Type") || "";
-
-  if (contentType.includes("application/json")) {
-    data = await res.json();
-  } else if (contentType.includes("text/")) {
-    data = await res.text();
-  } else {
-    data = await res.blob(); // fallback for files, images, etc.
-  }
-
   if (!res.ok) {
-    console.error("❌ Request failed:", res.status, data);
+    const contentType = res.headers.get("Content-Type") || "";
+    const data = contentType.includes("application/json") ? await res.json() : await res.text();
     throw new Error(`Request failed: ${res.status} ${JSON.stringify(data)}`);
   }
 
-  console.groupEnd();
-  return data;
+  return res.status === 204 ? null : await res.json();
 }
 
 function getCookie(name) {

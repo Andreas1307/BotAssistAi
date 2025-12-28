@@ -4,8 +4,11 @@ export default function ShopifyLoader() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
+    const host = params.get("host");
+  
 
     if (!shop) return;
+    if (!host) return;
 
     const installUrl = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}`;
 
