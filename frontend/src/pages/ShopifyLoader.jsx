@@ -8,10 +8,17 @@ export default function ShopifyLoader() {
 
     if (!shop || !host) return;
 
-    // 🔑 Only escape iframe, do NOT force OAuth blindly
+    const isInstalled = document.cookie.includes("shopify_installed=1");
+
+    // 🚫 First install → do NOTHING
+    if (!isInstalled) return;
+
+    // ✅ Post-install iframe recovery ONLY
     if (window.top !== window.self) {
       window.top.location.href =
-        `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        `https://www.botassistai.com/shopify/dashboard?shop=${encodeURIComponent(
+          shop
+        )}&host=${encodeURIComponent(host)}`;
     }
   }, []);
 
