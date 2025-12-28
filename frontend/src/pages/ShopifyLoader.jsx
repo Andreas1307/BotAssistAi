@@ -1,23 +1,49 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function ShopifyLoader() {
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get("shop");
-    const host = params.get("host");
-  
+    async function checkAuth() {
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get("shop");
 
-    if (!shop) return;
-    if (!host) return;
+      if (!shop) {
+        setLoading(false);
+        return;
+      }
 
-    const installUrl = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}`;
+      try {
+        const res = await fetch("https://api.botassistai.com/auth-check", {
+          credentials: "include",
+        });
 
-    if (window.top !== window.self) {
-      window.top.location.href = installUrl;
-    } else {
-      window.location.href = installUrl;
+        const data = await res.json();
+
+        // ✅ Already authenticated → stay in app
+        if (data?.user) {
+          setLoading(false);
+          return;
+        }
+
+        // ❌ Not authenticated → start OAuth
+        const installUrl = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(
+          shop
+        )}`;
+
+        if (window.top !== window.self) {
+          window.top.location.href = installUrl;
+        } else {
+          window.location.href = installUrl;
+        }
+      } catch (err) {
+        console.error("Auth check failed", err);
+        setLoading(false);
+      }
     }
+
+    checkAuth();
   }, []);
 
-  return <div>Loading Shopify App…</div>;
+  return <div>{loading ? "Loading Shopify App…" : null}</div>;
 }
