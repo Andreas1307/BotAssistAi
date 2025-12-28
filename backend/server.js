@@ -1226,7 +1226,7 @@ if (req.query.host) {
     const username = shopInfo.name || shop;
 
     // --- Find or create user
-    let [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    let [existing] = await pool.query("SELECT * FROM users WHERE shopify_shop_domain = ?", [shop]);
     let user;
     if (existing.length > 0) {
       user = existing[0];
@@ -1744,7 +1744,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-app.get("/offHadMem", verifySessionToken, async (req, res) => {
+app.get("/offHadMem", verifySessionToken, ensureShopifyInstalled, async (req, res) => {
   try{
     const { id } = req.query;
     await pool.query("UPDATE users SET hadMembership = false where user_id = ?", [id])
@@ -1946,6 +1946,7 @@ app.post("/save-staff", verifySessionToken, upload.any(), async (req, res) => {
     return res.status(500).json({ error: "An error has occurred with saving the staff" });
   }
 });
+
 function getTimeSlotsForDate(dateStr, startTimeStr, endTimeStr, durationMins) {
   const dayOfWeek = new Date(dateStr).toLocaleString("en-US", { weekday: "long" }).toLowerCase();
 
@@ -2146,6 +2147,7 @@ app.get("/booking-enable", async (req, res) => {
     return res.status(500).json({ err: "An error occured fetching the if booking is enabled"})
   }
 })
+
 app.get("/set-booking", async (req, res) => {
   const { userId, booking } = req.query
   try {

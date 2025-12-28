@@ -7,13 +7,6 @@ export default function ShopifyLoader() {
 
     if (!shop) return;
 
-    // ✅ only start OAuth once per browser session
-    if (sessionStorage.getItem("shopify_oauth_done")) {
-      return;
-    }
-
-    sessionStorage.setItem("shopify_oauth_done", "true");
-
     const installUrl = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}`;
 
     if (window.top !== window.self) {
