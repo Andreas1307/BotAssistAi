@@ -1169,19 +1169,6 @@ app.get("/shopify", async (req, res) => {
   const { shop, host } = req.query;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // 🔑 CHECK IF ALREADY INSTALLED
-  const [rows] = await pool.query(
-    "SELECT * FROM shopify_installs WHERE shop = ?",
-    [shop]
-  );
-
-  if (rows.length > 0 && host) {
-    // ✅ Already installed → go straight to dashboard
-    return res.redirect(
-      `https://www.botassistai.com/shopify/dashboard?shop=${shop}&host=${host}`
-    );
-  }
-
   // ❌ Not installed → begin OAuth
   return shopify.auth.begin({
     shop,
@@ -1201,11 +1188,6 @@ app.use((req, res, next) => {
 
 app.get('/shopify/callback', async (req, res) => {
   try {
-
-    const cookieHeader = req.headers.cookie || "";
-    const hasOAuthState = cookieHeader.includes("shopify_oauth_state");
-    const hasAppState = cookieHeader.includes("shopify_app_state");
-    const hasTopLevel = cookieHeader.includes("shopify_toplevel");
   
   
     const { session } = await shopify.auth.callback({
