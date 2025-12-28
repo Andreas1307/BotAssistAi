@@ -1744,7 +1744,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-app.get("/offHadMem", verifySessionToken, ensureShopifyInstalled, async (req, res) => {
+app.get("/offHadMem", verifySessionToken, async (req, res) => {
   try{
     const { id } = req.query;
     await pool.query("UPDATE users SET hadMembership = false where user_id = ?", [id])
