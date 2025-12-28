@@ -3770,30 +3770,29 @@ app.get(
   ensureShopifyOrLoggedIn,
   async (req, res) => {
     try {
-      // ✅ Determine user from Shopify OR Passport
-      let userId;
+      let user;
 
+      // Passport user (non-Shopify login)
       if (req.user?.user_id) {
-        userId = req.user.user_id; // Passport
-      } else if (req.shopify?.session?.shop) {
+        const [rows] = await pool.query(
+          "SELECT * FROM users WHERE user_id = ?",
+          [req.user.user_id]
+        );
+        user = rows[0];
+      }
+
+      // Shopify embedded user
+      else if (req.shopify?.session?.shop) {
         const [rows] = await pool.query(
           "SELECT * FROM users WHERE shopify_shop_domain = ?",
           [req.shopify.session.shop]
         );
-        if (!rows.length) {
-          return res.status(401).json({ user: null });
-        }
-        userId = rows[0].user_id;
-      } else {
-        return res.status(401).json({ user: null });
+        user = rows[0];
       }
 
-      const [rows] = await pool.query(
-        "SELECT * FROM users WHERE user_id = ?",
-        [userId]
-      );
-
-      const user = rows[0];
+      if (!user) {
+        return res.json({ user: null }); // ❗️NO 401
+      }
 
       let showRenewalModal = false;
       if (
@@ -3808,10 +3807,11 @@ app.get(
       return res.json({ user, showRenewalModal });
     } catch (err) {
       console.error("auth-check error:", err);
-      return res.status(500).json({ message: "Server error" });
+      return res.json({ user: null });
     }
   }
 );
+
 
 
 
