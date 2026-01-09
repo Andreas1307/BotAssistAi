@@ -165,7 +165,7 @@ const SettingsPage = () => {
     setLoading(true);
 
     try {
-      const res = await fetchWithAuth(
+      const data = await fetchWithAuth(
         `/shopify/cancel-subscription`,{
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -174,9 +174,7 @@ const SettingsPage = () => {
         }
       )
 
-      const data = await res.json();
-
-      if (!res.ok) {
+      if (!data?.success) {
         throw new Error(data?.error || "Cancellation failed");
       }
 
