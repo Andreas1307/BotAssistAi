@@ -165,13 +165,13 @@ const SettingsPage = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("/shopify/cancel-subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ userId: user.user_id }),
-      });
-
+      const res = await fetchWithAuth(
+        `/change-password`,{
+          method: "POST",
+          body: { userId: user.user_id },
+        }
+      )
+      
       const data = await res.json();
 
       if (!res.ok) {
@@ -293,7 +293,7 @@ const SettingsPage = () => {
       {loading ? "Canceling..." : "Cancel subscription"}
     </button>
 
-    
+
         {/* Log Out Button */}
         <div className="log-out">
           <button className="logout-btn" onClick={() => showLogoutConfirm(handleLogout)}>
