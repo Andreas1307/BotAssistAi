@@ -2831,10 +2831,12 @@ app.post("/shopify/cancel-subscription", async (req, res) => {
     // 3️⃣ Save cancellation locally
     await pool.query(
       `UPDATE users
-       SET shopify_subscription_status = ?
+       SET shopify_subscription_id = NULL,
+           shopify_subscription_status = NULL
        WHERE user_id = ?`,
-      [result.appSubscription.status, userId]
+      [userId]
     );
+    
 
     return res.json({
       success: true,

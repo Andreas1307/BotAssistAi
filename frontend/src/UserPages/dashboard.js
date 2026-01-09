@@ -244,9 +244,9 @@ const Dashboard = () => {
   
   // FETCH MEMBERSHIP
   useEffect(() => {
-    const fetchMembership = async () => {
-      if (!user) return;
+    if (!user) return;
   
+    const fetchMembership = async () => {
       try {
         const res = await fetchWithAuth(
           `/shopify/subscription-status?userId=${user.user_id}`
@@ -259,8 +259,16 @@ const Dashboard = () => {
       }
     };
   
+    // Initial fetch immediately
     fetchMembership();
+  
+    // Set interval to fetch every 5 seconds (5000 ms)
+    const intervalId = setInterval(fetchMembership, 5000);
+  
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
   }, [user]);
+  
   
   //FETCH USER
   useEffect(() => {
