@@ -290,7 +290,7 @@ const SettingsPage = () => {
       disabled={loading}
       style={{ background: "#e53e3e", color: "white", padding: "10px 16px" }}
     >
-      {loading ? "Canceling..." : "Cancel subscription"}
+      {loading ? "Downgrading..." : "Downgrade to Free"}
     </button>
 
 

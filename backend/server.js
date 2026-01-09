@@ -1352,18 +1352,7 @@ if (req.query.host) {
     }
 
 
-    // Register ScriptTag to load chatbot
-    const scriptClient = new shopify.clients.Rest({ session });
-    await scriptClient.post({
-      path: "script_tags",
-      data: {
-        script_tag: {
-          event: "onload",
-          src: `https://api.botassistai.com/chatbot-loader.js?shop=${shop}`
-        }
-      },
-      type: "application/json"
-    });
+ 
 
 
   } catch (err) {

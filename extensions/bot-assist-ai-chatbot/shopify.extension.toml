@@ -1,0 +1,7 @@
+name = "BotAssistAi Chatbot"
+type = "theme"
+uid = "82bb5ac9-0bbf-e6f3-6cdc-5e8a55ba9e425446a68c"
+
+[[extension_points]]
+type = "theme_app_extension" # App Embed
+name = "Chatbot App Embed"

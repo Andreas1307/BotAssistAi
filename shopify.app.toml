@@ -1,0 +1,41 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "f6248b498ce7ac6b85e6c87d01154377"
+name = "BotAssistAI"
+application_url = "https://botassistai.com/shopify"
+embedded = true
+handle = "botassistai"
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2025-07"
+
+  [[webhooks.subscriptions]]
+  uri = "https://api.botassistai.com/shopify/gdpr/customers/data_request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://api.botassistai.com/shopify/gdpr/customers/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://api.botassistai.com/shopify/gdpr/shop/redact"
+  compliance_topics = [ "shop/redact" ]
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,write_customers,read_products,write_products,read_script_tags,write_script_tags"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [
+  "https://api.botassistai.com/auth/callback",
+  "https://api.botassistai.com/shopify/callback"
+]
+
+[app_preferences]
+url = "https://botassistai.com/shopify"
