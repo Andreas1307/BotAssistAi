@@ -168,10 +168,12 @@ const SettingsPage = () => {
       const res = await fetchWithAuth(
         `/change-password`,{
           method: "POST",
-          body: { userId: user.user_id },
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ userId: user.user_id }),
         }
       )
-      
+
       const data = await res.json();
 
       if (!res.ok) {
