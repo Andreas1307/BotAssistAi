@@ -174,8 +174,6 @@ const SettingsPage = () => {
   
       alert("Subscription canceled successfully");
   
-      // ✅ Update membership state (if you can pass setter via context / props)
-      if (setMembership) setMembership(false);
   
       // ✅ Use App Bridge top-level redirect instead of reload
       if (window.ShopifyApp) {
