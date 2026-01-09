@@ -158,28 +158,34 @@ const SettingsPage = () => {
   }, [user]);
 
   const cancelPlan = async () => {
-    if (!window.confirm("Are you sure you want to cancel your subscription?")) {
-      return;
-    }
-
+    if (!window.confirm("Are you sure you want to cancel your subscription?")) return;
+  
     setLoading(true);
-
+  
     try {
-      const data = await fetchWithAuth(
-        `/shopify/cancel-subscription`,{
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ userId: user.user_id }),
-        }
-      )
-
-      if (!data?.success) {
-        throw new Error(data?.error || "Cancellation failed");
-      }
-
+      const data = await fetchWithAuth(`/shopify/cancel-subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId: user.user_id }),
+      });
+  
+      if (!data?.success) throw new Error(data?.error || "Cancellation failed");
+  
       alert("Subscription canceled successfully");
-      window.location.reload();
+  
+      // ✅ Update membership state (if you can pass setter via context / props)
+      if (setMembership) setMembership(false);
+  
+      // ✅ Use App Bridge top-level redirect instead of reload
+      if (window.ShopifyApp) {
+        const redirectUrl = `/shopify/dashboard?shop=${user.shopify_shop_domain}`;
+        window.ShopifyApp.redirect.dispatch(window.ShopifyApp.Redirect.Action.REMOTE, redirectUrl);
+      } else {
+        // fallback
+        window.location.href = `/shopify/dashboard?shop=${user.shopify_shop_domain}`;
+      }
+  
     } catch (err) {
       console.error(err);
       alert("Failed to cancel subscription");
@@ -187,6 +193,7 @@ const SettingsPage = () => {
       setLoading(false);
     }
   };
+  
 
   const handleRenewMembership = () => {
     alert("Membership has been renewed!");
