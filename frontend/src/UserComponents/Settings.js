@@ -157,6 +157,37 @@ const SettingsPage = () => {
     checkGoogle();
   }, [user]);
 
+  const cancelPlan = async () => {
+    if (!window.confirm("Are you sure you want to cancel your subscription?")) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/shopify/cancel-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId: user.user_id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Cancellation failed");
+      }
+
+      alert("Subscription canceled successfully");
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel subscription");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRenewMembership = () => {
     alert("Membership has been renewed!");
   };
@@ -253,6 +284,16 @@ const SettingsPage = () => {
           </button>
         </div>
 
+
+        <button
+      onClick={cancelPlan}
+      disabled={loading}
+      style={{ background: "#e53e3e", color: "white", padding: "10px 16px" }}
+    >
+      {loading ? "Canceling..." : "Cancel subscription"}
+    </button>
+
+    
         {/* Log Out Button */}
         <div className="log-out">
           <button className="logout-btn" onClick={() => showLogoutConfirm(handleLogout)}>

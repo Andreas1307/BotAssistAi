@@ -2770,6 +2770,81 @@ app.get("/shopify/subscription-status", async (req, res) => {
   }
 });
 
+app.post("/shopify/cancel-subscription", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId" });
+    }
+
+    // 1️⃣ Load user
+    const [[user]] = await pool.query(
+      "SELECT * FROM users WHERE user_id = ?",
+      [userId]
+    );
+
+    if (!user || !user.shopify_subscription_id) {
+      return res.status(404).json({ error: "No active Shopify subscription" });
+    }
+
+    // 2️⃣ Shopify cancel mutation
+    const mutation = `
+      mutation AppSubscriptionCancel($id: ID!) {
+        appSubscriptionCancel(id: $id) {
+          appSubscription {
+            id
+            status
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const response = await axios.post(
+      `https://${user.shopify_shop_domain}/admin/api/2025-01/graphql.json`,
+      {
+        query: mutation,
+        variables: { id: user.shopify_subscription_id },
+      },
+      {
+        headers: {
+          "X-Shopify-Access-Token": user.shopify_access_token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = response.data?.data?.appSubscriptionCancel;
+
+    if (!result) {
+      return res.status(500).json({ error: "Invalid Shopify response" });
+    }
+
+    if (result.userErrors?.length) {
+      return res.status(400).json({ errors: result.userErrors });
+    }
+
+    // 3️⃣ Save cancellation locally
+    await pool.query(
+      `UPDATE users
+       SET shopify_subscription_status = ?
+       WHERE user_id = ?`,
+      [result.appSubscription.status, userId]
+    );
+
+    return res.json({
+      success: true,
+      status: result.appSubscription.status,
+    });
+  } catch (err) {
+    console.error("❌ Cancel subscription failed:", err.response?.data || err);
+    res.status(500).json({ error: "Failed to cancel subscription" });
+  }
+});
 
 
 

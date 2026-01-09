@@ -262,7 +262,6 @@ const Dashboard = () => {
     fetchMembership();
   }, [user]);
   
-
   //FETCH USER
   useEffect(() => {
     const fetchUser = async () => {
@@ -1123,11 +1122,7 @@ if (loading) {
             <div className="conv-details">
             <div  style={{opacity: !membership ? 0.5 : 1}} className="conversation-details">
   <h2>Conversation History</h2>
-  {!membership ? (
-  <span style={{ fontSize: "21px", fontWeight: 700, color: "#00F5D4" }}>
-    Upgrade To See
-  </span>
-) : (
+  
   <div className="conversation-detail">
   {convHistory.length > 0 ? (
     <>
@@ -1167,7 +1162,6 @@ if (loading) {
   )}
 </div>
 
-)}
 
   
 </div>
