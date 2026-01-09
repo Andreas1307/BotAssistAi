@@ -245,25 +245,24 @@ const Dashboard = () => {
   // FETCH MEMBERSHIP
   useEffect(() => {
     const fetchMembership = async () => {
-      if (!user) return
-      try{
-        const userId = user?.user_id;
-        const response = await fetchWithAuth(`/get-membership?userId=${userId}`, {
-          method: "GET",
-        });
-
-        if(response.message.subscription_plan === "Pro") {
-          setMembership(true)
-        } else {
-          setMembership(false)
-        }
-      } catch(e) {
-        console.log("Error occured with retreiveing the membership status",e)
-        showErrorNotification()
+      if (!user) return;
+  
+      try {
+        const res = await fetchWithAuth(
+          `/shopify/subscription-status?userId=${user.user_id}`
+        );
+  
+        setMembership(res.active === true);
+      } catch (e) {
+        console.error("❌ Failed to check subscription", e);
+        setMembership(false);
       }
-    }
-    fetchMembership()
-  }, [user])
+    };
+  
+    fetchMembership();
+  }, [user]);
+  
+
   //FETCH USER
   useEffect(() => {
     const fetchUser = async () => {

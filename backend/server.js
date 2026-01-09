@@ -2498,14 +2498,14 @@ app.post("/create-subscription2", async (req, res) => {
         $returnUrl: URL!, 
         $lineItems: [AppSubscriptionLineItemInput!]!
       ) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
           userErrors { field message }
           appSubscription { id name }
           confirmationUrl
         }
       }
     `;
-    const returnHost = host; // Use the host sent from frontend / App Bridge
+    const returnHost = host; 
 
 
     const variables = {
@@ -2657,21 +2657,46 @@ app.get("/billing/callback", async (req, res) => {
     }
 
     
-const now = new Date();
-const expiry = new Date(now);
-expiry.setDate(now.getDate() + 30); // 30-day subscription
+// Fetch active subscriptions from Shopify
+const query = `
+{
+  currentAppInstallation {
+    activeSubscriptions {
+      id
+      name
+      status
+    }
+  }
+}
+`;
 
-console.log("🔄 Updating subscription for user:", userId);
-
-await pool.query(
-  `UPDATE users 
-   SET 
-     subscription_plan = ?, 
-     subscribed_at = ?, 
-     subscription_expiry = ? 
-   WHERE user_id = ?`,
-  ["Pro", now, expiry, userId]
+const billingRes = await axios.post(
+  `https://${shop}/admin/api/2025-01/graphql.json`,
+  { query },
+  {
+    headers: {
+      "X-Shopify-Access-Token": rows[0].shopify_access_token,
+      "Content-Type": "application/json",
+    },
+  }
 );
+
+const activeSub = billingRes.data.data.currentAppInstallation.activeSubscriptions
+  .find(sub => sub.name === "BotAssist Pro Plan" && sub.status === "ACTIVE");
+
+if (!activeSub) {
+  console.error("❌ No active Shopify subscription found");
+  return res.status(400).send("Subscription not active");
+}
+
+// ✅ SAVE SHOPIFY SUBSCRIPTION ONLY
+await pool.query(
+  `UPDATE users
+   SET shopify_subscription_id=?, shopify_subscription_status=?
+   WHERE user_id=?`,
+  [activeSub.id, activeSub.status, userId]
+);
+
 
 
     // Build final admin redirect URL. Use the shop to compute store path:
@@ -2702,6 +2727,49 @@ await pool.query(
     res.status(500).send("Billing callback failed");
   }
 });
+
+app.get("/shopify/subscription-status", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const [[user]] = await pool.query(
+      "SELECT * FROM users WHERE user_id=?",
+      [userId]
+    );
+
+    if (!user) return res.status(404).json({ active: false });
+
+    const query = `
+    {
+      currentAppInstallation {
+        activeSubscriptions {
+          name
+          status
+        }
+      }
+    }
+    `;
+
+    const result = await axios.post(
+      `https://${user.shopify_shop_domain}/admin/api/2025-01/graphql.json`,
+      { query },
+      {
+        headers: {
+          "X-Shopify-Access-Token": user.shopify_access_token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const hasPro = result.data.data.currentAppInstallation.activeSubscriptions
+      .some(sub => sub.name === "BotAssist Pro Plan" && sub.status === "ACTIVE");
+
+    res.json({ active: hasPro });
+  } catch (err) {
+    console.error("❌ Subscription status check failed:", err);
+    res.status(500).json({ active: false });
+  }
+});
+
 
 
 

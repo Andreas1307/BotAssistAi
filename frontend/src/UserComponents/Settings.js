@@ -181,18 +181,7 @@ const SettingsPage = () => {
         </div>
 
         {/* Editable Payment Type */}
-        <div className="form-group">
-          <label>Payment Type:</label>
-          <select
-            value={paymentType}
-            onChange={(e) => setPaymentType(e.target.value)} // Handle payment type change
-          >
-            <option value="Credit Card">Credit Card</option>
-            <option value="PayPal">PayPal</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Cryptocurrency">Cryptocurrency</option>
-          </select>
-        </div>
+  
 
         {/* Membership Details */}
         <div className="form-group">
