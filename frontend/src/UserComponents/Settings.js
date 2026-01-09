@@ -166,7 +166,7 @@ const SettingsPage = () => {
 
     try {
       const res = await fetchWithAuth(
-        `/change-password`,{
+        `/shopify/cancel-subscription`,{
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
