@@ -7,6 +7,7 @@
       return;
     }
   
+    document.addEventListener("DOMContentLoaded", () => {
     const style = document.createElement("style");
     style.textContent = `
       #botassist-chatlog::-webkit-scrollbar {
@@ -398,5 +399,6 @@
     });
   
     button.addEventListener("click", sendMessage);
+});
   })();
   
