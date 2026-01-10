@@ -296,7 +296,7 @@
     input.onfocus = () => input.style.boxShadow = "none";
   
     const button = document.createElement("button");
-    button.innerHTML = "Send";
+    button.innerHTML = "Send back";
     button.className = "diagonal-button"; 
     button.style.cssText = `
           border: none;
