@@ -1,3 +1,7 @@
+{% comment %}
+  BotAssist Chatbot Theme App Extension
+{% endcomment %}
+
 {% if shop.metafields.botassist.api_key != blank %}
   <script
     src="https://api.botassistai.com/chatbot-loader.js"
@@ -11,12 +15,6 @@
 {
   "name": "BotAssist Chatbot",
   "target": "body",
-  "settings": [],
-  "blocks": [
-    {
-      "type": "chatbot",
-      "name": "Chatbot Embed"
-    }
-  ]
+  "settings": []
 }
 {% endschema %}
