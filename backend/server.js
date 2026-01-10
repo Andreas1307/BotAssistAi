@@ -1556,7 +1556,6 @@ app.post("/paypal/webhook", async (req, res) => {
 
 
 
-
 app.get("/payed-membership", verifySessionToken, async (req, res) => {
 const { type, userId } = req.query;
 

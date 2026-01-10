@@ -250,8 +250,8 @@
       border-radius: 6px;
     `;
     
-    logoContainer.appendChild(logo);
-    chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
+  //  logoContainer.appendChild(logo);
+  //  chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
     chatbotBox.appendChild(satisfactionDiv);
 
 
