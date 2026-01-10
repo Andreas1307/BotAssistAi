@@ -1292,6 +1292,7 @@ let apiKeyForShop;
       }
     });
     
+    
   
     
 
@@ -1437,6 +1438,38 @@ return res.status(200).send(`
   
 }); 
  
+app.get('/public/chatbot-config', async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).json({ error: 'Missing shop' });
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM shopify_customization WHERE shop = ?',
+      [shop]
+    );
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Shop config not found' });
+    }
+
+    const config = rows[0];
+    res.json({
+      background: config.background,
+      chatbotBackground: config.chatbotBackground,
+      chatBoxBackground: config.chatBoxBackground,
+      chatInputBackground: config.chatInputBackground,
+      chatInputTextColor: config.chatInputTextColor,
+      chatBtn: config.chatBtn,
+      websiteChatBtn: config.websiteChatBtn,
+      websiteQuestion: config.websiteQuestion,
+      needHelpTextColor: config.needHelpTextColor,
+      textColor: config.textColor,
+      borderColor: config.borderColor
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 
 
