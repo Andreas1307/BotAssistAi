@@ -128,7 +128,7 @@
     const satisfactionDiv = document.createElement("div");
     satisfactionDiv.style.cssText = `
       position: absolute;
-      bottom: 35px;
+      bottom: 30px;
       left: 0;
       width: 100%;
       display: none;
@@ -143,6 +143,7 @@
     satisfactionHeading.innerText = "Was this helpful?";
     satisfactionHeading.style.cssText = `
       color: var(--need-help-text);
+      font-weight: 600;
       font-size: 17px;
     `;
   
@@ -259,7 +260,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 10px;
-      padding-top: 16px;
+      padding-top: 25px;
       height: 261px;
     `;
   
