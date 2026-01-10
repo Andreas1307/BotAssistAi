@@ -1,7 +1,9 @@
-name = "BotAssistAi Chatbot"
-type = "theme"
-uid = "82bb5ac9-0bbf-e6f3-6cdc-5e8a55ba9e425446a68c"
+name = "BotAssist Chatbot"
 
-[[extension_points]]
-type = "theme_app_extension" # App Embed
-name = "Chatbot App Embed"
+uid = "6d7ceb98-aec1-08ce-02fb-dc52a9718fbbc85ea0cf"
+
+type = "theme"
+
+[[blocks]]
+name = "Chatbot Embed"
+type = "chatbot"

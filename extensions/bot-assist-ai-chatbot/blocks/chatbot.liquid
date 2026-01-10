@@ -1,6 +1,16 @@
-<script
-  src="https://api.botassistai.com/chatbot-loader.js"
-  api-key="{{ shop.metafields.botassist.api_key }}"
-  data-shop="{{ shop.permanent_domain }}"
-  defer
-></script>
+{% if shop.metafields.botassist.api_key != blank %}
+  <script
+    src="https://api.botassistai.com/chatbot-loader.js"
+    api-key="{{ shop.metafields.botassist.api_key }}"
+    data-shop="{{ shop.permanent_domain }}"
+    defer
+  ></script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "BotAssist Chatbot",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}
