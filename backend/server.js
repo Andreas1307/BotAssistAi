@@ -1591,11 +1591,11 @@ cron.schedule("0 0 * * *", async () => {
     console.log("🔁 Running daily subscription expiry check...");
 
     const [usersToDowngrade] = await pool.query(
-      `SELECT user_id, email FROM users 
-       WHERE subscription_plan != 'free' 
-       AND subscription_expiry IS NOT NULL 
-       AND subscription_expiry <= NOW()`
+      `SELECT user_id, email, shopify_subscription_status, subscription_expiry FROM users 
+       WHERE (shopify_subscription_status IS NOT NULL AND shopify_subscription_status != 'ACTIVE')
+          OR (subscription_plan != 'Free' AND subscription_expiry IS NOT NULL AND subscription_expiry <= NOW())`
     );
+    
 
     if (usersToDowngrade.length > 0) {
 
@@ -1610,13 +1610,11 @@ cron.schedule("0 0 * * *", async () => {
         });
 
       for (const user of usersToDowngrade) {
-        await pool.query("UPDATE users SET hadMembership = true where user_id = ?", [user.user_id])
         await pool.query(
-          "UPDATE users SET subscription_plan = 'free' WHERE user_id = ?",
+          "UPDATE users SET hadMembership = true, subscription_plan = 'Free', shopify_subscription_id = NULL, shopify_subscription_status = NULL, subscription_expiry = NULL WHERE user_id = ?",
           [user.user_id]
-        );
+        );        
         console.log(`🔻 Downgraded user ${user.user_id} to free`);
-
     
         const mailOptions = {
           from: process.env.EMAIL,
@@ -2699,12 +2697,15 @@ if (!activeSub) {
   return res.status(400).send("Subscription not active");
 }
 
-// ✅ SAVE SHOPIFY SUBSCRIPTION ONLY
+// For recurring monthly plan
+const expiryDate = new Date();
+expiryDate.setMonth(expiryDate.getMonth() + 1);
+
 await pool.query(
   `UPDATE users
-   SET shopify_subscription_id=?, shopify_subscription_status=?
+   SET shopify_subscription_id=?, shopify_subscription_status=?, subscription_plan='Pro', subscription_expiry=?
    WHERE user_id=?`,
-  [activeSub.id, activeSub.status, userId]
+  [activeSub.id, activeSub.status, expiryDate, userId]
 );
 
 
@@ -2842,7 +2843,9 @@ app.post("/shopify/cancel-subscription", async (req, res) => {
     await pool.query(
       `UPDATE users
        SET shopify_subscription_id = NULL,
-           shopify_subscription_status = NULL
+           shopify_subscription_status = NULL, 
+           subscription_expiry = NULL,
+           subscription_plan = 'Free'
        WHERE user_id = ?`,
       [userId]
     );
