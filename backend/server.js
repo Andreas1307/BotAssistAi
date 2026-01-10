@@ -1215,6 +1215,8 @@ if (req.query.host) {
   }
 }
 
+let apiKeyForShop;
+
     // --- Fetch shop info
     const client = new shopify.clients.Rest({ session });
     const shopInfo = (await client.get({ path: 'shop' })).body.shop || {};
@@ -1226,15 +1228,19 @@ if (req.query.host) {
     let user;
     if (existing.length > 0) {
       user = existing[0];
+      apiKeyForShop = user.api_key;
       await pool.query(
         `UPDATE users SET shopify_shop_domain=?, shopify_access_token=?, shopify_installed_at=NOW() WHERE user_id=?`,
         [shop, session.accessToken, user.user_id]
       );
+      
     } else {
       const rawKey = Math.random().toString(36).slice(-8);
       const toEncryptKey = uuidv4();
       const encryptedKey = encryptApiKey(toEncryptKey);
       const hashedPassword = await bcrypt.hash(rawKey, 10);
+
+      apiKeyForShop = encryptedKey;
 
       await pool.query(
         `
@@ -1265,7 +1271,7 @@ if (req.query.host) {
       
       const [newUserResult] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       user = newUserResult[0];
-
+      
       try {
         await handleSendNewUserEmail(rawKey, email);
       } catch (err) {
@@ -1273,6 +1279,25 @@ if (req.query.host) {
       }
 
     }
+
+    await client.post({
+      path: "metafields",
+      data: {
+        metafield: {
+          namespace: "botassist",
+          key: "api_key",
+          value: apiKeyForShop,
+          type: "single_line_text_field",
+          owner_resource: "shop"
+        }
+      },
+      type: "application/json"
+    });
+    
+    console.log(`✅ Saved metafield botassist.api_key for ${shop}`);
+    
+  
+    
 
     // --- Log the user in via Passport BEFORE redirect
     await new Promise((resolve, reject) => {
@@ -1350,28 +1375,8 @@ if (req.query.host) {
     
     // 2️⃣ Inject chatbot snippet via ScriptTag if not already present
     const client = new shopify.clients.Rest({ session });
-    const scripts = await client.get({ path: "script_tags" });
     
-    const botScriptUrl = `https://www.api.botassistai.com/chatbot-loader.js?shop=${shop}`; // your chatbot JS
-    const existingBotScript = scripts.body.script_tags.find(
-      s => s.src === botScriptUrl
-    );
-    
-    if (!existingBotScript) {
-      await client.post({
-        path: "script_tags",
-        data: {
-          script_tag: {
-            event: "onload",
-            src: botScriptUrl
-          }
-        },
-        type: "application/json"
-      });
-      console.log("✅ Injected BotAssistAI script into store");
-    } else {
-      console.log("ℹ️ BotAssistAI script already present");
-    }
+ 
 
  
 
