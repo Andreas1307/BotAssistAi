@@ -4,12 +4,15 @@
 
 {% if shop.metafields.botassist.api_key != blank %}
   <script
-    src="{{ 'chatbot-loader.js' | asset_url }}?apiKey={{ shop.metafields.botassist.api_key }}&shop={{ shop.permanent_domain }}"
+    src="{{ 'chatbot-loader.js' | asset_url }}"
+    data-api-key="{{ shop.metafields.botassist.api_key }}"
+    data-shop="{{ shop.permanent_domain }}"
     defer
   ></script>
 {% else %}
   <script>console.error("❌ BotAssist API key missing for this shop")</script>
 {% endif %}
+
 
 {% schema %}
 {
