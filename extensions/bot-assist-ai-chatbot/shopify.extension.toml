@@ -2,5 +2,8 @@ name = "BotAssistAI"
 
 [[extensions]]
 name = "BotAssist Chatbot"
+
+uid = "6d7ceb98-aec1-08ce-02fb-dc52a9718fbbc85ea0cf"
+
 type = "theme"
 handle = "botassist-chatbot"
