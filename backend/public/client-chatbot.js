@@ -247,8 +247,8 @@
       border-radius: 6px;
     `;
     
-    logoContainer.appendChild(logo);
-    chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
+   // logoContainer.appendChild(logo);
+   // chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
     chatbotBox.appendChild(satisfactionDiv);
 
 
@@ -296,7 +296,7 @@
     input.onfocus = () => input.style.boxShadow = "none";
   
     const button = document.createElement("button");
-    button.innerHTML = "Send back";
+    button.innerHTML = "Send";
     button.className = "diagonal-button"; 
     button.style.cssText = `
           border: none;
