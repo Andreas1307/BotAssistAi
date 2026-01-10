@@ -6,6 +6,42 @@
       console.error("❌ Missing API key in <script> tag.");
       return;
     }
+    const shop = script.getAttribute("data-shop");
+
+    if (!apiKey || !shop) {
+      console.error("BotAssist: missing apiKey or shop");
+      return;
+    }
+  
+    // Fetch customization
+    fetch(`https://api.botassistai.com/public/chatbot-config?shop=${shop}`)
+      .then(res => res.json())
+      .then(config => {
+        window.BOTASSIST_CONFIG = config;
+
+        const root = document.documentElement;
+
+root.style.setProperty("--ai-background", config.background);
+root.style.setProperty("--ai-chatbot-bg", config.chatbotBackground);
+root.style.setProperty("--conversation-boxes", config.chatBoxBackground);
+root.style.setProperty("--ai-input", config.chatInputBackground);
+root.style.setProperty("--ai-button", config.chatBtn);
+root.style.setProperty("--ai-website-chat-btn", config.websiteChatBtn);
+root.style.setProperty("--ai-website-question", config.websiteQuestion);
+root.style.setProperty("--need-help-text", config.needHelpTextColor);
+root.style.setProperty("--font-color", config.textColor);
+root.style.setProperty("--ai-border", config.borderColor);
+
+
+  
+        const s = document.createElement("script");
+        s.src = "https://api.botassistai.com/client-chatbot.js";
+        s.defer = true;
+        document.body.appendChild(s);
+      })
+      .catch(err => console.error("BotAssist config load failed", err));
+
+
   
     const style = document.createElement("style");
     style.textContent = `
@@ -128,7 +164,7 @@
     const satisfactionDiv = document.createElement("div");
     satisfactionDiv.style.cssText = `
       position: absolute;
-      bottom: 30px;
+      bottom: 32.5px;
       left: 0;
       width: 100%;
       display: none;
@@ -228,28 +264,6 @@
       border-bottom-right-radius: 13px;
     `;
   
-    const logoContainer = document.createElement("a");
-    logoContainer.style.cssText = `
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding-top: 5px;
-      background-color: transparent;
-    `;
-    logoContainer.href = "https://www.botassistai.com/";
-    logoContainer.target = "_blank"
-    
-    const logo = document.createElement("img");
-    logo.src = "https://botassistai.com/img/BigLogo.png"; 
-    logo.style.cssText = `
-      height: 60px;
-      object-fit: contain;
-      border-radius: 6px;
-    `;
-    
-   // logoContainer.appendChild(logo);
-   // chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
     chatbotBox.appendChild(satisfactionDiv);
 
 
@@ -260,7 +274,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 10px;
-      padding-top: 25px;
+      padding-top: 22px;
       height: 261px;
     `;
   
@@ -402,3 +416,4 @@
     button.addEventListener("click", sendMessage);
   })();
   
+

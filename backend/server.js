@@ -1281,15 +1281,17 @@ let apiKeyForShop;
     }
 
     await client.post({
-      path: "script_tags",
+      path: "metafields",
       data: {
-        script_tag: {
-          event: "onload",
-          src: "https://api.botassistai.com/chatbot-loader.js?apiKey=" + encodeURIComponent(apiKeyForShop)
+        metafield: {
+          namespace: "botassist",
+          key: "api_key",
+          type: "single_line_text_field",
+          value: apiKeyForShop
         }
-      },
-      type: "application/json"
+      }
     });
+    
     
   
     
@@ -1436,6 +1438,20 @@ return res.status(200).send(`
   
 }); 
  
+app.get("/public/chatbot-config", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).json({});
+
+  const [[config]] = await pool.query(
+    "SELECT * FROM shopify_customization WHERE shop = ?",
+    [shop]
+  );
+
+  res.json(config || {});
+});
+
+
+
 
 
 

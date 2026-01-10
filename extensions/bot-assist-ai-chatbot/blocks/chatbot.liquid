@@ -1,14 +1,6 @@
-{% comment %}
-BotAssistAI Chatbot App Embed
-This file runs on EVERY storefront page when enabled
-{% endcomment %}
-
-{% if shop.metafields.botassist.api_key != blank %}
-  <script
-    src="https://api.botassistai.com/chatbot-loader.js"
-    api-key="{{ shop.metafields.botassist.api_key }}"
-    defer
-  ></script>
-{% else %}
-  <!-- BotAssistAI: API key missing -->
-{% endif %}
+<script
+  src="https://api.botassistai.com/chatbot-loader.js"
+  api-key="{{ shop.metafields.botassist.api_key }}"
+  data-shop="{{ shop.permanent_domain }}"
+  defer
+></script>
