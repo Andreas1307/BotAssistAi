@@ -1299,11 +1299,6 @@ if (req.query.host) {
     const { storeCallback } = require('./sessionStorage');
     await storeCallback(session);
     await registerGdprWebhooks(session, shop);
-
-    // ----------------------
-    // 💥 YOUR NEW LOGIC HERE
-    // ----------------------
-
     const defaultColors = {
       background: '#f2f2f2',
       chatbotBackground: '#092032',
@@ -1317,16 +1312,16 @@ if (req.query.host) {
       textColor: '#cccccc',
       borderColor: '#00F5D4'
     };
-
-    // 1️⃣ CHECK IF STORE EXISTS IN YOUR DB
+    
+    // 1️⃣ Ensure shop exists in customization table
     const [existingConfig] = await pool.query(
       "SELECT * FROM shopify_customization WHERE shop = ?",
       [shop]
     );
-
-    // 2️⃣ IF NOT INSTALLED → AUTO CREATE AFTER CALLBACK
+    
+    let customizationId;
     if (existingConfig.length === 0) {
-      await pool.query(
+      const insertResult = await pool.query(
         `INSERT INTO shopify_customization 
           (shop, background, chatbotBackground, chatBoxBackground, chatInputBackground, chatInputTextColor, chatBtn, websiteChatBtn, 
            websiteQuestion, needHelpTextColor, textColor, borderColor)
@@ -1346,11 +1341,37 @@ if (req.query.host) {
           defaultColors.borderColor
         ]
       );
-
+      customizationId = insertResult[0]?.insertId;
+      console.log(`✅ Created default config for ${shop}`);
     } else {
-      console.log(`🎨 Chatbot config already exists for ${shop}`);
+      customizationId = existingConfig[0].id;
+      console.log(`🎨 Config already exists for ${shop}`);
     }
-
+    
+    // 2️⃣ Inject chatbot snippet via ScriptTag if not already present
+    const client = new shopify.clients.Rest({ session });
+    const scripts = await client.get({ path: "script_tags" });
+    
+    const botScriptUrl = `https://www.api.botassistai.com/chatbot-loader.js?shop=${shop}`; // your chatbot JS
+    const existingBotScript = scripts.body.script_tags.find(
+      s => s.src === botScriptUrl
+    );
+    
+    if (!existingBotScript) {
+      await client.post({
+        path: "script_tags",
+        data: {
+          script_tag: {
+            event: "onload",
+            src: botScriptUrl
+          }
+        },
+        type: "application/json"
+      });
+      console.log("✅ Injected BotAssistAI script into store");
+    } else {
+      console.log("ℹ️ BotAssistAI script already present");
+    }
 
  
 
