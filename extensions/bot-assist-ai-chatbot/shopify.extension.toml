@@ -1,9 +1,6 @@
-name = "BotAssist Chatbot"
+# shopify.extension.toml
+name = "BotAssistAI"
 
-uid = "6d7ceb98-aec1-08ce-02fb-dc52a9718fbbc85ea0cf"
-
+[[extensions]]
+name = "botassist-chatbot"
 type = "theme"
-
-[[blocks]]
-name = "Chatbot Embed"
-type = "chatbot"

@@ -4,7 +4,7 @@
 
 {% if shop.metafields.botassist.api_key != blank %}
   <script
-    src="https://api.botassistai.com/chatbot-loader.js?apiKey={{ shop.metafields.botassist.api_key }}&shop={{ shop.permanent_domain }}"
+    src="{{ 'chatbot-loader.js' | asset_url }}?apiKey={{ shop.metafields.botassist.api_key }}&shop={{ shop.permanent_domain }}"
     defer
   ></script>
 {% else %}
