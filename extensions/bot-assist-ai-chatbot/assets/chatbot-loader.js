@@ -1,3 +1,5 @@
+// /extensions/assets/chatbot-loader.js
+
 (function () {
     const script = document.currentScript;
     const apiKey = script.getAttribute("api-key");

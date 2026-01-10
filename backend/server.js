@@ -1281,20 +1281,15 @@ let apiKeyForShop;
     }
 
     await client.post({
-      path: "metafields",
+      path: "script_tags",
       data: {
-        metafield: {
-          namespace: "botassist",
-          key: "api_key",
-          value: apiKeyForShop,
-          type: "single_line_text_field",
-          owner_resource: "shop"
+        script_tag: {
+          event: "onload",
+          src: "https://api.botassistai.com/chatbot-loader.js?apiKey=" + encodeURIComponent(apiKeyForShop)
         }
       },
       type: "application/json"
     });
-    
-    console.log(`✅ Saved metafield botassist.api_key for ${shop}`);
     
   
     
