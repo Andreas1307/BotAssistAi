@@ -1292,7 +1292,6 @@ let apiKeyForShop;
       }
     });
     
-    
   
     
 
@@ -1438,20 +1437,6 @@ return res.status(200).send(`
   
 }); 
  
-app.get("/public/chatbot-config", async (req, res) => {
-  const { shop } = req.query;
-  if (!shop) return res.status(400).json({});
-
-  const [[config]] = await pool.query(
-    "SELECT * FROM shopify_customization WHERE shop = ?",
-    [shop]
-  );
-
-  res.json(config || {});
-});
-
-
-
 
 
 
