@@ -1,6 +1,6 @@
-# shopify.extension.toml
 name = "BotAssistAI"
 
 [[extensions]]
-name = "botassist-chatbot"
+name = "BotAssist Chatbot"
 type = "theme"
+handle = "botassist-chatbot"
