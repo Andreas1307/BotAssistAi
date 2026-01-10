@@ -1,27 +1,6 @@
-{% comment %}
-  BotAssist Chatbot App Embed
-{% endcomment %}
-
-{% if shop.metafields.botassist.api_key != blank %}
-  <script
-    src="https://api.botassistai.com/chatbot-loader.js?apiKey={{ shop.metafields.botassist.api_key }}&shop={{ shop.permanent_domain }}"
-    defer
-  ></script>
-{% else %}
-  <script>console.error("❌ BotAssist API key missing for this shop")</script>
-{% endif %}
-
-{% schema %}
-{
-  "name": "BotAssist Chatbot",
-  "target": "body",
-  "settings": [],
-  "blocks": [
-    {
-      "type": "chatbot",
-      "name": "Chatbot Embed",
-      "settings": []
-    }
-  ]
-}
-{% endschema %}
+<script
+  src="https://api.botassistai.com/chatbot-loader.js"
+  api-key="TEST_API_KEY_FOR_DEV"
+  data-shop="{{ shop.permanent_domain }}"
+  defer
+></script>
