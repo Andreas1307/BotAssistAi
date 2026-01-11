@@ -4925,7 +4925,7 @@ app.get("/satisfaction-admin", async (req, res) => {
     console.log(colors)
     
   try {
-    const {
+    let {
       background,
       chatbotBackground,
       chatBoxBackground,
