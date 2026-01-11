@@ -143,7 +143,7 @@ clear: both;
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
     position: absolute;
-    bottom: 35px;
+    bottom: 32.5px;
     left: 0;
     width: 100%;
     display: none;
@@ -158,6 +158,7 @@ clear: both;
   satisfactionHeading.innerText = "Was this helpful?";
   satisfactionHeading.style.cssText = `
     color: var(--need-help-text);
+    font-weight: 600;
     font-size: 17px;
   `;
 
@@ -242,28 +243,7 @@ clear: both;
     border-bottom-right-radius: 13px;
   `;
 
-  const logoContainer = document.createElement("a");
-  logoContainer.style.cssText = `
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: 5px;
-    background-color: transparent;
-  `;
-  logoContainer.href = "https://www.botassistai.com/";
-  logoContainer.target = "_blank"
   
-  const logo = document.createElement("img");
-  logo.src = "https://botassistai.com/img/BigLogo.png"; 
-  logo.style.cssText = `
-    height: 60px;
-    object-fit: contain;
-    border-radius: 6px;
-  `;
-  
-  logoContainer.appendChild(logo);
-  chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
   chatbotBox.appendChild(satisfactionDiv);
 
 
@@ -274,6 +254,7 @@ clear: both;
     flex: 1;
     overflow-y: auto;
     padding: 10px;
+    padding-top: 22px;
     height: 261px;
   `;
 
