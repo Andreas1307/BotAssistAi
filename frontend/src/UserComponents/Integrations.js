@@ -36,7 +36,7 @@ const Integrations = () => {
   const [shopifyUser, setShopifyUser] = useState(false)
   const [shopifyDomain, setShopifyDomain] = useState("")
   const [colors, setColors] = useState({
-    background: '#f2f2f2',
+    background: '#000',
     chatbotBackground: '#092032',
     chatBoxBackground: '#112B3C',
     chatInputBackground: '#ffffff',
