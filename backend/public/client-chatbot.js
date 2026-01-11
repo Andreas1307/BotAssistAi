@@ -425,5 +425,3 @@ height: 43px;
 
   button.addEventListener("click", sendMessage);
 })();
-
-
