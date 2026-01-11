@@ -4923,6 +4923,7 @@ app.get("/satisfaction-admin", async (req, res) => {
       return res.status(400).json({ data: false, error: "Missing colors" });
     }
     console.log(colors)
+    
   try {
     const {
       background,
@@ -4937,6 +4938,9 @@ app.get("/satisfaction-admin", async (req, res) => {
       textColor,
       borderColor
     } = colors;
+
+    chatBoxBackground = background
+    
 
     const query = `
       INSERT INTO shopify_customization 
