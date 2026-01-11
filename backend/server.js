@@ -4907,15 +4907,21 @@ app.get("/satisfaction-admin", async (req, res) => {
   })
 
   app.post("/chatbot-config-shopify", async (req, res) => {
-        // Extract colors from body
-        const colors = req.body.colors;
 
-        // REAL SHOP DOMAIN FROM SERVER SESSION
         const shop =
           req.user?.shopify_shop_domain ||
           req.session?.shopify?.shop ||
           null;
     console.log("/chatbot-config-shopify", shop)
+
+    if (!shop) {
+      return res.status(401).json({ data: false, error: "Unauthorized" });
+    }
+  
+    const colors = req.body?.colors;
+    if (!colors) {
+      return res.status(400).json({ data: false, error: "Missing colors" });
+    }
   try {
     const {
       background,

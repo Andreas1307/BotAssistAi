@@ -410,15 +410,20 @@ const Integrations = () => {
     try {
       const response = await fetchWithAuth(`/chatbot-config-shopify`, {
         method: "POST",
-        body: { shop, colors}
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ colors }) // 👈 shop NOT needed here
       });
+  
       if (response.data === true) {
-        setChatBotConfig(false)
+        setChatBotConfig(false);
       }
     } catch (e) {
-      console.log("An error occured while trying to send the chatbot config", e)
+      console.log("An error occurred while trying to send the chatbot config", e);
     }
   };
+  
   
 
   const handleCopyApiKey = () => {
