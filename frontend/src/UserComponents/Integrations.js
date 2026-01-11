@@ -387,20 +387,21 @@ const Integrations = () => {
     fetchShopifyUser()
   }, [user])
 
-
-  useEffect(() => {
-    const getShopifyStyles = async () => {
+ const getShopifyStyles = async () => {
       if (!shopifyDomain) return;
       try {
         const shop = shopifyDomain
         const response = await fetchWithAuth(`/get-shopify-styles?shop=${shop}`, {
           method: "GET",
         });
+        console.log("RESPONSE", response.data)
         setColors(response.data);
       } catch (e) {
         console.log("Error occurred while trying to fetch the Shopify styles", e);
       }
     };
+  useEffect(() => {
+   
     getShopifyStyles();
   }, [user]);
 
@@ -863,6 +864,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
     if (window.top !== window.self) {
       alert("This action is not available inside the Shopify admin. Please open BotAssistAi in a new tab.");
     } else {
+      getShopifyStyles()
       setChatBotConfig(true);
     }
   }}
