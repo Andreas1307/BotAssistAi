@@ -14,11 +14,6 @@
     return;
   }
   
-  if (!apiKey || !shop) {
-    console.error("❌ BotAssist missing apiKey or shop on loader");
-    return;
-  }
-  
 
 const directory = "https://api.botassistai.com"
   

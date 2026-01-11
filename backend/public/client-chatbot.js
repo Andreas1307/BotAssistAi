@@ -1,11 +1,26 @@
 (function () {
   const script = document.currentScript;
-  const apiKey = script.getAttribute("api-key");
+  const apiKey = window.BOTASSIST_API_KEY;
+  const shop = window.BOTASSIST_SHOP;
 const directory = "https://api.botassistai.com"
   if (!apiKey) {
     console.error("❌ Missing API key in <script> tag.");
     return;
   }
+
+
+
+
+  if (!shop) {
+    console.error("❌ Missing shop on chatbot-loader.js script tag");
+    return;
+  }
+
+
+
+
+
+
 
   const style = document.createElement("style");
   style.textContent = `
