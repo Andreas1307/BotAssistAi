@@ -3715,12 +3715,20 @@ app.post("/ping-client", async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      "SELECT user_id FROM users",
-      []
+      "SELECT user_id, api_key FROM users"
     );
 
-    const user = rows.find(u => decryptApiKey(u.api_key) === apiKey);
-    if (!user) return res.status(403).json({ connected: false });
+    const user = rows.find(u => {
+      try {
+        return decryptApiKey(u.api_key) === apiKey;
+      } catch {
+        return false;
+      }
+    });
+
+    if (!user) {
+      return res.status(403).json({ connected: false });
+    }
 
     await pool.query(
       "UPDATE users SET last_connected = NOW() WHERE user_id = ?",
@@ -3734,7 +3742,6 @@ app.post("/ping-client", async (req, res) => {
     return res.status(500).json({ connected: false });
   }
 });
-
 
 
 
