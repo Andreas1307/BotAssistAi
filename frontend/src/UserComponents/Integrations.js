@@ -380,6 +380,8 @@ const Integrations = () => {
         });
         setShopifyUser(response.data)
         setShopifyDomain(response.domain)
+        
+        console.log("SHOP", response)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
       }
@@ -391,7 +393,6 @@ const Integrations = () => {
       if (!shopifyDomain) return;
       try {
         const shop = shopifyDomain
-        console.log("SHOP", shop)
         const response = await fetchWithAuth(`/get-shopify-styles?shop=${shop}`, {
           method: "GET",
         });
