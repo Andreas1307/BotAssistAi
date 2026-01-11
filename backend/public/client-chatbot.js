@@ -1,6 +1,8 @@
 (function () {
   const script = document.currentScript;
-  const apiKey = script.getAttribute("data-api-key");
+  const apiKey = window.BOTASSIST_API_KEY;
+
+
 const directory = "https://api.botassistai.com"
   if (!apiKey) {
     console.error("❌ Missing API key in <script> tag.");

@@ -3699,36 +3699,43 @@ const userId = user.user_id;
   }
 });
 
-app.post("/ping-client", verifySessionToken, async (req, res) => {
-  const { apiKey } = req.body;
-
+app.post("/ping-client", async (req, res) => {
   try {
-    const [users] = await pool.query("SELECT * FROM users");
-    
-    let user = null;
-    for (const u of users) {
-      try {
-        if (!u.api_key) continue;
-        if (decryptApiKey(u.api_key) === apiKey) {
-          user = u;
-          break;
-        }
-      } catch (decryptErr) {
-        console.error("Error decrypting api_key for user_id", u.user_id, decryptErr);
-      }
+    const { apiKey } = req.body;
+
+    if (!apiKey) {
+      return res.status(400).json({
+        connected: false,
+        message: "Missing apiKey"
+      });
     }
 
-    if (!user) {
-      return res.status(403).json({ connected: false, message: "API key not found" });
+    // Compare encrypted key directly (NO DECRYPTION)
+    const [rows] = await pool.query(
+      "SELECT user_id FROM users WHERE api_key = ? LIMIT 1",
+      [apiKey]
+    );
+
+    if (!rows.length) {
+      return res.status(403).json({
+        connected: false,
+        message: "Invalid API key"
+      });
     }
 
-    await pool.query('UPDATE users SET last_connected = NOW() WHERE user_id = ?', [user.user_id]);
+    await pool.query(
+      "UPDATE users SET last_connected = NOW() WHERE user_id = ?",
+      [rows[0].user_id]
+    );
 
     return res.status(200).json({ connected: true });
 
-  } catch (e) {
-    console.error("Error checking if the api is connected:", e);
-    return res.status(500).json({ connected: false, error: e.message });
+  } catch (err) {
+    console.error("❌ /ping-client error:", err);
+    return res.status(500).json({
+      connected: false,
+      error: "Server error"
+    });
   }
 });
 
