@@ -6,19 +6,18 @@
 fetch('https://api.botassistai.com/public/get-api-key?shop={{ shop.permanent_domain }}')
   .then(res => res.json())
   .then(({ apiKey }) => {
-    if (!apiKey) {
-      console.error("❌ Missing API key");
-      return;
-    }
+    if (!apiKey) return;
+
+    window.BOTASSIST_API_KEY = apiKey;
+    window.BOTASSIST_SHOP = "{{ shop.permanent_domain }}";
 
     const s = document.createElement("script");
     s.src = "{{ 'chatbot-loader.js' | asset_url }}";
-    s.setAttribute("data-api-key", apiKey); // ✅ now actually used
-    s.setAttribute("data-shop", "{{ shop.permanent_domain }}");
     s.defer = true;
     document.body.appendChild(s);
   });
 </script>
+
 
 
 

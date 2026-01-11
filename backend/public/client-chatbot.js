@@ -1,13 +1,7 @@
 (function () {
   const script = document.currentScript;
-const apiKey = script?.getAttribute("data-api-key");
-const shop = script?.getAttribute("data-shop");
-
-
-
-  // ✅ FIX: expose to client-chatbot.js
-  window.BOTASSIST_API_KEY = apiKey;
-  window.BOTASSIST_SHOP = shop;
+  const apiKey = window.BOTASSIST_API_KEY;
+  const shop = window.BOTASSIST_SHOP;
 
 
   if (!apiKey) {
