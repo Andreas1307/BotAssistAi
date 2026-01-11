@@ -354,7 +354,7 @@ height: 43px;
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message, apiKey }),
+        body: JSON.stringify({ message, apiKey: window.BOTASSIST_API_KEY }),
       });
       const data = await res.json();
       const botResponse = data.response;

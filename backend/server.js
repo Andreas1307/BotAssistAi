@@ -1478,17 +1478,24 @@ app.get("/public/get-api-key", async (req, res) => {
   const { shop } = req.query;
   if (!shop) return res.status(400).json({ apiKey: null });
 
-  const [rows] = await pool.query(
-    "SELECT api_key FROM users WHERE shopify_shop_domain = ?",
-    [shop]
-  );
+  try {
+    const [rows] = await pool.query(
+      "SELECT api_key FROM users WHERE shopify_shop_domain = ?",
+      [shop]
+    );
 
-  if (!rows.length) return res.json({ apiKey: null });
+    if (!rows.length) return res.json({ apiKey: null });
 
-  res.json({ apiKey: rows[0].api_key });
+    // decrypt key before sending to frontend
+    const decryptedApiKey = decryptApiKey(rows[0].api_key);
+
+    res.json({ apiKey: decryptedApiKey });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ apiKey: null });
+  }
 });
-
-
 
 
 
@@ -3708,17 +3715,16 @@ app.post("/ping-client", async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      "SELECT user_id FROM users WHERE api_key = ? LIMIT 1",
-      [apiKey]
+      "SELECT user_id FROM users",
+      []
     );
 
-    if (!rows.length) {
-      return res.status(403).json({ connected: false });
-    }
+    const user = rows.find(u => decryptApiKey(u.api_key) === apiKey);
+    if (!user) return res.status(403).json({ connected: false });
 
     await pool.query(
       "UPDATE users SET last_connected = NOW() WHERE user_id = ?",
-      [rows[0].user_id]
+      [user.user_id]
     );
 
     return res.json({ connected: true });
@@ -3728,6 +3734,7 @@ app.post("/ping-client", async (req, res) => {
     return res.status(500).json({ connected: false });
   }
 });
+
 
 
 
