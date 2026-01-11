@@ -3,12 +3,19 @@
 {% endcomment %}
 
 {% if shop.metafields.botassist.api_key != blank %}
-  <script
-    src="{{ 'chatbot-loader.js' | asset_url }}"
-    data-api-key="{{ shop.metafields.botassist.api_key }}"
-    data-shop="{{ shop.permanent_domain }}"
-    defer
-  ></script>
+<script>
+  fetch('/public/get-api-key?shop={{ shop.permanent_domain }}')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.apiKey) return console.error("❌ Missing API key");
+      const s = document.createElement("script");
+      s.src = "{{ 'chatbot-loader.js' | asset_url }}";
+      s.setAttribute("data-api-key", data.apiKey);
+      s.setAttribute("data-shop", "{{ shop.permanent_domain }}");
+      document.body.appendChild(s);
+    });
+</script>
+    
 {% else %}
   <script>console.error("❌ BotAssist API key missing for this shop")</script>
 {% endif %}
