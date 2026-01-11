@@ -4939,7 +4939,7 @@ app.get("/satisfaction-admin", async (req, res) => {
       borderColor
     } = colors;
     
-    background = chatBoxBackground
+    background = chatbotBackground
 
     const query = `
       INSERT INTO shopify_customization 
