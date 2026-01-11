@@ -379,9 +379,8 @@ const Integrations = () => {
           method: "GET",
         });
         setShopifyUser(response.data)
-        setShopifyDomain(response.domain)
+        setShopifyDomain(response.shopDomain)
         
-        console.log("SHOP", response)
       } catch(e) {
         console.log("An error occured checking the shopify user", e)
       }
@@ -396,14 +395,12 @@ const Integrations = () => {
         const response = await fetchWithAuth(`/get-shopify-styles?shop=${shop}`, {
           method: "GET",
         });
-        console.log("RESPONSE", response.data)
         setColors(response.data);
       } catch (e) {
         console.log("Error occurred while trying to fetch the Shopify styles", e);
       }
     };
   useEffect(() => {
-   
     getShopifyStyles();
   }, [user]);
 
