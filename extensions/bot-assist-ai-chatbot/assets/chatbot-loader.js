@@ -1,19 +1,20 @@
 (function () {
   const script = document.currentScript;
-  const apiKey = window.BOTASSIST_API_KEY;
+const apiKey = script?.getAttribute("data-api-key");
+const shop = script?.getAttribute("data-shop");
 
+if (!apiKey) {
+  console.error("❌ Missing API key on chatbot-loader.js script tag");
+  return;
+}
+
+if (!shop) {
+  console.error("❌ Missing shop on chatbot-loader.js script tag");
+  return;
+}
 
 const directory = "https://api.botassistai.com"
-  if (!apiKey) {
-    console.error("❌ Missing API key in <script> tag.");
-    return;
-  }
-  const shop = script.getAttribute("data-shop");
-
-  if (!apiKey || !shop) {
-    console.error("BotAssist: missing apiKey or shop");
-    return;
-  }
+  
 
   // Fetch customization
   fetch(`https://api.botassistai.com/public/chatbot-config?shop=${shop}`)

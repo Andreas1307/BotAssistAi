@@ -13,12 +13,13 @@ fetch('https://api.botassistai.com/public/get-api-key?shop={{ shop.permanent_dom
 
     const s = document.createElement("script");
     s.src = "{{ 'chatbot-loader.js' | asset_url }}";
-    s.setAttribute("data-api-key", apiKey);
+    s.setAttribute("data-api-key", apiKey); // ✅ now actually used
     s.setAttribute("data-shop", "{{ shop.permanent_domain }}");
     s.defer = true;
     document.body.appendChild(s);
   });
 </script>
+
 
 
 
