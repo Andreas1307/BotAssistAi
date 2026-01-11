@@ -3719,6 +3719,7 @@ app.post("/ping-client", async (req, res) => {
     );
 
     const user = rows.find(u => {
+      if (!u.api_key) return false;
       try {
         return decryptApiKey(u.api_key) === apiKey;
       } catch {
@@ -3742,6 +3743,7 @@ app.post("/ping-client", async (req, res) => {
     return res.status(500).json({ connected: false });
   }
 });
+
 
 
 
