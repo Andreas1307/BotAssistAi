@@ -4,16 +4,22 @@
 
 {% if shop.metafields.botassist.api_key != blank %}
 <script>
-  fetch('/public/get-api-key?shop={{ shop.permanent_domain }}')
+  fetch('https://api.botassistai.com/public/get-api-key?shop={{ shop.permanent_domain }}')
     .then(res => res.json())
     .then(data => {
-      if (!data.apiKey) return console.error("❌ Missing API key");
+      if (!data.apiKey) {
+        console.error("❌ Missing API key");
+        return;
+      }
+
       const s = document.createElement("script");
       s.src = "{{ 'chatbot-loader.js' | asset_url }}";
       s.setAttribute("data-api-key", data.apiKey);
       s.setAttribute("data-shop", "{{ shop.permanent_domain }}");
+      s.defer = true;
       document.body.appendChild(s);
-    });
+    })
+    .catch(err => console.error("❌ BotAssist init failed", err));
 </script>
 
 {% else %}

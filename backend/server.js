@@ -1474,6 +1474,22 @@ app.get('/public/chatbot-config', async (req, res) => {
   }
 });
 
+app.get("/public/get-api-key", async (req, res) => {
+  const { shop } = req.query;
+  if (!shop) return res.status(400).json({ apiKey: null });
+
+  const [rows] = await pool.query(
+    "SELECT api_key FROM users WHERE shopify_shop_domain = ?",
+    [shop]
+  );
+
+  if (!rows.length) return res.json({ apiKey: null });
+
+  res.json({ apiKey: rows[0].api_key });
+});
+
+
+
 
 
 app.get("/debug/cookies", (req, res) => {
