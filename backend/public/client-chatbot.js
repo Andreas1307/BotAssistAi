@@ -3,12 +3,28 @@
 const apiKey = script?.getAttribute("data-api-key");
 const shop = script?.getAttribute("data-shop");
 
-if (!apiKey || !shop) {
-  console.error("❌ BotAssist missing apiKey or shop", { apiKey, shop });
-  return;
-}
 
 
+  // ✅ FIX: expose to client-chatbot.js
+  window.BOTASSIST_API_KEY = apiKey;
+  window.BOTASSIST_SHOP = shop;
+
+
+  if (!apiKey) {
+    console.error("❌ Missing API key on chatbot-loader.js script tag");
+    return;
+  }
+  
+  if (!shop) {
+    console.error("❌ Missing shop on chatbot-loader.js script tag");
+    return;
+  }
+  
+  if (!apiKey || !shop) {
+    console.error("❌ BotAssist missing apiKey or shop on loader");
+    return;
+  }
+  
 
 const directory = "https://api.botassistai.com"
   
