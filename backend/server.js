@@ -3703,32 +3703,22 @@ app.post("/ping-client", async (req, res) => {
   const { apiKey } = req.body;
 
   if (!apiKey) {
-    return res.status(400).json({ connected: false, message: "Missing apiKey" });
+    return res.status(400).json({ connected: false });
   }
 
   try {
     const [rows] = await pool.query(
-      "SELECT user_id, api_key FROM users WHERE api_key IS NOT NULL"
+      "SELECT user_id FROM users WHERE api_key = ? LIMIT 1",
+      [apiKey]
     );
 
-    let user = null;
-
-    for (const row of rows) {
-      try {
-        if (decryptApiKey(row.api_key) === apiKey) {
-          user = row;
-          break;
-        }
-      } catch {}
-    }
-
-    if (!user) {
+    if (!rows.length) {
       return res.status(403).json({ connected: false });
     }
 
     await pool.query(
       "UPDATE users SET last_connected = NOW() WHERE user_id = ?",
-      [user.user_id]
+      [rows[0].user_id]
     );
 
     return res.json({ connected: true });
@@ -3738,6 +3728,7 @@ app.post("/ping-client", async (req, res) => {
     return res.status(500).json({ connected: false });
   }
 });
+
 
 
 app.get("/get-connected", verifySessionToken, async (req, res) => {
