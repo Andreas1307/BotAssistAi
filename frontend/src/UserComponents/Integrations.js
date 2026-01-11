@@ -36,7 +36,7 @@ const Integrations = () => {
   const [shopifyUser, setShopifyUser] = useState(false)
   const [shopifyDomain, setShopifyDomain] = useState("")
   const [colors, setColors] = useState({
-    background: '#000',
+    background: '#f2f2f2',
     chatbotBackground: '#092032',
     chatBoxBackground: '#112B3C',
     chatInputBackground: '#ffffff',
@@ -391,6 +391,7 @@ const Integrations = () => {
       if (!shopifyDomain) return;
       try {
         const shop = shopifyDomain
+        console.log("SHOP", shop)
         const response = await fetchWithAuth(`/get-shopify-styles?shop=${shop}`, {
           method: "GET",
         });
