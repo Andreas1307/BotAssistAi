@@ -1,57 +1,11 @@
 (function () {
   const script = document.currentScript;
-  const apiKey = window.BOTASSIST_API_KEY;
-  const shop = window.BOTASSIST_SHOP;
-
-
-  if (!apiKey) {
-    console.error("❌ Missing API key on chatbot-loader.js script tag");
-    return;
-  }
-  
-  if (!shop) {
-    console.error("❌ Missing shop on chatbot-loader.js script tag");
-    return;
-  }
-  
-  if (!apiKey || !shop) {
-    console.error("❌ BotAssist missing apiKey or shop on loader");
-    return;
-  }
-  
-
+  const apiKey = script.getAttribute("api-key");
 const directory = "https://api.botassistai.com"
-  
-
-  // Fetch customization
-  fetch(`https://api.botassistai.com/public/chatbot-config?shop=${shop}`)
-    .then(res => res.json())
-    .then(config => {
-      window.BOTASSIST_CONFIG = config;
-
-      const root = document.documentElement;
-
-root.style.setProperty("--ai-background", config.background);
-root.style.setProperty("--ai-chatbot-bg", config.chatbotBackground);
-root.style.setProperty("--conversation-boxes", config.chatBoxBackground);
-root.style.setProperty("--ai-input", config.chatInputBackground);
-root.style.setProperty("--ai-button", config.chatBtn);
-root.style.setProperty("--ai-website-chat-btn", config.websiteChatBtn);
-root.style.setProperty("--ai-website-question", config.websiteQuestion);
-root.style.setProperty("--need-help-text", config.needHelpTextColor);
-root.style.setProperty("--font-color", config.textColor);
-root.style.setProperty("--ai-border", config.borderColor);
-
-
-
-      const s = document.createElement("script");
-      s.src = "https://api.botassistai.com/client-chatbot.js";
-      s.defer = true;
-      document.body.appendChild(s);
-    })
-    .catch(err => console.error("BotAssist config load failed", err));
-
-
+  if (!apiKey) {
+    console.error("❌ Missing API key in <script> tag.");
+    return;
+  }
 
   const style = document.createElement("style");
   style.textContent = `
@@ -174,7 +128,7 @@ clear: both;
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
     position: absolute;
-    bottom: 32.5px;
+    bottom: 35px;
     left: 0;
     width: 100%;
     display: none;
@@ -189,7 +143,6 @@ clear: both;
   satisfactionHeading.innerText = "Was this helpful?";
   satisfactionHeading.style.cssText = `
     color: var(--need-help-text);
-    font-weight: 600;
     font-size: 17px;
   `;
 
@@ -274,6 +227,28 @@ clear: both;
     border-bottom-right-radius: 13px;
   `;
 
+  const logoContainer = document.createElement("a");
+  logoContainer.style.cssText = `
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 5px;
+    background-color: transparent;
+  `;
+  logoContainer.href = "https://www.botassistai.com/";
+  logoContainer.target = "_blank"
+  
+  const logo = document.createElement("img");
+  logo.src = "https://botassistai.com/img/BigLogo.png"; 
+  logo.style.cssText = `
+    height: 60px;
+    object-fit: contain;
+    border-radius: 6px;
+  `;
+  
+  logoContainer.appendChild(logo);
+  chatbotBox.insertBefore(logoContainer, chatbotBox.firstChild);
   chatbotBox.appendChild(satisfactionDiv);
 
 
@@ -284,7 +259,6 @@ clear: both;
     flex: 1;
     overflow-y: auto;
     padding: 10px;
-    padding-top: 22px;
     height: 261px;
   `;
 
