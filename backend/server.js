@@ -1280,6 +1280,8 @@ let apiKeyForShop;
 
     }
 
+    console.log("APIKEYYYYYYYYYYYYYYYYYYY", apiKeyForShop)
+
     await client.post({
       path: "metafields",
       data: {
@@ -1465,6 +1467,7 @@ app.get('/public/chatbot-config', async (req, res) => {
       textColor: config.textColor,
       borderColor: config.borderColor
     });
+    
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
