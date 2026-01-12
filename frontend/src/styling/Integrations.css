@@ -250,7 +250,7 @@
 .chat-div {
   flex: 1;
       overflow-y: auto;
-      padding: 12px 10px 10px;
+      padding: 15px 10px 10px;
       min-height: 312px;
       display: flex;
       flex-direction: column;

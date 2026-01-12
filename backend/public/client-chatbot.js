@@ -264,7 +264,6 @@ clear: both;
       max-height: 43px;
 display: flex;
 background: var(--ai-input);
-border-top: 1px solid var(--ai-border);
 justify-content: space-between;
 margin-top: 50px;
 border-bottom-right-radius: 13px; 
