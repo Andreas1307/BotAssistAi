@@ -86,7 +86,7 @@ const SettingsPage = () => {
       try {
         const data = await fetchWithAuth("/auth-check");  
         
-        console.log("USER", user)
+        console.log("USER", data.user)
         setUser(data.user);
       } catch (error) {
         console.error("❌ Auth check error:", error);

@@ -107,6 +107,7 @@
 .downGradeBtn {
   max-width: fit-content;
   padding: 10px 16px;
+  margin-bottom: -5px;
   border-radius: 10px;
   background: transparent;
   border: 1.5px solid #d0d5dd;
