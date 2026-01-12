@@ -346,7 +346,7 @@ setHasSubscription(false)
 
 {hasSubscription && (
  <button
- onClick={showLogoutConfirm2(cancelPlan)}
+ onClick={() => showLogoutConfirm2(cancelPlan)}
  disabled={loading}
  className="downGradeBtn"
 >
