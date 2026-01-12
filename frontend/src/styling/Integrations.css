@@ -438,7 +438,7 @@ align-self: flex-start;
   
   .onboarding-modal h2 {
     margin-bottom: 10px;
-    font-size: 26px;
+    font-size: 28px;
     font-family: "Space Grotesk", sans-serif;
   }
   
@@ -483,13 +483,13 @@ align-self: flex-start;
   
   .step h4 {
     margin: 0 0 4px;
-    font-size: 18px;
+    font-size: 19.5px;
     font-family: "Space Grotesk", sans-serif;
   }
   
   .step p {
     margin: 0;
-    font-size: 14px;
+    font-size: 14.5px;
     color: #555;
     font-family: "Space Grotesk", sans-serif;
   }
@@ -519,9 +519,11 @@ align-self: flex-start;
     background: #00f5d4;
     color: #fff;
     padding: 14px;
-    border-radius: 8px;
+    border-radius: 14px;
     font-weight: 600;
+    font-size: 15.9px;
     text-decoration: none;
+    font-family: "Space Grotesk", sans-serif;
   }
   
   .enable-btn:hover {
@@ -551,7 +553,10 @@ align-self: flex-start;
     cursor: pointer;
     margin: 18px auto 0;
     font-family: "Space Grotesk", sans-serif;
-
+    transition: .3s ease;
+  }
+  .close-btn:hover {
+    transform: translateY(-4px);
   }
   .quick-btn.inte {
     border: 0;
@@ -566,7 +571,7 @@ align-self: flex-start;
     background-color: red;
   }
   .configChatBtn.inte {
-    font-size: 15px;
+    font-size: 14.6px;
     padding: 6.5px 18px;
   }
   .howToIN {
