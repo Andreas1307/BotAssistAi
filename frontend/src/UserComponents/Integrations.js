@@ -635,6 +635,8 @@ const Integrations = () => {
     return () => clearInterval(interval);
   }, [user]);
 
+  const themeEditorUrl = `https://admin.shopify.com/store/${user?.shopify_shop_domain}/themes/current/editor?context=apps`;
+
   return (
     <main className="integrations-page">
       {chatBotConfig && (
@@ -800,7 +802,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
         App embeds.
       </p>
 
-      <button className="close-btn" onClick={onClose}>
+      <button className="close-btn" onClick={() => setShowHow(false)}>
         I’ll do this later
       </button>
     </div>
