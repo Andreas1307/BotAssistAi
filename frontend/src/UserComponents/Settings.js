@@ -181,7 +181,7 @@ const SettingsPage = () => {
       if (!data?.success) {
         throw new Error(data?.error || "Cancellation failed");
       }
-
+setHasSubscription(false)
       alert("Subscription canceled successfully");
       
     } catch (err) {
@@ -189,6 +189,62 @@ const SettingsPage = () => {
       alert("Failed to cancel subscription");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const LogoutConfirmToast2 = ({ closeToast, onConfirm, reason = "Are you sure you cancel the plan?" }) => (
+    <div>
+      <p>⚠️ {reason}</p> {/* Fallback to default message */}
+      <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+        <button
+          onClick={() => {
+            onConfirm();
+            closeToast();
+          }}
+          style={{
+            padding: "9px 18px",
+            backgroundColor: "#d9534f",
+            border: "none",
+            fontWeight: 700,
+            color: "white",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Yes, Cancel Plan
+        </button>
+        <button
+          onClick={closeToast}
+          style={{
+            padding: "9px 18px",
+            fontWeight: 700,
+            backgroundColor: "#6c757d",
+            border: "none",
+            color: "white",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+
+  const showLogoutConfirm2 = (onConfirm, reason) => {
+    try {
+      toast.info(({ closeToast }) => (
+        <LogoutConfirmToast2 closeToast={closeToast} onConfirm={onConfirm} reason={reason} />
+      ), {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false,
+        toastId: "logout-confirm",
+      });
+    } catch (error) {
+      console.log("Error displaying logout confirmation toast:", error);
     }
   };
 
@@ -290,7 +346,7 @@ const SettingsPage = () => {
 
 {hasSubscription && (
  <button
- onClick={cancelPlan}
+ onClick={showLogoutConfirm2(cancelPlan)}
  disabled={loading}
  className="downGradeBtn"
 >
