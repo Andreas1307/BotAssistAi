@@ -771,7 +771,6 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 )}
 
 {showHow && (
-     (
       <div className="onboarding-overlay">
         <div className="onboarding-modal">
           <h2>Get BotAssistAi Live on Your Store</h2>
