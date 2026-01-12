@@ -728,7 +728,6 @@ onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
 
      <div className="chatbot" style={{ backgroundColor: colors.background }}>
 <div className="chatbot-div" style={{ backgroundColor: colors.chatbotBackground }}>
-<img draggable="false" src={`${process.env.PUBLIC_URL}/img/BigLogo.png`} />
 <div className="chat-div" >
 <div className="chat-1" style={{ color: colors.textColor, backgroundColor: colors.chatBoxBackground }}>Hey, cau you help me ?</div>
 <div className="chat-2" style={{ color: colors.textColor, backgroundColor: colors.chatBoxBackground }}>Yes, sure . Let me know about what product</div>
