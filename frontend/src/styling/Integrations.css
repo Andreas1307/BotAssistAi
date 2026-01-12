@@ -458,6 +458,8 @@ align-self: flex-start;
     border-bottom: 1px solid #eee;
     text-align: center;
     font-family: "Space Grotesk", sans-serif;
+    align-items: center;
+    justify-content: center;
   }
   
   .step:last-child {
@@ -496,6 +498,11 @@ align-self: flex-start;
     gap: 7px;
     font-family: "Space Grotesk", sans-serif;
   }
+  .step ol li {
+    font-size: 15.6px;
+    color: #444;
+    font-family: "Space Grotesk", sans-serif;
+  }
   .step.highlight .step-number {   
      background: #00f5d4;
     color: #fff;
@@ -530,17 +537,18 @@ align-self: flex-start;
     background: #dfdfdf;
     border-radius: 13px;
     border: none;
-    margin-top: 18px;
     display: block;
     font-size: 15.5px;
     width: 100%;
     text-align: center;
     padding: 10px 14px;
+    font-weight: 600;
     max-width: fit-content;
     color: #555;
     cursor: pointer;
+    margin: 18px auto 0;
     font-family: "Space Grotesk", sans-serif;
-    
+
   }
   .quick-btn.inte {
     border: 0;
@@ -548,8 +556,8 @@ align-self: flex-start;
     color: #fff;
     cursor: pointer;
     font-size: 14px;
-    font-weight: 600;
-    padding: 7px 13px;
+    font-weight: 700;
+    padding: 7px 13px 7.5px;
     transition: .4s ease;
     margin: 0 6px;
     background-color: red;
