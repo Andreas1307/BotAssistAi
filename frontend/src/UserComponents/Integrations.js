@@ -35,6 +35,7 @@ const Integrations = () => {
   const [chatBotConfig, setChatBotConfig] = useState(false)
   const [shopifyUser, setShopifyUser] = useState(false)
   const [shopifyDomain, setShopifyDomain] = useState("")
+  const [showHow, setShowHow] = useState(false)
   const [colors, setColors] = useState({
     background: '#f2f2f2',
     chatbotBackground: '#092032',
@@ -766,6 +767,51 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   </div>
 </div>
 )}
+
+{showHow && (
+    <div className="onboarding-overlay">
+    <div className="onboarding-modal">
+      <h2>Enable BotAssistAi on Your Store</h2>
+
+      <p>
+        BotAssistAi is installed, but it won’t appear on your storefront until
+        you enable it in your theme.
+      </p>
+
+      <ol>
+        <li>Click <strong>“Enable BotAssistAi”</strong> below</li>
+        <li>You’ll be taken to the Shopify <strong>Theme Editor</strong></li>
+        <li>Open the <strong>App embeds</strong> panel</li>
+        <li>Toggle <strong>BotAssistAi Chatbot</strong> ON</li>
+        <li>Click <strong>Save</strong></li>
+      </ol>
+
+      <a
+        href={themeEditorUrl}
+        target="_top"
+        rel="noopener noreferrer"
+        className="enable-btn"
+      >
+        Enable BotAssistAi
+      </a>
+
+      <p className="note">
+        You can disable or re-enable BotAssistAi at any time from your theme’s
+        App embeds.
+      </p>
+
+      <button className="close-btn" onClick={onClose}>
+        I’ll do this later
+      </button>
+    </div>
+  </div>
+)}
+
+
+
+
+
+
       <div className="dashboard-widgets">
         <div className="status-panel">
           <h2>System Status</h2>
@@ -909,7 +955,11 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 )}
 
       </div>
-      
+      <button 
+      onClick={() => setShowHow(true)}
+      >
+        How To Integrate
+      </button>
    
 
       <div>

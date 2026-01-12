@@ -414,3 +414,64 @@ align-self: flex-start;
     font-size: 14.5px;
     }
   }
+
+
+
+  .onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .onboarding-modal {
+    background: #ffffff;
+    max-width: 520px;
+    width: 90%;
+    padding: 28px;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  .onboarding-modal h2 {
+    margin-bottom: 12px;
+  }
+  
+  .onboarding-modal ol {
+    margin: 16px 0;
+    padding-left: 20px;
+  }
+  
+  .enable-btn {
+    display: inline-block;
+    background: #008060;
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+  
+  .enable-btn:hover {
+    background: #006e52;
+  }
+  
+  .note {
+    font-size: 13px;
+    color: #666;
+    margin-top: 12px;
+  }
+  
+  .close-btn {
+    background: transparent;
+    border: none;
+    margin-top: 16px;
+    color: #555;
+    cursor: pointer;
+  }
+  
+
