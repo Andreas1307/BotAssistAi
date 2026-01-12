@@ -784,7 +784,6 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
             {/* STEP 1 */}
             <div className="step">
-              <span className="step-number">1</span>
               <div>
                 <h4>Train Your Bot</h4>
                 <p>
@@ -797,7 +796,6 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
             {/* STEP 2 */}
             <div className="step">
-              <span className="step-number">2</span>
               <div>
                 <h4>Enable AI Integration</h4>
                 <p>
@@ -823,7 +821,6 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
             {/* STEP 3 */}
             <div className="step">
-              <span className="step-number">3</span>
               <div>
                 <h4>Customize Chatbot (Optional)</h4>
                 <p>
@@ -849,7 +846,6 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
             {/* STEP 4 */}
             <div className="step highlight">
-              <span className="step-number">4</span>
               <div>
                 <h4>Enable the Chatbot in Your Theme</h4>
 

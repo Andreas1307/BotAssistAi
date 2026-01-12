@@ -438,13 +438,14 @@ align-self: flex-start;
   
   .onboarding-modal h2 {
     margin-bottom: 10px;
-    font-size: 22px;
+    font-size: 26px;
     font-family: "Space Grotesk", sans-serif;
   }
   
   .intro {
     color: #555;
-    font-size: 14px;
+    font-size: 14.5px;
+    font-family: "Space Grotesk", sans-serif;
   }
   
   .steps {
@@ -482,7 +483,7 @@ align-self: flex-start;
   
   .step h4 {
     margin: 0 0 4px;
-    font-size: 15px;
+    font-size: 18px;
     font-family: "Space Grotesk", sans-serif;
   }
   
@@ -496,6 +497,7 @@ align-self: flex-start;
     display: flex;
     flex-direction: column;
     gap: 7px;
+    width: 100%;
     font-family: "Space Grotesk", sans-serif;
   }
   .step ol li {
@@ -541,7 +543,7 @@ align-self: flex-start;
     font-size: 15.5px;
     width: 100%;
     text-align: center;
-    padding: 10px 14px;
+    padding: 9.5px 17px;
     font-weight: 600;
     max-width: fit-content;
     color: #555;
