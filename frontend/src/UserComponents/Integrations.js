@@ -15,6 +15,7 @@ import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
 import { formatDistanceToNow, set } from "date-fns";
 import { fetchWithAuth } from "../utils/initShopifyAppBridge";
+import axios from "axios";
 const Integrations = () => {
   const [bgColor, setBgColor] = useState("#007bff");
   const [position, setPosition] = useState("bottom-right");
@@ -635,7 +636,7 @@ const Integrations = () => {
     return () => clearInterval(interval);
   }, [user]);
 
-  
+
   async function getActiveThemeId(shop, accessToken) {
     try {
       const res = await axios.get(`https://${shop}/admin/api/2025-01/themes.json`, {
@@ -683,7 +684,7 @@ const Integrations = () => {
       const url = await getThemeEditorUrl(user); // currentUser = logged-in Shopify user from your DB
       setThemeEditorUrl(url);
     })();
-  }, [currentUser]);
+  }, [user]);
   return (
     <main className="integrations-page">
       {chatBotConfig && (
