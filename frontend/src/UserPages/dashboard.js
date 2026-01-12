@@ -1219,9 +1219,6 @@ if (loading) {
       <div className="bot-training-feedback">
         <h2>Chatbot Training</h2>
         <div className="feedback-card">
-          <p>⚠️<span> Flagged Issue:</span> {flaggedIssue || "No issues"}</p>
-        </div>
-        <div className="feedback-card">
           <p>💡<span> Suggestion:</span> Upload real chat examples and FAQs to help the AI respond more naturally and accurately.</p>
         </div>
       </div>
