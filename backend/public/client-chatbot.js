@@ -57,7 +57,7 @@ transform-origin: top left;
 
 .botassist-message {
   margin-bottom: 12px;
-  max-width: 80%;
+  max-width: 85%;
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 15px;
@@ -256,7 +256,7 @@ clear: both;
     overflow-y: auto;
     padding: 10px;
     padding-top: 22px;
-    height: 261px;
+    height: 270px;
   `;
 
   const submit = document.createElement("div");
@@ -300,7 +300,7 @@ outline: none;
 padding: 0 30px;
 cursor: pointer;
 color: var(--font-color);
-font-weight: 500;
+font-weight: 600;
 font-size: 16px;
 background: var(--ai-button);
 border-radius: 0;
