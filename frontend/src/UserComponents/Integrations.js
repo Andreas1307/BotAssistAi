@@ -635,8 +635,55 @@ const Integrations = () => {
     return () => clearInterval(interval);
   }, [user]);
 
-  const themeEditorUrl = `https://admin.shopify.com/store/${user?.shopify_shop_domain}/themes/current/editor?context=apps`;
-
+  
+  async function getActiveThemeId(shop, accessToken) {
+    try {
+      const res = await axios.get(`https://${shop}/admin/api/2025-01/themes.json`, {
+        headers: {
+          "X-Shopify-Access-Token": accessToken,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const themes = res.data.themes || [];
+      const activeTheme = themes.find(theme => theme.role === "main"); // main = published theme
+      return activeTheme?.id || null;
+  
+    } catch (err) {
+      console.error("❌ Failed to fetch themes:", err.response?.data || err.message);
+      return null;
+    }
+  }
+  
+  // 2️⃣ Generate the theme editor URL
+  async function getThemeEditorUrl(user) {
+    if (!user || !user.shopify_shop_domain || !user.shopify_access_token) {
+      console.warn("Missing user/shop info for theme editor URL");
+      return null;
+    }
+  
+    const themeId = await getActiveThemeId(user.shopify_shop_domain, user.shopify_access_token);
+  
+    if (!themeId) {
+      console.warn("No active theme found, falling back to /themes/current/editor");
+      return `https://admin.shopify.com/store/${user.shopify_shop_domain}/themes/current/editor?context=apps`;
+    }
+  
+    // Optional: specify a section to open by default
+    const sectionId = "template--25414724256071__image_banner"; // replace with your default section if needed
+  
+    return `https://admin.shopify.com/store/${user.shopify_shop_domain}/themes/${themeId}/editor?section=${sectionId}&context=apps`;
+  }
+  
+  // 3️⃣ Usage in your React/onboarding component
+  const [themeEditorUrl, setThemeEditorUrl] = useState("");
+  
+  useEffect(() => {
+    (async () => {
+      const url = await getThemeEditorUrl(user); // currentUser = logged-in Shopify user from your DB
+      setThemeEditorUrl(url);
+    })();
+  }, [currentUser]);
   return (
     <main className="integrations-page">
       {chatBotConfig && (
