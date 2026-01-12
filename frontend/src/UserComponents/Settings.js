@@ -84,7 +84,9 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await fetchWithAuth("/auth-check");        
+        const data = await fetchWithAuth("/auth-check");  
+        
+        console.log("USER", user)
         setUser(data.user);
       } catch (error) {
         console.error("❌ Auth check error:", error);
@@ -288,7 +290,7 @@ const SettingsPage = () => {
         <button
       onClick={cancelPlan}
       disabled={loading}
-      style={{ background: "#e53e3e", color: "white", padding: "10px 16px" }}
+      className="downGradeBtn"
     >
       {loading ? "Downgrading..." : "Downgrade to Free"}
     </button>

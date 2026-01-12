@@ -1127,7 +1127,7 @@ if (loading) {
       </div>
 
             <div className="conv-details">
-            <div  style={{opacity: !membership ? 0.5 : 1}} className="conversation-details">
+            <div className="conversation-details">
   <h2>Conversation History</h2>
   
   <div className="conversation-detail">

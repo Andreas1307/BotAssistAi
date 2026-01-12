@@ -104,6 +104,36 @@
   font-weight: 600;
 }
 
+.downGradeBtn {
+  max-width: fit-content;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1.5px solid #d0d5dd;
+  color: #667085;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.downGradeBtn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #98a2b3;
+  color: #475467;
+}
+
+.downGradeBtn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.downGradeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
 .logout-btn {
   background-color: #dc3545;
   color: white;

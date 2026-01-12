@@ -395,7 +395,12 @@ const Integrations = () => {
         const response = await fetchWithAuth(`/get-shopify-styles?shop=${shop}`, {
           method: "GET",
         });
-        setColors(response.data);
+        setColors(prev => ({
+          ...prev,
+          ...response.data,
+          background: "#f2f2f2", 
+        }));
+        
       } catch (e) {
         console.log("Error occurred while trying to fetch the Shopify styles", e);
       }
