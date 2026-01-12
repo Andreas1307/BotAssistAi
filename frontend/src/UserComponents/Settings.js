@@ -86,10 +86,9 @@ const SettingsPage = () => {
     const fetchUser = async () => {
       try {
         const data = await fetchWithAuth("/auth-check");  
-        if(data.shopify_subscription_status === "ACTIVE") {
+        if(data.user.shopify_subscription_status === "ACTIVE") {
           setHasSubscription(true)
         }
-        console.log("DATA", data.user)
         setUser(data.user);
       } catch (error) {
         console.error("❌ Auth check error:", error);
