@@ -771,42 +771,116 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 )}
 
 {showHow && (
-    <div className="onboarding-overlay">
-    <div className="onboarding-modal">
-      <h2>Enable BotAssistAi on Your Store</h2>
-
-      <p>
-        BotAssistAi is installed, but it won’t appear on your storefront until
-        you enable it in your theme.
-      </p>
-
-      <ol>
-        <li>Click <strong>“Enable BotAssistAi”</strong> below</li>
-        <li>You’ll be taken to the Shopify <strong>Theme Editor</strong></li>
-        <li>Open the <strong>App embeds</strong> panel</li>
-        <li>Toggle <strong>BotAssistAi Chatbot</strong> ON</li>
-        <li>Click <strong>Save</strong></li>
-      </ol>
-
-      <a
-        href={themeEditorUrl}
-        target="_top"
-        rel="noopener noreferrer"
-        className="enable-btn"
-      >
-        Enable BotAssistAi
-      </a>
-
-      <p className="note">
-        You can disable or re-enable BotAssistAi at any time from your theme’s
-        App embeds.
-      </p>
-
-      <button className="close-btn" onClick={() => setShowHow(false)}>
-        I’ll do this later
-      </button>
-    </div>
-  </div>
+     (
+      <div className="onboarding-overlay">
+        <div className="onboarding-modal">
+          <h2>Get BotAssistAi Live on Your Store</h2>
+  
+          <p className="intro">
+            Follow the steps below to activate your AI chatbot on your website.
+            Each step is required for the chatbot to function correctly.
+          </p>
+  
+          <div className="steps">
+  
+            {/* STEP 1 */}
+            <div className="step">
+              <span className="step-number">1</span>
+              <div>
+                <h4>Train Your Bot</h4>
+                <p>
+                  Go to <strong>Bot Training</strong> and enter your business
+                  information so the AI understands your store, products, and
+                  policies.
+                </p>
+              </div>
+            </div>
+  
+            {/* STEP 2 */}
+            <div className="step">
+              <span className="step-number">2</span>
+              <div>
+                <h4>Enable AI Integration</h4>
+                <p>
+                  Navigate to <strong>Integrations</strong> and click
+                  <button
+              style={{
+                background: aiBot ? "red" : "green",
+              }}
+              className="quick-btn"
+              onClick={() => {
+                const newStatus = !aiBot;
+                setAiBot(newStatus);
+                setBotStatus(newStatus);
+              }}
+            >
+              <FaPowerOff className="quick-icon" />
+              {aiBot ? "Disable AI" : "Enable AI"}
+            </button>
+                  This activates the chatbot logic.
+                </p>
+              </div>
+            </div>
+  
+            {/* STEP 3 */}
+            <div className="step">
+              <span className="step-number">3</span>
+              <div>
+                <h4>Customize Chatbot (Optional)</h4>
+                <p>
+                  In <strong>Integrations →  <button
+  className="configChatBtn"
+  onClick={() => {
+    if (window.top !== window.self) {
+      alert("This action is not available inside the Shopify admin. Please open BotAssistAi in a new tab.");
+    } else {
+      setShowHow(false)
+      getShopifyStyles()
+      setChatBotConfig(true);
+    }
+  }}
+>
+  Configure Chatbot
+</button>
+</strong>, customize
+                  colors, button style, and appearance to match your brand.
+                </p>
+              </div>
+            </div>
+  
+            {/* STEP 4 */}
+            <div className="step highlight">
+              <span className="step-number">4</span>
+              <div>
+                <h4>Enable the Chatbot in Your Theme</h4>
+                <p>
+                  Finally, enable the chatbot in your Shopify theme using
+                  <strong> App embeds</strong>.
+                </p>
+              </div>
+            </div>
+  
+          </div>
+  
+          <a
+            href={themeEditorUrl}
+            target="_top"
+            rel="noopener noreferrer"
+            className="enable-btn"
+          >
+            Open Theme Editor & Enable BotAssistAi
+          </a>
+  
+          <p className="note">
+            You can enable or disable BotAssistAi at any time from your theme’s
+            <strong> App embeds</strong> section.
+          </p>
+  
+          <button className="close-btn" onClick={onClose}>
+            I’ll do this later
+          </button>
+        </div>
+      </div>
 )}
 
 
