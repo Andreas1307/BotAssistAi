@@ -1041,12 +1041,15 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 )}
 
       </div>
+
+      <div className="code-snippet">
       <button 
+      className="howToIN"
       onClick={() => setShowHow(true)}
       >
         How To Integrate
       </button>
-   
+   </div>
 
       <div>
         <ToastContainer />

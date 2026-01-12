@@ -569,3 +569,16 @@ align-self: flex-start;
     font-size: 15px;
     padding: 6.5px 18px;
   }
+  .howToIN {
+    background: linear-gradient(90deg, #07f, #9b00ff, #ff007a);
+    border: none;
+    border-radius: 15px;
+    color: #fff;
+    cursor: pointer;
+    font-family: Space Grotesk, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 2px auto;
+    padding: 8px 28px;
+    transition: .3s ease;
+  }
