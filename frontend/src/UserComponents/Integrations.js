@@ -806,7 +806,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
               style={{
                 background: aiBot ? "red" : "green",
               }}
-              className="quick-btn"
+              className="quick-btn inte"
               onClick={() => {
                 const newStatus = !aiBot;
                 setAiBot(newStatus);
@@ -866,14 +866,6 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   <li>Click <strong>Save</strong></li>
 </ol>
 
-<a
-  href={themeEditorUrl}
-  target="_top"
-  rel="noopener noreferrer"
-  className="enable-btn"
->
-  Enable BotAssistAi
-</a>
 
 <p className="note">
   You can disable or re-enable BotAssistAi at any time from your theme’s
@@ -890,7 +882,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
             rel="noopener noreferrer"
             className="enable-btn"
           >
-            Open Theme Editor & Enable BotAssistAi
+            Enable BotAssistAi
           </a>
   
           <p className="note">

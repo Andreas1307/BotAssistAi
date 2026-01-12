@@ -423,17 +423,15 @@ align-self: flex-start;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 85%;
-    max-width: 1000px;
     z-index: 9999;
   }
   
   .onboarding-modal {
     background: #ffffff;
-    width: 92%;
-    max-width: 600px;
     padding: 32px;
     border-radius: 14px;
+    width: 87%;
+    max-width: 1000px;
     font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
   }
   
@@ -485,9 +483,13 @@ align-self: flex-start;
     font-size: 14px;
     color: #555;
   }
-  
-  .step.highlight .step-number {
-    background: #008060;
+  .step ol {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .step.highlight .step-number {   
+     background: #00f5d4;
     color: #fff;
   }
   
@@ -495,7 +497,7 @@ align-self: flex-start;
     display: block;
     text-align: center;
     margin-top: 22px;
-    background: #008060;
+    background: #00f5d4;
     color: #fff;
     padding: 14px;
     border-radius: 8px;
@@ -504,7 +506,7 @@ align-self: flex-start;
   }
   
   .enable-btn:hover {
-    background: #006e52;
+    background: #00f5d48f;
   }
   
   .note {
@@ -526,4 +528,15 @@ align-self: flex-start;
     color: #555;
     cursor: pointer;
   }
-  
+  .quick-btn.inte {
+    border: 0;
+    border-radius: 15px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14.3px;
+    font-weight: 600;
+    padding: 11px 16px;
+    transition: .4s ease;
+    margin: 0 4px;
+    background-color: red;
+  }
