@@ -5,14 +5,20 @@ import { getSessionToken } from "@shopify/app-bridge/utilities";
 import directory from "../directory";
 
 export async function handleBilling(shop) {
+
+  const app = getAppBridgeInstance();
+
+  const store = shop.replace(".myshopify.com", "");
+  const path = `/charges/botassistai/pricing_plans`;
+
+  const redirect = Redirect.create(app);
+
+  redirect.dispatch(Redirect.Action.ADMIN_PATH, {
+    path,
+  });
+
+  /*
   try {
-
-    const store = shop.replace(".myshopify.com", "");
-    const pricingUrl = `https://admin.shopify.com/store/${store}/charges/botassistai/pricing_plans`;
-    window.top.location.href = pricingUrl;
-
-
-    /*
     const app = getAppBridgeInstance();
 
     let host;
@@ -56,9 +62,10 @@ export async function handleBilling(shop) {
 
     // Shopify requires top redirect here
     window.location.href = confirmationUrl;
-*/
+
   } catch (err) {
     console.error("Billing failed:", err);
     alert("Billing failed — check console");
-  }
+  } 
+    */
 }
