@@ -825,7 +825,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
                 <h4>Customize Chatbot (Optional)</h4>
                 <p>
                   In <strong>Integrations →  <button
-  className="configChatBtn"
+  className="configChatBtn inte"
   onClick={() => {
     if (window.top !== window.self) {
       alert("This action is not available inside the Shopify admin. Please open BotAssistAi in a new tab.");

@@ -498,6 +498,7 @@ align-self: flex-start;
     flex-direction: column;
     gap: 7px;
     width: 100%;
+    margin: 7px 0;
     font-family: "Space Grotesk", sans-serif;
   }
   .step ol li {
@@ -563,4 +564,8 @@ align-self: flex-start;
     transition: .4s ease;
     margin: 0 6px;
     background-color: red;
+  }
+  .configChatBtn.inte {
+    font-size: 15px;
+    padding: 6.5px 18px;
   }
