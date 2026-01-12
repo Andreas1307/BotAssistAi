@@ -4,20 +4,7 @@ import { getAppBridgeInstance } from "./initShopifyAppBridge";
 import { getSessionToken } from "@shopify/app-bridge/utilities";
 import directory from "../directory";
 
-export async function handleBilling(shop) {
-
-  const app = getAppBridgeInstance();
-
-  const store = shop.replace(".myshopify.com", "");
-  const path = `/charges/botassistai/pricing_plans`;
-
-  const redirect = Redirect.create(app);
-
-  redirect.dispatch(Redirect.Action.ADMIN_PATH, {
-    path,
-  });
-
-  /*
+export async function handleBilling(userId) {
   try {
     const app = getAppBridgeInstance();
 
@@ -66,6 +53,5 @@ export async function handleBilling(shop) {
   } catch (err) {
     console.error("Billing failed:", err);
     alert("Billing failed — check console");
-  } 
-    */
+  }
 }

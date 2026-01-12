@@ -120,7 +120,7 @@ const Dashboard = () => {
 
 
   const activatePlan = async () => {
-    await handleBilling(user.shopify_shop_domain);
+    await handleBilling(user.user_id);
   };
   
   
