@@ -875,7 +875,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
             <strong> App embeds</strong> section.
           </p>
   
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={() => setShowHow(false)}>
             I’ll do this later
           </button>
         </div>
