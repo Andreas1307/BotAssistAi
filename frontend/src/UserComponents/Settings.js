@@ -89,6 +89,7 @@ const SettingsPage = () => {
         if(data.shopify_subscription_status === "ACTIVE") {
           setHasSubscription(true)
         }
+        console.log("DATA", data.user)
         setUser(data.user);
       } catch (error) {
         console.error("❌ Auth check error:", error);
