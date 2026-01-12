@@ -3126,8 +3126,16 @@ app.post("/ask-ai", async (req, res) => {
 
 
       let systemPrompt = `
-      You are a helpful, concise AI chatbot for customer support on this website: ${webUrl}.
-      Keep answers short (under 30 words), friendly, and direct.
+      You are a highly helpful, concise AI chatbot for customer support on this website: ${webUrl} and this bussiness ${businessName}.
+
+       Answer every customer question clearly and with actionable info.
+- Always be specific using the products/services listed on ${webUrl}.
+- Do NOT give vague answers.
+- Do NOT redirect to other pages unless explicitly requested.
+- Use examples from ${business_context} whenever relevant.
+- Keep responses professional but approachable, under 70 words.
+- Always check the user’s question and respond accurately.
+- If the user asks about an unavailable service/product, politely explain alternatives.
       
       Be specific with your answers and make them very undestable for the person asking you.
 
@@ -3184,14 +3192,12 @@ app.post("/ask-ai", async (req, res) => {
   
    
     if (languages_supported) {
-      systemPrompt += `\nThe chatbot should prefer responding in these languages: ${languages_supported}.`;
-  }
-  
+      systemPrompt += `\nAlways respond in these languages: ${languages_supported}`;
+    }
+    if (response_tone) {
+      systemPrompt += `\nUse a ${response_tone} tone in all replies.`;
+    }
     
-  
-      if (response_tone) {
-          systemPrompt += `\nRespond in a ${response_tone} tone.`;
-      }
       if (fine_tuning_data) {
           systemPrompt += `\nUse fine-tuned data: ${fine_tuning_data}`;
       }
@@ -3210,16 +3216,32 @@ Never refer users to another page unless explicitly asked.`;
 
 
 
+// 1️⃣ Initialize history if it doesn't exist
+if (!userConversationState[conversationId].history) {
+  userConversationState[conversationId].history = [];
+}
+
+// 2️⃣ Add the current user message to the history
+userConversationState[conversationId].history.push({ role: "user", content: userMessage });
+
+// 3️⃣ Prepare messages for OpenAI with last 6 messages for context
+const messages = [
+  { role: "system", content: systemPrompt },
+  ...userConversationState[conversationId].history.slice(-6) // last 6 messages only
+];
+
+
+
+
+
+
       const startTime = Date.now();
   
       const response = await openai.chat.completions.create({
           model: model,
-          messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userMessage }
-          ],
+          messages: messages,
           temperature: temperature,
-          max_tokens: 40
+          max_tokens: 230
       });
   
       const endTime = Date.now(); 
@@ -3249,6 +3271,7 @@ Never refer users to another page unless explicitly asked.`;
   
        aiResponse = response.choices[0].message.content;
   
+       userConversationState[conversationId].history.push({ role: "assistant", content: aiResponse });
       
       console.log("Parsed Date:", chrono.parseDate("May 7", new Date(), { forwardDate: true }));
   

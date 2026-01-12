@@ -236,7 +236,7 @@ clear: both;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     font-family: sans-serif;
     color: var(--font-color);
-    font-weight: 600;
+    font-weight: 500;
     padding-top: 0px;
     padding-bottom: 95px;
     border-radius: 13px;
