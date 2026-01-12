@@ -74,6 +74,7 @@ const SettingsPage = () => {
   const [membershipType] = useState("Premium");
   const [membershipStatus] = useState("Active");
   const [membershipExpiry] = useState("December 31, 2023");
+  const [hasSubscription, setHasSubscription] = useState(false)
   const [google, setGoogle] = useState(true);
 
   const handleResetSettings = () => {
@@ -85,8 +86,9 @@ const SettingsPage = () => {
     const fetchUser = async () => {
       try {
         const data = await fetchWithAuth("/auth-check");  
-        
-        console.log("USER", data.user)
+        if(data.shopify_subscription_status === "ACTIVE") {
+          setHasSubscription(true)
+        }
         setUser(data.user);
       } catch (error) {
         console.error("❌ Auth check error:", error);
@@ -286,14 +288,16 @@ const SettingsPage = () => {
           </button>
         </div>
 
-
-        <button
-      onClick={cancelPlan}
-      disabled={loading}
-      className="downGradeBtn"
-    >
-      {loading ? "Downgrading..." : "Downgrade to Free"}
-    </button>
+{hasSubscription && (
+ <button
+ onClick={cancelPlan}
+ disabled={loading}
+ className="downGradeBtn"
+>
+ {loading ? "Downgrading..." : "Downgrade to Free"}
+</button>
+)}
+       
 
 
         {/* Log Out Button */}
