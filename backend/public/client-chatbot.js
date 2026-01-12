@@ -157,7 +157,7 @@ clear: both;
   const satisfactionHeading = document.createElement("h2");
   satisfactionHeading.innerText = "Was this helpful?";
   satisfactionHeading.style.cssText = `
-    color: var(--need-help-text);
+    color: var(--font-color);
     font-weight: 600;
     font-size: 17px;
   `;
@@ -236,6 +236,7 @@ clear: both;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     font-family: sans-serif;
     color: var(--font-color);
+    font-weight: 600;
     padding-top: 0px;
     padding-bottom: 95px;
     border-radius: 13px;
