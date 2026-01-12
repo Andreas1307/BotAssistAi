@@ -852,10 +852,33 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
               <span className="step-number">4</span>
               <div>
                 <h4>Enable the Chatbot in Your Theme</h4>
-                <p>
-                  Finally, enable the chatbot in your Shopify theme using
-                  <strong> App embeds</strong>.
-                </p>
+
+<p>
+  BotAssistAi is installed, but it won’t appear on your storefront until
+  you enable it in your theme.
+</p>
+
+<ol>
+  <li>Click <strong>“Enable BotAssistAi”</strong> below</li>
+  <li>You’ll be taken to the Shopify <strong>Theme Editor</strong></li>
+  <li>Open the <strong>App embeds</strong> panel</li>
+  <li>Toggle <strong>BotAssistAi Chatbot</strong> ON</li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<a
+  href={themeEditorUrl}
+  target="_top"
+  rel="noopener noreferrer"
+  className="enable-btn"
+>
+  Enable BotAssistAi
+</a>
+
+<p className="note">
+  You can disable or re-enable BotAssistAi at any time from your theme’s
+  App embeds.
+</p>
               </div>
             </div>
   

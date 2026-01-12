@@ -423,6 +423,8 @@ align-self: flex-start;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 85%;
+    max-width: 1000px;
     z-index: 9999;
   }
   
@@ -513,10 +515,12 @@ align-self: flex-start;
   }
   
   .close-btn {
-    background: none;
+    background: #dfdfdf;
+    border-radius: 13px;
     border: none;
     margin-top: 18px;
     display: block;
+    font-size: 15.5px;
     width: 100%;
     text-align: center;
     color: #555;
