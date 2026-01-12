@@ -161,11 +161,42 @@ const SettingsPage = () => {
     checkGoogle();
   }, [user]);
 
-  const cancelPlan = async () => {
-    if (!window.confirm("Are you sure you want to cancel your subscription?")) {
-      return;
-    }
 
+  let toastId;
+  const showNotification = (m) => {
+    if (!toast.isActive(toastId)) {
+      toastId = toast.success(m, {
+        toastId: "unique-notification-id", // Helps prevent duplicates
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  };
+  const showErrorNotification = () => {
+    toast.error("Something went wrong. Please try again.", {
+      position: "top-center",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        borderRadius: "8px",
+        fontSize: "16px",
+        backgroundColor: "#330000",
+        color: "#fff",
+      },
+      progressStyle: {
+        background: "#ff4d4f",
+      },
+    });
+  };
+
+  const cancelPlan = async () => {
     setLoading(true);
 
     try {
@@ -182,17 +213,15 @@ const SettingsPage = () => {
         throw new Error(data?.error || "Cancellation failed");
       }
 setHasSubscription(false)
-      alert("Subscription canceled successfully");
-      
+      showNotification("Plan Cancelled")
     } catch (err) {
       console.error(err);
-      alert("Failed to cancel subscription");
+      showErrorNotification()
     } finally {
       setLoading(false);
     }
   };
-
-  const LogoutConfirmToast2 = ({ closeToast, onConfirm, reason = "Are you sure you cancel the plan?" }) => (
+  const LogoutConfirmToast3 = ({ closeToast, onConfirm, reason = "Are you sure you cancel the plan?" }) => (
     <div>
       <p>⚠️ {reason}</p> {/* Fallback to default message */}
       <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
@@ -231,10 +260,10 @@ setHasSubscription(false)
     </div>
   );
 
-  const showLogoutConfirm2 = (onConfirm, reason) => {
+  const showLogoutConfirm3 = (onConfirm, reason) => {
     try {
       toast.info(({ closeToast }) => (
-        <LogoutConfirmToast2 closeToast={closeToast} onConfirm={onConfirm} reason={reason} />
+        <LogoutConfirmToast3 closeToast={closeToast} onConfirm={onConfirm} reason={reason} />
       ), {
         position: "top-center",
         autoClose: false,
@@ -244,7 +273,7 @@ setHasSubscription(false)
         toastId: "logout-confirm",
       });
     } catch (error) {
-      console.log("Error displaying logout confirmation toast:", error);
+      console.log("Error displaying canceling confirmation toast:", error);
     }
   };
 
@@ -346,7 +375,7 @@ setHasSubscription(false)
 
 {hasSubscription && (
  <button
- onClick={() => showLogoutConfirm2(cancelPlan)}
+ onClick={() => showLogoutConfirm3(cancelPlan)}
  disabled={loading}
  className="downGradeBtn"
 >
