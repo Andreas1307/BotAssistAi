@@ -637,27 +637,15 @@ const Integrations = () => {
   }, [user]);
 
 
-  async function getThemeEditorUrl() {
-    if (!user?.shopify_shop_domain || !user?.shopify_access_token) return null;
+  function getThemeEditorUrl() {
+    if (!user?.shopify_shop_domain) return null;
   
     const storeHandle = user.shopify_shop_domain.replace(".myshopify.com", "");
-    const themeId = await getActiveThemeId(
-      user.shopify_shop_domain,
-      user.shopify_access_token
-    );
   
-    if (!themeId) {
-      return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps`;
-    }
+    const APP_ID = "f6248b498ce7ac6b85e6c87d01154377"; // your real App ID
+    const EMBED_HANDLE = "chatbot"; // app embed filename (without .liquid)
   
-    const APP_ID = "f6248b498ce7ac6b85e6c87d01154377"; // from Partner Dashboard
-    const EMBED_HANDLE = "chatbot"; // filename without .liquid
-  
-    return `
-  https://admin.shopify.com/store/${storeHandle}/themes/${themeId}/editor
-  ?context=apps
-  &activateAppId=${APP_ID}/${EMBED_HANDLE}
-  `.replace(/\s+/g, "");
+    return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=${APP_ID}/${EMBED_HANDLE}`;
   }
   
 
