@@ -885,7 +885,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
           </div>
   
           <button
-            onClick={() => getThemeEditorUrl()}
+            onClick={() => enableBotAssistAi()}
             className="enable-btn"
           >
             Enable BotAssistAi
