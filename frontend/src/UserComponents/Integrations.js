@@ -879,14 +879,12 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
           </div>
   
-          <a
-            href={getThemeEditorUrl}
-            target="_top"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => getThemeEditorUrl()}
             className="enable-btn"
           >
             Enable BotAssistAi
-          </a>
+          </button>
   
           <p className="note">
             You can enable or disable BotAssistAi at any time from your theme’s
