@@ -880,10 +880,10 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
           </div>
   
           <a
+            href={getThemeEditorUrl}
             target="_top"
             rel="noopener noreferrer"
             className="enable-btn"
-            href={getThemeEditorUrl}
           >
             Enable BotAssistAi
           </a>
