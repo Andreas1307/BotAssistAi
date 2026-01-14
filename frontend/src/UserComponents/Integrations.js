@@ -637,9 +637,29 @@ const Integrations = () => {
   }, [user]);
 
 
-const themeEditorUrl = `https://admin.shopify.com/store/${user?.shopify_shop_domain}/themes/current/editor?context=apps`;
-
-
+  async function getThemeEditorUrl() {
+    if (!user?.shopify_shop_domain || !user?.shopify_access_token) return null;
+  
+    const storeHandle = user.shopify_shop_domain.replace(".myshopify.com", "");
+    const themeId = await getActiveThemeId(
+      user.shopify_shop_domain,
+      user.shopify_access_token
+    );
+  
+    if (!themeId) {
+      return `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps`;
+    }
+  
+    const APP_ID = "f6248b498ce7ac6b85e6c87d01154377"; // from Partner Dashboard
+    const EMBED_HANDLE = "chatbot"; // filename without .liquid
+  
+    return `
+  https://admin.shopify.com/store/${storeHandle}/themes/${themeId}/editor
+  ?context=apps
+  &activateAppId=${APP_ID}/${EMBED_HANDLE}
+  `.replace(/\s+/g, "");
+  }
+  
 
   return (
     <main className="integrations-page">
@@ -830,13 +850,9 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
                   In <strong>Integrations →  <button
   className="configChatBtn inte"
   onClick={() => {
-    if (window.top !== window.self) {
-      alert("This action is not available inside the Shopify admin. Please open BotAssistAi in a new tab.");
-    } else {
       setShowHow(false)
       getShopifyStyles()
       setChatBotConfig(true);
-    }
   }}
 >
   Configure Chatbot
@@ -876,10 +892,10 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
           </div>
   
           <a
-            href={themeEditorUrl}
-            target="_blank"
+            target="_top"
             rel="noopener noreferrer"
             className="enable-btn"
+            onClick={() => getThemeEditorUrl()}
           >
             Enable BotAssistAi
           </a>
@@ -1000,12 +1016,8 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
           <button
   className="configChatBtn"
   onClick={() => {
-    if (window.top !== window.self) {
-      alert("This action is not available inside the Shopify admin. Please open BotAssistAi in a new tab.");
-    } else {
       getShopifyStyles()
       setChatBotConfig(true);
-    }
   }}
 >
   Configure Chatbot
