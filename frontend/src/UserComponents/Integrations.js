@@ -636,7 +636,7 @@ const Integrations = () => {
     return () => clearInterval(interval);
   }, [user]);
 
-  function getThemeEditorUrl() {
+  function enableBotAssistAi() {
     if (!user?.shopify_shop_domain) return;
   
     const storeHandle = user.shopify_shop_domain.replace(".myshopify.com", "");
@@ -644,11 +644,14 @@ const Integrations = () => {
     const APP_ID = "f6248b498ce7ac6b85e6c87d01154377";
     const EMBED_HANDLE = "chatbot";
   
-    const url = `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?context=apps&activateAppId=${APP_ID}/${EMBED_HANDLE}`;
+    const url =
+      `https://admin.shopify.com/store/${storeHandle}` +
+      `/themes/current/editor?context=apps` +
+      `&activateAppId=${APP_ID}/${EMBED_HANDLE}`;
   
-    // 🔥 REQUIRED for Shopify embedded apps
     window.top.location.href = url;
   }
+  
   
 
   return (
