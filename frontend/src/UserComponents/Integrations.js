@@ -883,7 +883,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
             target="_top"
             rel="noopener noreferrer"
             className="enable-btn"
-            onClick={() => getThemeEditorUrl()}
+            href={getThemeEditorUrl}
           >
             Enable BotAssistAi
           </a>
