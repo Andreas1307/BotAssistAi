@@ -867,7 +867,8 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
 </p>
 
 <ol>
-  <li>Go to your shop, and to Shopify <strong>Theme Editor</strong></li>
+  <li>Click <strong>“Enable BotAssistAi”</strong> below</li>
+  <li>You’ll be taken to the Shopify <strong>Theme Editor</strong></li>
   <li>Open the <strong>App embeds</strong> panel</li>
   <li>Toggle <strong>BotAssistAi Chatbot</strong> ON</li>
   <li>Click <strong>Save</strong></li>
@@ -883,7 +884,12 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
           </div>
   
-         
+          <button
+            onClick={() => enableBotAssistAi()}
+            className="enable-btn"
+          >
+            Enable BotAssistAi
+          </button>
   
           <p className="note">
             You can enable or disable BotAssistAi at any time from your theme’s
