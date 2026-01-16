@@ -2,28 +2,26 @@
   BotAssistAi – Chatbot App Embed
 {% endcomment %}
 
-{% app-embed %}
-  <script>
-    (function () {
-      fetch('https://api.botassistai.com/public/get-api-key?shop={{ shop.permanent_domain }}')
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (!data || !data.apiKey) return;
+<script>
+  (function () {
+    fetch('https://api.botassistai.com/public/get-api-key?shop={{ shop.permanent_domain }}')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data || !data.apiKey) return;
 
-          window.BOTASSIST_API_KEY = data.apiKey;
-          window.BOTASSIST_SHOP = "{{ shop.permanent_domain }}";
+        window.BOTASSIST_API_KEY = data.apiKey;
+        window.BOTASSIST_SHOP = "{{ shop.permanent_domain }}";
 
-          var s = document.createElement("script");
-          s.src = "{{ 'chatbot-loader.js' | asset_url }}";
-          s.defer = true;
-          document.body.appendChild(s);
-        })
-        .catch(function () {
-          // Fail silently — required for Shopify review
-        });
-    })();
-  </script>
-{% endapp-embed %}
+        var s = document.createElement("script");
+        s.src = "{{ 'chatbot-loader.js' | asset_url }}";
+        s.defer = true;
+        document.body.appendChild(s);
+      })
+      .catch(function () {
+        // fail silently (Shopify requirement)
+      });
+  })();
+</script>
 
 {% schema %}
 {
