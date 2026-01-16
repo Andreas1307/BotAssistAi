@@ -884,12 +884,7 @@ color: colors.needHelpTextColor }}>Need Help?</p></div>
   
           </div>
   
-          <button
-            onClick={() => enableBotAssistAi()}
-            className="enable-btn"
-          >
-            Enable BotAssistAi
-          </button>
+         
   
           <p className="note">
             You can enable or disable BotAssistAi at any time from your theme’s
