@@ -4945,6 +4945,7 @@ app.get("/satisfaction-admin", async (req, res) => {
     if (!colors) {
       return res.status(400).json({ data: false, error: "Missing colors" });
     }
+    console.log("/chatbot-config-shopify", colors)
     
   try {
     let {
