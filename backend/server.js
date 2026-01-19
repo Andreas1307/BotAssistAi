@@ -2565,7 +2565,7 @@ app.post("/create-subscription2", async (req, res) => {
         $returnUrl: URL!, 
         $lineItems: [AppSubscriptionLineItemInput!]!
       ) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
           userErrors { field message }
           appSubscription { id name }
           confirmationUrl
