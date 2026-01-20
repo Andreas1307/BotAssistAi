@@ -283,13 +283,16 @@ left: 0;
 border: none;
 width: 100%;
 background: var(--ai-input);
-color: var(--chat-input-font-color);
+color: var(--ai-input-font-color);
 outline: none;
 font-size: 16px;
 flex: 1; 
   `;
-  input.onfocus = () => input.style.outline = "none";
-  input.onfocus = () => input.style.boxShadow = "none";
+  input.onfocus = () => {
+    input.style.outline = "none";
+    input.style.boxShadow = "none";
+  };
+  
 
   const button = document.createElement("button");
   button.innerHTML = "Send";
