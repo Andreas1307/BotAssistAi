@@ -110,7 +110,7 @@ const SupportBotCustomization = () => {
           phoneNum: data.phoneNum || "",
           responseTone: data.responseTone || "",
         };
-  
+  console.log("USER", data)
         setUserData(mappedConfig);
         setResponseTone(mappedConfig.responseTone || '');
         
