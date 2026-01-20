@@ -26,17 +26,16 @@ const directory = "https://api.botassistai.com"
 
       const root = document.documentElement;
 
-root.style.setProperty("--ai-background", config.background);
-root.style.setProperty("--ai-chatbot-bg", config.chatbotBackground);
-root.style.setProperty("--conversation-boxes", config.chatBoxBackground);
-root.style.setProperty("--ai-input", config.chatInputBackground);
-root.style.setProperty("--ai-button", config.chatBtn);
-root.style.setProperty("--ai-website-chat-btn", config.websiteChatBtn);
-root.style.setProperty("--ai-website-question", config.websiteQuestion);
-root.style.setProperty("--need-help-text", config.needHelpTextColor);
-root.style.setProperty("--font-color", config.textColor);
-root.style.setProperty("--ai-border", config.borderColor);
-
+      root.style.setProperty("--ai-background", config.chatbotBackground);
+      root.style.setProperty("--conversation-boxes", config.chatBoxBackground);
+      root.style.setProperty("--ai-input", config.chatInputBackground);
+      root.style.setProperty("--ai-input-font-color", config.chatInputTextColor);
+      root.style.setProperty("--ai-button", config.chatBtn);
+      root.style.setProperty("--ai-website-chat-btn", config.websiteChatBtn);
+      root.style.setProperty("--ai-website-question", config.websiteQuestion);
+      root.style.setProperty("--need-help-text", config.needHelpTextColor);
+      root.style.setProperty("--font-color", config.textColor);
+      root.style.setProperty("--ai-border", config.borderColor);
 
 
       const s = document.createElement("script");
