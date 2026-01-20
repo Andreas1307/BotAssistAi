@@ -2999,7 +2999,6 @@ function generateRandomToken() {
 let userData = {};  
 let userConversationState = {};
 let user_id;
-const conversationId = `${user_id}-${generateRandomToken()}`;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.post("/ask-ai", async (req, res) => {
@@ -3030,8 +3029,11 @@ app.post("/ask-ai", async (req, res) => {
       }
   
   
-  const userId = user.user_id
-  user_id = userId
+      const userId = user.user_id;
+      user_id = userId;
+      const conversationId = `${userId}-${generateRandomToken()}`;
+      
+
   if (!userData[conversationId]) {
     userData[conversationId] = {
       serviceName: "",
@@ -3049,15 +3051,7 @@ app.post("/ask-ai", async (req, res) => {
     userConversationState[conversationId] = {};  // Initialize empty state for the conversation
   }
   const [accountType] = await pool.query("SELECT * FROM users WHERE user_id = ?", [userId]);
-      if (accountType[0].subscription_plan === "Free") {
-        const count = await dailyConversations(userId);
-        console.log("👀 Conversations today:", count);
-      
-        if (count >= 30) {
-          aiResponse = "You've reached the conversation limit for today. Please check back tomorrow.";
-          return res.status(400).json({ error: "Daily conversation limit reached." });
-        }        
-      }
+     
   
       if(accountType[0].apiBot === 0) {
         console.log("ACC typr: ", accountType[0].apiBot)
@@ -3077,6 +3071,27 @@ app.post("/ask-ai", async (req, res) => {
       }
   
       let userSettings = rows[0];
+
+        // Check if user is Pro / premium
+const subscriptionPlan = accountType[0].subscription_plan;
+let shopProducts = [];
+
+if (subscriptionPlan === "Pro" && isShopify) {
+    try {
+        // Fetch products from Shopify for this store
+        const response = await axios.get(`https://${shop}/admin/api/2023-10/products.json`, {
+            headers: { 'X-Shopify-Access-Token': process.env.SHOPIFY_ACCESS_TOKEN }
+        });
+        shopProducts = response.data.products.map(p => ({
+            title: p.title,
+            variants: p.variants.map(v => v.title).join(", "),
+            handle: p.handle,
+            url: `https://${shop}/products/${p.handle}`
+        }));
+    } catch (err) {
+        console.error("Error fetching Shopify products:", err);
+    }
+}
   
       const updateFields = {};
       Object.keys(updates).forEach((key) => {
@@ -3123,7 +3138,10 @@ app.post("/ask-ai", async (req, res) => {
   
       let userMessage = message;
   
-
+      if (subscriptionPlan === "Pro" && shopProducts.length > 0) {
+        userMessage += `\nAvailable products: ${shopProducts.map(p => `${p.title} (${p.url})`).join("; ")}`;
+    }
+    
 
       let systemPrompt = `
       You are a highly helpful, concise AI chatbot for customer support on this website: ${webUrl} and this bussiness ${businessName}.
@@ -3213,6 +3231,18 @@ app.post("/ask-ai", async (req, res) => {
 Avoid vague answers. Provide clear value in every reply.
 Use product or service examples that match the business type.
 Never refer users to another page unless explicitly asked.`;
+
+if (subscriptionPlan === "Pro" && shopProducts.length > 0) {
+  systemPrompt += `
+You have access to the store's product catalog. Suggest relevant products to the user when appropriate, including:
+- Product name
+- Variant (if relevant)
+- Direct link to the product: e.g., ${shopProducts[0].url}
+Use the list of products available: ${shopProducts.map(p => p.title).join(", ")}
+Always provide actionable suggestions in context.
+`;
+}
+
 
 
 
