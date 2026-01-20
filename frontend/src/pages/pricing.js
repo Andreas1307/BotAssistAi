@@ -197,8 +197,7 @@ const Pricing = () => {
               <p className="price pro">€0<span>/month</span></p>
               <ul>
                 <li>✅ Basic AI chatbot</li>
-                <li>✅ Up to 30 conversations/day</li>
-                <li>❌ No Booking System</li>
+                <li>✅ Unlimited Conversations</li>
                 <li>❌ Little configuration</li>
                 <li>❌ No analytics or insights</li>
                 <li>❌ No access to past conversations</li>
