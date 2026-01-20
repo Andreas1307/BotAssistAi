@@ -89,12 +89,14 @@ const SupportBotCustomization = () => {
   
     const fetchUserData = async () => {
       try {
-        const response = await fetchWithAuth(
-          `/user-training`, {
-            method: "POST",
-            body: { username: user.username }
-          }
-        );
+        const response = await fetchWithAuth("/user-training", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username: user.username }),
+        });
+        
 
         const data = response.config || {};
         const mappedConfig = {
@@ -110,7 +112,6 @@ const SupportBotCustomization = () => {
           phoneNum: data.phoneNum || "",
           responseTone: data.responseTone || "",
         };
-  console.log("USER", data)
         setUserData(mappedConfig);
         setResponseTone(mappedConfig.responseTone || '');
         
