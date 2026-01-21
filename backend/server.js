@@ -3133,6 +3133,32 @@ if (subscriptionPlan === "Pro" && isShopify) {
           webUrl,
           phoneNum
       } = userSettings;
+
+      // 🔒 Build business ground-truth context
+const businessGroundTruth = `
+BUSINESS NAME:
+${businessName || "Not provided"}
+
+BUSINESS DESCRIPTION:
+${business_context || "No business context provided"}
+
+WEBSITE:
+${webUrl || "No website provided"}
+
+FAQ DATA:
+${uploaded_file || "No uploaded file"}
+
+AVAILABLE PRODUCTS:
+${
+  shopProducts.length > 0
+    ? shopProducts.map(p => `- ${p.title}: ${p.url}`).join("\n")
+    : "No product catalog available"
+}
+
+SUPPORT PHONE:
+${phoneNum || "Not provided"}
+`;
+
   
       const businessName = customer_name; 
   
@@ -3144,13 +3170,44 @@ if (subscriptionPlan === "Pro" && isShopify) {
     
 
       let systemPrompt = `
+
+      SYSTEM RULES (STRICT — MUST FOLLOW):
+
+You are a customer support chatbot.
+You MUST answer questions ONLY using the information provided in BUSINESS DATA below.
+You are NOT allowed to invent, assume, or guess any information.
+If information is not present in BUSINESS DATA, you MUST say:
+"I'm sorry, I don’t have that information for this business."
+
+You MUST determine FIRST what this business does (products vs services)
+based ONLY on BUSINESS DATA.
+
+You MUST NOT:
+- Use general knowledge
+- Use assumptions
+- Hallucinate products, prices, policies, or services
+- Pretend to browse the website
+
+You MUST:
+- Ground every answer in BUSINESS DATA
+- Be specific and helpful
+- Stay under 70 words
+- Use a ${response_tone || "professional"} tone
+
+If a question is unrelated to the business, politely decline.
+
+====================
+BUSINESS DATA (GROUND TRUTH):
+====================
+${businessGroundTruth}
+====================
+
+Answer the user's question using ONLY the BUSINESS DATA above.
       You are a highly helpful, concise AI chatbot for customer support on this website: ${webUrl} and this bussiness ${businessName}.
 
        Answer every customer question clearly and with actionable info.
-- Always be specific using the products/services listed on ${webUrl}.
 - Do NOT give vague answers.
 - Do NOT redirect to other pages unless explicitly requested.
-- Use examples from ${business_context} whenever relevant.
 - Keep responses professional but approachable, under 70 words.
 - Always check the user’s question and respond accurately.
 - If the user asks about an unavailable service/product, politely explain alternatives.
@@ -3161,15 +3218,10 @@ if (subscriptionPlan === "Pro" && isShopify) {
       
       If a user asks a broad or general question, use product categories relevant to the business context: ${business_context}.
       
-      Never say “I’m not sure.” Always be helpful, even with minimal input.
-      
       Do not assist with specific order issues. Instead say: "Have you completed all the steps correctly, including payment and confirmation?"
-      
-      Also if you get asked a question about a product or service I need you to go to that product/service on ${webUrl}, find it, and give it back to the person asked about that product.
-      
+    
       Give your absolute best to staisfy the customer and answer his questions or requiremnts in the best way possible.
 
-      And don't say in the answer that you give back "you can check out our website for more" because you are already on the website and that answer is no useful to the customer, you go to this ${webUrl} and check what the customer asked you.
       `;
 
      
