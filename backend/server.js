@@ -3135,7 +3135,18 @@ if (subscriptionPlan === "Pro" && isShopify) {
       } = userSettings;
 
       // 🔒 Build business ground-truth context
-const businessGroundTruth = `
+
+
+  
+      const businessName = customer_name; 
+  
+      let userMessage = message;
+  
+      if (subscriptionPlan === "Pro" && shopProducts.length > 0) {
+        userMessage += `\nAvailable products: ${shopProducts.map(p => `${p.title} (${p.url})`).join("; ")}`;
+    }
+
+    const businessGroundTruth = `
 BUSINESS NAME:
 ${businessName || "Not provided"}
 
@@ -3158,15 +3169,6 @@ ${
 SUPPORT PHONE:
 ${phoneNum || "Not provided"}
 `;
-
-  
-      const businessName = customer_name; 
-  
-      let userMessage = message;
-  
-      if (subscriptionPlan === "Pro" && shopProducts.length > 0) {
-        userMessage += `\nAvailable products: ${shopProducts.map(p => `${p.title} (${p.url})`).join("; ")}`;
-    }
     
 
       let systemPrompt = `
