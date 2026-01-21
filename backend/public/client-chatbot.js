@@ -318,9 +318,27 @@ height: 43px;
   chatbotBox.appendChild(submit);
   document.body.appendChild(chatbotBox);
 
+  function showWelcomeMessageIfEmpty() {
+    if (chatLog.children.length === 0) {
+      chatLog.innerHTML += `
+        <div class="botassist-message botassist-bot">
+          How can we help you today?
+        </div>
+      `;
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+  }
+  
+
   toggleBtn.addEventListener("click", () => {
-    chatbotBox.style.display = chatbotBox.style.display === "none" ? "flex" : "none";
+    const isOpening = chatbotBox.style.display === "none";
+    chatbotBox.style.display = isOpening ? "flex" : "none";
+  
+    if (isOpening) {
+      showWelcomeMessageIfEmpty();
+    }
   });
+  
 
   async function sendMessage() {
     const message = input.value.trim();
