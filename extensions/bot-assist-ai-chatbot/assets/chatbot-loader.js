@@ -263,6 +263,8 @@ clear: both;
     color: var(--font-color);
     padding-top: 0px;
     padding-bottom: 95px;
+    padding-left: 8px;
+    padding-right: 8px;
     border-radius: 13px;
     border-bottom-left-radius: 13px;
     border-bottom-right-radius: 13px;
@@ -343,14 +345,25 @@ height: 43px;
   document.body.appendChild(chatbotBox);
 
   function showWelcomeMessageIfEmpty() {
-    if (chatLog.children.length === 0) {
-      chatLog.innerHTML += `
-        <div class="botassist-message botassist-bot">
-          How can we help you today?
-        </div>
-      `;
+    if (chatLog.children.length !== 0) return;
+  
+    // Show typing indicator first
+    const typingId = `typing-${Date.now()}`;
+    chatLog.innerHTML += `
+      <div id="${typingId}" class="botassist-message botassist-bot">
+        <em>Typing...</em>
+      </div>
+    `;
+    chatLog.scrollTop = chatLog.scrollHeight;
+  
+    // Replace typing with welcome message after delay
+    setTimeout(() => {
+      const typingEl = document.getElementById(typingId);
+      if (typingEl) {
+        typingEl.innerHTML = `How can we help you today?`;
+      }
       chatLog.scrollTop = chatLog.scrollHeight;
-    }
+    }, 700); // 👈 adjust (500–1000ms is ideal)
   }
   
 
@@ -362,6 +375,7 @@ height: 43px;
       showWelcomeMessageIfEmpty();
     }
   });
+  
   
 
   async function sendMessage() {
