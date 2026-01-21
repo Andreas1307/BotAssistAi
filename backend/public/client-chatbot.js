@@ -339,7 +339,7 @@ height: 43px;
         typingEl.innerHTML = `How can we help you today?`;
       }
       chatLog.scrollTop = chatLog.scrollHeight;
-    }, 700); // 👈 adjust (500–1000ms is ideal)
+    }, 400); // 👈 adjust (500–1000ms is ideal)
   }
   
 
