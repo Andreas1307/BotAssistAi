@@ -2565,7 +2565,7 @@ app.post("/create-subscription2", async (req, res) => {
         $returnUrl: URL!, 
         $lineItems: [AppSubscriptionLineItemInput!]!
       ) {
-        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems) {
+        appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: true) {
           userErrors { field message }
           appSubscription { id name }
           confirmationUrl
@@ -2576,13 +2576,13 @@ app.post("/create-subscription2", async (req, res) => {
 
 
     const variables = {
-      name: "BotAssist Pro Plan",
+      name: "Growth Plan",
       returnUrl: `https://api.botassistai.com/billing/callback?userId=${userId}&host=${encodeURIComponent(returnHost)}`,
       lineItems: [
         {
           plan: {
             appRecurringPricingDetails: {
-              price: { amount: 19.99, currencyCode: "EUR" },
+              price: { amount: 23.00, currencyCode: "EUR" },
               interval: "EVERY_30_DAYS",
             },
           },
@@ -2749,7 +2749,7 @@ const billingRes = await axios.post(
 );
 
 const activeSub = billingRes.data.data.currentAppInstallation.activeSubscriptions
-  .find(sub => sub.name === "BotAssist Pro Plan" && sub.status === "ACTIVE");
+  .find(sub => sub.name === "Growth Plan" && sub.status === "ACTIVE");
 
 if (!activeSub) {
   console.error("❌ No active Shopify subscription found");
@@ -2812,7 +2812,7 @@ app.get("/shopify/subscription-status", async (req, res) => {
     }
 
     // ✅ DB fallback check
-    const hasDbPro = user.subscription_status === "Pro";
+    const hasDbPro = user.subscription_plan === "Pro";
 
     let hasShopifyPro = false;
 
@@ -2844,7 +2844,7 @@ app.get("/shopify/subscription-status", async (req, res) => {
 
       hasShopifyPro = subscriptions.some(
         (sub) =>
-          sub.name === "BotAssist Pro Plan" &&
+          sub.name === "Growth Plan" &&
           sub.status === "ACTIVE"
       );
     } catch (shopifyErr) {
@@ -2853,8 +2853,6 @@ app.get("/shopify/subscription-status", async (req, res) => {
 
     // ✅ FINAL VERDICT
     const isActive = hasShopifyPro || hasDbPro;
-console.log( "KKKKKKKKKKKKKKKKKKKKKKKKKK", isActive,
-   hasShopifyPro ? "shopify" : hasDbPro ? "database" : "none")
     res.json({
       active: isActive,
       source: hasShopifyPro ? "shopify" : hasDbPro ? "database" : "none",
