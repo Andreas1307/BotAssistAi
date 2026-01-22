@@ -2853,7 +2853,8 @@ app.get("/shopify/subscription-status", async (req, res) => {
 
     // ✅ FINAL VERDICT
     const isActive = hasShopifyPro || hasDbPro;
-
+console.log( "KKKKKKKKKKKKKKKKKKKKKKKKKK", isActive,
+   hasShopifyPro ? "shopify" : hasDbPro ? "database" : "none")
     res.json({
       active: isActive,
       source: hasShopifyPro ? "shopify" : hasDbPro ? "database" : "none",
