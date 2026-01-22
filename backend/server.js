@@ -2801,39 +2801,64 @@ await pool.query(
 app.get("/shopify/subscription-status", async (req, res) => {
   try {
     const { userId } = req.query;
+
     const [[user]] = await pool.query(
-      "SELECT * FROM users WHERE user_id=?",
+      "SELECT * FROM users WHERE user_id = ?",
       [userId]
     );
 
-    if (!user) return res.status(404).json({ active: false });
-
-    const query = `
-    {
-      currentAppInstallation {
-        activeSubscriptions {
-          name
-          status
-        }
-      }
+    if (!user) {
+      return res.status(404).json({ active: false });
     }
-    `;
 
-    const result = await axios.post(
-      `https://${user.shopify_shop_domain}/admin/api/2025-01/graphql.json`,
-      { query },
-      {
-        headers: {
-          "X-Shopify-Access-Token": user.shopify_access_token,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // ✅ DB fallback check
+    const hasDbPro = user.subscription_status === "Pro";
 
-    const hasPro = result.data.data.currentAppInstallation.activeSubscriptions
-      .some(sub => sub.name === "BotAssist Pro Plan" && sub.status === "ACTIVE");
+    let hasShopifyPro = false;
 
-    res.json({ active: hasPro });
+    try {
+      const query = `
+        {
+          currentAppInstallation {
+            activeSubscriptions {
+              name
+              status
+            }
+          }
+        }
+      `;
+
+      const result = await axios.post(
+        `https://${user.shopify_shop_domain}/admin/api/2025-01/graphql.json`,
+        { query },
+        {
+          headers: {
+            "X-Shopify-Access-Token": user.shopify_access_token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const subscriptions =
+        result?.data?.data?.currentAppInstallation?.activeSubscriptions || [];
+
+      hasShopifyPro = subscriptions.some(
+        (sub) =>
+          sub.name === "BotAssist Pro Plan" &&
+          sub.status === "ACTIVE"
+      );
+    } catch (shopifyErr) {
+      console.warn("⚠️ Shopify subscription check failed, using DB fallback");
+    }
+
+    // ✅ FINAL VERDICT
+    const isActive = hasShopifyPro || hasDbPro;
+
+    res.json({
+      active: isActive,
+      source: hasShopifyPro ? "shopify" : hasDbPro ? "database" : "none",
+    });
+
   } catch (err) {
     console.error("❌ Subscription status check failed:", err);
     res.status(500).json({ active: false });
