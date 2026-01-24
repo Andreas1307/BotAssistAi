@@ -124,7 +124,7 @@ support_email: "",
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,
           escalation_threshold: data.escalation_threshold ?? 0.7,
-          web_url: data.webUrl ?? user?.shopify_shop_domain,
+          web_url: user?.shopify_shop_domain ?? data.webUrl,
           business_context: data.business_context || "",
           businessName: data.businessName || "",
           avoid_topics: data.avoid_topics || "",
