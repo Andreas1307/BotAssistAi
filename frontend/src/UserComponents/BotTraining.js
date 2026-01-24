@@ -33,7 +33,13 @@ const SupportBotCustomization = () => {
     question4: "",
     answer4: "",
     fine_tuning_data: "",
-    phoneNum: ""
+    phoneNum: "",
+
+    order_tracking_url: "",
+returns_url: "",
+shipping_policy_url: "",
+support_email: "",
+
   });
 
 
@@ -139,6 +145,13 @@ const SupportBotCustomization = () => {
           phoneNum: data.phoneNum || "",
           responseTone: data.response_tone || "friendly",
 
+          
+          order_tracking_url: data.order_tracking_url || "",
+          returns_url: data.returns_url || "",
+          shipping_policy_url: data.shipping_policy_url || "",
+          support_email: data.support_email || "",
+
+
         };
         setUserData(mappedConfig);
         setResponseTone(mappedConfig.responseTone || '');
@@ -217,6 +230,11 @@ const setFieldValue = (field, value) => {
 
     formData.append("webUrl", userData.web_url ?? "");
     formData.append("phoneNum", userData.phoneNum ?? "");
+
+    formData.append("order_tracking_url", userData.order_tracking_url ?? "");
+    formData.append("returns_url", userData.returns_url ?? "");
+    formData.append("shipping_policy_url", userData.shipping_policy_url ?? "");
+    formData.append("support_email", userData.support_email ?? "");
   
     try {
       const response = await fetchWithAuth(`/update-config`, {
@@ -391,7 +409,7 @@ shopifyUser ? (
       </div>
 
       <div>
-        <label>Question:</label>
+        <label>Question2:</label>
         <input
           type="text"
           value={userData.question1 || ""}
@@ -400,7 +418,7 @@ shopifyUser ? (
         />
       </div>
       <div>
-        <label>Answer:</label>
+        <label>Answer2:</label>
         <textarea
           value={userData.answer1 || ""}
           onChange={(e) => setFieldValue("answer1", e.target.value)}
@@ -411,7 +429,7 @@ shopifyUser ? (
 
 
       <div>
-        <label>Question:</label>
+        <label>Question3:</label>
         <input
           type="text"
           value={userData.question2 || ""}
@@ -420,7 +438,7 @@ shopifyUser ? (
         />
       </div>
       <div>
-        <label>Answer:</label>
+        <label>Answer3:</label>
         <textarea
           value={userData.answer2 || ""}
           onChange={(e) => setFieldValue("answer2", e.target.value)}
@@ -429,7 +447,7 @@ shopifyUser ? (
       </div>
 
       <div>
-        <label>Question:</label>
+        <label>Question4:</label>
         <input
           type="text"
           value={userData.question3 || ""}
@@ -438,7 +456,7 @@ shopifyUser ? (
         />
       </div>
       <div>
-        <label>Answer:</label>
+        <label>Answer4:</label>
         <textarea
           value={userData.answer3 || ""}
           onChange={(e) => setFieldValue("answer3", e.target.value)}
@@ -447,7 +465,7 @@ shopifyUser ? (
       </div>
 
       <div>
-        <label>Question:</label>
+        <label>Question5:</label>
         <input
           type="text"
           value={userData.question4 || ""}
@@ -456,7 +474,7 @@ shopifyUser ? (
         />
       </div>
       <div>
-        <label>Answer:</label>
+        <label>Answer5:</label>
         <textarea
           value={userData.answer4 || ""}
           onChange={(e) => setFieldValue("answer4", e.target.value)}
@@ -466,13 +484,55 @@ shopifyUser ? (
     </div>
 
 
+    <div>
+    <h3>Orders Policy</h3>
 
+    <div>
+        <label>Order Tracking:</label>
+        <input
+          type="text"
+          value={userData.order_tracking_url || ""}
+          onChange={(e) => setFieldValue("order_tracking_url", e.target.value)}
+           placeholder="Enter your order tracking URL"
+        />
+      </div>
+
+      <div>
+        <label>Returns Url:</label>
+        <input
+          type="text"
+          value={userData.returns_url || ""}
+          onChange={(e) => setFieldValue("returns_url", e.target.value)}
+          placeholder="Enter your returns policy URL"
+        />
+      </div>
+
+      <div>
+        <label>Shipping Policy:</label>
+        <input
+          type="text"
+          value={userData.shipping_policy_url || ""}
+          onChange={(e) => setFieldValue("shipping_policy_url", e.target.value)}
+          placeholder="Enter your shipping policy URL"
+        />
+      </div>
+
+      <div>
+        <label>Support Email:</label>
+        <input
+          type="text"
+          value={userData.support_email || ""}
+          onChange={(e) => setFieldValue("support_email", e.target.value)}
+          placeholder="Enter your support email address"
+        />
+      </div>
+
+
+    </div>
      
 
 
-
-
-
+ 
 
 
 

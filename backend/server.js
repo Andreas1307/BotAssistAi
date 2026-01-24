@@ -3174,9 +3174,7 @@ if (subscriptionPlan === "Pro" && isShopify) {
   
       let userMessage = message;
   
-      if (subscriptionPlan === "Pro" && shopProducts.length > 0) {
-        userMessage += `\nAvailable products: ${shopProducts.map(p => `${p.title} (${p.url})`).join("; ")}`;
-    }
+     
 
     const businessGroundTruth = `
 BUSINESS NAME:
@@ -3249,7 +3247,7 @@ Answer the user's question using ONLY the BUSINESS DATA above.
 
        Answer every customer question clearly and with actionable info.
 - Do NOT give vague answers.
-- Do NOT redirect to other pages unless explicitly requested.
+- Do NOT link or redirect to pages unless the user explicitly asks to view/buy a product or requests a link.
 - Keep responses professional but approachable, under 70 words.
 - Always check the user’s question and respond accurately.
 - If the user asks about an unavailable service/product, politely explain alternatives.
@@ -3268,7 +3266,6 @@ Answer the user's question using ONLY the BUSINESS DATA above.
 
      
       if (businessName) {
-          userMessage = `Hello ${businessName},\n` + userMessage;
           systemPrompt += `\nThis chatbot represents the business: ${businessName}.`;
       }
       
@@ -3324,18 +3321,23 @@ Answer the user's question using ONLY the BUSINESS DATA above.
       systemPrompt += `
 Avoid vague answers. Provide clear value in every reply.
 Use product or service examples that match the business type.
-Never refer users to another page unless explicitly asked.`;
+Never refer users to another page unless explicitly asked. Product links are allowed only when the user asks for a link or to buy/view an item.`;
 
 if (subscriptionPlan === "Pro" && shopProducts.length > 0) {
   systemPrompt += `
-You have access to the store's product catalog. Suggest relevant products to the user when appropriate, including:
+You have access to the store's product catalog. Suggest relevant products when appropriate.
+IMPORTANT: Only include direct product links if the user explicitly asks for a link, asks to view the product, or asks how to buy.
+If not asked, describe the product without linking.
+
+When you do include a link, include:
 - Product name
 - Variant (if relevant)
-- Direct link to the product: e.g., ${shopProducts[0].url}
-Use the list of products available: ${shopProducts.map(p => p.title).join(", ")}
-Always provide actionable suggestions in context.
+- Direct link to the product (example format): ${shopProducts[0].url}
+
+Available products: ${shopProducts.map(p => p.title).join(", ")}
 `;
 }
+
 
 
 
@@ -4500,7 +4502,11 @@ const {
 
 
   webUrl,
-  phoneNum
+  phoneNum,
+  order_tracking_url,
+  returns_url, 
+  shipping_policy_url,
+  support_email
 } = req.body;
 
 const fileReference = req.file ? req.file.path : null; // Get the uploaded file
@@ -4516,7 +4522,8 @@ try {
        response_tone = ?, response_delay_ms = ?, escalation_threshold = ?, 
        business_context = ?, avoid_topics = ?, languages_supported = ?, 
        fine_tuning_data = ?, businessName = ?, uploaded_file = ?, webUrl = ?, phoneNum = ?, last_updated = NOW(),
-       question1 = ?, answer1 = ?, question2 = ?, answer2 = ?, question3 = ?, answer3 = ?, question4 = ?, answer4 = ?
+       question1 = ?, answer1 = ?, question2 = ?, answer2 = ?, question3 = ?, answer3 = ?, question4 = ?, answer4 = ?,
+       order_tracking_url = ?, returns_url = ?, shipping_policy_url = ?, support_email = ?
        WHERE user_id = ?`,
       [
         userName, faqQuestion, faqAnswer, categories,
@@ -4524,6 +4531,10 @@ try {
         businessContext, avoidTopics, languages,
         fineTuningData, businessName, fileReference, webUrl, phoneNum, 
         faqQuestion1, faqAnswer1, faqQuestion2, faqAnswer2, faqQuestion3, faqAnswer3, faqQuestion4, faqAnswer4,
+        order_tracking_url,
+        returns_url, 
+        shipping_policy_url,
+        support_email,
         userId
       ]
     );
@@ -4549,15 +4560,20 @@ try {
       (user_id, username, question, answer, category, response_tone, response_delay_ms, 
       escalation_threshold, business_context, avoid_topics, languages_supported, 
       fine_tuning_data, businessName, uploaded_file, webUrl, phoneNum, 
-      question1, answer1, question2, answer2, question3, answer3, question4, answer4
+      question1, answer1, question2, answer2, question3, answer3, question4, answer4,
+      order_tracking_url, returns_url, shipping_policy_url, support_email
       ) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId, userName, faqQuestion, faqAnswer, categories,
         responseTone, parseInt(responseDelay) || 500, parsedThreshold,
         businessContext, avoidTopics, languages,
         fineTuningData, businessName, fileReference, webUrl, phoneNum,
-        faqQuestion1, faqAnswer1, faqQuestion2, faqAnswer2, faqQuestion3, faqAnswer3, faqQuestion4, faqAnswer4
+        faqQuestion1, faqAnswer1, faqQuestion2, faqAnswer2, faqQuestion3, faqAnswer3, faqQuestion4, faqAnswer4,
+        order_tracking_url,
+        returns_url, 
+        shipping_policy_url,
+        support_email
       ]
     );
 
