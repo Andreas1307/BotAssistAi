@@ -194,7 +194,7 @@ const setFieldValue = (field, value) => {
   }));
 };
 
-
+console.log("UYDSADASDSADSA", user)
 
   const handleSaveSettings = async () => {
     const formData = new FormData();

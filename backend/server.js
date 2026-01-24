@@ -3162,7 +3162,12 @@ if (subscriptionPlan === "Pro" && isShopify) {
         question1, answer1,
         question2, answer2,
         question3, answer3,
-        question4, answer4
+        question4, answer4, 
+
+        order_tracking_url,
+        returns_url, 
+        shipping_policy_url,
+        support_email
       } = userSettings;
       
 
