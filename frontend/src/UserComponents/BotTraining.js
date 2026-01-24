@@ -334,7 +334,7 @@ const setFieldValue = (field, value) => {
       <label>Website Url:</label>
       <input
         type="text"
-        value={userData.web_url || ""}
+        value={user?.shopify_shop_domain || ""}
         onChange={(e) => setFieldValue("web_url", e.target.value)}
         placeholder="Enter your website URL"
       />
