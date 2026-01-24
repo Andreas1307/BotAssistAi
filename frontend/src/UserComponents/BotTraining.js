@@ -92,7 +92,15 @@ support_email: "",
     fetchUser();
   }, []);
 
-
+  useEffect(() => {
+    if (!user) return;
+  
+    setUserData((prev) => ({
+      ...prev,
+      web_url: prev.web_url || user.shopify_shop_domain || "",
+    }));
+  }, [user]);
+  
   
   const activatePlan = async () => {
     await handleBilling(user.user_id);
@@ -116,7 +124,7 @@ support_email: "",
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,
           escalation_threshold: data.escalation_threshold ?? 0.7,
-          webUrl: data.webUrl || user?.shopify_shop_domain,
+          web_url: data.webUrl ?? user?.shopify_shop_domain ?? "",
           business_context: data.business_context || "",
           businessName: data.businessName || "",
           avoid_topics: data.avoid_topics || "",
@@ -194,7 +202,6 @@ const setFieldValue = (field, value) => {
   }));
 };
 
-console.log("UYDSADASDSADSA", user)
 
   const handleSaveSettings = async () => {
     const formData = new FormData();
