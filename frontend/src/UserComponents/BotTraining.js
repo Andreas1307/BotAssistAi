@@ -389,18 +389,13 @@ shopifyUser ? (
           placeholder="Enter the answer"
         />
       </div>
-    </div>
 
-
-
-    <div>
-      <h3>Business FAQs</h3>
       <div>
         <label>Question:</label>
         <input
           type="text"
           value={userData.question1 || ""}
-          onChange={(e) => setFieldValue("question", e.target.value)}
+          onChange={(e) => setFieldValue("question1", e.target.value)}
           placeholder="Enter a frequently asked question"
         />
       </div>
@@ -408,22 +403,19 @@ shopifyUser ? (
         <label>Answer:</label>
         <textarea
           value={userData.answer1 || ""}
-          onChange={(e) => setFieldValue("answer", e.target.value)}
+          onChange={(e) => setFieldValue("answer1", e.target.value)}
           placeholder="Enter the answer"
         />
       </div>
-    </div>
 
 
 
-    <div>
-      <h3>Business FAQs</h3>
       <div>
         <label>Question:</label>
         <input
           type="text"
           value={userData.question2 || ""}
-          onChange={(e) => setFieldValue("question", e.target.value)}
+          onChange={(e) => setFieldValue("question2", e.target.value)}
           placeholder="Enter a frequently asked question"
         />
       </div>
@@ -431,20 +423,17 @@ shopifyUser ? (
         <label>Answer:</label>
         <textarea
           value={userData.answer2 || ""}
-          onChange={(e) => setFieldValue("answer", e.target.value)}
+          onChange={(e) => setFieldValue("answer2", e.target.value)}
           placeholder="Enter the answer"
         />
       </div>
-    </div>
 
-    <div>
-      <h3>Business FAQs</h3>
       <div>
         <label>Question:</label>
         <input
           type="text"
           value={userData.question3 || ""}
-          onChange={(e) => setFieldValue("question", e.target.value)}
+          onChange={(e) => setFieldValue("question3", e.target.value)}
           placeholder="Enter a frequently asked question"
         />
       </div>
@@ -452,20 +441,17 @@ shopifyUser ? (
         <label>Answer:</label>
         <textarea
           value={userData.answer3 || ""}
-          onChange={(e) => setFieldValue("answer", e.target.value)}
+          onChange={(e) => setFieldValue("answer3", e.target.value)}
           placeholder="Enter the answer"
         />
       </div>
-    </div>
 
-    <div>
-      <h3>Business FAQs</h3>
       <div>
         <label>Question:</label>
         <input
           type="text"
           value={userData.question4 || ""}
-          onChange={(e) => setFieldValue("question", e.target.value)}
+          onChange={(e) => setFieldValue("question4", e.target.value)}
           placeholder="Enter a frequently asked question"
         />
       </div>
@@ -473,11 +459,15 @@ shopifyUser ? (
         <label>Answer:</label>
         <textarea
           value={userData.answer4 || ""}
-          onChange={(e) => setFieldValue("answer", e.target.value)}
+          onChange={(e) => setFieldValue("answer4", e.target.value)}
           placeholder="Enter the answer"
         />
       </div>
     </div>
+
+
+
+     
 
 
 
