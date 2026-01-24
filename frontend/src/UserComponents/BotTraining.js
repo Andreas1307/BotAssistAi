@@ -9,7 +9,7 @@ import { handleBilling } from "../utils/billing";
 import { fetchWithAuth } from "../utils/initShopifyAppBridge";
 
 const SupportBotCustomization = () => {
-  const [responseTone, setResponseTone] = useState('');
+  const [responseTone, setResponseTone] = useState('friendly');
   const [uploadStatus, setUploadStatus] = useState(null);
   const [user, setUser] = useState(null)
   const [membership, setMembership] = useState(false)
@@ -18,12 +18,20 @@ const SupportBotCustomization = () => {
   const [userData, setUserData] = useState({
     response_delay_ms: 500,
     escalation_threshold: 0.7,
-    web_url: "",
+    web_url: user?.shopify_shop_domain || "",
     business_context: "",
     businessName: "",
     avoid_topics: "",
     question: "",
     answer: "",
+    question1: "",
+    answer1: "",
+    question2: "",
+    answer2: "",
+    question3: "",
+    answer3: "",
+    question4: "",
+    answer4: "",
     fine_tuning_data: "",
     phoneNum: ""
   });
@@ -102,15 +110,35 @@ const SupportBotCustomization = () => {
         const mappedConfig = {
           response_delay_ms: data.response_delay_ms ?? 500,
           escalation_threshold: data.escalation_threshold ?? 0.7,
-          web_url: data.webUrl || "",
+          webUrl: data.webUrl || user?.shopify_shop_domain,
           business_context: data.business_context || "",
           businessName: data.businessName || "",
           avoid_topics: data.avoid_topics || "",
           question: data.question || "",
           answer: data.answer || "",
+
+
+          
+          question1: data.question1 || "",
+          answer1: data.answer1 || "",
+
+          
+          question2: data.question2 || "",
+          answer2: data.answer2 || "",
+
+          
+          question3: data.question3 || "",
+          answer3: data.answer3 || "",
+
+          
+          question4: data.question4 || "",
+          answer4: data.answer4 || "",
+
+
           fine_tuning_data: data.fine_tuning_data || "",
           phoneNum: data.phoneNum || "",
-          responseTone: data.responseTone || "",
+          responseTone: data.response_tone || "friendly",
+
         };
         setUserData(mappedConfig);
         setResponseTone(mappedConfig.responseTone || '');
@@ -169,6 +197,24 @@ const setFieldValue = (field, value) => {
     formData.append("userId", user.user_id ?? "");
     formData.append("faqQuestion", userData.question ?? "");
     formData.append("faqAnswer", userData.answer ?? "");
+
+    
+    formData.append("faqQuestion1", userData.question1 ?? "");
+    formData.append("faqAnswer1", userData.answer1 ?? "");
+
+    
+    formData.append("faqQuestion2", userData.question2 ?? "");
+    formData.append("faqAnswer2", userData.answer2 ?? "");
+
+    
+    formData.append("faqQuestion3", userData.question3 ?? "");
+    formData.append("faqAnswer3", userData.answer3 ?? "");
+
+    
+    formData.append("faqQuestion4", userData.question4 ?? "");
+    formData.append("faqAnswer4", userData.answer4 ?? "");
+
+
     formData.append("webUrl", userData.web_url ?? "");
     formData.append("phoneNum", userData.phoneNum ?? "");
   
@@ -226,7 +272,7 @@ const setFieldValue = (field, value) => {
         disabled= {!membership ? true : false}
         >
   <option value="" disabled>None Selected</option> 
-  <option value="friendly">Friendly</option>
+  <option value="friendly">Friendly (recommended)</option>
   <option value="formal">Formal</option>
   <option value="professional">Professional</option>
   <option value="casual">Casual</option>
@@ -344,6 +390,103 @@ shopifyUser ? (
         />
       </div>
     </div>
+
+
+
+    <div>
+      <h3>Business FAQs</h3>
+      <div>
+        <label>Question:</label>
+        <input
+          type="text"
+          value={userData.question1 || ""}
+          onChange={(e) => setFieldValue("question", e.target.value)}
+          placeholder="Enter a frequently asked question"
+        />
+      </div>
+      <div>
+        <label>Answer:</label>
+        <textarea
+          value={userData.answer1 || ""}
+          onChange={(e) => setFieldValue("answer", e.target.value)}
+          placeholder="Enter the answer"
+        />
+      </div>
+    </div>
+
+
+
+    <div>
+      <h3>Business FAQs</h3>
+      <div>
+        <label>Question:</label>
+        <input
+          type="text"
+          value={userData.question2 || ""}
+          onChange={(e) => setFieldValue("question", e.target.value)}
+          placeholder="Enter a frequently asked question"
+        />
+      </div>
+      <div>
+        <label>Answer:</label>
+        <textarea
+          value={userData.answer2 || ""}
+          onChange={(e) => setFieldValue("answer", e.target.value)}
+          placeholder="Enter the answer"
+        />
+      </div>
+    </div>
+
+    <div>
+      <h3>Business FAQs</h3>
+      <div>
+        <label>Question:</label>
+        <input
+          type="text"
+          value={userData.question3 || ""}
+          onChange={(e) => setFieldValue("question", e.target.value)}
+          placeholder="Enter a frequently asked question"
+        />
+      </div>
+      <div>
+        <label>Answer:</label>
+        <textarea
+          value={userData.answer3 || ""}
+          onChange={(e) => setFieldValue("answer", e.target.value)}
+          placeholder="Enter the answer"
+        />
+      </div>
+    </div>
+
+    <div>
+      <h3>Business FAQs</h3>
+      <div>
+        <label>Question:</label>
+        <input
+          type="text"
+          value={userData.question4 || ""}
+          onChange={(e) => setFieldValue("question", e.target.value)}
+          placeholder="Enter a frequently asked question"
+        />
+      </div>
+      <div>
+        <label>Answer:</label>
+        <textarea
+          value={userData.answer4 || ""}
+          onChange={(e) => setFieldValue("answer", e.target.value)}
+          placeholder="Enter the answer"
+        />
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
 
     <div>
       <label>Fine-Tuning Data (Optional):</label>

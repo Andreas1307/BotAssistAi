@@ -3141,22 +3141,30 @@ if (subscriptionPlan === "Pro" && isShopify) {
       userSettings = updatedRows[0];  
   
       const { 
-          faq_id,
-          username,
-          tags,
-          category,
-          response_tone,
-          response_delay_ms,
-          escalation_threshold,
-          business_context,
-          avoid_topics,
-          languages_supported,
-          fine_tuning_data,
-          customer_name,
-          uploaded_file,
-          webUrl,
-          phoneNum
+        faq_id,
+        username,
+        tags,
+        category,
+        response_tone,
+        response_delay_ms,
+        escalation_threshold,
+        business_context,
+        avoid_topics,
+        languages_supported,
+        fine_tuning_data,
+        customer_name,
+        uploaded_file,
+        webUrl,
+        phoneNum,
+      
+        question,
+        answer,
+        question1, answer1,
+        question2, answer2,
+        question3, answer3,
+        question4, answer4
       } = userSettings;
+      
 
       // 🔒 Build business ground-truth context
 
@@ -3180,8 +3188,16 @@ ${business_context || "No business context provided"}
 WEBSITE:
 ${webUrl || "No website provided"}
 
-FAQ DATA:
+FAQS:
+${question ? `Q: ${question}\nA: ${answer}\n` : ""}
+${question1 ? `Q: ${question1}\nA: ${answer1}\n` : ""}
+${question2 ? `Q: ${question2}\nA: ${answer2}\n` : ""}
+${question3 ? `Q: ${question3}\nA: ${answer3}\n` : ""}
+${question4 ? `Q: ${question4}\nA: ${answer4}\n` : ""}
+
+UPLOADED FILE:
 ${uploaded_file || "No uploaded file"}
+
 
 AVAILABLE PRODUCTS:
 ${
@@ -4468,6 +4484,21 @@ const {
   userId,
   faqQuestion,
   faqAnswer,
+
+
+  faqQuestion1,
+  faqAnswer1,
+  
+  faqQuestion2,
+  faqAnswer2,
+  
+  faqQuestion3,
+  faqAnswer3,
+  
+  faqQuestion4,
+  faqAnswer4,
+
+
   webUrl,
   phoneNum
 } = req.body;
@@ -4484,12 +4515,16 @@ try {
       `UPDATE faq SET username = ?, question = ?, answer = ?, category = ?, 
        response_tone = ?, response_delay_ms = ?, escalation_threshold = ?, 
        business_context = ?, avoid_topics = ?, languages_supported = ?, 
-       fine_tuning_data = ?, businessName = ?, uploaded_file = ?, webUrl = ?, phoneNum = ?, last_updated = NOW() WHERE user_id = ?`,
+       fine_tuning_data = ?, businessName = ?, uploaded_file = ?, webUrl = ?, phoneNum = ?, last_updated = NOW(),
+       question1 = ?, answer1 = ?, question2 = ?, answer2 = ?, question3 = ?, answer3 = ?, question4 = ?, answer4 = ?
+       WHERE user_id = ?`,
       [
         userName, faqQuestion, faqAnswer, categories,
         responseTone, parseInt(responseDelay) || 500, parsedThreshold,
         businessContext, avoidTopics, languages,
-        fineTuningData, businessName, fileReference, webUrl, phoneNum, userId
+        fineTuningData, businessName, fileReference, webUrl, phoneNum, 
+        faqQuestion1, faqAnswer1, faqQuestion2, faqAnswer2, faqQuestion3, faqAnswer3, faqQuestion4, faqAnswer4,
+        userId
       ]
     );
 
@@ -4513,13 +4548,16 @@ try {
       `INSERT INTO faq 
       (user_id, username, question, answer, category, response_tone, response_delay_ms, 
       escalation_threshold, business_context, avoid_topics, languages_supported, 
-      fine_tuning_data, businessName, uploaded_file, phoneNum) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      fine_tuning_data, businessName, uploaded_file, webUrl, phoneNum, 
+      question1, answer1, question2, answer2, question3, answer3, question4, answer4
+      ) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId, userName, faqQuestion, faqAnswer, categories,
         responseTone, parseInt(responseDelay) || 500, parsedThreshold,
         businessContext, avoidTopics, languages,
-        fineTuningData, businessName, fileReference, phoneNum
+        fineTuningData, businessName, fileReference, webUrl, phoneNum,
+        faqQuestion1, faqAnswer1, faqQuestion2, faqAnswer2, faqQuestion3, faqAnswer3, faqQuestion4, faqAnswer4
       ]
     );
 
