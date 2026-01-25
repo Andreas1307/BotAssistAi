@@ -281,47 +281,46 @@ const Dashboard = () => {
   
   //FETCH USER
   useEffect(() => {
-
-
-let intervalId;
+    let intervalId;
+  
     const fetchUser = async () => {
       try {
-        const res = await fetchWithAuth("/auth-check"); 
-        setUser(res.user);
-        if(res.user.shopify_access_token){
-          setShopifyUser(true)
-        } else {
-          setShopifyUser(false)
+        const res = await fetchWithAuth("/auth-check");
+  
+        // ✅ Handle reconnect FIRST
+        if (res === null || res?.__needsReconnect || res?.needsReconnect) {
+          setNeedsReconnect(true);
+          if (intervalId) clearInterval(intervalId);
+          return;
         }
-       if(res.user.hadMembership === true) {
-        setRenew(true)
-       } else {
-        setRenew(false)
-       }
-       if (res === null || res.needsReconnect) {
-        if (intervalId) clearInterval(intervalId);
-        setNeedsReconnect(true);
-        return;
-      }
-
+  
+        // ✅ Now it's safe to use res.user
+        setNeedsReconnect(false);
+        setUser(res.user);
+  
+        if (res.user?.shopify_access_token) setShopifyUser(true);
+        else setShopifyUser(false);
+  
+        setRenew(res.user?.hadMembership === true);
+  
       } catch (error) {
-        setUser(null);
-        showErrorNotification()
+        // ✅ Don't kick them to homepage on token expiry
         setNeedsReconnect(true);
+        if (intervalId) clearInterval(intervalId);
+        return;
       } finally {
         setLoading(false);
       }
     };
+  
     fetchUser();
-    
-    
-
     intervalId = setInterval(fetchUser, 9000);
-
+  
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, []);
+  
 
   //fETCH QUERIES
   useEffect(() => {
@@ -772,19 +771,24 @@ const fetchConvHistory = async (loadAllChats = false) => {
   }, [user]);
 
   useEffect(() => {
-    if (loading) return; 
-
+    if (loading) return;
+  
+    // ✅ If reconnect needed, DO NOT navigate away
+    if (needsReconnect) return;
+  
     if (user?.shopify_access_token) {
       navigate("/shopify/dashboard");
       return;
     }
   
     if (user) {
-      navigate(`/${user?.username}/dashboard`);
-    } else {
-      navigate("/")
+      navigate(`/${user.username}/dashboard`);
+      return;
     }
-  }, [user, loading, navigate]);
+  
+    navigate("/");
+  }, [user, loading, needsReconnect, navigate]);
+  
 
   const sendSupport = async (e) => {
     e.preventDefault()
