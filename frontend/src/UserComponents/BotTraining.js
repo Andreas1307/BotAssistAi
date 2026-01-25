@@ -361,31 +361,6 @@ const setFieldValue = (field, value) => {
       />
     </div>
 
-    {!membership ? (
-
-shopifyUser ? (
-  <div onClick={activatePlan} className='upgrade-div'>
-    <span>
-      Upgrade Plan For More
-    </span>
-  </div>
-) : (
-  <div className='upgrade-div'>
-    <Link to={`/${user?.username}/upgrade-plan`}>
-      Upgrade Plan For More
-    </Link>
-  </div>
-)
-    ) : (
-      <div className='div'>
-    <div>
-      <label>Avoid Topics (Optional):</label>
-      <textarea
-        value={userData.avoid_topics || ""}
-        onChange={(e) => setFieldValue("avoid_topics", e.target.value)}
-        placeholder="Enter topics the bot should avoid (e.g., pricing)"
-      />
-    </div>
     <div>
       <label>Support phone number: (Optional)</label>
       <input
@@ -441,6 +416,33 @@ shopifyUser ? (
 
 
     </div>
+
+    {!membership ? (
+
+shopifyUser ? (
+  <div onClick={activatePlan} className='upgrade-div'>
+    <span>
+      Upgrade Plan For More
+    </span>
+  </div>
+) : (
+  <div className='upgrade-div'>
+    <Link to={`/${user?.username}/upgrade-plan`}>
+      Upgrade Plan For More
+    </Link>
+  </div>
+)
+    ) : (
+      <div className='div'>
+    <div>
+      <label>Avoid Topics (Optional):</label>
+      <textarea
+        value={userData.avoid_topics || ""}
+        onChange={(e) => setFieldValue("avoid_topics", e.target.value)}
+        placeholder="Enter topics the bot should avoid (e.g., pricing)"
+      />
+    </div>
+    
   <div>
       <h3>Business FAQs</h3>
       <div>

@@ -3529,13 +3529,7 @@ if (userConversationState[conversationId].history.length > MAX_HISTORY) {
       
       const seemsUnsure = unsurePhrases.some(p => aiResponse.toLowerCase().includes(p));
       
-      if (seemsUnsure) {
-        if (support_email) {
-          aiResponse += `\n\nYou can also contact support at: ${support_email}`;
-        } else if (phoneNum) {
-          aiResponse += `\n\nYou can also contact support at: ${phoneNum}`;
-        }
-      }
+   
   
 
 
