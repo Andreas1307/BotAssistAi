@@ -3363,8 +3363,9 @@ ${businessGroundTruth}
 
 If you cannot answer confidently from BUSINESS DATA, respond with:
 [ESCALATE] I'm sorry — I don’t have that information for this business.
-Do NOT include contact details. (The system will provide them.)
 
+Then, if SUPPORT EMAIL/PHONE is available, include ONE short line offering it as a next step.
+Only do this for escalations — not for normal answers.
 
 
 Answer the user's question using ONLY the BUSINESS DATA above.
@@ -3385,9 +3386,7 @@ Answer the user's question using ONLY the BUSINESS DATA above.
       
       For order status / tracking questions, you may share the ORDER TRACKING link from BUSINESS DATA.
 Do NOT request or process sensitive personal data.
-Only provide SUPPORT EMAIL/PHONE if:
-- you used [ESCALATE], or
-- the user asks to contact support / a human.
+If the user needs human help, provide SUPPORT EMAIL/PHONE.
 
       Give your absolute best to staisfy the customer and answer his questions or requiremnts in the best way possible.
 
