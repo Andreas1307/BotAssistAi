@@ -393,6 +393,7 @@ const setFieldValue = (field, value) => {
           onChange={(e) => setFieldValue("returns_url", e.target.value)}
           placeholder="Enter your returns policy URL"
         />
+         <label style={{fontSize: "14px", marginTop: "-4px", marginLeft: "5px", color: "#545454"}} >Example: https://yourstore.com/policies/refund-policy</label>
       </div>
 
       <div>
@@ -403,6 +404,7 @@ const setFieldValue = (field, value) => {
           onChange={(e) => setFieldValue("shipping_policy_url", e.target.value)}
           placeholder="Enter your shipping policy URL"
         />
+         <label style={{fontSize: "14px", marginTop: "-4px", marginLeft: "5px", color: "#545454"}} >Example: https://yourstore.com/policies/shipping-policy</label>
       </div>
 
       <div>
