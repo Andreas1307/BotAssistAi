@@ -365,7 +365,10 @@ let intervalId;
           return;
         }
   
-        const satisfactionData = response.message;
+        const satisfactionData = Array.isArray(response?.message)
+  ? response.message
+  : [];
+
         setSatisfaction(satisfactionData);
   
         if (satisfactionData.length > 0) {
