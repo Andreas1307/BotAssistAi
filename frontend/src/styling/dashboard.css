@@ -70,6 +70,39 @@ body {
     width: 95px;
     margin-bottom: 2px;
   }
+  .reconnect-banner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+    padding: 20px 15px;
+    border-radius: 15px;
+    margin-top: 15px;
+    background-color: red;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .reconnect-banner p {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f8f8f8;
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .reconnect-banner button {
+    background-color: #fff;
+    color: #222;
+    font-size: 15.7px;
+    padding: 8px 16px;
+    border-radius: 14px;
+    margin-top: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-family: "Space Grotesk", sans-serif;
+    transition: .3s ease;
+  }
+  .reconnect-banner button:hover {
+    transform: translateY(-5px);
+  }
   .nav-item {
     padding: 12px;
     display: flex;

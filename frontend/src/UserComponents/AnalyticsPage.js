@@ -145,11 +145,12 @@ const [shopifyUser, setShopifyUser] = useState(false)
         const res = await fetchWithAuth(`/resTime-graph?userId=${userId}`, {
           method: "GET",
         });
-        setResData(res.message.slice(-5))
         if (res === null) {
           if (intervalId) clearInterval(intervalId);
           return;
         }
+        setResData(res.message.slice(-5))
+        
       } catch(e) {
         console.log("An error has occured with retreiving the response time for chart", e)
         showErrorNotification()
