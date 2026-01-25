@@ -14,6 +14,7 @@ import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
 import { fetchWithAuth, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 
+import { Redirect } from "@shopify/app-bridge/actions";
 
 import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
 
