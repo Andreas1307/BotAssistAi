@@ -137,6 +137,7 @@ const [shopifyUser, setShopifyUser] = useState(false)
   }, [user])
 //FETCH RESPONSE TIME
   useEffect(() => {
+    let intervalId;
     const fetchResTime = async () => {
       if(!user) return
       try {
@@ -145,14 +146,24 @@ const [shopifyUser, setShopifyUser] = useState(false)
           method: "GET",
         });
         setResData(res.message.slice(-5))
+        if (res === null) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
       } catch(e) {
         console.log("An error has occured with retreiving the response time for chart", e)
         showErrorNotification()
       }
     }
     fetchResTime()
-    const interval = setInterval(fetchResTime, 2000); // fetch every 2 seconds
-    return () => clearInterval(interval);
+   
+
+
+    intervalId = setInterval(fetchResTime, 3000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [user])
 
   useEffect(() => {

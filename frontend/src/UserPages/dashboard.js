@@ -246,12 +246,17 @@ const Dashboard = () => {
   // FETCH MEMBERSHIP
   useEffect(() => {
     if (!user) return;
-  
+  let intervalId;
     const fetchMembership = async () => {
       try {
         const res = await fetchWithAuth(
           `/shopify/subscription-status?userId=${user.user_id}`
         );
+        if (res === null) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
+  
   
         setMembership(res.active === true);
       } catch (e) {
@@ -263,16 +268,19 @@ const Dashboard = () => {
     // Initial fetch immediately
     fetchMembership();
   
-    // Set interval to fetch every 5 seconds (5000 ms)
-    const intervalId = setInterval(fetchMembership, 5000);
-  
-    // Cleanup on unmount
-    return () => clearInterval(intervalId);
+    intervalId = setInterval(fetchMembership, 5000);
+
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
   }, [user]);
   
   
   //FETCH USER
   useEffect(() => {
+
+
+let intervalId;
     const fetchUser = async () => {
       try {
         const res = await fetchWithAuth("/auth-check"); 
@@ -287,6 +295,11 @@ const Dashboard = () => {
        } else {
         setRenew(false)
        }
+       if (res === null) {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
       } catch (error) {
         setUser(null);
         showErrorNotification()
@@ -297,10 +310,12 @@ const Dashboard = () => {
     fetchUser();
     
     
-    const interval = setInterval(() => {
-      fetchUser();
-    }, 9000);
-    return () => clearInterval(interval);
+
+    intervalId = setInterval(fetchUser, 9000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   //fETCH QUERIES
@@ -333,14 +348,17 @@ const Dashboard = () => {
   // FETCH USER SATISFACTION
   useEffect(() => {
     if (!user) return;
-  
+  let intervalId;
     const fetchSatisfaction = async () => {
       try {
         const userId = user.user_id;
         const response = await fetchWithAuth(`/satisfaction?userId=${userId}`, {
           method: "GET",
         });
-
+        if (response === null) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
   
         const satisfactionData = response.message;
         setSatisfaction(satisfactionData);
@@ -375,9 +393,15 @@ const Dashboard = () => {
     };
   
     fetchSatisfaction(); 
-    const interval = setInterval(fetchSatisfaction, 5000); // Auto-refresh every 5 seconds
-  
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    
+    
+    intervalId = setInterval(fetchSatisfaction, 5000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+
+
   }, [user]);
   // FETCH RES TIME
   useEffect(() => {
@@ -427,6 +451,9 @@ const Dashboard = () => {
   }, [user])
   // FETCH DAILY CONVERSATIONS
   useEffect(() => {
+
+    let intervalId;
+
     const fetchDailyConversations = async () => {
       if(!user) {
         return
@@ -436,8 +463,13 @@ const Dashboard = () => {
         const response = await fetchWithAuth(`/daily-messages?userId=${userId}`, {
           method: "GET",
         });
-        setDailyCount(response.dailyMessages);
 
+        
+        setDailyCount(response.dailyMessages);
+if (response === null) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
         if(response.dailyMessages / 2 >= 15 && membership === false) {
           setShowConvsLimit(true)
         } else {
@@ -450,12 +482,15 @@ const Dashboard = () => {
     }
     fetchDailyConversations()
 
-    const interval = setInterval(() => {
-      fetchDailyConversations();
-    }, 3000);
-  
-    // Cleanup on unmount
-    return () => clearInterval(interval);
+
+    intervalId = setInterval(fetchDailyConversations, 5000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+
+
+
   }, [user])
 
 //fetchBotStatus
