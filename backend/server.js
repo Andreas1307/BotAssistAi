@@ -3035,7 +3035,16 @@ app.post("/ask-ai", async (req, res) => {
     const userType = isShopify ? "shopify" : "standard";
 
     let aiResponse;
-      const { apiKey, message, model = "gpt-4o-mini", temperature = 0.1, ...updates } = req.body;
+    const {
+      apiKey,
+      message,
+      conversationId: incomingConversationId,
+      model = "gpt-4o-mini",
+      temperature = 0.1,
+      ...updates
+    } = req.body;
+    
+    const conversationId = incomingConversationId || `${userId}-default`;
  
       const [users] = await pool.query("SELECT * FROM users")
       const user = users.find((u) => {
@@ -3055,7 +3064,6 @@ app.post("/ask-ai", async (req, res) => {
   
       const userId = user.user_id;
       user_id = userId;
-      const conversationId = req.body.conversationId || `${userId}-default`;
 
       
 

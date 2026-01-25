@@ -395,6 +395,52 @@ shopifyUser ? (
         placeholder="Enter your support num for customers needs"
       />
     </div>
+
+    <div>
+    <h3>Orders Policy</h3>
+
+    <div>
+        <label>Order Tracking:</label>
+        <input
+          type="text"
+          value={userData.order_tracking_url || ""}
+          onChange={(e) => setFieldValue("order_tracking_url", e.target.value)}
+           placeholder="Enter your order tracking URL"
+        />
+      </div>
+
+      <div>
+        <label>Returns Url:</label>
+        <input
+          type="text"
+          value={userData.returns_url || ""}
+          onChange={(e) => setFieldValue("returns_url", e.target.value)}
+          placeholder="Enter your returns policy URL"
+        />
+      </div>
+
+      <div>
+        <label>Shipping Policy:</label>
+        <input
+          type="text"
+          value={userData.shipping_policy_url || ""}
+          onChange={(e) => setFieldValue("shipping_policy_url", e.target.value)}
+          placeholder="Enter your shipping policy URL"
+        />
+      </div>
+
+      <div>
+        <label>Support Email:</label>
+        <input
+          type="text"
+          value={userData.support_email || ""}
+          onChange={(e) => setFieldValue("support_email", e.target.value)}
+          placeholder="Enter your support email address"
+        />
+      </div>
+
+
+    </div>
   <div>
       <h3>Business FAQs</h3>
       <div>
@@ -491,51 +537,7 @@ shopifyUser ? (
     </div>
 
 
-    <div>
-    <h3>Orders Policy</h3>
-
-    <div>
-        <label>Order Tracking:</label>
-        <input
-          type="text"
-          value={userData.order_tracking_url || ""}
-          onChange={(e) => setFieldValue("order_tracking_url", e.target.value)}
-           placeholder="Enter your order tracking URL"
-        />
-      </div>
-
-      <div>
-        <label>Returns Url:</label>
-        <input
-          type="text"
-          value={userData.returns_url || ""}
-          onChange={(e) => setFieldValue("returns_url", e.target.value)}
-          placeholder="Enter your returns policy URL"
-        />
-      </div>
-
-      <div>
-        <label>Shipping Policy:</label>
-        <input
-          type="text"
-          value={userData.shipping_policy_url || ""}
-          onChange={(e) => setFieldValue("shipping_policy_url", e.target.value)}
-          placeholder="Enter your shipping policy URL"
-        />
-      </div>
-
-      <div>
-        <label>Support Email:</label>
-        <input
-          type="text"
-          value={userData.support_email || ""}
-          onChange={(e) => setFieldValue("support_email", e.target.value)}
-          placeholder="Enter your support email address"
-        />
-      </div>
-
-
-    </div>
+    
      
 
 
