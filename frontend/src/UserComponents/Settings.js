@@ -88,7 +88,7 @@ const SettingsPage = () => {
       try {
         const data = await fetchWithAuth("/auth-check");  
 
-        if (res === null || res.needsReconnect) {
+        if (data === null || data.needsReconnect) {
           setNeedsReconnect(true);
           return;
         }
