@@ -12,7 +12,7 @@ import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
-import { fetchWithAuth, safeRedirect } from "../utils/initShopifyAppBridge";
+import { fetchWithAuth, getAppBridgeInstance } from "../utils/initShopifyAppBridge";
 
 
 import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
@@ -609,9 +609,19 @@ useEffect(() => {
 
 const handleReconnect = () => {
   const shop = sessionStorage.getItem("shopify_shop") || "";
-  safeRedirect(`https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`, shop);
-};
+  const app = getAppBridgeInstance();
 
+  const target = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}`;
+
+  if (app) {
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.REMOTE, target);
+    return;
+  }
+
+  // fallback (will break out of iframe)
+  window.top.location.href = target;
+};
 
 const setBotStatus = async (status) => {
   if (!user) return;
