@@ -3361,8 +3361,10 @@ BUSINESS DATA (GROUND TRUTH):
 ${businessGroundTruth}
 ====================
 
-If you cannot answer confidently from BUSINESS DATA, respond with:
-[ESCALATE] I'm sorry — I don’t have that information for this business.
+IMPORTANT: If BUSINESS DATA does not contain the answer, you MUST prefix your reply with exactly:
+[ESCALATE]
+Then write: "I'm sorry — I don’t have that information for this business."
+
 
 Then, if SUPPORT EMAIL/PHONE is available, include ONE short line offering it as a next step.
 Only do this for escalations — not for normal answers.
@@ -3386,7 +3388,7 @@ Answer the user's question using ONLY the BUSINESS DATA above.
       
       For order status / tracking questions, you may share the ORDER TRACKING link from BUSINESS DATA.
 Do NOT request or process sensitive personal data.
-If the user needs human help, provide SUPPORT EMAIL/PHONE.
+If the user asks for a human or contact details, provide SUPPORT EMAIL/PHONE.
 
       Give your absolute best to staisfy the customer and answer his questions or requiremnts in the best way possible.
 
@@ -3823,14 +3825,28 @@ if (escalated) {
   }
 }
 
-
-// If bot seems unsure, append contact once (avoid duplicates)
 const aiLower = (aiResponse || "").toLowerCase();
-const seemsUnsure2 =
+const looksLikeIDK =
   aiLower.includes("i don’t have that information") ||
   aiLower.includes("i don't have that information") ||
   aiLower.includes("i’m not sure") ||
-  aiLower.includes("i'm not sure");
+  aiLower.includes("i'm not sure") ||
+  aiLower.includes("i cannot help") ||
+  aiLower.includes("i can't help") ||
+  aiLower.includes("i can’t help");
+
+// Only add contact if the model is "IDK" AND it didn't already include contact AND it wasn't already escalated
+if (!escalated && looksLikeIDK) {
+  if (support_email && !aiResponse.includes(support_email)) {
+    aiResponse += `\n\nContact support: ${support_email}`;
+  } else if (phoneNum && !aiResponse.includes(phoneNum)) {
+    aiResponse += `\n\nContact support: ${phoneNum}`;
+  }
+}
+
+
+// If bot seems unsure, append contact once (avoid duplicates)
+
 /*
 if (seemsUnsure2) {
   if (support_email && !aiResponse.includes(support_email)) {
