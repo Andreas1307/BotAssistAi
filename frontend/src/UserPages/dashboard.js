@@ -12,7 +12,7 @@ import Integration from "../UserComponents/Integrations";
 import BotTraining from "../UserComponents/BotTraining";
 import SettingsPage from "../UserComponents/Settings"
 import directory from '../directory';
-import { fetchWithAuth } from "../utils/initShopifyAppBridge";
+import { fetchWithAuth, safeRedirect } from "../utils/initShopifyAppBridge";
 
 
 import { initShopifyAppBridge } from "../utils/initShopifyAppBridge.js";
