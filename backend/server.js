@@ -1164,6 +1164,14 @@ app.get("/shopify/auth", (req, res) => {
 });
 */
 
+app.get("/shopify/top-level-auth", async (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Missing shop");
+
+  // IMPORTANT: bounce through your existing /shopify route (starts OAuth)
+  // You likely also want to preserve host if you have it, but shop alone is OK.
+  return res.redirect(`/shopify?shop=${encodeURIComponent(shop)}`);
+});
 
 app.get("/shopify", async (req, res) => {
   const { shop, host } = req.query;
