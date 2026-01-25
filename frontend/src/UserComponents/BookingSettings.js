@@ -300,36 +300,22 @@ const selectedProTip = codeSnippets.find(
   const [blockedSlots, setBlockedSlots] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-
-
-  const [needsReconnect, setNeedsReconnect] = useState(false);
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(`${directory}/auth-check`, {
+          withCredentials: true,
+        });
+        setUser(res.user);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
-        const fetchUser = async () => {
-          try {
-            const res = await fetchWithAuth("/auth-check"); 
-            setUser(res.user);
-            
-           if (res === null || res.needsReconnect) {
-            setNeedsReconnect(true);
-            return;
-          }
-    
-          } catch (error) {
-            setUser(null);
-            showErrorNotification()
-            setNeedsReconnect(true);
-          } finally {
-            setLoading(false);
-          }
-        };
-        fetchUser();
-        
-      }, []);
-
-
-
-      
     // FETCH MEMBERSHIP
     useEffect(() => {
       const fetchMembership = async () => {
