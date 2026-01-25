@@ -379,7 +379,7 @@ setHasSubscription(false)
  disabled={loading}
  className="downGradeBtn"
 >
- {loading ? "Downgrading..." : "Downgrade to Free"}
+ {loading ? "Downgrading..." : "Downgrade Plan to Free"}
 </button>
 )}
        
