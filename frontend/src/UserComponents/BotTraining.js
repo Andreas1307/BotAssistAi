@@ -74,19 +74,21 @@ support_email: "",
   };
 
   const [shopifyUser, setShopifyUser] = useState(false)
+  const [needsReconnect, setNeedsReconnect] = useState(false);
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await fetchWithAuth("/auth-check"); 
         setUser(res.user);
-        if(res.user.shopify_access_token) {
-          setShopifyUser(true)
-        } else {
-          setShopifyUser(false)
+
+        if (res === null || res.needsReconnect) {
+          setNeedsReconnect(true);
+          return;
         }
       } catch (error) {
         setUser(null);
         showErrorNotification()
+        setNeedsReconnect(true)
       } 
     };
     fetchUser();

@@ -19,6 +19,9 @@ const AnalyticsPage = () => {
   const [dailyCount, setDailyCount] = useState(0)
   const [yestCount, setYestCount] = useState(0)
   const [activityData, setActivityData] = useState(new Array(6).fill(0));
+
+
+
   const [lastWeekData, setLastWeekData] = useState({
     labels: [],
     datasets: [{
@@ -57,25 +60,31 @@ const [shopifyUser, setShopifyUser] = useState(false)
     await handleBilling(user.user_id);
   };
   
+  
+  const [needsReconnect, setNeedsReconnect] = useState(false);
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetchWithAuth("/auth-check"); 
-        setUser(res.user);
-        if(res.user.shopify_access_token){
-          setShopifyUser(true)
-        } else {
-          setShopifyUser(false)
-        }
-      } catch (error) {
-        setUser(null);
-        showErrorNotification()
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
+
+        const fetchUser = async () => {
+          try {
+            const res = await fetchWithAuth("/auth-check"); 
+            setUser(res.user);
+           
+           if (res === null || res.needsReconnect) {
+            setNeedsReconnect(true);
+            return;
+          }
+    
+          } catch (error) {
+            setUser(null);
+            showErrorNotification()
+            setNeedsReconnect(true);
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchUser();
+        
+      }, []);
 
   
   

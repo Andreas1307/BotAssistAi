@@ -338,19 +338,22 @@ const Integrations = () => {
 
   
 
+  const [needsReconnect, setNeedsReconnect] = useState(false);
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await fetchWithAuth("/auth-check");        
-        setUser(data.user);
+        const res = await fetchWithAuth("/auth-check"); 
+        setUser(res.user);
+
+        if (res === null || res.needsReconnect) {
+          setNeedsReconnect(true);
+          return;
+        }
       } catch (error) {
-        console.error("❌ Auth check error:", error);
         setUser(null);
-      } finally {
-        setLoading(false);
-      }
+        setNeedsReconnect(true)
+      } 
     };
-  
     fetchUser();
   }, []);
 

@@ -82,10 +82,16 @@ const SettingsPage = () => {
     alert("Settings have been reset!");
   };
 
+  const [needsReconnect, setNeedsReconnect] = useState(false);
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const data = await fetchWithAuth("/auth-check");  
+
+        if (res === null || res.needsReconnect) {
+          setNeedsReconnect(true);
+          return;
+        }
         if(data.user.shopify_subscription_status === "ACTIVE") {
           setHasSubscription(true)
         }
@@ -93,6 +99,7 @@ const SettingsPage = () => {
       } catch (error) {
         console.error("❌ Auth check error:", error);
         setUser(null);
+        setNeedsReconnect(true)
       } finally {
         setLoading(false);
       }
@@ -100,6 +107,9 @@ const SettingsPage = () => {
   
     fetchUser();
   }, []);
+
+
+
 
 
   const formattedDate = new Date(user.created_at).toLocaleString("en-US", {
