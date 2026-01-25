@@ -46,7 +46,8 @@ module.exports = async function verifySessionToken(req, res, next) {
     next();
   } catch (err) {
     const isExpired = err?.name === "TokenExpiredError" || err?.message?.includes("jwt expired");
-  
+    if (isExpired) return res.status(401).json({ error: "SESSION_EXPIRED" });
+
     console.warn("❌ Invalid Shopify session token:", err.message);
   
     return res.status(401).json({
