@@ -294,14 +294,20 @@ const Dashboard = () => {
           return;
         }
   
-        // ✅ Now it's safe to use res.user
-        setNeedsReconnect(false);
-        setUser(res.user);
-  
-        if (res.user?.shopify_access_token) setShopifyUser(true);
-        else setShopifyUser(false);
-  
-        setRenew(res.user?.hadMembership === true);
+      // If backend returned no user, treat as reconnect needed (do NOT clear banner)
+if (!res?.user) {
+  setNeedsReconnect(true);
+  if (intervalId) clearInterval(intervalId);
+  return;
+}
+
+// ✅ Valid user -> clear reconnect and proceed
+setNeedsReconnect(false);
+setUser(res.user);
+
+setShopifyUser(!!res.user?.shopify_access_token);
+setRenew(res.user?.hadMembership === true);
+
   
       } catch (error) {
         // ✅ Don't kick them to homepage on token expiry

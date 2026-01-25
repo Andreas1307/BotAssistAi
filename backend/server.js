@@ -3363,7 +3363,7 @@ ${businessGroundTruth}
 
 IMPORTANT: If BUSINESS DATA does not contain the answer, you MUST prefix your reply with exactly:
 [ESCALATE]
-Then write: "I'm sorry — I don’t have that information for this business."
+Then write: "I'm sorry — I don’t have that information for that."
 
 
 Then, if SUPPORT EMAIL/PHONE is available, include ONE short line offering it as a next step.
