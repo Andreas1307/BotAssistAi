@@ -8,6 +8,13 @@
     console.error("❌ Missing API key on chatbot-loader.js script tag");
     return;
   }
+
+  let conversationId = localStorage.getItem("botassist_conversation_id");
+  if (!conversationId) {
+    conversationId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random();
+    localStorage.setItem("botassist_conversation_id", conversationId);
+  }
+
   
   if (!shop) {
     console.error("❌ Missing shop on chatbot-loader.js script tag");
@@ -394,7 +401,7 @@ height: 43px;
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message, apiKey: window.BOTASSIST_API_KEY }),
+        body: JSON.stringify({ message, apiKey: window.BOTASSIST_API_KEY, conversationId }),
       });
       const data = await res.json();
       const botResponse = data.response;

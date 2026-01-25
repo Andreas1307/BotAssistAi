@@ -3055,7 +3055,8 @@ app.post("/ask-ai", async (req, res) => {
   
       const userId = user.user_id;
       user_id = userId;
-      const conversationId = `${userId}-${generateRandomToken()}`;
+      const conversationId = req.body.conversationId || `${userId}-default`;
+
       
 
   if (!userData[conversationId]) {
@@ -3152,7 +3153,7 @@ if (subscriptionPlan === "Pro" && isShopify) {
         avoid_topics,
         languages_supported,
         fine_tuning_data,
-        customer_name,
+        businessName ,
         uploaded_file,
         webUrl,
         phoneNum,
@@ -3171,13 +3172,72 @@ if (subscriptionPlan === "Pro" && isShopify) {
       } = userSettings;
       
 
-      // 🔒 Build business ground-truth context
-
-
-  
-      const businessName = customer_name; 
   
       let userMessage = message;
+
+
+      const lowerMessage = (message || "").toLowerCase();
+
+  
+  
+      const trackingKeywords = [
+        "wismo",
+        "where is my order",
+        "where's my order",
+        "where’s my order",
+        "track my order",
+        "order tracking",
+        "tracking",
+        "tracking number",
+        "order status",
+        "shipment status",
+        "delivery status",
+        "when will my order arrive",
+        "where's my package",
+        "where’s my package",
+        "where is my package"
+      ];
+      
+
+
+      
+      if (trackingKeywords.some(k => lowerMessage.includes(k))) {
+        const trackingUrl =
+          order_tracking_url ||
+          (webUrl ? `${webUrl.replace(/\/$/, "")}/apps/track-your-order` : null);
+      
+        const supportLine =
+          support_email
+            ? `You can also email support at: ${support_email}`
+            : phoneNum
+            ? `You can also call support at: ${phoneNum}`
+            : "";
+      
+        const msg = trackingUrl
+          ? `You can track your order here: ${trackingUrl}\n\nIf the page asks for it, enter your order number and email used at checkout.\n\n${supportLine}`
+          : `To track an order, please check your order confirmation email for the tracking link.\n\n${supportLine}`;
+      
+        return res.json({ response: msg, metadata: { userId, faq_id } });
+      }
+      
+
+// Returns policy (fast path)
+const returnsKeywords = ["return", "refund", "exchange", "send back", "return policy"];
+if (returnsKeywords.some(k => lowerMessage.includes(k)) && returns_url) {
+  return res.json({
+    response: `You can view our returns policy here: ${returns_url}`,
+    metadata: { userId, faq_id }
+  });
+}
+
+// Shipping policy (fast path)
+const shippingKeywords = ["shipping policy", "shipping", "delivery", "shipping time", "how long does shipping take"];
+if (shippingKeywords.some(k => lowerMessage.includes(k)) && shipping_policy_url) {
+  return res.json({
+    response: `You can view our shipping policy here: ${shipping_policy_url}`,
+    metadata: { userId, faq_id }
+  });
+}
   
      
 
@@ -3211,6 +3271,15 @@ ${
 
 SUPPORT PHONE:
 ${phoneNum || "Not provided"}
+
+ORDER & POLICY LINKS:
+Order tracking: ${order_tracking_url || "Not provided"}
+Returns policy: ${returns_url || "Not provided"}
+Shipping policy: ${shipping_policy_url || "Not provided"}
+
+SUPPORT EMAIL:
+${support_email || "Not provided"}
+ 
 `;
     
 
@@ -3223,6 +3292,10 @@ You MUST answer questions ONLY using the information provided in BUSINESS DATA b
 You are NOT allowed to invent, assume, or guess any information.
 If information is not present in BUSINESS DATA, you MUST say:
 "I'm sorry, I don’t have that information for this business."
+Then offer support contact:
+- If SUPPORT EMAIL exists, include it.
+- Otherwise, if SUPPORT PHONE exists, include it.
+
 
 You MUST determine FIRST what this business does (products vs services)
 based ONLY on BUSINESS DATA.
@@ -3247,6 +3320,11 @@ BUSINESS DATA (GROUND TRUTH):
 ${businessGroundTruth}
 ====================
 
+If you are not confident the answer is correct from BUSINESS DATA, respond with:
+[ESCALATE] I'm sorry — I don’t have that information for this business.
+Then include SUPPORT EMAIL or SUPPORT PHONE if available.
+
+
 Answer the user's question using ONLY the BUSINESS DATA above.
       You are a highly helpful, concise AI chatbot for customer support on this website: ${webUrl} and this bussiness ${businessName}.
 
@@ -3263,8 +3341,10 @@ Answer the user's question using ONLY the BUSINESS DATA above.
       
       If a user asks a broad or general question, use product categories relevant to the business context: ${business_context}.
       
-      Do not assist with specific order issues. Instead say: "Have you completed all the steps correctly, including payment and confirmation?"
-    
+      For order status / tracking questions, you may share the ORDER TRACKING link from BUSINESS DATA.
+Do NOT request or process sensitive personal data.
+If the user needs human help, provide SUPPORT EMAIL/PHONE.
+
       Give your absolute best to staisfy the customer and answer his questions or requiremnts in the best way possible.
 
       `;
@@ -3355,6 +3435,12 @@ if (!userConversationState[conversationId].history) {
 // 2️⃣ Add the current user message to the history
 userConversationState[conversationId].history.push({ role: "user", content: userMessage });
 
+
+const MAX_HISTORY = 12; // 6 user + 6 assistant
+if (userConversationState[conversationId].history.length > MAX_HISTORY) {
+  userConversationState[conversationId].history = userConversationState[conversationId].history.slice(-MAX_HISTORY);
+}
+
 // 3️⃣ Prepare messages for OpenAI with last 6 messages for context
 const messages = [
   { role: "system", content: systemPrompt },
@@ -3381,16 +3467,22 @@ const messages = [
   
       console.log(`Response time: ${responseTime} ms`); 
   
-      const sessionQuery = "SELECT session_id FROM chat_sessions WHERE user_id = ? ORDER BY session_id DESC LIMIT 1";
-      const [sessionRows] = await pool.query(sessionQuery, [userId]);
-  
-      let sessionId;
-      if (sessionRows.length > 0) {
-          sessionId = sessionRows[0].session_id;  
-      } else {
-          const [newSession] = await pool.query("INSERT INTO chat_sessions (user_id) VALUES (?)", [userId]);
-          sessionId = newSession.insertId;  
-      }
+      const sessionQuery =
+      "SELECT session_id FROM chat_sessions WHERE user_id = ? AND conversation_id = ? LIMIT 1";
+    const [sessionRows] = await pool.query(sessionQuery, [userId, conversationId]);
+    
+    let sessionId;
+    
+    if (sessionRows.length > 0) {
+      sessionId = sessionRows[0].session_id;
+    } else {
+      const [newSession] = await pool.query(
+        "INSERT INTO chat_sessions (user_id, conversation_id) VALUES (?, ?)",
+        [userId, conversationId]
+      );
+      sessionId = newSession.insertId;
+    }
+    
   
       await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id) VALUES (?, 'user', ?, ?)", [sessionId, message, userId]);
   
@@ -3400,17 +3492,46 @@ const messages = [
       const [bookingEnabled] = await pool.query("SELECT booking FROM users where user_id = ?", [userId])
       const [subscrptionPlan] = await pool.query("SELECT subscription_plan FROM users WHERE user_id = ?", [userId])
   
+
+
        aiResponse = response.choices[0].message.content;
   
        userConversationState[conversationId].history.push({ role: "assistant", content: aiResponse });
-      
+  
+if (userConversationState[conversationId].history.length > MAX_HISTORY) {
+  userConversationState[conversationId].history =
+    userConversationState[conversationId].history.slice(-MAX_HISTORY);
+}
+
       console.log("Parsed Date:", chrono.parseDate("May 7", new Date(), { forwardDate: true }));
   
-  
-      const lowerMessage = message.toLowerCase();
-  
-  
+
+      const unsurePhrases = [
+        "i don’t have that information",
+        "i don't have that information",
+        "i’m not sure",
+        "i'm not sure",
+        "i cannot help",
+        "i can't help",
+        "i can’t help",
+        "not provided",
+        "no information",
+        "not available"
+      ];
       
+      const seemsUnsure = unsurePhrases.some(p => aiResponse.toLowerCase().includes(p));
+      
+      if (seemsUnsure) {
+        if (support_email) {
+          aiResponse += `\n\nYou can also contact support at: ${support_email}`;
+        } else if (phoneNum) {
+          aiResponse += `\n\nYou can also contact support at: ${phoneNum}`;
+        }
+      }
+  
+
+
+
   
   
      
@@ -3435,9 +3556,14 @@ const messages = [
       const wantsHumanSupport = supportKeywords.some(phrase => lowerMessage.includes(phrase));
       
       if (wantsHumanSupport) {
-        aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum}. `;
-        await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Transferred to Agent"]);
-      } 
+        aiResponse = `Sure! You can reach our human support agent at 📞 ${phoneNum || "support"}.`;
+        await pool.query(
+          "INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)",
+          [sessionId, aiResponse, userId, responseTime, "Transferred to Agent"]
+        );
+        return res.json({ response: aiResponse, metadata: { userId, faq_id } });
+      }
+      
   
   
       const triggers = [
@@ -3627,17 +3753,12 @@ const messages = [
             }
       }
     }
-      } else {
+      } /* else {
       await pool.query("INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)", [sessionId, aiResponse, userId, responseTime, "Chatbot handled"]);
-      }
+      } */
       
   
-      if (isUnresolved(aiResponse)) {
-          await pool.query("INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, 'unresolved')", [userId, message, aiResponse]);
-      } else {
-        await pool.query("INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, 'resolved')", [userId, message, aiResponse]);
-      }
-  
+    
       const satisfactionPrompt = `Thank you for using our support! Please rate your experience:
         1. Very Dissatisfied
         2. Dissatisfied
@@ -3645,6 +3766,51 @@ const messages = [
         4. Satisfied
         5. Very Satisfied
       `;
+
+     
+
+
+
+      // Handle escalation tag
+if (typeof aiResponse === "string" && aiResponse.includes("[ESCALATE]")) {
+  aiResponse = aiResponse.replace("[ESCALATE]", "").trim();
+}
+
+// If bot seems unsure, append contact once (avoid duplicates)
+const aiLower = (aiResponse || "").toLowerCase();
+const seemsUnsure2 =
+  aiLower.includes("i don’t have that information") ||
+  aiLower.includes("i don't have that information") ||
+  aiLower.includes("i’m not sure") ||
+  aiLower.includes("i'm not sure");
+
+if (seemsUnsure2) {
+  if (support_email && !aiResponse.includes(support_email)) {
+    aiResponse += `\n\nContact support: ${support_email}`;
+  } else if (phoneNum && !aiResponse.includes(phoneNum)) {
+    aiResponse += `\n\nContact support: ${phoneNum}`;
+  }
+}
+
+// ✅ Always insert bot message once
+await pool.query(
+  "INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)",
+  [sessionId, aiResponse, userId, responseTime, "Chatbot handled"]
+);
+
+const unresolved =
+(aiResponse || "").toLowerCase().includes("i don’t have that information") ||
+(aiResponse || "").toLowerCase().includes("i don't have that information") ||
+isUnresolved(aiResponse);
+
+await pool.query(
+"INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, ?)",
+[userId, message, aiResponse, unresolved ? "unresolved" : "resolved"]
+);
+
+
+
+
   
       setTimeout(() => {
           res.json({ 

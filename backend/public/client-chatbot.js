@@ -8,7 +8,11 @@ const directory = "https://api.botassistai.com"
     return;
   }
 
-
+  let conversationId = localStorage.getItem("botassist_conversation_id");
+  if (!conversationId) {
+    conversationId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random();
+    localStorage.setItem("botassist_conversation_id", conversationId);
+  }
 
 
   if (!shop) {
@@ -370,7 +374,8 @@ height: 43px;
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message, apiKey }),
+        body: JSON.stringify({ message, apiKey, conversationId }),
+
       });
       const data = await res.json();
       const botResponse = data.response;
