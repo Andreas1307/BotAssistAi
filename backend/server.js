@@ -3801,9 +3801,12 @@ await pool.query(
 );
 
 const unresolved =
-(aiResponse || "").toLowerCase().includes("i don’t have that information") ||
-(aiResponse || "").toLowerCase().includes("i don't have that information") ||
-isUnresolved(aiResponse);
+  (aiResponse || "").includes("[UNANSWERED]") || isUnresolved(aiResponse);
+
+if (unresolved) {
+  aiResponse = aiResponse.replace("[UNANSWERED]", "").trim();
+}
+
 
 await pool.query(
 "INSERT INTO unresolved_queries (user_id, query, response, status) VALUES (?, ?, ?, ?)",
@@ -3975,7 +3978,7 @@ if (!userId) {
   return res.status(404).json({ message: "Invalid credentials"})
 }
 try {
-  const [rows] = await pool.query("SELECT * FROM chat_messages WHERE user_id = ?", [userId])
+  const [rows] = await pool.query("SELECT * FROM chat_messages WHERE user_id = ? ORDER BY id DESC LIMIT 200", [userId])
   return res.status(200).json({ message: rows})
    
 } catch(e){
@@ -3983,6 +3986,23 @@ try {
   return res.status(500).json({ message: "Internal server error occured"})
 }
 })
+
+app.get("/una-questions", verifySessionToken, async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ message: "Missing userId" });
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM unresolved_queries WHERE user_id = ? ORDER BY created_at DESC",
+      [userId]
+    );
+    return res.status(200).json({ message: rows });
+  } catch (e) {
+    console.log("Error fetching unanswered questions", e);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
 app.post("/submit-feedback", verifySessionToken, async (req, res) => {
   try {

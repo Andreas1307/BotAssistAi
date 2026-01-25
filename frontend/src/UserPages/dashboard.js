@@ -48,9 +48,11 @@ const Dashboard = () => {
   const [dailyCount, setDailyCount] = useState(0);
   const [membership, setMembership] = useState(false)
   const [convHistory, setConvHistory] = useState([])
+  const [unaQuestions, setUnaQuestions] = useState([])
   const [collap, setCollap] = useState(false);
   const [renew, setRenew] = useState(false)
   const [visibleCount, setVisibleCount] = useState(10);
+  const [visibleCount2, setVisibleCount2] = useState(10);
   const [aiBot, setAiBot] = useState(false);
   const [dashPopUp, setDashPopUp] = useState(false)
   const [connected, setConnected] = useState(false)
@@ -646,6 +648,11 @@ const [page, setPage] = useState(1);
 const [hasMore, setHasMore] = useState(true);
 const [loadAll, setLoadAll] = useState(false);
 
+
+
+const [page2, setPage2] = useState(1);
+const [hasMore2, setHasMore2] = useState(true);
+
 const fetchConvHistory = async (loadAllChats = false) => {
   if (!user || (!hasMore && !loadAllChats)) return;
 
@@ -804,6 +811,58 @@ const handleReset = async () => {
     showErrorNotification()
   }
 }
+
+
+
+const fetchUnaQuestions = async (loadAllChats = false) => {
+  if (!user || (!hasMore2 && !loadAllChats)) return;
+
+  try {
+    const query = new URLSearchParams({
+      userId: user.user_id,
+      ...(loadAllChats ? { all: true } : { page2, limit: 20 }),
+    }).toString();
+    
+    // Make the request
+    const userId = user.user_id;
+    const res = await fetchWithAuth(`/una-questions?userId=${userId}`, {
+      method: "GET", // optional, default is GET
+    });
+
+
+    if (loadAllChats) {
+      setUnaQuestions(res.message);
+
+      setHasMore2(false); // No more to load after viewing all
+    } else {
+      if (!res.message || res.message.length === 0) {
+        setHasMore2(false); // No more messages available
+      } else {
+        setUnaQuestions(prev => {
+          const newMessages = res.message.filter(msg => 
+            !prev.some(prevMsg => prevMsg.id === msg.id) // Avoid duplicates
+          );
+          return [...prev, ...newMessages];
+        });
+
+        setPage2(prev => prev + 1);
+      }
+    }
+  } catch (e) {
+    console.log("Error occurred fetching unanswered questions", e);
+    showErrorNotification()
+  }
+};
+  useEffect(() => {
+    fetchUnaQuestions();
+  }, [user]);
+
+
+
+
+
+
+
 
 
 
@@ -1126,9 +1185,10 @@ if (loading) {
       <ul className="chat-list">
   {(() => {
     const pairs = [];
-    for (let i = 0; i < convHistory.length; i += 2) {
-      const userMsg = convHistory[i];
-      const botMsg = convHistory[i + 1];
+    const limited = convHistory.slice(0, visibleCount);
+for (let i = 0; i < limited.length; i += 2) {
+  const userMsg = limited[i];
+  const botMsg = limited[i + 1];
 
       pairs.push(
         <li key={i} className="chat-pair">
@@ -1195,23 +1255,40 @@ if (loading) {
           <p><span>Bot:</span> {resTime}ms</p>
         </div>
       </div>
-      <div className="support-tools">
-        <h2>Support Tools</h2>
-        <div className="tools-card">
-          <h3>⏱️Last Training Update</h3>
-          <p>{lastUpdated}</p>
-        </div>
-        <div className="tools-card">
-          <h3>🧠Brain Boosts</h3>
-          <p>Every update makes your assistant smarter and better.</p>
-        </div>
+      <div className="conversation-details">
+  <h2>Unanswered Questions</h2>
+  
+  <div className="conversation-detail">
+  {unaQuestions.length > 0 ? (
+    <>
+     <ul className="chat-list">
+  {unaQuestions.slice(0, visibleCount2).map((q) => (
+    <li key={q.id} className="chat-pair">
+      <div className="user-message">
+        <strong>User:</strong> {q.query}
       </div>
-      <div className="bot-training-feedback">
-        <h2>Chatbot Training</h2>
-        <div className="feedback-card">
-          <p>💡<span> Suggestion:</span> Upload real chat examples and FAQs to help the AI respond more naturally and accurately.</p>
-        </div>
+      <div className="bot-message">
+        <strong>Bot:</strong> {q.response}
       </div>
+    </li>
+  ))}
+</ul>
+
+
+      {visibleCount2 < unaQuestions.length && (
+        <button className="load-btn" onClick={() => setVisibleCount2(prev => prev + 10)}>
+          Load more
+        </button>
+      )}
+    </>
+  ) : (
+    <h2>No unanswered questions</h2>
+  )}
+</div>
+
+
+  
+</div>
 </div>
       
 
