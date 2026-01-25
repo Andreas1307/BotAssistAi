@@ -3044,8 +3044,7 @@ app.post("/ask-ai", async (req, res) => {
       ...updates
     } = req.body;
     
-    const conversationId = incomingConversationId || `${userId}-default`;
- 
+   
       const [users] = await pool.query("SELECT * FROM users")
       const user = users.find((u) => {
         try {
@@ -3064,7 +3063,8 @@ app.post("/ask-ai", async (req, res) => {
   
       const userId = user.user_id;
       user_id = userId;
-
+ const conversationId = incomingConversationId || `${userId}-default`;
+ 
       
 
   if (!userData[conversationId]) {

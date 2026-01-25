@@ -380,8 +380,9 @@ const setFieldValue = (field, value) => {
           type="text"
           value={userData.order_tracking_url || ""}
           onChange={(e) => setFieldValue("order_tracking_url", e.target.value)}
-           placeholder="Enter your order tracking URL"
+           placeholder="Paste your tracking page URL (AfterShip/Tracktor/Order status page)"
         />
+        <label>https://yourstore.com/apps/track-your-order</label>
       </div>
 
       <div>
