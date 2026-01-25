@@ -1164,13 +1164,23 @@ app.get("/shopify/auth", (req, res) => {
 });
 */
 
-app.get("/shopify/top-level-auth", async (req, res) => {
+app.get("/shopify/top-level-auth", (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop");
 
-  // IMPORTANT: bounce through your existing /shopify route (starts OAuth)
-  // You likely also want to preserve host if you have it, but shop alone is OK.
-  return res.redirect(`/shopify?shop=${encodeURIComponent(shop)}`);
+  const target = `https://api.botassistai.com/shopify?shop=${encodeURIComponent(shop)}`;
+
+  return res.status(200).send(`
+    <!doctype html>
+    <html>
+      <head><meta charset="utf-8" /></head>
+      <body>
+        <script>
+          window.top.location.href = "${target}";
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 app.get("/shopify", async (req, res) => {
