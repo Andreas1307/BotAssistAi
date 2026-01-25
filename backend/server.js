@@ -3232,13 +3232,24 @@ if (subscriptionPlan === "Pro" && isShopify) {
           order_tracking_url ||
           (webUrl ? `${webUrl.replace(/\/$/, "")}/apps/track-your-order` : null);
       
-        const supportLine =
-          support_email
-            ? `You can also email support at: ${support_email}`
-            : phoneNum
-            ? `You can also call support at: ${phoneNum}`
-            : "";
-      
+
+          const wantsSupport =
+  lowerMessage.includes("contact") ||
+  lowerMessage.includes("support") ||
+  lowerMessage.includes("email") ||
+  lowerMessage.includes("call") ||
+  lowerMessage.includes("human") ||
+  lowerMessage.includes("agent");
+  
+  const supportLine =
+  wantsSupport || !trackingUrl
+    ? (support_email
+        ? `If you need help, email support at: ${support_email}`
+        : phoneNum
+        ? `If you need help, call: ${phoneNum}`
+        : "")
+    : "";
+
         const msg = trackingUrl
           ? `You can track your order here: ${trackingUrl}\n\nIf the page asks for it, enter your order number and email used at checkout.\n\n${supportLine}`
           : `To track an order, please check your order confirmation email for the tracking link.\n\n${supportLine}`;
@@ -3318,10 +3329,14 @@ You MUST answer questions ONLY using the information provided in BUSINESS DATA b
 You are NOT allowed to invent, assume, or guess any information.
 If information is not present in BUSINESS DATA, you MUST say:
 "I'm sorry, I don’t have that information for this business."
-Then offer support contact:
-- If SUPPORT EMAIL exists, include it.
-- Otherwise, if SUPPORT PHONE exists, include it.
 
+When you cannot answer from BUSINESS DATA, you SHOULD offer a next step.
+Include SUPPORT EMAIL/PHONE if available, but only when it’s helpful — e.g.:
+- the user needs account/order-specific help,
+- the user asks for a human,
+- the question is policy/price/availability you cannot confirm from BUSINESS DATA,
+- you already said you don’t have enough info.
+Do NOT include contact details in every response if you already answered the question.
 
 You MUST determine FIRST what this business does (products vs services)
 based ONLY on BUSINESS DATA.
@@ -3346,9 +3361,10 @@ BUSINESS DATA (GROUND TRUTH):
 ${businessGroundTruth}
 ====================
 
-If you are not confident the answer is correct from BUSINESS DATA, respond with:
+If you cannot answer confidently from BUSINESS DATA, respond with:
 [ESCALATE] I'm sorry — I don’t have that information for this business.
-Then include SUPPORT EMAIL or SUPPORT PHONE if available.
+Do NOT include contact details. (The system will provide them.)
+
 
 
 Answer the user's question using ONLY the BUSINESS DATA above.
@@ -3369,7 +3385,9 @@ Answer the user's question using ONLY the BUSINESS DATA above.
       
       For order status / tracking questions, you may share the ORDER TRACKING link from BUSINESS DATA.
 Do NOT request or process sensitive personal data.
-If the user needs human help, provide SUPPORT EMAIL/PHONE.
+Only provide SUPPORT EMAIL/PHONE if:
+- you used [ESCALATE], or
+- the user asks to contact support / a human.
 
       Give your absolute best to staisfy the customer and answer his questions or requiremnts in the best way possible.
 
@@ -3795,6 +3813,17 @@ if (userConversationState[conversationId].history.length > MAX_HISTORY) {
 if (typeof aiResponse === "string" && aiResponse.includes("[ESCALATE]")) {
   aiResponse = aiResponse.replace("[ESCALATE]", "").trim();
 }
+
+const escalated = (response.choices[0].message.content || "").includes("[ESCALATE]");
+
+if (escalated) {
+  if (support_email && !aiResponse.includes(support_email)) {
+    aiResponse += `\n\nContact support: ${support_email}`;
+  } else if (phoneNum && !aiResponse.includes(phoneNum)) {
+    aiResponse += `\n\nContact support: ${phoneNum}`;
+  }
+}
+
 
 // If bot seems unsure, append contact once (avoid duplicates)
 const aiLower = (aiResponse || "").toLowerCase();
