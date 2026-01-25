@@ -3978,7 +3978,7 @@ if (!userId) {
   return res.status(404).json({ message: "Invalid credentials"})
 }
 try {
-  const [rows] = await pool.query("SELECT * FROM chat_messages WHERE user_id = ? ORDER BY id DESC LIMIT 200", [userId])
+  const [rows] = await pool.query("SELECT * FROM chat_messages WHERE user_id = ?", [userId])
   return res.status(200).json({ message: rows})
    
 } catch(e){
