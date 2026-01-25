@@ -298,14 +298,16 @@ let intervalId;
        } else {
         setRenew(false)
        }
-       if (res === null) {
+       if (res === null || res.needsReconnect) {
         if (intervalId) clearInterval(intervalId);
+        setNeedsReconnect(true);
         return;
       }
 
       } catch (error) {
         setUser(null);
         showErrorNotification()
+        setNeedsReconnect(true);
       } finally {
         setLoading(false);
       }

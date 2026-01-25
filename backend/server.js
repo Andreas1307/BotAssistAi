@@ -4372,9 +4372,10 @@ app.get(
       }
 
       if (!user) {
-        return res.json({ user: null }); // ❗️NO 401
+        // If Shopify token is missing/expired, tell frontend to show reconnect UI
+        return res.json({ user: null, needsReconnect: true });
       }
-
+      
       let showRenewalModal = false;
       if (
         user.subscription_plan === "free" &&
