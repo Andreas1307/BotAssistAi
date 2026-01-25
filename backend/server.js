@@ -3993,7 +3993,7 @@ app.get("/una-questions", verifySessionToken, async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      "SELECT * FROM unresolved_queries WHERE user_id = ? ORDER BY created_at DESC",
+      "SELECT * FROM unresolved_queries WHERE user_id = ? ORDER BY id DESC",
       [userId]
     );
     return res.status(200).json({ message: rows });
