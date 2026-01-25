@@ -3803,7 +3803,7 @@ const seemsUnsure2 =
   aiLower.includes("i don't have that information") ||
   aiLower.includes("i’m not sure") ||
   aiLower.includes("i'm not sure");
-
+/*
 if (seemsUnsure2) {
   if (support_email && !aiResponse.includes(support_email)) {
     aiResponse += `\n\nContact support: ${support_email}`;
@@ -3811,7 +3811,7 @@ if (seemsUnsure2) {
     aiResponse += `\n\nContact support: ${phoneNum}`;
   }
 }
-
+*/ 
 // ✅ Always insert bot message once
 await pool.query(
   "INSERT INTO chat_messages (session_id, sender_type, message_text, user_id, res_duration, status) VALUES (?, 'bot', ?, ?, ?, ?)",

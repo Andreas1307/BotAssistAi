@@ -73,6 +73,12 @@ const [shopifyUser, setShopifyUser] = useState(false)
             setNeedsReconnect(true);
             return;
           }
+
+          if(res.user.shopify_access_token){
+            setShopifyUser(true)
+          } else {
+            setShopifyUser(false)
+          }
     
           } catch (error) {
             setUser(null);
