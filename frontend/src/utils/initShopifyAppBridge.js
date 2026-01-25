@@ -125,11 +125,28 @@ export async function fetchWithAuth(url, options = {}) {
 
   const res = await fetch(fullUrl, opts);
 
-  // Retry once if token expired
   if (res.status === 401 && !options._retried) {
-    window.sessionToken = null;
+    console.warn("⚠️ 401 — session token likely expired. Forcing reauth…");
+  
+    // Try again once (getSessionToken should mint a new JWT if App Bridge session is valid)
     return fetchWithAuth(url, { ...options, _retried: true });
   }
+  
+  if (res.status === 401) {
+    const contentType = res.headers.get("Content-Type") || "";
+    const data = contentType.includes("application/json") ? await res.json() : await res.text();
+  
+    // if expired or missing session -> reauth
+    const errCode = data?.error;
+    if (errCode === "SESSION_EXPIRED" || errCode === "SESSION_NOT_FOUND" || errCode === "INVALID_SESSION_TOKEN") {
+      safeRedirect(`https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(sessionStorage.getItem("shopify_shop") || "")}`);
+    }
+  
+    throw new Error(`Request failed: 401 ${JSON.stringify(data)}`);
+  }
+  
+  
+  
 
   if (!res.ok) {
     const contentType = res.headers.get("Content-Type") || "";
