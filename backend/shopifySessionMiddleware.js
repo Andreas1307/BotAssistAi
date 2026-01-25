@@ -26,16 +26,25 @@ async function shopifySessionMiddleware(req, res, next) {
       (await loadCallback(onlineSessionId)) ||
       (await loadCallback(offlineSessionId));
 
-    if (!session) {
-      console.warn('⚠️ No session found for JWT payload');
-      return res.status(401).send('Session expired or invalid.');
-    }
+      if (!session) {
+        console.warn("⚠️ No session found for JWT payload");
+        return res.status(401).json({
+          error: "SESSION_NOT_FOUND",
+          message: "Session expired or invalid",
+        });
+      }
 
     req.shopify = { shop, session, payload };
     next();
   } catch (err) {
-    console.error('❌ Invalid Shopify session token:', err.message);
-    return res.status(401).send('Unauthorized Shopify request');
+    const isExpired = err?.name === "TokenExpiredError" || err?.message?.includes("jwt expired");
+  
+    console.warn("❌ Invalid Shopify session token:", err.message);
+  
+    return res.status(401).json({
+      error: isExpired ? "SESSION_EXPIRED" : "INVALID_SESSION_TOKEN",
+      message: err.message,
+    });
   }
 }
 

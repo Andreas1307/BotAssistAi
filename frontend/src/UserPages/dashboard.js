@@ -527,12 +527,18 @@ if (issues.length > 0) {
 useEffect(() => {
   if (!user) return;
 
+  let intervalId;
   const checkConnected = async () => {
     try {
       const userId = user.user_id
       const res = await fetchWithAuth(`/get-connected?userId=${userId}`, {
         method: "GET",
       });
+
+      if (res === null) {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
 
 
       if (res.connected) {
@@ -549,9 +555,11 @@ useEffect(() => {
 
   checkConnected();
 
-  const interval = setInterval(checkConnected, 3000); 
+  intervalId = setInterval(checkConnected, 3000);
 
-  return () => clearInterval(interval);
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
 }, [user]);
 
 

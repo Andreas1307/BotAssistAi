@@ -607,16 +607,21 @@ const Integrations = () => {
   //checkIf Api is connected
   useEffect(() => {
     if (!user) return;
-
+  
+    let intervalId;
     const checkConnected = async () => {
       try {
-        
-    const userId = user.user_id;
-        
+        const userId = user.user_id
         const res = await fetchWithAuth(`/get-connected?userId=${userId}`, {
           method: "GET",
         });
-
+  
+        if (res === null) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
+  
+  
         if (res.connected) {
           setConnected(true);
           setLastConnected(res.last_connected);
@@ -628,12 +633,14 @@ const Integrations = () => {
         showErrorNotification();
       }
     };
-
+  
     checkConnected();
-
-    const interval = setInterval(checkConnected, 1000);
-
-    return () => clearInterval(interval);
+  
+    intervalId = setInterval(checkConnected, 3000);
+  
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [user]);
 
   function enableBotAssistAi() {
