@@ -83,7 +83,7 @@ body {
     font-family: "Space Grotesk", sans-serif;
   }
   .reconnect-banner p {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 600;
     color: #f8f8f8;
     font-family: "Space Grotesk", sans-serif;
@@ -91,12 +91,14 @@ body {
   .reconnect-banner button {
     background-color: #fff;
     color: #222;
-    font-size: 15.7px;
-    padding: 8px 16px;
+    font-size: 15.5px;
+    padding: 7px 16px;
     border-radius: 14px;
+    font-weight: 500;
     margin-top: 8px;
     cursor: pointer;
     font-weight: 500;
+    border: 0;
     font-family: "Space Grotesk", sans-serif;
     transition: .3s ease;
   }
