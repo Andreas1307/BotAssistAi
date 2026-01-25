@@ -71,6 +71,8 @@ const Dashboard = () => {
   const [shopifyUser, setShopifyUser] = useState(false);
   const [showConvsLimit, setShowConvsLimit] = useState(false)
 
+  const [needsReconnect, setNeedsReconnect] = useState(false);
+
   const [host, setHost] = useState(null);
 
   let toastId;
@@ -558,6 +560,8 @@ if (issues.length > 0) {
   }
   fetchAllFaq()
 }, [user])
+
+
 //checkIf Api is connected
 useEffect(() => {
   if (!user) return;
@@ -571,6 +575,12 @@ useEffect(() => {
       });
 
       if (res === null) {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
+      if (res?.__needsReconnect) {
+        setNeedsReconnect(true);
         if (intervalId) clearInterval(intervalId);
         return;
       }
@@ -596,6 +606,11 @@ useEffect(() => {
     if (intervalId) clearInterval(intervalId);
   };
 }, [user]);
+
+const handleReconnect = () => {
+  const shop = sessionStorage.getItem("shopify_shop") || "";
+  safeRedirect(`https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(shop)}`, shop);
+};
 
 
 const setBotStatus = async (status) => {
@@ -1037,6 +1052,12 @@ if (loading) {
 
     <ToastContainer />
   </div>
+  {needsReconnect && (
+  <div className="reconnect-banner">
+    <p>Your Shopify session expired. Please reconnect.</p>
+    <button onClick={handleReconnect}>Reconnect</button>
+  </div>
+)}
 
         {/* System Status & AI Quick Actions */}
         <div className="dashboard-widgets">

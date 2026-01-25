@@ -130,13 +130,14 @@ export async function fetchWithAuth(url, options = {}) {
     const data = contentType.includes("application/json") ? await res.json() : await res.text();
     const errCode = data?.error;
   
+    // ✅ tell UI to show reconnect button (no refresh)
     if (["SESSION_EXPIRED", "SESSION_NOT_FOUND", "INVALID_SESSION_TOKEN"].includes(errCode)) {
-      safeRedirect(`https://api.botassistai.com/shopify/top-level-auth?shop=${encodeURIComponent(sessionStorage.getItem("shopify_shop") || "")}`);
-      return null;
+      return { __needsReconnect: true };
     }
   
     throw new Error(`Request failed: 401 ${JSON.stringify(data)}`);
   }
+  
   
   
 
