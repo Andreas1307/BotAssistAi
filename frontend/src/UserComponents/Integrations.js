@@ -632,6 +632,7 @@ const Integrations = () => {
           setConnected(false);
         }
       } catch (e) {
+        if (intervalId) clearInterval(intervalId);
         console.log("Error fetching the bot status (connected)", e);
         showErrorNotification();
       }

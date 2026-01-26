@@ -263,6 +263,7 @@ const Dashboard = () => {
   
         setMembership(res.active === true);
       } catch (e) {
+        if (intervalId) clearInterval(intervalId);
         console.error("❌ Failed to check subscription", e);
         setMembership(false);
       }
@@ -310,7 +311,7 @@ setRenew(res.user?.hadMembership === true);
 
   
       } catch (error) {
-        // ✅ Don't kick them to homepage on token expiry
+        
         setNeedsReconnect(true);
         if (intervalId) clearInterval(intervalId);
         return;
@@ -400,6 +401,7 @@ setRenew(res.user?.hadMembership === true);
           setNeutral(0);
         }
       } catch (e) {
+        if (intervalId) clearInterval(intervalId);
         console.log("Error with fetching user satisfaction", e);
         showErrorNotification()
       }
@@ -489,6 +491,7 @@ if (response === null) {
           setShowConvsLimit(false)
         }
       } catch (e) {
+        if (intervalId) clearInterval(intervalId);
         console.log("An error occured with fetching the daily conversations", e)
         showErrorNotification()
       }
@@ -604,6 +607,7 @@ useEffect(() => {
         setConnected(false);
       }
     } catch (e) {
+      if (intervalId) clearInterval(intervalId);
       console.log("Error fetching the bot status (connected)", e);
       showErrorNotification();
     }

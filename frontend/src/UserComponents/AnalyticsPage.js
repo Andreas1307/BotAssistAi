@@ -168,6 +168,7 @@ const [shopifyUser, setShopifyUser] = useState(false)
       setResData(arr.slice(-5));
         
       } catch(e) {
+        if (intervalId) clearInterval(intervalId);
         console.log("An error has occured with retreiving the response time for chart", e)
         showErrorNotification()
       }
