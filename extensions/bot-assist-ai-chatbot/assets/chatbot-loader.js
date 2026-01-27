@@ -175,9 +175,9 @@ clear: both;
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
     position: absolute;
-    bottom: 47px;
+    bottom: 43px;
     left: 0;
-    width: 96%;
+    width: 98%;
     display: none;
     align-items: center;
     text-align: center;
