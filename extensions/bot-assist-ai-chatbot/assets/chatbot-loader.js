@@ -315,7 +315,7 @@ clear: both;
 
 
   const img = document.createElement("img")
-  img.src = "https://www.botassistai.com/img/headChatbot.png"
+  img.src = "https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"
   img.style.cssText = `
   width: 46.5px;
   height: 46.5px;
