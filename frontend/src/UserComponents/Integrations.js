@@ -10,6 +10,8 @@ import {
   FaEye,
   FaTimes
 } from "react-icons/fa";
+import { FiSend } from "react-icons/fi";
+
 import "../styling/Integrations.css";
 import directory from '../directory';
 import { ToastContainer, toast } from "react-toastify";
@@ -752,10 +754,10 @@ onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
 
      <div className="chatbot" style={{ backgroundColor: colors.background }}>
 <div className="chatbot-div" style={{ backgroundColor: colors.chatbotBackground }}>
-<div className="chatHeader">
+<div className="chatHeader" style={{ backgroundColor: colors.chatBoxBackground }}>
   <div>
     <img src="https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"/>
-    <h2>Test</h2>
+    <h2 style={{ color: colors.textColor}}>Test</h2>
   </div>
   <span>
     <FaTimes />
@@ -776,7 +778,7 @@ onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
   }}
 />
 <button style={{ backgroundColor: colors.chatBtn, color: colors.textColor }}>
-  Send
+  <FiSend />
 </button>
 </div>
 </div>
