@@ -335,6 +335,8 @@ clear: both;
   website.style.cssText = `
   font-size: 20.6px;
   font-weight: 600;
+    max-width: 160px;
+    overflow: hidden;
   margin-left: 14px;
   color: var(--font-color);
   `

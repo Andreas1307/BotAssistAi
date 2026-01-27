@@ -300,6 +300,8 @@ clear: both;
   website.innerText = cleanShopName
   website.style.cssText = `
   font-size: 20.6px;
+    max-width: 160px;
+    overflow: hidden;
   font-weight: 600;
   margin-left: 14px;
   color: var(--font-color);
