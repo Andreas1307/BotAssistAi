@@ -443,7 +443,7 @@ margin-right: 8px
         typingEl.innerHTML = `How can we help you today?`;
       }
       chatLog.scrollTop = chatLog.scrollHeight;
-    }, 600); // 👈 adjust (500–1000ms is ideal)
+    }, 700); // 👈 adjust (500–1000ms is ideal)
   }
   
 
