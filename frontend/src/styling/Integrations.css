@@ -243,8 +243,8 @@
   position: relative;
 }
 .chatHeader {
-  width: 101.5%;
-    margin-left: -3.8px;
+  width: 101%;
+    margin-left: -3px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -313,7 +313,7 @@ align-self: flex-start;
   display: flex;
   justify-content: space-between;
   margin-top: 50px;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden; 
   position: absolute;
   bottom: 0;

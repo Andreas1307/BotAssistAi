@@ -698,13 +698,7 @@ value={colors.chatBoxBackground}
 onChange={(e) => setColors({ ...colors, chatBoxBackground: e.target.value })}
 />
 </div>
-<div>
-<p>Chat Input:</p>
-<input type="color" 
-value={colors.chatInputBackground}
-onChange={(e) => setColors({ ...colors, chatInputBackground: e.target.value })}
-/>
-</div>
+
 <div>
 <p>Chat Input Color:</p>
 <input type="color" 
