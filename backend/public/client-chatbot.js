@@ -260,7 +260,7 @@ clear: both;
   const chatBotHeader = document.createElement("div")
   chatBotHeader.style.cssText = `
     width: 102%;
-    margin-left: -3px;
+    margin-left: -3.5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
