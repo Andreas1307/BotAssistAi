@@ -21,11 +21,6 @@ const directory = "https://api.botassistai.com"
   }
 
 
-
-
-
-
-
   const style = document.createElement("style");
   style.textContent = `
     #botassist-chatlog::-webkit-scrollbar {
@@ -91,6 +86,8 @@ display: table;
 clear: both;
 }
 
+
+
   `;
   document.head.appendChild(style);
 
@@ -147,9 +144,9 @@ clear: both;
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
     position: absolute;
-    bottom: 32.5px;
+    bottom: 47px;
     left: 0;
-    width: 100%;
+    width: 95%;
     display: none;
     align-items: center;
     text-align: center;
@@ -235,7 +232,7 @@ clear: both;
     height: 420px;
     background: var(--ai-background);
     z-index: 99999;
-    display: none;
+    display: flex;
     flex-direction: column;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     font-family: sans-serif;
@@ -249,6 +246,95 @@ clear: both;
     border-bottom-left-radius: 13px;
     border-bottom-right-radius: 13px;
   `;
+
+
+
+
+
+
+
+
+
+
+
+  const chatBotHeader = document.createElement("div")
+  chatBotHeader.style.cssText = `
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7.5px 22px 7.7px;
+  background: var(--conversation-boxes);
+  border-top-left-radius: 13px;
+  border-top-right-radius: 13px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  `
+
+  const divHead = document.createElement("div")
+  divHead.style.cssText = `
+  display: flex;
+  align-items: center;
+  `
+
+
+
+
+  const img = document.createElement("img")
+  img.src = "https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"
+  img.style.cssText = `
+  width: 46.5px;
+  height: 46.5px;
+  border-radius: 50%;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  `
+  divHead.appendChild(img)
+
+  const cleanShopName = shop
+.replace(/^https?:\/\//, "") // remove protocol if present
+.split(".")[0];  
+
+  const website = document.createElement("h2") 
+  website.innerText = cleanShopName
+  website.style.cssText = `
+  font-size: 21.1px;
+  font-weight: 600;
+  margin-left: 14px;
+  color: var(--font-color);
+  `
+  divHead.appendChild(website)
+
+
+  const iconHead = document.createElement("span")
+  iconHead.innerHTML = `
+<svg viewBox="0 0 24 24" width="16.5" height="16.5"
+     fill="none" stroke="currentColor" stroke-width="4"
+     stroke-linecap="round" stroke-linejoin="round">
+  <line x1="18" y1="6" x2="6" y2="18"></line>
+  <line x1="6" y1="6" x2="18" y2="18"></line>
+</svg>
+`;
+  iconHead.style.cssText = `  
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+      background: var(--ai-background);
+  `
+  
+
+chatBotHeader.appendChild(divHead)
+chatBotHeader.appendChild(iconHead)
+
+chatbotBox.appendChild(chatBotHeader);
+
+
+
+
 
   
   chatbotBox.appendChild(satisfactionDiv);
@@ -267,14 +353,14 @@ clear: both;
 
   const submit = document.createElement("div");
   submit.style.cssText = `
-      width: 100%;
+      width: 92%;
       max-height: 43px;
+      margin: 0 15px 13px;
 display: flex;
 background: var(--ai-input);
 justify-content: space-between;
 margin-top: 50px;
-border-bottom-right-radius: 13px; 
-border-bottom-left-radius: 13px;
+border-radius: 14px;
 overflow: hidden; /* 💡 prevents button overflow causing white space */
 position: absolute;
 bottom: 0;
@@ -287,7 +373,7 @@ left: 0;
   input.style.cssText = `
  padding: 12.5px;
 border: none;
-width: 100%;
+min-width: 300px
 background: var(--ai-input);
 color: var(--ai-input-font-color);
 outline: none;
@@ -301,21 +387,31 @@ flex: 1;
   
 
   const button = document.createElement("button");
-  button.innerHTML = "Send";
+  button.innerHTML = `
+<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="22" y1="2" x2="11" y2="13"></line>
+  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+</svg>
+`;
   button.className = "diagonal-button"; 
   button.style.cssText = `
         border: none;
 outline: none;
-padding: 0 30px;
 cursor: pointer;
 color: var(--font-color);
 font-weight: 600;
 font-size: 16px;
 background: var(--ai-button);
 border-radius: 0;
-clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
 height: 100%; 
-height: 43px;
+width: 33px;
+height: 33px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 37%;
+margin: auto 0;
+margin-right: 8px
   `;
 
   submit.appendChild(input);
@@ -355,6 +451,16 @@ height: 43px;
       showWelcomeMessageIfEmpty();
     }
   });
+
+  iconHead.addEventListener("click", () => {
+      const isOpening = chatbotBox.style.display === "none";
+      chatbotBox.style.display = isOpening ? "flex" : "none";
+    
+      if (isOpening) {
+        showWelcomeMessageIfEmpty();
+      }
+    });
+    
   
   
 
