@@ -1,3 +1,6 @@
+
+
+
 (function () {
   const script = document.currentScript;
   const apiKey = window.BOTASSIST_API_KEY;
@@ -146,7 +149,7 @@ clear: both;
     position: absolute;
     bottom: 42px;
     left: 0;
-    width: 10%;
+    width: 100%;
     display: none;
     align-items: center;
     text-align: center;
@@ -545,3 +548,7 @@ margin-right: 8px
 
   button.addEventListener("click", sendMessage);
 })();
+
+
+
+

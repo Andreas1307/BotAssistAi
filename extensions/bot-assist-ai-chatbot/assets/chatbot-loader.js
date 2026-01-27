@@ -1,3 +1,5 @@
+
+
 (function () {
   const script = document.currentScript;
   const apiKey = window.BOTASSIST_API_KEY;
@@ -191,7 +193,7 @@ clear: both;
   satisfactionHeading.style.cssText = `
     color: var(--ai-input-font-color);
     font-weight: 600;
-    font-size: 1px;
+    font-size: 15.8px;
   `;
 
   const buttonsDiv = document.createElement("div");
