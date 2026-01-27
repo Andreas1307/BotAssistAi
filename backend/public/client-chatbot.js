@@ -144,9 +144,9 @@ clear: both;
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
     position: absolute;
-    bottom: 43px;
+    bottom: 42px;
     left: 0;
-    width: 98%;
+    width: 100%;
     display: none;
     align-items: center;
     text-align: center;
@@ -160,7 +160,7 @@ clear: both;
   satisfactionHeading.style.cssText = `
     color: var(--ai-input-font-color);
     font-weight: 600;
-    font-size: 17px;
+    font-size: 15.8px;
   `;
 
   const buttonsDiv = document.createElement("div");
