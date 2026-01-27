@@ -260,7 +260,7 @@ clear: both;
     bottom: 80px;
     right: 17px;
     width: 335px;
-    height: 420px;
+    height: 550px;
     background: var(--ai-background);
     z-index: 9999;
     display: none;
@@ -293,7 +293,7 @@ clear: both;
 
   const chatBotHeader = document.createElement("div")
   chatBotHeader.style.cssText = `
-  max-width: 100%;
+  max-width: 101%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -315,7 +315,7 @@ clear: both;
 
 
   const img = document.createElement("img")
-  img.src = "https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"
+  img.src = "https://www.botassistai.com/img/headChatbot.png"
   img.style.cssText = `
   width: 46.5px;
   height: 46.5px;
@@ -357,8 +357,8 @@ clear: both;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--font-color);
-      background: var(--ai-background);
+  color: #111;
+      background: #f8f8f8;
   `
   
 

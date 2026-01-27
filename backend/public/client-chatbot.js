@@ -229,7 +229,7 @@ clear: both;
     bottom: 80px;
     right: 17px;
     width: 335px;
-    height: 420px;
+    height: 550px;
     background: var(--ai-background);
     z-index: 99999;
     display: flex;
@@ -259,7 +259,7 @@ clear: both;
 
   const chatBotHeader = document.createElement("div")
   chatBotHeader.style.cssText = `
-  max-width: 100%;
+  max-width: 101%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -323,7 +323,8 @@ clear: both;
   display: flex;
   align-items: center;
   justify-content: center;
-      background: var(--ai-background);
+  color: #111;
+      background: #f8f8f8;
   `
   
 
