@@ -317,8 +317,8 @@ clear: both;
   const img = document.createElement("img")
   img.src = "https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"
   img.style.cssText = `
-  width: 46.5px;
-  height: 46.5px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
   cursor: pointer;
@@ -332,7 +332,7 @@ clear: both;
   const website = document.createElement("h2") 
   website.innerText = cleanShopName
   website.style.cssText = `
-  font-size: 21.1px;
+  font-size: 20.6px;
   font-weight: 600;
   margin-left: 14px;
   color: var(--font-color);
