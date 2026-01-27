@@ -229,7 +229,7 @@ clear: both;
     bottom: 80px;
     right: 17px;
     width: 335px;
-    height: 550px;
+    height: 510px;
     background: var(--ai-background);
     z-index: 99999;
     display: flex;
@@ -281,7 +281,7 @@ clear: both;
 
 
   const img = document.createElement("img")
-  img.src = "https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"
+  img.src = "https://www.botassistai.com/img/headChatbot.png"
   img.style.cssText = `
   width: 46.5px;
   height: 46.5px;

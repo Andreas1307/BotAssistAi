@@ -260,7 +260,7 @@ clear: both;
     bottom: 80px;
     right: 17px;
     width: 335px;
-    height: 550px;
+    height: 510px;
     background: var(--ai-background);
     z-index: 9999;
     display: none;
