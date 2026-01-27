@@ -333,7 +333,7 @@ clear: both;
   const website = document.createElement("h2") 
   website.innerText = cleanShopName
   website.style.cssText = `
-  font-size: 20.3px;
+  font-size: 20.4px;
   font-weight: 600;
     max-width: 160px;
     overflow: hidden;

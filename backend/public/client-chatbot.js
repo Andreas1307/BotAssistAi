@@ -293,13 +293,13 @@ clear: both;
   divHead.appendChild(img)
 
   const cleanShopName = shop
-.replace(/^https?:\/\//, "") // remove protocol if present
+.replace(/^https?:\/\//, "") 
 .split(".")[0];  
 
   const website = document.createElement("h2") 
   website.innerText = cleanShopName
   website.style.cssText = `
-  font-size: 20.3px;
+  font-size: 20.4px;
     max-width: 160px;
     overflow: hidden;
   font-weight: 600;
