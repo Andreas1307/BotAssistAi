@@ -21,6 +21,11 @@ const directory = "https://api.botassistai.com"
   }
 
 
+
+
+
+
+
   const style = document.createElement("style");
   style.textContent = `
     #botassist-chatlog::-webkit-scrollbar {
@@ -86,8 +91,6 @@ display: table;
 clear: both;
 }
 
-
-
   `;
   document.head.appendChild(style);
 
@@ -144,7 +147,7 @@ clear: both;
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
     position: absolute;
-    bottom: 42px;
+    bottom: 32.5px;
     left: 0;
     width: 100%;
     display: none;
@@ -158,9 +161,9 @@ clear: both;
   const satisfactionHeading = document.createElement("h2");
   satisfactionHeading.innerText = "Was this helpful?";
   satisfactionHeading.style.cssText = `
-    color: var(--ai-input-font-color);
+    color: var(--font-color);
     font-weight: 600;
-    font-size: 15.8px;
+    font-size: 17px;
   `;
 
   const buttonsDiv = document.createElement("div");
@@ -229,7 +232,7 @@ clear: both;
     bottom: 80px;
     right: 17px;
     width: 335px;
-    height: 550px;
+    height: 420px;
     background: var(--ai-background);
     z-index: 99999;
     display: none;
@@ -246,99 +249,6 @@ clear: both;
     border-bottom-left-radius: 13px;
     border-bottom-right-radius: 13px;
   `;
-
-
-
-
-
-
-
-
-
-
-
-  const chatBotHeader = document.createElement("div")
-  chatBotHeader.style.cssText = `
-    width: 102.2%;
-    margin-left: -3.8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7.5px 22px 7.7px;
-  background: var(--conversation-boxes);
-  border-top-left-radius: 13px;
-  border-top-right-radius: 13px;
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
-  `
-
-  const divHead = document.createElement("div")
-  divHead.style.cssText = `
-  display: flex;
-  align-items: center;
-  `
-
-
-
-
-  const img = document.createElement("img")
-  img.src = "https://i.pinimg.com/originals/45/53/e3/4553e37f5946db5c248e4a56bef77ab5.gif"
-  img.style.cssText = `
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  `
-  divHead.appendChild(img)
-
-  const cleanShopName = shop
-.replace(/^https?:\/\//, "") 
-.split(".")[0];  
-
-  const website = document.createElement("h2") 
-  website.innerText = cleanShopName
-  website.style.cssText = `
-  font-size: 20.4px;
-    max-width: 160px;
-    overflow: hidden;
-  font-weight: 600;
-  margin-left: 14px;
-  color: var(--font-color);
-  `
-  divHead.appendChild(website)
-
-
-  const iconHead = document.createElement("span")
-  iconHead.innerHTML = `
-<svg viewBox="0 0 24 24" width="16.5" height="16.5"
-     fill="none" stroke="currentColor" stroke-width="4"
-     stroke-linecap="round" stroke-linejoin="round">
-  <line x1="18" y1="6" x2="6" y2="18"></line>
-  <line x1="6" y1="6" x2="18" y2="18"></line>
-</svg>
-`;
-  iconHead.style.cssText = `  
-  width: 31px;
-  height: 31px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #111;
-      background: #f8f8f8;
-  `
-  
-
-chatBotHeader.appendChild(divHead)
-chatBotHeader.appendChild(iconHead)
-
-chatbotBox.appendChild(chatBotHeader);
-
-
-
-
 
   
   chatbotBox.appendChild(satisfactionDiv);
@@ -357,14 +267,14 @@ chatbotBox.appendChild(chatBotHeader);
 
   const submit = document.createElement("div");
   submit.style.cssText = `
-      width: 92%;
+      width: 100%;
       max-height: 43px;
-      margin: 0 15px 13px;
 display: flex;
 background: var(--ai-input);
 justify-content: space-between;
 margin-top: 50px;
-border-radius: 14px;
+border-bottom-right-radius: 13px; 
+border-bottom-left-radius: 13px;
 overflow: hidden; /* 💡 prevents button overflow causing white space */
 position: absolute;
 bottom: 0;
@@ -377,8 +287,8 @@ left: 0;
   input.style.cssText = `
  padding: 12.5px;
 border: none;
-min-width: 300px
-background: var(--ai-input) !important;
+width: 100%;
+background: var(--ai-input);
 color: var(--ai-input-font-color);
 outline: none;
 font-size: 16px;
@@ -391,31 +301,21 @@ flex: 1;
   
 
   const button = document.createElement("button");
-  button.innerHTML = `
-<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <line x1="22" y1="2" x2="11" y2="13"></line>
-  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-</svg>
-`;
+  button.innerHTML = "Send";
   button.className = "diagonal-button"; 
   button.style.cssText = `
         border: none;
 outline: none;
+padding: 0 30px;
 cursor: pointer;
 color: var(--font-color);
 font-weight: 600;
 font-size: 16px;
 background: var(--ai-button);
 border-radius: 0;
+clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 0% 100%);
 height: 100%; 
-width: 33px;
-height: 33px;
-display: flex;
-align-items: center;
-justify-content: center;
-border-radius: 37%;
-margin: auto 0;
-margin-right: 8px
+height: 43px;
   `;
 
   submit.appendChild(input);
@@ -443,7 +343,7 @@ margin-right: 8px
         typingEl.innerHTML = `How can we help you today?`;
       }
       chatLog.scrollTop = chatLog.scrollHeight;
-    }, 700); // 👈 adjust (500–1000ms is ideal)
+    }, 600); // 👈 adjust (500–1000ms is ideal)
   }
   
 
@@ -455,16 +355,6 @@ margin-right: 8px
       showWelcomeMessageIfEmpty();
     }
   });
-
-  iconHead.addEventListener("click", () => {
-      const isOpening = chatbotBox.style.display === "none";
-      chatbotBox.style.display = isOpening ? "flex" : "none";
-    
-      if (isOpening) {
-        showWelcomeMessageIfEmpty();
-      }
-    });
-    
   
   
 
