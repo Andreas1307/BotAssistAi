@@ -146,7 +146,7 @@ clear: both;
     position: absolute;
     bottom: 47px;
     left: 0;
-    width: 95%;
+    width: 96%;
     display: none;
     align-items: center;
     text-align: center;
@@ -158,7 +158,7 @@ clear: both;
   const satisfactionHeading = document.createElement("h2");
   satisfactionHeading.innerText = "Was this helpful?";
   satisfactionHeading.style.cssText = `
-    color: var(--font-color);
+    color: var(--ai-input-font-color);
     font-weight: 600;
     font-size: 17px;
   `;
