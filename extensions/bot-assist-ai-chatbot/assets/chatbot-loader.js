@@ -293,7 +293,8 @@ clear: both;
 
   const chatBotHeader = document.createElement("div")
   chatBotHeader.style.cssText = `
-    width: 100%;
+    width: 102%;
+    margin-left: -3.5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -332,7 +333,7 @@ clear: both;
   const website = document.createElement("h2") 
   website.innerText = cleanShopName
   website.style.cssText = `
-  font-size: 20.6px;
+  font-size: 20.3px;
   font-weight: 600;
     max-width: 160px;
     overflow: hidden;

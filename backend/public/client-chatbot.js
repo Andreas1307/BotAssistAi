@@ -299,7 +299,7 @@ clear: both;
   const website = document.createElement("h2") 
   website.innerText = cleanShopName
   website.style.cssText = `
-  font-size: 20.6px;
+  font-size: 20.3px;
     max-width: 160px;
     overflow: hidden;
   font-weight: 600;
