@@ -419,7 +419,7 @@ chatbotBox.appendChild(chatBotHeader);
  padding: 12.5px;
   border: none;
   min-width: 300px
-  background: var(--ai-input);
+  background: var(--ai-input) !important;
   color: var(--ai-input-font-color);
   outline: none;
   font-size: 16px;
