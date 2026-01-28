@@ -528,7 +528,7 @@ const Homepage = () => {
                       Try It Free – No Credit Card
                     </button>
                   </Link>
-                  <a target="_blank" href={"https://shop-ease2.netlify.app/"}>
+                  <a target="_blank" href={"https://botassistai-test.myshopify.com/"}>
                     <button className="hero-btn aaaa">See Demo</button>
                   </a>
                   <div className="icon-hero">
