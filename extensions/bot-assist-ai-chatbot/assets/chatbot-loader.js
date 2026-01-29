@@ -140,7 +140,10 @@ clear: both;
 
 
 
-
+.botassist-message a {
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 
   `;
@@ -534,6 +537,42 @@ chatbotBox.appendChild(chatBotHeader);
   
   
 
+
+
+
+  function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[m]));
+  }
+  
+  function linkifyText(text) {
+    // escape first so users can't inject HTML
+    let safe = escapeHTML(text);
+  
+    // URLs (http/https or www.)
+    const urlRegex = /\b((https?:\/\/|www\.)[^\s<]+)\b/gi;
+    safe = safe.replace(urlRegex, (match) => {
+      const href = match.startsWith("http") ? match : `https://${match}`;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+    });
+  
+    // Emails
+    const emailRegex = /\b([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})\b/gi;
+    safe = safe.replace(emailRegex, (email) => {
+      return `<a href="mailto:${email}">${email}</a>`;
+    });
+  
+    return safe;
+  }
+  
+
+
+
   async function sendMessage() {
     const message = input.value.trim();
     if (!message) return;
@@ -562,7 +601,7 @@ chatbotBox.appendChild(chatBotHeader);
       } else {
         if (loadingElem) {
           loadingElem.className = "botassist-message botassist-bot";
-          loadingElem.innerHTML = `${botResponse}`;
+          loadingElem.innerHTML = linkifyText(botResponse);
         }
         satisfactionDiv.style.display = "flex";
       }
