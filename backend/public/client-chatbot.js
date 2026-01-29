@@ -90,6 +90,20 @@ clear: both;
 }
 
 
+.botassist-message {
+  overflow-wrap: anywhere;   /* best modern behavior */
+  word-break: break-word;    /* fallback */
+  hyphens: auto;             /* adds hyphens where the browser can */
+}
+
+/* ✅ Make sure links also wrap properly */
+.botassist-message a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  display: inline;           /* keep normal link flow */
+}
+
 
   `;
   document.head.appendChild(style);
