@@ -143,6 +143,7 @@ clear: both;
 .botassist-message a {
   text-decoration: underline;
   cursor: pointer;
+  color: var(--font-color);
 }
 
 
