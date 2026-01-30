@@ -56,6 +56,56 @@ const directory = "https://api.botassistai.com"
 
 
 
+
+
+
+
+
+    // ---------------------------
+// ✅ Local history (per conversationId)
+// ---------------------------
+const HISTORY_KEY = `botassist_history_${conversationId}`;
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function addToHistory(role, text) {
+  const history = getHistory();
+  history.push({ role, text, ts: Date.now() });
+
+  // optional: keep last 50 messages to avoid unlimited growth
+  if (history.length > 50) history.splice(0, history.length - 50);
+
+  saveHistory(history);
+}
+
+function renderHistory() {
+  const history = getHistory();
+  if (!history.length) return;
+
+  chatLog.innerHTML = ""; // clear welcome/previous DOM
+  for (const msg of history) {
+    if (msg.role === "user") {
+      chatLog.innerHTML += `<div class="botassist-message botassist-user">${escapeHTML(msg.text)}</div>`;
+    } else {
+      chatLog.innerHTML += `<div class="botassist-message botassist-bot">${linkifyText(msg.text)}</div>`;
+    }
+  }
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+
+
+
   const style = document.createElement("style");
   style.textContent = `
     #botassist-chatlog::-webkit-scrollbar {
@@ -522,6 +572,7 @@ chatbotBox.appendChild(chatBotHeader);
     chatbotBox.style.display = isOpening ? "flex" : "none";
   
     if (isOpening) {
+      renderHistory();
       showWelcomeMessageIfEmpty();
     }
   });
@@ -532,6 +583,7 @@ chatbotBox.appendChild(chatBotHeader);
     chatbotBox.style.display = isOpening ? "flex" : "none";
   
     if (isOpening) {
+      renderHistory();
       showWelcomeMessageIfEmpty();
     }
   });
@@ -578,6 +630,7 @@ chatbotBox.appendChild(chatBotHeader);
     const message = input.value.trim();
     if (!message) return;
     chatLog.innerHTML += `<div class="botassist-message botassist-user">${message}</div>`;
+    addToHistory("user", message);
     input.value = "";
   
     const loadingId = `loading-${Date.now()}`;
@@ -603,6 +656,7 @@ chatbotBox.appendChild(chatBotHeader);
         if (loadingElem) {
           loadingElem.className = "botassist-message botassist-bot";
           loadingElem.innerHTML = linkifyText(botResponse);
+          addToHistory("bot", botResponse);
         }
         satisfactionDiv.style.display = "flex";
       }
@@ -615,7 +669,7 @@ chatbotBox.appendChild(chatBotHeader);
       satisfactionDiv.style.display = "none";
     }
   }
-  
+ 
 
 
   (async () => {
