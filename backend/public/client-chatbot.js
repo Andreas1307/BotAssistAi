@@ -164,21 +164,27 @@ clear: both;
   toggleBtn.innerHTML = "💬";
   toggleBtn.title = "Chat with us";
   toggleBtn.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 52px;
-    border-radius: 50%;
-    border: none;
-    background: var(--ai-website-chat-btn);
-    color: white;
-    font-size: 26px;
-    z-index: 10000;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    color: var(--font-color);
-  `;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ai-website-chat-btn);
+  color: var(--font-color);
+  font-size: 26px;
+  z-index: 10000;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  line-height: 1;
+`;
   document.body.appendChild(toggleBtn);
 
   const helperText = document.createElement("div");
@@ -446,7 +452,7 @@ left: 0;
   input.style.cssText = `
  padding: 12.5px;
 border: none;
-min-width: 300px
+min-width: 300px;
 background: var(--ai-input) !important;
 color: var(--ai-input-font-color);
 outline: none;
@@ -484,7 +490,7 @@ align-items: center;
 justify-content: center;
 border-radius: 37%;
 margin: auto 0;
-margin-right: 8px
+margin-right: 8px;
   `;
 
   submit.appendChild(input);
