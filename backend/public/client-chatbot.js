@@ -221,7 +221,7 @@ clear: both;
   position: absolute;
   left: 15px;
   right: 15px;
-  bottom: 53px;
+  bottom: 55px;
   display: none;
   align-items: center;
   justify-content: space-between;
@@ -433,7 +433,7 @@ chatbotBox.appendChild(chatBotHeader);
     overflow-y: auto;
     padding: 10px;
     padding-top: 22px;
-    height: 270px;
+    height: 263px;
   `;
 
   const submit = document.createElement("div");
