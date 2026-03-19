@@ -221,7 +221,7 @@ clear: both;
   position: absolute;
   left: 15px;
   right: 15px;
-  bottom: 62px;
+  bottom: 48px;
   display: none;
   align-items: center;
   justify-content: space-between;
