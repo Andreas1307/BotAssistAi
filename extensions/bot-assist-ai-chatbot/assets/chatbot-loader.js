@@ -261,7 +261,7 @@ clear: both;
   position: absolute;
   left: 15px;
   right: 15px;
-  bottom: 48px;
+  bottom: 53px;
   display: none;
   align-items: center;
   justify-content: space-between;
