@@ -258,32 +258,35 @@ clear: both;
   // Satisfaction UI
   const satisfactionDiv = document.createElement("div");
   satisfactionDiv.style.cssText = `
-    position: absolute;
-    bottom: 43px;
-    left: 0;
-    width: 100%;
-    display: none;
-    align-items: center;
-    text-align: center;
-    justify-content: space-between;
-    padding: 0 15px 10px;
-    border-radius: 10px;
-  `;
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  bottom: 62px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  border-radius: 10px;
+  box-sizing: border-box;
+`;
 
   const satisfactionHeading = document.createElement("h2");
   satisfactionHeading.innerText = "Was this helpful?";
   satisfactionHeading.style.cssText = `
-    color: var(--ai-input-font-color);
-    font-weight: 600;
-    font-size: 15.8px;
-  `;
+  color: var(--ai-input-font-color);
+  font-weight: 600;
+  font-size: 15.8px;
+  margin: 0;
+  line-height: 1.1;
+`;
 
   const buttonsDiv = document.createElement("div");
   buttonsDiv.style.cssText = `
-    display: flex;
-    gap: 15px;
-    margin-top: -15px;
-  `;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 0;
+`;
 
   const likeButton = document.createElement("button");
   likeButton.innerHTML = "👍";
