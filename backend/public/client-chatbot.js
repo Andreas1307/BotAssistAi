@@ -345,6 +345,8 @@ clear: both;
   border-top-right-radius: 13px;
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
+  box-sizing: border-box;
+min-height: 61px;
   `
 
   const divHead = document.createElement("div")
@@ -371,16 +373,17 @@ clear: both;
 .replace(/^https?:\/\//, "") 
 .split(".")[0];  
 
-  const website = document.createElement("h2") 
-  website.innerText = cleanShopName
-  website.style.cssText = `
+const website = document.createElement("h2") 
+website.innerText = cleanShopName
+website.style.cssText = `
   font-size: 20.4px;
-    max-width: 160px;
-    overflow: hidden;
+  max-width: 160px;
+  overflow: hidden;
   font-weight: 600;
-  margin-left: 14px;
+  margin: 0 0 0 14px;
+  line-height: 1.1;
   color: var(--font-color);
-  `
+`
   divHead.appendChild(website)
 
 
