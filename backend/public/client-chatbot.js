@@ -466,13 +466,15 @@ chatbotBox.appendChild(chatBotHeader);
   outline: none;
   box-shadow: none;
   border-radius: 0;
-  padding: 12.5px;
+  padding: 0 12.5px;
+  margin: 0;
   min-width: 0;
   width: 100%;
+  height: 43px;
   flex: 1;
   font-size: 16px;
   font-family: inherit;
-  line-height: 1.2;
+  line-height: 43px;
   box-sizing: border-box;
 `;
   input.onfocus = () => {
