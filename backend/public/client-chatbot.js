@@ -117,7 +117,7 @@ transform-origin: top left;
   align-self: flex-end;
   float: right;
   text-align: right;
-  color: var(--font-color);
+  color: var(--font-color) !important;
 }
 
 .botassist-bot {
@@ -125,7 +125,7 @@ transform-origin: top left;
   align-self: flex-start;
   float: left;
   text-align: left;
-  color: var(--font-color);
+  color: var(--font-color) !important;
 }
   #botassist-chatlog::after {
 content: "";
@@ -153,7 +153,7 @@ clear: both;
 .botassist-message a {
   text-decoration: underline;
   cursor: pointer;
-  color: var(--font-color);
+  color: var(--font-color) !important;
 }
 
 
@@ -172,7 +172,7 @@ clear: both;
   border-radius: 50%;
   border: none;
   background: var(--ai-website-chat-btn);
-  color: var(--font-color);
+  color: var(--font-color) !important;
   font-size: 26px;
   z-index: 10000;
   cursor: pointer;
@@ -314,7 +314,7 @@ clear: both;
     flex-direction: column;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     font-family: sans-serif;
-    color: var(--font-color);
+    color: var(--font-color) !important;
     font-weight: 500;
     padding-top: 0px;
     padding-bottom: 95px;
@@ -385,7 +385,7 @@ website.style.cssText = `
   font-weight: 600;
   margin: 0 0 0 14px;
   line-height: 1.1;
-  color: var(--font-color);
+  color: var(--font-color) !important;
 `
   divHead.appendChild(website)
 
@@ -495,7 +495,7 @@ chatbotBox.appendChild(chatBotHeader);
   border: none;
   outline: none;
   cursor: pointer;
-  color: var(--font-color);
+  color: var(--font-color) !important;
   background: var(--ai-button);
   width: 33px;
   height: 33px;
